@@ -1,11 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useState } from "react";
-import { Clock3, MapPin, Store, Trash2, Truck, Wallet } from "lucide-react";
+import { Trash2, Wallet } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { productsById, user } from "@/lib/data";
+import { productsById } from "@/lib/data";
 import { CartSummary } from "@/components/cart-summary";
 import { CheckoutShell, EmptyState, MobilePageHeader, Price, QtyStepper } from "@/components/ui";
 
@@ -54,8 +53,7 @@ function CartItem({ lineKey }: { lineKey: string }) {
 }
 
 export function CartView() {
-  const { lines, count, t } = useApp();
-  const [mode, setMode] = useState<"delivery" | "pickup">("delivery");
+  const { lines, count, t, fulfilment: mode } = useApp();
   const [notes, setNotes] = useState("");
 
   if (lines.length === 0) {
@@ -113,60 +111,10 @@ export function CartView() {
         <>
           <CartSummary
             ctaLabel="المتابعة لإتمام الطلب"
-            ctaHref={mode === "delivery" ? "/checkout/delivery" : "/checkout/branch"}
+            ctaHref="/checkout/pickup"
             delivery={mode === "delivery"}
             note="هتراجع بيانات التوصيل والدفع قبل تأكيد الطلب."
-          >
-            <div className="mt-4 flex rounded-full border border-line bg-cream-50 p-1">
-              <button
-                type="button"
-                onClick={() => setMode("delivery")}
-                className={`flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full text-[11px] font-bold transition ${
-                  mode === "delivery" ? "bg-white text-brand shadow-sm" : "text-muted hover:text-ink"
-                }`}
-              >
-                <Truck className="size-3.5" />
-                {t("التوصيل")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("pickup")}
-                className={`flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full text-[11px] font-bold transition ${
-                  mode === "pickup" ? "bg-white text-brand shadow-sm" : "text-muted hover:text-ink"
-                }`}
-              >
-                <Store className="size-3.5" />
-                {t("الاستلام")}
-              </button>
-            </div>
-          </CartSummary>
-
-          <div className="card p-4">
-            <div className="flex items-center justify-between">
-              <h3 className="flex items-center gap-1.5 text-sm font-extrabold">
-                {mode === "delivery" ? <MapPin className="size-4 text-brand" /> : <Store className="size-4 text-brand" />}
-                {mode === "delivery" ? t("التوصيل إلى") : t("الفرع المختار")}
-              </h3>
-              <Link
-                href={mode === "delivery" ? "/addresses/new" : "/checkout/branch"}
-                className="text-[11px] font-bold text-brand hover:text-brand-dark"
-              >
-                {t("تغيير")}
-              </Link>
-            </div>
-            <p className="mt-3 text-xs font-bold">
-              {mode === "delivery" ? t(user.address) : t("فرع النخيل")}
-            </p>
-            <p className="mt-1 text-[11px] leading-5 text-muted">
-              {mode === "delivery" ? t(user.fullAddress) : t("حي النخيل، شارع السلطان محمد فرع الملك، الإسكندرية")}
-            </p>
-            <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-cream-50 px-2.5 py-2 text-[10px] font-semibold text-muted">
-              <Clock3 className="size-3.5 text-brand" />
-              {mode === "delivery"
-                ? t("وقت التوصيل المتوقع: 30-45 دقيقة")
-                : t("وقت الاستلام المتوقع: 1:00 - 1:30 مساءً")}
-            </p>
-          </div>
+          />
 
           <div className="hidden items-center gap-2 rounded-2xl bg-brand-soft/60 px-4 py-3 text-[11px] font-semibold text-brand-dark lg:flex">
             <Wallet className="size-4" />

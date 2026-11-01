@@ -10,6 +10,7 @@ import {
   FileText,
   Info,
   LogOut,
+  MapPin,
   Shield,
   ShieldCheck,
   X,
@@ -19,59 +20,32 @@ import {
 import { useApp } from "@/components/providers";
 import { Breadcrumbs, MobilePageHeader } from "@/components/ui";
 
-type RowId = "help" | "privacy" | "terms" | "data" | "about";
-
 type Row = {
-  id: RowId;
+  id: string;
   label: string;
   icon: ComponentType<LucideProps>;
+  href: string;
 };
 
 const rows: Row[] = [
-  { id: "help", label: "المساعدة والدعم", icon: CircleHelp },
-  { id: "privacy", label: "سياسة الخصوصية", icon: Shield },
-  { id: "terms", label: "الشروط والاحكام", icon: ShieldCheck },
-  { id: "data", label: "معالجة البيانات", icon: FileText },
-  { id: "about", label: "عن التطبيق", icon: Info },
+  { id: "help", label: "المساعدة والدعم", icon: CircleHelp, href: "/help" },
+  { id: "addresses", label: "العناوين المحفوظة", icon: MapPin, href: "/addresses" },
+  { id: "privacy", label: "سياسة الخصوصية", icon: Shield, href: "/help/policies?tab=privacy" },
+  { id: "terms", label: "الشروط والاحكام", icon: ShieldCheck, href: "/help/policies?tab=terms" },
+  { id: "data", label: "معالجة البيانات", icon: FileText, href: "/help/policies?tab=data" },
+  { id: "about", label: "عن التطبيق", icon: Info, href: "/about" },
 ];
-
-const infoContent: Record<RowId, { title: string; body: string }> = {
-  help: {
-    title: "المساعدة والدعم",
-    body: "فريق ناوي أوردرز معاك يومياً من 10 صباحاً لـ 12 بالليل. كلمنا على 19885 أو ابعتلنا رسالة وهنساعدك في أي مشكلة في الطلب أو التوصيل.",
-  },
-  privacy: {
-    title: "سياسة الخصوصية",
-    body: "بنتعامل مع بياناتك بحرص، وبنستخدمها بس لتوصيل طلباتك وتحسين تجربتك. بياناتك محفوظة ومش بنشاركها مع أي طرف تالت من غير موافقتك.",
-  },
-  terms: {
-    title: "الشروط والأحكام",
-    body: "استخدامك للتطبيق معناه موافقتك على شروط الخدمة وسياسة الإلغاء والاسترجاع. الأسعار والمنتجات قابلة للتغيير، وبنأكد طلبك قبل بدء التحضير.",
-  },
-  data: {
-    title: "معالجة البيانات",
-    body: "بنحفظ بيانات حسابك وعناوينك وطلباتك بشكل آمن، وبنستخدمها فقط في تشغيل الخدمة وإرسال تحديثات طلباتك. تقدر تطلب حذف بياناتك في أي وقت من الدعم.",
-  },
-  about: {
-    title: "عن التطبيق",
-    body: "ناوي أوردرز — طعم يوصلك لباب البيت. الإصدار 1.0.0، صُنع بحب في مصر.",
-  },
-};
 
 export function SettingsView() {
   const router = useRouter();
   const { logout, lang, setLang, t } = useApp();
   const [notificationsOn, setNotificationsOn] = useState(true);
-  const [info, setInfo] = useState<RowId | null>(null);
   const [logoutOpen, setLogoutOpen] = useState(false);
 
   useEffect(() => {
-    if (!logoutOpen && !info) return;
+    if (!logoutOpen) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setLogoutOpen(false);
-        setInfo(null);
-      }
+      if (event.key === "Escape") setLogoutOpen(false);
     };
     window.addEventListener("keydown", onKey);
     const previous = document.body.style.overflow;
@@ -80,7 +54,7 @@ export function SettingsView() {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = previous;
     };
-  }, [logoutOpen, info]);
+  }, [logoutOpen]);
 
   const confirmLogout = () => {
     setLogoutOpen(false);
@@ -166,10 +140,9 @@ export function SettingsView() {
               {rows.map((row) => {
                 const Icon = row.icon;
                 return (
-                  <button
+                  <Link
                     key={row.id}
-                    type="button"
-                    onClick={() => setInfo(row.id)}
+                    href={row.href}
                     className="flex w-full items-center gap-3 rounded-2xl bg-[#fbf4ec] px-3.5 py-3 text-start transition hover:bg-[#f7ece1]"
                   >
                     <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white text-brand shadow-[3px_3px_0_0_rgba(32,26,22,0.9)]">
@@ -177,7 +150,7 @@ export function SettingsView() {
                     </span>
                     <span className="flex-1 text-sm font-extrabold">{t(row.label)}</span>
                     <ChevronLeft className="size-4 text-ink/70 ltr:rotate-180" />
-                  </button>
+                  </Link>
                 );
               })}
             </div>
@@ -193,32 +166,6 @@ export function SettingsView() {
           </button>
         </div>
       </div>
-
-      {info ? (
-        <div className="fixed inset-0 z-[100] grid place-items-center bg-ink/25 p-5 backdrop-blur-sm">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="settings-info-title"
-            className="animate-float-in relative w-full max-w-[440px] rounded-[26px] bg-cream px-6 pb-6 pt-14 shadow-pop"
-          >
-            <span className="absolute -top-9 left-1/2 grid size-[72px] -translate-x-1/2 place-items-center rounded-[20px] border border-white/70 bg-gradient-to-b from-white to-[#ddd2ca] text-brand shadow-[0_18px_30px_-18px_rgba(40,25,15,0.65)]">
-              <Info className="size-8" strokeWidth={1.8} />
-            </span>
-            <h2 id="settings-info-title" className="text-center text-xl font-extrabold">
-              {t(infoContent[info].title)}
-            </h2>
-            <p className="mt-3 text-center text-xs leading-7 text-muted">{t(infoContent[info].body)}</p>
-            <button
-              type="button"
-              onClick={() => setInfo(null)}
-              className="btn-brand mt-6 h-11 w-full text-sm"
-            >
-              {t("تمام")}
-            </button>
-          </div>
-        </div>
-      ) : null}
 
       {logoutOpen ? (
         <div

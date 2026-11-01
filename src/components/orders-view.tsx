@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { ChevronLeft, MapPin, ReceiptText, RotateCcw, Truck } from "lucide-react";
+import { ChevronLeft, ReceiptText, RotateCcw, Truck } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { MobilePageHeader } from "@/components/ui";
 import { formatPrice, orders, productsById, user, type Order } from "@/lib/data";
@@ -17,11 +17,8 @@ const reorderMap: Record<string, string[]> = {
 const toArabicDigits = (value: string) =>
   value.replace(/[0-9]/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[Number(digit)]);
 
-const trackerSteps = ["تم استلام الطلب", "قيد التحضير", "في الطريق ليك"];
-
 export function OrdersView() {
   const { addItem, toast, t, lang } = useApp();
-  const [trackedId, setTrackedId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const current = orders.filter((order) => order.status === "preparing");
@@ -40,7 +37,6 @@ export function OrdersView() {
   const renderOrder = (order: Order, index: number) => {
     const key = `${order.id}-${index}`;
     const isCurrent = order.status === "preparing";
-    const tracked = trackedId === key;
     const expanded = expandedId === key;
 
     return (
@@ -75,43 +71,6 @@ export function OrdersView() {
           </p>
         ) : null}
 
-        {tracked ? (
-          <div className="mt-4 rounded-2xl bg-[#fbf4ec] px-4 py-4">
-            <div className="flex items-start justify-between gap-1">
-              {trackerSteps.map((step, stepIndex) => {
-                const done = stepIndex <= 1;
-                const active = stepIndex === 2;
-                return (
-                  <div key={step} className="flex flex-1 flex-col items-center gap-2 text-center">
-                    <span
-                      className={`grid size-7 place-items-center rounded-full text-[10px] font-bold ${
-                        done
-                          ? "bg-success text-white"
-                          : active
-                            ? "border-2 border-brand bg-white text-brand"
-                            : "border border-line bg-white text-muted"
-                      }`}
-                    >
-                      {done ? "✓" : stepIndex + 1}
-                    </span>
-                    <span
-                      className={`text-[10px] leading-4 ${
-                        active ? "font-bold text-brand" : done ? "font-semibold text-ink/80" : "text-muted"
-                      }`}
-                    >
-                      {t(step)}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="mt-3 flex items-center justify-center gap-1.5 text-[10px] text-muted">
-              <MapPin className="size-3.5 text-brand" />
-              {t(user.address)}
-            </p>
-          </div>
-        ) : null}
-
         {expanded ? (
           <div className="mt-3 space-y-1.5 rounded-2xl bg-[#fbf4ec] px-4 py-3.5 text-[11px] leading-6 text-muted">
             <p>
@@ -132,15 +91,13 @@ export function OrdersView() {
         <div className="mt-4 flex items-center justify-between gap-2 border-t border-line pt-4">
           <div className="flex items-center gap-2">
             {isCurrent ? (
-              <button
-                type="button"
-                onClick={() => setTrackedId(tracked ? null : key)}
-                aria-expanded={tracked}
+              <Link
+                href={`/orders/${order.id}`}
                 className="flex h-9 items-center gap-1.5 rounded-full bg-brand px-4 text-[11px] font-bold text-white transition hover:bg-brand-dark"
               >
                 <Truck className="size-3.5" />
-                {t(tracked ? "إخفاء التتبع" : "تتبع الطلب")}
-              </button>
+                {t("تتبع الطلب")}
+              </Link>
             ) : (
               <button
                 type="button"

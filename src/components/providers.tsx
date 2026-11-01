@@ -13,6 +13,7 @@ import {
 import Link from "next/link";
 import { Check, ShoppingCart } from "lucide-react";
 import { productsById, seedCart, seedFavorites } from "@/lib/data";
+import { savedAddresses, type SavedAddress } from "@/lib/account-data";
 import { translate, type Lang, type Vars } from "@/lib/i18n";
 
 export type CartLine = {
@@ -46,8 +47,19 @@ type AppContextValue = {
   isFavorite: (id: string) => boolean;
   toggleFavorite: (id: string) => void;
   loggedIn: boolean;
+  ready: boolean;
+  loginPromptOpen: boolean;
+  openLoginPrompt: () => void;
+  closeLoginPrompt: () => void;
   login: () => void;
   logout: () => void;
+  addresses: SavedAddress[];
+  addAddress: (address: SavedAddress) => void;
+  removeAddress: (id: string) => void;
+  selectedAddressId: string | null;
+  selectAddress: (id: string | null) => void;
+  fulfilment: "delivery" | "pickup";
+  setFulfilment: (mode: "delivery" | "pickup") => void;
   toast: (message: string, kind?: ToastKind) => void;
   lang: Lang;
   dir: "rtl" | "ltr";
@@ -65,6 +77,8 @@ const CART_KEY = "nawy-cart-v1";
 const FAVORITES_KEY = "nawy-favorites-v1";
 const AUTH_KEY = "nawy-auth-v1";
 const LANG_KEY = "nawy-lang-v1";
+const ADDRESSES_KEY = "nawy-addresses-v1";
+const SELECTED_ADDRESS_KEY = "nawy-selected-address-v1";
 
 function readStorage<T>(key: string, fallback: T): T {
   try {
@@ -79,7 +93,11 @@ function readStorage<T>(key: string, fallback: T): T {
 export function AppProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>(seedCart);
   const [favorites, setFavorites] = useState<string[]>(seedFavorites);
-  const [loggedIn, setLoggedIn] = useState(true);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [loginPromptOpen, setLoginPromptOpen] = useState(false);
+  const [addresses, setAddresses] = useState<SavedAddress[]>(savedAddresses);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(savedAddresses[0].id);
+  const [fulfilment, setFulfilment] = useState<"delivery" | "pickup">("delivery");
   const [toastState, setToastState] = useState<ToastState>(null);
   const [lang, setLang] = useState<Lang>("ar");
   const [ready, setReady] = useState(false);
@@ -90,8 +108,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setLines(readStorage<CartLine[]>(CART_KEY, seedCart));
     setFavorites(readStorage<string[]>(FAVORITES_KEY, seedFavorites));
-    setLoggedIn(readStorage<boolean>(AUTH_KEY, true));
+    setLoggedIn(readStorage<boolean>(AUTH_KEY, false));
     setLang(readStorage<Lang>(LANG_KEY, "ar") === "en" ? "en" : "ar");
+    setAddresses(readStorage<SavedAddress[]>(ADDRESSES_KEY, savedAddresses));
+    setSelectedAddressId(readStorage<string | null>(SELECTED_ADDRESS_KEY, savedAddresses[0].id));
     setReady(true);
   }, []);
 
@@ -112,6 +132,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (ready) window.localStorage.setItem(AUTH_KEY, JSON.stringify(loggedIn));
   }, [loggedIn, ready]);
+
+  useEffect(() => {
+    if (ready) window.localStorage.setItem(ADDRESSES_KEY, JSON.stringify(addresses));
+  }, [addresses, ready]);
+
+  useEffect(() => {
+    if (ready) window.localStorage.setItem(SELECTED_ADDRESS_KEY, JSON.stringify(selectedAddressId));
+  }, [selectedAddressId, ready]);
 
   useEffect(() => {
     return () => {
@@ -198,8 +226,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [toast, t],
   );
 
+  const openLoginPrompt = useCallback(() => setLoginPromptOpen(true), []);
+  const closeLoginPrompt = useCallback(() => setLoginPromptOpen(false), []);
+
   const login = useCallback(() => {
     setLoggedIn(true);
+    setLoginPromptOpen(false);
     toast(t("تم تسجيل الدخول بنجاح"), "info");
   }, [toast, t]);
 
@@ -207,6 +239,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setLoggedIn(false);
     toast(t("تم تسجيل الخروج"), "info");
   }, [toast, t]);
+
+  const addAddress = useCallback(
+    (address: SavedAddress) => {
+      setAddresses((current) => {
+        const withoutDuplicate = current.filter((item) => item.id !== address.id);
+        return [...withoutDuplicate, address];
+      });
+      setSelectedAddressId(address.id);
+      toast(t("تم حفظ العنوان بنجاح"), "info");
+    },
+    [toast, t],
+  );
+
+  const removeAddress = useCallback(
+    (id: string) => {
+      setAddresses((current) => current.filter((item) => item.id !== id));
+      setSelectedAddressId((current) => (current === id ? null : current));
+      toast(t("تم حذف العنوان"), "info");
+    },
+    [toast, t],
+  );
+
+  const selectAddress = useCallback((id: string | null) => setSelectedAddressId(id), []);
 
   const count = useMemo(() => lines.reduce((total, line) => total + line.qty, 0), [lines]);
   const subtotal = useMemo(
@@ -228,8 +283,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       isFavorite,
       toggleFavorite,
       loggedIn,
+      ready,
+      loginPromptOpen,
+      openLoginPrompt,
+      closeLoginPrompt,
       login,
       logout,
+      addresses,
+      addAddress,
+      removeAddress,
+      selectedAddressId,
+      selectAddress,
+      fulfilment,
+      setFulfilment,
       toast,
       lang,
       dir,
@@ -249,8 +315,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       isFavorite,
       toggleFavorite,
       loggedIn,
+      ready,
+      loginPromptOpen,
+      openLoginPrompt,
+      closeLoginPrompt,
       login,
       logout,
+      addresses,
+      addAddress,
+      removeAddress,
+      selectedAddressId,
+      selectAddress,
+      fulfilment,
       toast,
       lang,
       dir,

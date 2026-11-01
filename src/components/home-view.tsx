@@ -19,6 +19,7 @@ import {
   filterMenu,
   homeCategoryOrder,
   menuFilters,
+  orders,
   products,
 } from "@/lib/data";
 import { PromoCarousel } from "@/components/promo-carousel";
@@ -29,6 +30,7 @@ import { InstallButton } from "@/components/install-button";
 import { MenuFilters } from "@/components/menu-filters";
 import { SectionTitle } from "@/components/ui";
 import { StoreHeader } from "@/components/store-header";
+import { DesktopOrderTrackingCard, MobileOrderTrackingBanner } from "@/components/order-tracking-promo";
 import { useApp } from "@/components/providers";
 
 function PhoneMockup() {
@@ -106,9 +108,11 @@ function PhoneMockup() {
 }
 
 export function HomeView() {
-  const { t } = useApp();
+  const { t, loggedIn } = useApp();
   const [filter, setFilter] = useState("الكل");
+  const [showActiveOrder, setShowActiveOrder] = useState(true);
   const menu = filterMenu(filter);
+  const activeOrder = orders.find((order) => order.status === "preparing");
 
   return (
     <div className="pb-6 lg:pb-0">
@@ -120,7 +124,7 @@ export function HomeView() {
         <PromoCarousel />
       </div>
 
-      <section className="shell mt-7 lg:mt-9">
+      <section className="shell relative mt-7 lg:mt-9">
         <SectionTitle
           title="الاقسام"
           icon={<LayoutGrid className="size-5 text-brand lg:size-6" />}
@@ -213,6 +217,12 @@ export function HomeView() {
             </div>
           </div>
         </div>
+        {loggedIn && activeOrder && showActiveOrder ? (
+          <>
+            <MobileOrderTrackingBanner order={activeOrder} onClose={() => setShowActiveOrder(false)} />
+            <DesktopOrderTrackingCard order={activeOrder} onClose={() => setShowActiveOrder(false)} />
+          </>
+        ) : null}
       </section>
 
       <section className="shell mt-8 lg:mt-11">

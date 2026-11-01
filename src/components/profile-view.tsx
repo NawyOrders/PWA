@@ -2,9 +2,28 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Flower2, FolderHeart, Heart, History, ShoppingBag, Star } from "lucide-react";
+import {
+  ChevronLeft,
+  CircleHelp,
+  FolderHeart,
+  Heart,
+  History,
+  Info,
+  MapPinned,
+  Settings2,
+  ShoppingBag,
+  Star,
+  type LucideProps,
+} from "lucide-react";
 import { useApp } from "@/components/providers";
 import { user } from "@/lib/data";
+
+const accountLinks: { label: string; href: string; icon: React.ComponentType<LucideProps> }[] = [
+  { label: "العناوين المحفوظة", href: "/addresses", icon: MapPinned },
+  { label: "المساعدة والدعم", href: "/help", icon: CircleHelp },
+  { label: "الاعدادات", href: "/settings", icon: Settings2 },
+  { label: "عن التطبيق", href: "/about", icon: Info },
+];
 
 const stats = [
   { key: "favorites", label: "المفضلة", value: 15, icon: Heart, tile: "bg-[#fde3e8] text-[#e24467]" },
@@ -92,15 +111,24 @@ export function ProfileView() {
             </Link>
           </div>
 
-          <Link
-            href="/settings"
-            className="card flex flex-col items-center gap-3 px-4 py-6 transition hover:-translate-y-1 hover:shadow-pop"
-          >
-            <span className="grid size-12 place-items-center rounded-2xl bg-pink-soft text-[#e24467]">
-              <Flower2 className="size-6" strokeWidth={1.7} />
-            </span>
-            <span className="text-sm font-bold">{t("الاعدادات")}</span>
-          </Link>
+          <div className="card divide-y divide-line overflow-hidden">
+            {accountLinks.map((link) => {
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="flex items-center gap-3 px-4 py-4 transition hover:bg-cream-50 lg:px-5"
+                >
+                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand">
+                    <Icon className="size-[18px]" strokeWidth={1.9} />
+                  </span>
+                  <span className="flex-1 text-sm font-extrabold">{t(link.label)}</span>
+                  <ChevronLeft className="size-4 shrink-0 text-ink/60 ltr:rotate-180" />
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

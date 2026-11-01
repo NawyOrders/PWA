@@ -12,6 +12,7 @@ export function CartSummary({
   ctaHref,
   onCta,
   ctaDisabled = false,
+  showCta = true,
   showItems = false,
   delivery = true,
   note,
@@ -22,6 +23,7 @@ export function CartSummary({
   ctaHref?: string;
   onCta?: () => void;
   ctaDisabled?: boolean;
+  showCta?: boolean;
   showItems?: boolean;
   delivery?: boolean;
   note?: string;
@@ -144,17 +146,19 @@ export function CartSummary({
         </div>
       </dl>
 
-      {ctaHref && !ctaDisabled ? (
-        <Link href={ctaHref} className={ctaClasses}>
-          {t(ctaLabel)}
-          <ArrowLeft className="size-4 ltr:rotate-180" />
-        </Link>
-      ) : (
-        <button type="button" onClick={onCta} disabled={ctaDisabled} className={ctaClasses}>
-          {t(ctaLabel)}
-          <ArrowLeft className="size-4 ltr:rotate-180" />
-        </button>
-      )}
+      {showCta ? (
+        ctaHref && !ctaDisabled ? (
+          <Link href={ctaHref} className={ctaClasses}>
+            {t(ctaLabel)}
+            <ArrowLeft className="size-4 ltr:rotate-180" />
+          </Link>
+        ) : (
+          <button type="button" onClick={onCta} disabled={ctaDisabled} className={ctaClasses}>
+            {t(ctaLabel)}
+            <ArrowLeft className="size-4 ltr:rotate-180" />
+          </button>
+        )
+      ) : null}
 
       <p className="mt-3 text-center text-[10px] leading-5 text-muted">
         {t(note ?? "هتراجع بيانات التوصيل والدفع قبل تأكيد الطلب.")}

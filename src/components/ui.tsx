@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ChevronLeft, ChevronRight, Flame, Heart, Minus, Plus, ShoppingBag } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Flame, Heart, Minus, Plus, ShoppingBag } from "lucide-react";
 import { formatPrice } from "@/lib/data";
 import { useApp } from "@/components/providers";
 
@@ -209,6 +209,43 @@ export function MobilePageHeader({
       </Link>
       <h1 className="text-lg font-extrabold">{t(title)}</h1>
       <div className="flex min-w-11 justify-end">{action}</div>
+    </header>
+  );
+}
+
+export function DisplayPageHeader({
+  title,
+  subtitle,
+  backHref = "/",
+  action,
+  className = "",
+}: {
+  title: string;
+  subtitle?: string;
+  backHref?: string;
+  action?: ReactNode;
+  className?: string;
+}) {
+  const { t } = useApp();
+  return (
+    <header className={`px-5 pb-6 pt-6 lg:hidden ${className}`}>
+      <div className="flex justify-start">
+        {action ?? (
+          <Link
+            href={backHref}
+            aria-label={t("رجوع")}
+            className="grid size-12 place-items-center rounded-full bg-white/80 text-ink shadow-soft transition active:scale-95"
+          >
+            <ArrowRight className="size-5 ltr:rotate-180" strokeWidth={2.1} />
+          </Link>
+        )}
+      </div>
+      <h1 className="mt-6 text-start font-display text-[42px] font-extrabold leading-[1.15] lg:text-[46px]">
+        {t(title)}
+      </h1>
+      {subtitle ? (
+        <p className="mt-3 text-start text-sm leading-6 text-muted">{t(subtitle)}</p>
+      ) : null}
     </header>
   );
 }
