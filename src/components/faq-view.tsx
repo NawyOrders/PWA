@@ -13,12 +13,14 @@ export function FaqView() {
   const [openId, setOpenId] = useState<string | null>(faqItems[0].id);
 
   const visible = useMemo(() => {
-    const needle = query.trim();
+    const needle = query.trim().toLowerCase();
     if (!needle) return faqItems;
-    return faqItems.filter(
-      (item) => item.question.includes(needle) || item.answer.includes(needle),
-    );
-  }, [query]);
+    return faqItems.filter((item) => {
+      const question = t(item.question).toLowerCase();
+      const answer = t(item.answer).toLowerCase();
+      return question.includes(needle) || answer.includes(needle);
+    });
+  }, [query, t]);
 
   return (
     <div className="pb-10">

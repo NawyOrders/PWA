@@ -8,8 +8,12 @@ export const metadata: Metadata = {
 
 async function LoginContent({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const params = await searchParams;
-  const next = params.next?.startsWith("/") ? params.next : "/profile";
-  return <LoginView next={next} />;
+  const requested = params.next;
+  const safeNext =
+    requested && requested.startsWith("/") && !requested.startsWith("//") && !requested.startsWith("/\\")
+      ? requested
+      : "/profile";
+  return <LoginView next={safeNext} />;
 }
 
 export default function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {

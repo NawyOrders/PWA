@@ -36,11 +36,30 @@ const rows: Row[] = [
   { id: "about", label: "عن التطبيق", icon: Info, href: "/about" },
 ];
 
+const NOTIFICATIONS_KEY = "nawy-notifications-v1";
+
 export function SettingsView() {
   const router = useRouter();
   const { logout, lang, setLang, t } = useApp();
   const [notificationsOn, setNotificationsOn] = useState(true);
   const [logoutOpen, setLogoutOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(NOTIFICATIONS_KEY);
+      if (stored) setNotificationsOn(stored === "on");
+    } catch {}
+  }, []);
+
+  const toggleNotifications = () => {
+    setNotificationsOn((value) => {
+      const next = !value;
+      try {
+        window.localStorage.setItem(NOTIFICATIONS_KEY, next ? "on" : "off");
+      } catch {}
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!logoutOpen) return;
@@ -123,7 +142,7 @@ export function SettingsView() {
                 role="switch"
                 aria-checked={notificationsOn}
                 aria-label={t("تشغيل الإشعارات")}
-                onClick={() => setNotificationsOn((value) => !value)}
+                onClick={toggleNotifications}
                 className={`relative h-8 w-14 shrink-0 rounded-full p-1 transition ${
                   notificationsOn ? "bg-brand" : "bg-line"
                 }`}

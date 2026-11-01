@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
 import { Trash2, Wallet } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { productsById } from "@/lib/data";
@@ -53,8 +52,7 @@ function CartItem({ lineKey }: { lineKey: string }) {
 }
 
 export function CartView() {
-  const { lines, count, t, fulfilment: mode } = useApp();
-  const [notes, setNotes] = useState("");
+  const { lines, count, t, fulfilment: mode, orderNote, setOrderNote } = useApp();
 
   if (lines.length === 0) {
     return (
@@ -98,8 +96,8 @@ export function CartView() {
               <span className="rounded-full bg-cream-100 px-2 py-0.5 text-[9px] font-semibold text-muted">{t("اختياري")}</span>
             </h2>
             <textarea
-              value={notes}
-              onChange={(event) => setNotes(event.target.value.slice(0, 200))}
+              value={orderNote}
+              onChange={(event) => setOrderNote(event.target.value.slice(0, 200))}
               rows={3}
               placeholder={t("عندك أي طلب خاص؟ اكتبه هنا...")}
               className="mt-2.5 w-full resize-none rounded-xl border border-line bg-cream-50 px-4 py-3 text-xs leading-6 outline-none transition focus:border-brand/40"

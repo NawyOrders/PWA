@@ -7,6 +7,7 @@ import { ChevronLeft, LayoutGrid, SlidersHorizontal } from "lucide-react";
 import {
   categories,
   categoriesById,
+  categoryCounts,
   desktopCategoryOrder,
   homeCategoryOrder,
   products,
@@ -33,7 +34,9 @@ export function CategoriesView() {
   const [sort, setSort] = useState("popular");
 
   const category = categoriesById[categoryId];
-  let items = products.filter((product) => product.category === categoryId);
+  const categoryItems = products.filter((product) => product.category === categoryId);
+  const categoryTotal = categoryItems.length;
+  let items = categoryItems;
 
   if (chip === "الأكثر طلباً") items = items.filter((product) => product.popular);
   if (chip === "العروض") items = items.filter((product) => product.offer);
@@ -66,15 +69,8 @@ export function CategoriesView() {
             </span>
             {t("الأقسام")}
           </h1>
-          <button
-            type="button"
-            className="text-xs font-bold text-brand lg:hidden"
-            onClick={() => setCategoryId("burger")}
-          >
-            {t("عرض الكل")}
-          </button>
           <Link href="/categories" className="hidden text-sm font-bold text-brand hover:text-brand-dark lg:block">
-            {t("عرض كل الأصناف (12)")}
+            {t("عرض كل الأصناف ({count})", { count: products.length })}
           </Link>
         </div>
 
@@ -129,7 +125,7 @@ export function CategoriesView() {
                   <Image src={item.image} alt={t(item.name)} fill sizes="56px" className="object-cover" />
                 </span>
                 <span className={`mt-3 text-sm font-bold ${active ? "text-brand" : "text-ink"}`}>{t(item.name)}</span>
-                <span className="mt-0.5 text-[10px] text-muted">{item.count} {t("صنف")}</span>
+                <span className="mt-0.5 text-[10px] text-muted">{categoryCounts[id] ?? 0} {t("صنف")}</span>
               </button>
             );
           })}
@@ -199,7 +195,7 @@ export function CategoriesView() {
         <p className="mt-6 hidden text-center text-xs text-muted lg:block">
           {t("عرض {count} من {total} أطباق في قسم {category}", {
             count: items.length,
-            total: items.length,
+            total: categoryTotal,
             category: t(category.name),
           })}
         </p>
@@ -214,6 +210,7 @@ export function CategoriesView() {
         <div className="mt-3 grid grid-cols-2 gap-3">
           {products
             .filter((product) => product.category === categoryId)
+            .sort((a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)))
             .slice(0, 2)
             .map((product) => (
               <ProductCard key={product.id} product={product} />

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bike, Clock3, MapPin, NotebookPen, Pencil, Phone, ShieldCheck } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { user } from "@/lib/data";
@@ -9,7 +9,7 @@ import { CartSummary } from "@/components/cart-summary";
 import { CheckoutShell } from "@/components/ui";
 
 export function DeliveryView() {
-  const { count, t, addresses, selectedAddressId } = useApp();
+  const { count, t, addresses, selectedAddressId, setFulfilment } = useApp();
   const selected = addresses.find((address) => address.id === selectedAddressId) ?? null;
   const [building, setBuilding] = useState("12");
   const [floor, setFloor] = useState("الثاني");
@@ -17,6 +17,10 @@ export function DeliveryView() {
   const [name, setName] = useState("أحمد محمد");
   const [phone, setPhone] = useState("010 1234 5678");
   const [instructions, setInstructions] = useState("من فضلك اتصل بي قبل الوصول، الجرس مش شغال.");
+
+  useEffect(() => {
+    setFulfilment("delivery");
+  }, [setFulfilment]);
 
   return (
     <CheckoutShell

@@ -1,13 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Bike } from "lucide-react";
+import { ArrowLeft, Bike, Store } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { formatPrice, productsById } from "@/lib/data";
+import { deliveryFee, formatPrice, productsById } from "@/lib/data";
 
 export function CartBar() {
-  const { count, subtotal, lines, t, lang, loggedIn, openLoginPrompt } = useApp();
+  const { count, subtotal, lines, t, lang, loggedIn, openLoginPrompt, fulfilment, coupon } = useApp();
   if (count === 0) return null;
+
+  const discount = coupon ? Math.min(Math.round(subtotal * 0.2), 50) : 0;
+  const fee = fulfilment === "delivery" ? deliveryFee : 0;
+  const total = Math.max(0, subtotal - discount + fee);
 
   const names = lines
     .slice(0, 2)
@@ -38,13 +42,13 @@ export function CartBar() {
         <p className="line-1 mt-0.5 max-w-md text-[11px] text-muted">{names}</p>
       </div>
       <span className="ms-4 flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1.5 text-[11px] font-bold text-brand">
-        <Bike className="size-3.5" />
-        {t("توصيل لزهراء المعادي")}
+        {fulfilment === "delivery" ? <Bike className="size-3.5" /> : <Store className="size-3.5" />}
+        {fulfilment === "delivery" ? t("توصيل لزهراء المعادي") : t("استلام من الفرع")}
       </span>
       <div className="ms-auto text-end">
         <p className="text-[10px] text-muted">{t("الإجمالي")}</p>
         <p className="text-lg font-extrabold text-brand">
-          {formatPrice(subtotal)} <span className="text-[10px] font-bold">{t("جنيه")}</span>
+          {formatPrice(total)} <span className="text-[10px] font-bold">{t("جنيه")}</span>
         </p>
       </div>
       <Link

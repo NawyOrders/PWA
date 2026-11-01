@@ -55,8 +55,6 @@ export function PromoCarousel() {
     return () => clearInterval(timer);
   }, []);
 
-  const slide = slides[index];
-
   return (
     <div>
       <div className="relative aspect-[2.5/1] overflow-hidden rounded-[22px] bg-peach shadow-soft sm:aspect-[3.4/1] lg:aspect-[4.75/1] lg:rounded-[26px]">
@@ -67,7 +65,7 @@ export function PromoCarousel() {
             key={item.id}
             aria-hidden={slideIndex !== index}
             className={`absolute inset-0 transition-opacity duration-700 ${
-              slideIndex === index ? "opacity-100" : "opacity-0"
+              slideIndex === index ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
             }`}
           >
             <Image
@@ -108,14 +106,15 @@ export function PromoCarousel() {
                 {t(item.text)}
               </p>
               <Link
-                href={slide.href}
+                href={item.href}
+                tabIndex={slideIndex === index ? 0 : -1}
                 className={`mt-1 inline-flex h-9 w-fit items-center gap-2 rounded-full px-4 text-[11px] font-bold transition lg:h-11 lg:px-6 lg:text-sm ${
                   item.theme === "dark"
                     ? "bg-[#cb2f19] text-white hover:bg-[#b32612]"
                     : "bg-brand text-white hover:bg-brand-dark"
                 }`}
               >
-                {t(slide.cta)}
+                {t(item.cta)}
                 <ArrowLeft className="size-3.5 lg:size-4 ltr:rotate-180" />
               </Link>
             </div>

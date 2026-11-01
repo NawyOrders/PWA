@@ -7,22 +7,22 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, ChevronLeft } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { Breadcrumbs, MobilePageHeader } from "@/components/ui";
-import { user } from "@/lib/data";
 
 export function EditProfileView() {
   const router = useRouter();
-  const { toast, t, lang } = useApp();
+  const { toast, t, profile, ready, updateProfile } = useApp();
   const fileInput = useRef<HTMLInputElement | null>(null);
-  const [name, setName] = useState(user.name);
-  const [phone, setPhone] = useState(user.phone);
-  const [email, setEmail] = useState(user.email);
+  const [name, setName] = useState(profile.name);
+  const [phone, setPhone] = useState(profile.phone);
+  const [email, setEmail] = useState(profile.email);
   const [preview, setPreview] = useState<string | null>(null);
 
   useEffect(() => {
-    return () => {
-      if (preview) URL.revokeObjectURL(preview);
-    };
-  }, [preview]);
+    if (!ready) return;
+    setName(profile.name);
+    setPhone(profile.phone);
+    setEmail(profile.email);
+  }, [ready, profile.name, profile.phone, profile.email]);
 
   const pickImage = (file: File | undefined) => {
     if (!file) return;
@@ -30,9 +30,38 @@ export function EditProfileView() {
       toast(t("الملف لازم يكون صورة"), "info");
       return;
     }
-    if (preview) URL.revokeObjectURL(preview);
-    setPreview(URL.createObjectURL(file));
-    toast(t("تم تحديث الصورة الشخصية"), "info");
+    if (file.size > 5 * 1024 * 1024) {
+      toast(t("حجم الصورة أكبر من 5 ميجا، اختار صورة أصغر."), "info");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onerror = () => toast(t("الملف لازم يكون صورة"), "info");
+    reader.onload = () => {
+      if (typeof reader.result !== "string") return;
+      const image = new window.Image();
+      image.onerror = () => toast(t("الملف لازم يكون صورة"), "info");
+      image.onload = () => {
+        const size = 320;
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const context = canvas.getContext("2d");
+        if (!context || !image.naturalWidth || !image.naturalHeight) {
+          setPreview(reader.result as string);
+          return;
+        }
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, size, size);
+        const scale = Math.max(size / image.naturalWidth, size / image.naturalHeight);
+        const width = image.naturalWidth * scale;
+        const height = image.naturalHeight * scale;
+        context.drawImage(image, (size - width) / 2, (size - height) / 2, width, height);
+        setPreview(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
   };
 
   const submit = (event: React.FormEvent) => {
@@ -45,6 +74,12 @@ export function EditProfileView() {
       toast(t("رقم الهاتف غير صحيح"), "info");
       return;
     }
+    updateProfile({
+      name: name.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
+      avatar: preview ?? profile.avatar,
+    });
     toast(t("تم حفظ التغييرات بنجاح"), "info");
     router.push("/profile");
   };
@@ -83,8 +118,8 @@ export function EditProfileView() {
           <div className="flex flex-col items-center">
             <div className="relative">
               <Image
-                src={preview ?? user.avatar}
-                alt={t(user.name)}
+                src={preview ?? profile.avatar}
+                alt={t(profile.name)}
                 width={144}
                 height={144}
                 unoptimized={preview !== null}
@@ -127,7 +162,7 @@ export function EditProfileView() {
               </label>
               <input
                 id="full-name"
-                value={name === user.name ? t(user.name) : name}
+                value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder={t("اكتب اسمك الكامل")}
                 className="field mt-2 h-14 text-sm font-semibold"

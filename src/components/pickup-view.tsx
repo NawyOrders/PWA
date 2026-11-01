@@ -9,14 +9,15 @@ import { branches, deliveryFee, formatPrice, user } from "@/lib/data";
 
 export function PickupView() {
   const router = useRouter();
-  const { fulfilment, setFulfilment, subtotal, count, t, lang, addresses, selectedAddressId } = useApp();
+  const { fulfilment, setFulfilment, subtotal, count, t, lang, addresses, selectedAddressId, coupon } = useApp();
   const branch = branches[0];
   const selectedAddress = addresses.find((address) => address.id === selectedAddressId) ?? null;
   const deliveryAddress = selectedAddress
     ? `${t(selectedAddress.area)}${lang === "ar" ? "، " : ", "}${t(selectedAddress.detail)}`
     : t(user.fullAddress);
   const fee = fulfilment === "delivery" && subtotal > 0 ? deliveryFee : 0;
-  const total = subtotal + fee;
+  const discount = coupon ? Math.min(Math.round(subtotal * 0.2), 50) : 0;
+  const total = Math.max(0, subtotal - discount + fee);
 
   function confirmFulfilment() {
     router.push(fulfilment === "delivery" ? "/checkout/delivery" : "/checkout/branch");
@@ -146,6 +147,12 @@ export function PickupView() {
                 <dt className="text-muted">{t("رسوم التوصيل")}</dt>
                 <dd className="font-bold">{formatPrice(fee)} {t("جنيه")}</dd>
               </div>
+              {discount > 0 ? (
+                <div className="flex items-center justify-between gap-4 text-success">
+                  <dt>{t("الخصم (NAWY20)")}</dt>
+                  <dd className="font-bold">- {formatPrice(discount)} {t("جنيه")}</dd>
+                </div>
+              ) : null}
               <div className="flex items-center justify-between gap-4 border-t border-line pt-3">
                 <dt className="text-sm font-extrabold sm:text-base">{t("الإجمالي")}</dt>
                 <dd className="text-lg font-extrabold text-brand sm:text-xl">{formatPrice(total)} {t("جنيه")}</dd>

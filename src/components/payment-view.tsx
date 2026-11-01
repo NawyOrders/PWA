@@ -54,7 +54,7 @@ const methods: {
 
 export function PaymentView() {
   const router = useRouter();
-  const { toast, t } = useApp();
+  const { toast, t, fulfilment, clearCart } = useApp();
   const [method, setMethod] = useState<MethodId>("instapay");
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [error, setError] = useState("");
@@ -74,12 +74,17 @@ export function PaymentView() {
       setError("ارفع صورة بصيغة JPG أو PNG.");
       return;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("حجم الصورة أكبر من 5 ميجا، اختار صورة أصغر.");
+      return;
+    }
     setReceipt({ name: file.name || "إيصال الدفع.jpg", size: file.size, url: URL.createObjectURL(file) });
     setError("");
   };
 
   const finalize = () => {
     setShowModal(false);
+    clearCart(true);
     toast(t("تم تأكيد طلبك بنجاح، جاري تحضيره الآن"), "info");
     router.push("/orders");
   };
@@ -112,8 +117,8 @@ export function PaymentView() {
         activeStep={2}
         title="اختار طريقة الدفع اللي تريحك"
         subtitle="كل طرق الدفع آمنة، اختار الأسهل ليك وأكد طلبك."
-        backHref="/checkout/delivery"
-        backLabel="الرجوع للتوصيل"
+        backHref={fulfilment === "pickup" ? "/checkout/branch" : "/checkout/delivery"}
+        backLabel={fulfilment === "pickup" ? "الرجوع للفرع" : "الرجوع للتوصيل"}
         breadcrumb={[
           { label: "الرئيسية", href: "/" },
           { label: "السلة", href: "/cart" },
@@ -263,6 +268,7 @@ export function PaymentView() {
         aside={
           <CartSummary
             showItems
+            delivery={fulfilment === "delivery"}
             ctaLabel="تأكيد الطلب"
             onCta={confirm}
             note="بالضغط على تأكيد الطلب، أنت موافق على الشروط والأحكام."

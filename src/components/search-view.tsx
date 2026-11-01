@@ -257,14 +257,16 @@ export function SearchView({ query }: { query: string }) {
 
             <button
               type="button"
-              onClick={() => reset()}
+              onClick={() =>
+                document.getElementById("search-results")?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }
               className="mt-6 flex h-11 w-full items-center justify-center rounded-full bg-brand text-xs font-bold text-white transition hover:bg-brand-dark"
             >
               {t("عرض {count} نتائج", { count: results.length })}
             </button>
           </aside>
 
-          <div className="min-w-0">
+          <div id="search-results" className="min-w-0 scroll-mt-24">
             <div className="hidden grid-cols-2 gap-4 lg:grid">
               {results.map((product) => (
                 <ProductCard key={product.id} product={product} showType mediaClassName="aspect-[1.65/1]" />

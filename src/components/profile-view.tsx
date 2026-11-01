@@ -16,7 +16,7 @@ import {
   type LucideProps,
 } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { user } from "@/lib/data";
+import { orders } from "@/lib/data";
 
 const accountLinks: { label: string; href: string; icon: React.ComponentType<LucideProps> }[] = [
   { label: "العناوين المحفوظة", href: "/addresses", icon: MapPinned },
@@ -27,12 +27,12 @@ const accountLinks: { label: string; href: string; icon: React.ComponentType<Luc
 
 const stats = [
   { key: "favorites", label: "المفضلة", value: 15, icon: Heart, tile: "bg-[#fde3e8] text-[#e24467]" },
-  { key: "orders", label: "الطلبات", value: 8, icon: ShoppingBag, tile: "bg-[#fbdcd2] text-[#e8452c]" },
+  { key: "orders", label: "الطلبات", value: orders.length, icon: ShoppingBag, tile: "bg-[#fbdcd2] text-[#e8452c]" },
   { key: "points", label: "النقاط", value: 320, icon: Star, tile: "bg-[#fcecc9] text-[#eaa41c]" },
 ];
 
 export function ProfileView() {
-  const { favorites, t } = useApp();
+  const { favorites, profile, t } = useApp();
 
   return (
     <div className="pb-8">
@@ -51,18 +51,19 @@ export function ProfileView() {
                 <span className="absolute end-0 top-6 block h-8 w-4 rotate-[40deg] rounded-full bg-[#f6a723]" />
               </div>
               <Image
-                src={user.avatar}
-                alt={t(user.name)}
+                src={profile.avatar}
+                alt={t(profile.name)}
                 width={144}
                 height={144}
                 priority
+                unoptimized={profile.avatar.startsWith("data:")}
                 className="relative size-[124px] rounded-full object-cover ring-[5px] ring-brand/80 ring-offset-4 ring-offset-white lg:size-[144px]"
               />
             </div>
 
-            <h2 className="mt-6 text-2xl font-extrabold">{t(user.name)}</h2>
+            <h2 className="mt-6 text-2xl font-extrabold">{t(profile.name)}</h2>
             <p className="mt-1.5 text-sm text-muted" dir="ltr">
-              {user.phone}
+              {profile.phone}
             </p>
 
             <Link

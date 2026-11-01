@@ -27,7 +27,7 @@ import {
   trackingRoute,
   trackingSteps,
 } from "@/lib/account-data";
-import { formatPrice, user, type Order } from "@/lib/data";
+import { formatPrice, toArabicDigits, user, type Order } from "@/lib/data";
 
 const stepIcons: Record<string, React.ComponentType<LucideProps>> = {
   check: Check,
@@ -177,7 +177,7 @@ export function OrderTrackingView({ order }: { order: Order }) {
           <div className="card p-4 lg:p-5">
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm font-extrabold lg:text-base">
-                {t("طلب رقم")} {order.id}
+                {t("طلب رقم")} {lang === "ar" ? toArabicDigits(order.id) : order.id}
               </span>
               <span className="rounded-full bg-brand-soft px-3 py-1 text-[10px] font-bold text-brand">
                 {t("قيد التحضير")}

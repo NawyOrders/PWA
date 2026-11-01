@@ -30,18 +30,17 @@ export function CartSummary({
   children?: ReactNode;
   className?: string;
 }) {
-  const { lines, count, subtotal, t } = useApp();
+  const { lines, count, subtotal, t, coupon, applyCoupon, orderNote } = useApp();
   const [code, setCode] = useState("");
-  const [appliedCode, setAppliedCode] = useState<string | null>(null);
   const [error, setError] = useState("");
 
-  const discount = appliedCode ? Math.min(Math.round(subtotal * 0.2), 50) : 0;
+  const discount = coupon ? Math.min(Math.round(subtotal * 0.2), 50) : 0;
   const fee = delivery ? (subtotal > 0 ? baseDeliveryFee : 0) : 0;
   const total = Math.max(0, subtotal - discount + fee);
 
   const applyCode = () => {
-    if (code.trim().toUpperCase() === "NAWY20") {
-      setAppliedCode("NAWY20");
+    if (applyCoupon(code)) {
+      setCode("");
       setError("");
     } else {
       setError("كود الخصم غير صحيح");
@@ -84,6 +83,13 @@ export function CartSummary({
         </ul>
       ) : null}
 
+      {orderNote ? (
+        <p className="mt-3 rounded-xl bg-cream-50 px-3 py-2 text-[11px] leading-5 text-muted">
+          <span className="font-bold text-ink">{t("ملاحظات على الطلب")}: </span>
+          {orderNote}
+        </p>
+      ) : null}
+
       {children}
 
       <div className="mt-4">
@@ -114,9 +120,9 @@ export function CartSummary({
           </button>
         </div>
         {error ? <p className="mt-1.5 text-[11px] font-semibold text-brand">{t(error)}</p> : null}
-        {appliedCode ? (
+        {coupon ? (
           <p className="mt-1.5 text-[11px] font-semibold text-success">
-            {t("تم تطبيق كود {code} — خصم 20%", { code: appliedCode })}
+            {t("تم تطبيق كود {code} — خصم 20%", { code: coupon })}
           </p>
         ) : null}
       </div>

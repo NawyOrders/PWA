@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Clock3, MapPin, Store } from "lucide-react";
 import { branches } from "@/lib/data";
 import { CartSummary } from "@/components/cart-summary";
@@ -9,9 +9,13 @@ import { CheckoutShell } from "@/components/ui";
 import { useApp } from "@/components/providers";
 
 export function BranchView() {
-  const { t } = useApp();
+  const { t, setFulfilment } = useApp();
   const [selected, setSelected] = useState(branches[0].id);
   const branch = branches.find((item) => item.id === selected) ?? branches[0];
+
+  useEffect(() => {
+    setFulfilment("pickup");
+  }, [setFulfilment]);
 
   return (
     <CheckoutShell

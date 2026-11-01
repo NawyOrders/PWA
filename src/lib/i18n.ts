@@ -781,6 +781,9 @@ const en: Record<string, string> = {
   "مطور بواسطة": "Developed by",
   "13 أكتوبر 2026": "October 13, 2026",
   "© {year} كرم الشام. جميع الحقوق محفوظة.": "© {year} Karm El Sham. All rights reserved.",
+  "عرض كل الأصناف ({count})": "View all {count} items",
+  "الرجوع للفرع": "Back to branch",
+  "حجم الصورة أكبر من 5 ميجا، اختار صورة أصغر.": "Image is larger than 5 MB, please choose a smaller one.",
 
   // misc
   "الطبق غير موجود": "Dish not found",

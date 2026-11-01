@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import {
   categoriesById,
+  categoryCounts,
   desktopCategoryOrder,
   filterMenu,
   homeCategoryOrder,
@@ -172,7 +173,7 @@ export function HomeView() {
                   <Image src={category.image} alt={t(category.name)} fill sizes="56px" className="object-cover" />
                 </span>
                 <span className={`mt-3 text-sm font-bold ${active ? "text-brand" : "text-ink"}`}>{t(category.name)}</span>
-                <span className="mt-0.5 text-[10px] text-muted">{category.count} {t("صنف")}</span>
+                <span className="mt-0.5 text-[10px] text-muted">{categoryCounts[id] ?? 0} {t("صنف")}</span>
               </Link>
             );
           })}
@@ -188,6 +189,7 @@ export function HomeView() {
         <div className="mt-3 grid grid-cols-2 gap-3 lg:mt-5 lg:grid-cols-5 lg:gap-4">
           {products
             .filter((product) => product.category === "burger")
+            .sort((a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)))
             .slice(0, 4)
             .map((product) => (
               <ProductCard key={product.id} product={product} />

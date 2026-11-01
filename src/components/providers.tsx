@@ -12,7 +12,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { Check, ShoppingCart } from "lucide-react";
-import { productsById, seedCart, seedFavorites } from "@/lib/data";
+import { productsById, seedCart, seedFavorites, user } from "@/lib/data";
 import { savedAddresses, type SavedAddress } from "@/lib/account-data";
 import { translate, type Lang, type Vars } from "@/lib/i18n";
 
@@ -34,6 +34,13 @@ type AddOptions = {
   price: number;
 };
 
+export type Profile = {
+  name: string;
+  phone: string;
+  email: string;
+  avatar: string;
+};
+
 type AppContextValue = {
   lines: CartLine[];
   count: number;
@@ -42,7 +49,13 @@ type AppContextValue = {
   quickAdd: (productId: string) => void;
   changeQty: (key: string, delta: number) => void;
   removeLine: (key: string) => void;
-  clearCart: () => void;
+  clearCart: (silent?: boolean) => void;
+  coupon: string | null;
+  applyCoupon: (code: string) => boolean;
+  orderNote: string;
+  setOrderNote: (note: string) => void;
+  profile: Profile;
+  updateProfile: (patch: Partial<Profile>) => void;
   favorites: string[];
   isFavorite: (id: string) => boolean;
   toggleFavorite: (id: string) => void;
@@ -79,6 +92,16 @@ const AUTH_KEY = "nawy-auth-v1";
 const LANG_KEY = "nawy-lang-v1";
 const ADDRESSES_KEY = "nawy-addresses-v1";
 const SELECTED_ADDRESS_KEY = "nawy-selected-address-v1";
+const COUPON_KEY = "nawy-coupon-v1";
+const ORDER_NOTE_KEY = "nawy-order-note-v1";
+const PROFILE_KEY = "nawy-profile-v1";
+
+const seedProfile: Profile = {
+  name: user.name,
+  phone: user.phone,
+  email: user.email,
+  avatar: user.avatar,
+};
 
 function readStorage<T>(key: string, fallback: T): T {
   try {
@@ -90,6 +113,17 @@ function readStorage<T>(key: string, fallback: T): T {
   }
 }
 
+function isProfile(value: unknown): value is Profile {
+  if (!value || typeof value !== "object") return false;
+  const profile = value as Record<string, unknown>;
+  return (
+    typeof profile.name === "string" &&
+    typeof profile.phone === "string" &&
+    typeof profile.email === "string" &&
+    typeof profile.avatar === "string"
+  );
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>(seedCart);
   const [favorites, setFavorites] = useState<string[]>(seedFavorites);
@@ -98,6 +132,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [addresses, setAddresses] = useState<SavedAddress[]>(savedAddresses);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(savedAddresses[0].id);
   const [fulfilment, setFulfilment] = useState<"delivery" | "pickup">("delivery");
+  const [coupon, setCoupon] = useState<string | null>(null);
+  const [orderNote, setOrderNote] = useState("");
+  const [profile, setProfile] = useState<Profile>(seedProfile);
   const [toastState, setToastState] = useState<ToastState>(null);
   const [lang, setLang] = useState<Lang>("ar");
   const [ready, setReady] = useState(false);
@@ -106,12 +143,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const t = useCallback((text: string, vars?: Vars) => translate(lang, text, vars), [lang]);
 
   useEffect(() => {
-    setLines(readStorage<CartLine[]>(CART_KEY, seedCart));
-    setFavorites(readStorage<string[]>(FAVORITES_KEY, seedFavorites));
-    setLoggedIn(readStorage<boolean>(AUTH_KEY, false));
-    setLang(readStorage<Lang>(LANG_KEY, "ar") === "en" ? "en" : "ar");
-    setAddresses(readStorage<SavedAddress[]>(ADDRESSES_KEY, savedAddresses));
-    setSelectedAddressId(readStorage<string | null>(SELECTED_ADDRESS_KEY, savedAddresses[0].id));
+    const storedLines = readStorage<unknown>(CART_KEY, seedCart);
+    setLines(
+      Array.isArray(storedLines)
+        ? (storedLines.filter(
+            (line): line is CartLine =>
+              Boolean(line) && typeof (line as CartLine).key === "string" && typeof (line as CartLine).productId === "string",
+          ) as CartLine[])
+        : seedCart,
+    );
+    const storedFavorites = readStorage<unknown>(FAVORITES_KEY, seedFavorites);
+    setFavorites(Array.isArray(storedFavorites) ? storedFavorites.filter((id): id is string => typeof id === "string") : seedFavorites);
+    setLoggedIn(readStorage<unknown>(AUTH_KEY, false) === true);
+    setLang(readStorage<unknown>(LANG_KEY, "ar") === "en" ? "en" : "ar");
+    const storedAddresses = readStorage<unknown>(ADDRESSES_KEY, savedAddresses);
+    setAddresses(Array.isArray(storedAddresses) ? (storedAddresses as SavedAddress[]) : savedAddresses);
+    const storedSelectedAddress = readStorage<unknown>(SELECTED_ADDRESS_KEY, savedAddresses[0].id);
+    setSelectedAddressId(typeof storedSelectedAddress === "string" ? storedSelectedAddress : savedAddresses[0].id);
+    setCoupon(readStorage<unknown>(COUPON_KEY, null) === "NAWY20" ? "NAWY20" : null);
+    const storedNote = readStorage<unknown>(ORDER_NOTE_KEY, "");
+    setOrderNote(typeof storedNote === "string" ? storedNote.slice(0, 200) : "");
+    const storedProfile = readStorage<unknown>(PROFILE_KEY, seedProfile);
+    setProfile(isProfile(storedProfile) ? storedProfile : seedProfile);
     setReady(true);
   }, []);
 
@@ -142,6 +195,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [selectedAddressId, ready]);
 
   useEffect(() => {
+    if (ready) window.localStorage.setItem(COUPON_KEY, JSON.stringify(coupon));
+  }, [coupon, ready]);
+
+  useEffect(() => {
+    if (ready) window.localStorage.setItem(ORDER_NOTE_KEY, JSON.stringify(orderNote));
+  }, [orderNote, ready]);
+
+  useEffect(() => {
+    if (ready) window.localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  }, [profile, ready]);
+
+  useEffect(() => {
     return () => {
       if (toastTimer.current) clearTimeout(toastTimer.current);
     };
@@ -159,7 +224,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!product) return;
       const size = options.size ?? "";
       const extras = options.extras?.length ? [...options.extras].sort() : [];
-      const key = [productId, size, extras.join("+")].filter(Boolean).join("|");
+      const note = options.note?.trim() ?? "";
+      const key = [productId, size, extras.join("+"), note].filter(Boolean).join("|");
       setLines((current) => {
         const existing = current.find((line) => line.key === key);
         if (existing) {
@@ -176,7 +242,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             price: options.price,
             size: size || undefined,
             extras: extras.length ? extras : undefined,
-            note: options.note || undefined,
+            note: note || undefined,
           },
         ];
       });
@@ -189,7 +255,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (productId: string) => {
       const product = productsById[productId];
       if (!product) return;
-      addItem(productId, { price: product.price, size: "ساندوتش فقط" });
+      addItem(productId, {
+        price: product.price,
+        size: product.category === "burger" ? "ساندوتش فقط" : undefined,
+      });
     },
     [addItem],
   );
@@ -208,10 +277,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setLines((current) => current.filter((line) => line.key !== key));
   }, []);
 
-  const clearCart = useCallback(() => {
-    setLines([]);
-    toast(t("تم تفريغ السلة"));
-  }, [toast, t]);
+  const clearCart = useCallback(
+    (silent = false) => {
+      setLines([]);
+      setCoupon(null);
+      setOrderNote("");
+      if (!silent) toast(t("تم تفريغ السلة"));
+    },
+    [toast, t],
+  );
+
+  const applyCoupon = useCallback((code: string) => {
+    if (code.trim().toUpperCase() !== "NAWY20") return false;
+    setCoupon("NAWY20");
+    return true;
+  }, []);
+
+  const updateProfile = useCallback((patch: Partial<Profile>) => {
+    setProfile((current) => ({ ...current, ...patch }));
+  }, []);
 
   const isFavorite = useCallback((id: string) => favorites.includes(id), [favorites]);
 
@@ -279,6 +363,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       changeQty,
       removeLine,
       clearCart,
+      coupon,
+      applyCoupon,
+      orderNote,
+      setOrderNote,
+      profile,
+      updateProfile,
       favorites,
       isFavorite,
       toggleFavorite,
@@ -311,6 +401,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       changeQty,
       removeLine,
       clearCart,
+      coupon,
+      applyCoupon,
+      orderNote,
+      setOrderNote,
+      profile,
+      updateProfile,
       favorites,
       isFavorite,
       toggleFavorite,

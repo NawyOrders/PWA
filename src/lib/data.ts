@@ -305,6 +305,14 @@ export const productsById = Object.fromEntries(products.map((product) => [produc
 
 export const popularProducts = products.filter((product) => product.popular);
 
+export const categoryCounts: Record<string, number> = products.reduce<Record<string, number>>(
+  (counts, product) => {
+    counts[product.category] = (counts[product.category] ?? 0) + 1;
+    return counts;
+  },
+  {},
+);
+
 export const homeCategoryOrder: CategoryId[] = ["burger", "pizza", "tost", "chicken", "drinks"];
 
 export const desktopCategoryOrder: CategoryId[] = [
@@ -364,15 +372,6 @@ export const orders: Order[] = [
     image: "/images/pizza.webp",
   },
   {
-    id: "10193",
-    status: "delivered",
-    title: "بيتزا بيبروني",
-    date: "24 أكتوبر 2026 • 7:30 م",
-    description: "1 بيتزا كبيرة + 2 كولا",
-    total: 285,
-    image: "/images/pizza.webp",
-  },
-  {
     id: "10136",
     status: "delivered",
     title: "وجبة فرايد تشيكن",
@@ -417,15 +416,6 @@ export const notifications: AppNotification[] = [
   },
   {
     id: "n4",
-    title: "التوصيل علينا",
-    body: "استمتع بتوصيل مجاني على طلبك الجاي من 200 جنيه.",
-    time: "أمس، 12:00 ظهراً",
-    group: "yesterday",
-    unread: false,
-    icon: "free",
-  },
-  {
-    id: "n5",
     title: "التوصيل علينا",
     body: "استمتع بتوصيل مجاني على طلبك الجاي من 200 جنيه.",
     time: "أمس، 12:00 ظهراً",
@@ -503,6 +493,10 @@ export type PaymentMethodId = (typeof paymentMethods)[number]["id"];
 
 export function formatPrice(value: number) {
   return value.toLocaleString("en-US");
+}
+
+export function toArabicDigits(value: string | number) {
+  return String(value).replace(/[0-9]/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[Number(digit)]);
 }
 
 export const deliveryFee = 30;

@@ -6,16 +6,13 @@ import { useState } from "react";
 import { ChevronLeft, ReceiptText, RotateCcw, Truck } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { MobilePageHeader } from "@/components/ui";
-import { formatPrice, orders, productsById, user, type Order } from "@/lib/data";
+import { formatPrice, orders, productsById, toArabicDigits, user, type Order } from "@/lib/data";
 
 const reorderMap: Record<string, string[]> = {
   "كومبو برجر لحم": ["family-box"],
   "بيتزا بيبروني": ["pizza-pepperoni", "cola"],
   "وجبة فرايد تشيكن": ["chicken-bucket", "fries"],
 };
-
-const toArabicDigits = (value: string) =>
-  value.replace(/[0-9]/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[Number(digit)]);
 
 export function OrdersView() {
   const { addItem, toast, t, lang } = useApp();
