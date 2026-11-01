@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { RefreshCw, WifiOff } from "lucide-react";
 import { useApp } from "@/components/providers";
+import { Button } from "@/components/ui";
 import { LogoMark, BrandWordmark } from "@/components/logo";
 
 export function OfflineView() {
@@ -23,14 +24,10 @@ export function OfflineView() {
           {t("اتأكد من اتصالك بالنت وحاول تاني. السلة والمفضلة محفوظين عندك وهتلاقيهم أول ما ترجع.")}
         </p>
 
-        <button
-          type="button"
-          onClick={() => window.location.reload()}
-          className="btn-brand mt-6 h-12 w-full text-sm"
-        >
+        <Button block className="mt-6" onClick={() => window.location.reload()}>
           <RefreshCw className="size-4" />
           {t("حاول تاني")}
-        </button>
+        </Button>
         <Link
           href="/"
           className="mt-3 block text-xs font-bold text-muted transition hover:text-brand"

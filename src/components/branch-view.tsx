@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Clock3, MapPin, Store } from "lucide-react";
 import { branches } from "@/lib/data";
 import { CartSummary } from "@/components/cart-summary";
-import { CheckoutShell } from "@/components/ui";
+import { CheckoutShell, buttonStyles } from "@/components/ui";
 import { useApp } from "@/components/providers";
 
 export function BranchView() {
@@ -85,7 +85,7 @@ export function BranchView() {
               <p className="text-[10px] text-muted">{t("الفرع المختار")}</p>
               <p className="mt-1 text-sm font-extrabold text-brand">{t(branch.name)}</p>
             </div>
-            <Link href="/checkout/payment" className="btn-brand h-11 px-5 text-xs">
+            <Link href="/checkout/payment" className={buttonStyles({ size: "sm" })}>
               {t("تأكيد الفرع")}
               <ArrowLeft className="size-3.5 ltr:rotate-180" />
             </Link>

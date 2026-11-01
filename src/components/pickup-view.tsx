@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bike, MapPin, PackageCheck } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { CheckoutShell } from "@/components/ui";
+import { CheckoutShell, Button } from "@/components/ui";
 import { branches, deliveryFee, formatPrice, user } from "@/lib/data";
 
 export function PickupView() {
@@ -163,9 +163,9 @@ export function PickupView() {
       }
       aside={
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-cream/95 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-pop backdrop-blur lg:static lg:rounded-2xl lg:border-0 lg:bg-white lg:p-4 lg:shadow-soft">
-          <button type="button" onClick={confirmFulfilment} className="btn-brand h-14 w-full text-sm sm:text-base">
+          <Button size="lg" block onClick={confirmFulfilment}>
             {t("تأكيد طريقة الاستلام")}
-          </button>
+          </Button>
           <p className="mt-2 hidden text-center text-[10px] leading-5 text-muted lg:block">
             {t("هتختار طريقة الدفع في الخطوة الجاية.")}
           </p>

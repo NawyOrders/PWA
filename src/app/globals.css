@@ -13,6 +13,10 @@
   --color-ink: #201a16;
   --color-muted: #9b8d82;
   --color-line: #f1e5d9;
+  --color-line-strong: #8a7466;
+  --color-cocoa: #2b1a12;
+  --color-violet: #c07bff;
+  --color-violet-deep: #1a1016;
   --color-success: #38a475;
   --color-success-soft: #ddf3e7;
   --color-gold: #f6a723;
@@ -21,6 +25,7 @@
   --font-display: var(--font-baloo), var(--font-cairo), ui-sans-serif, sans-serif;
 
   --radius-card: 1.5rem;
+  --radius-field: 0.9rem;
   --shadow-soft: 0 18px 44px -30px rgba(88, 46, 24, 0.4);
   --shadow-pop: 0 28px 70px -32px rgba(88, 46, 24, 0.5);
 }
@@ -40,6 +45,12 @@
 
   ::selection {
     background: rgba(232, 69, 44, 0.18);
+  }
+
+  :where(a, button, [role="button"], [role="tab"]):focus-visible {
+    outline: 2px solid rgba(232, 69, 44, 0.72);
+    outline-offset: 2px;
+    border-radius: 0.5rem;
   }
 
   input,
@@ -109,13 +120,20 @@
     transform: scale(0.985);
   }
 
+  .btn-brand:disabled {
+    pointer-events: none;
+    background-color: var(--color-cream-100);
+    color: var(--color-muted);
+    box-shadow: none;
+  }
+
   .btn-gradient {
     background-image: linear-gradient(270deg, #f0683f 0%, #e8452c 100%);
   }
 
   .field {
     width: 100%;
-    border-radius: 0.9rem;
+    border-radius: var(--radius-field);
     border: 1px solid var(--color-line);
     background-color: var(--color-cream-50);
     padding: 0.9rem 1.1rem;

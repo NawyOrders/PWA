@@ -1,10 +1,92 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight, Flame, Heart, Minus, Plus, ShoppingBag } from "lucide-react";
 import { formatPrice } from "@/lib/data";
 import { useApp } from "@/components/providers";
+
+type ButtonVariant = "brand" | "soft" | "outline" | "ghost" | "dark";
+type ButtonSize = "xs" | "sm" | "md" | "lg";
+
+const buttonVariants: Record<ButtonVariant, string> = {
+  brand:
+    "bg-brand text-white shadow-[0_14px_26px_-16px_rgba(232,69,44,0.9)] hover:bg-brand-dark",
+  soft: "bg-brand-soft text-brand hover:bg-brand/15",
+  outline: "border border-line bg-white text-ink shadow-soft hover:border-brand/40",
+  ghost: "text-ink hover:bg-cream-100",
+  dark: "bg-ink text-white hover:bg-ink/90",
+};
+
+const buttonSizes: Record<ButtonSize, string> = {
+  xs: "h-9 px-3 text-[11px]",
+  sm: "h-11 px-4 text-xs",
+  md: "h-12 px-5 text-sm",
+  lg: "h-14 px-7 text-base",
+};
+
+/**
+ * Shared call-to-action styling. Exported so links can look like buttons
+ * without nesting an anchor inside a button.
+ */
+export function buttonStyles({
+  variant = "brand",
+  size = "md",
+  block = false,
+  className = "",
+}: {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  block?: boolean;
+  className?: string;
+} = {}): string {
+  return [
+    "inline-flex items-center justify-center gap-2 rounded-full font-extrabold transition active:scale-[0.985]",
+    "disabled:pointer-events-none disabled:bg-cream-100 disabled:text-muted disabled:shadow-none",
+    buttonVariants[variant],
+    buttonSizes[size],
+    block ? "w-full" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+export function Button({
+  variant = "brand",
+  size = "md",
+  block = false,
+  className = "",
+  type = "button",
+  ...props
+}: ComponentPropsWithoutRef<"button"> & {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  block?: boolean;
+}) {
+  return <button type={type} className={buttonStyles({ variant, size, block, className })} {...props} />;
+}
+
+/** Selected/unselected pill used for tabs, filters and option pickers. */
+export function chipStyles(selected: boolean, className = ""): string {
+  return [
+    "inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-extrabold transition",
+    selected
+      ? "border border-brand bg-brand text-white shadow-[0_16px_30px_-18px_rgba(232,69,44,0.9)]"
+      : "border border-line bg-white text-ink shadow-soft hover:border-brand/40 hover:bg-cream-50",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+export function Chip({
+  selected = false,
+  className = "",
+  ...props
+}: ComponentPropsWithoutRef<"button"> & { selected?: boolean }) {
+  return <button type="button" aria-pressed={selected} className={chipStyles(selected, className)} {...props} />;
+}
 
 export function Price({
   value,
@@ -394,7 +476,7 @@ export function EmptyState({
       </span>
       <h2 className="mt-5 text-xl font-extrabold">{t(title)}</h2>
       <p className="mt-2 max-w-sm text-sm leading-6 text-muted">{t(description)}</p>
-      <Link href={ctaHref} className="btn-brand mt-6 h-11 px-7 text-sm">
+      <Link href={ctaHref} className={buttonStyles({ size: "sm", className: "mt-6" })}>
         {t(ctaLabel)}
       </Link>
     </div>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { ArrowRight, ChevronDown, Send, Star, UploadCloud } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs } from "@/components/ui";
+import { Breadcrumbs, Button } from "@/components/ui";
 import { feedbackRatings, feedbackTypes } from "@/lib/account-data";
 
 export function FeedbackView() {
@@ -169,10 +169,10 @@ export function FeedbackView() {
                 </div>
               </div>
 
-              <button type="submit" className="btn-brand mt-6 flex h-16 w-full rounded-[24px] text-base lg:mt-8">
+              <Button type="submit" size="lg" block className="mt-6 lg:mt-8">
                 {t("ارسال")}
                 <Send className="size-5 shrink-0 rtl:rotate-180" strokeWidth={2.1} />
-              </button>
+              </Button>
             </form>
           </div>
         </div>

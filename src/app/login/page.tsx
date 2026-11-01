@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { LoginView } from "@/components/login-view";
+import { sanitizeNextPath } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "تسجيل الدخول",
@@ -8,12 +9,7 @@ export const metadata: Metadata = {
 
 async function LoginContent({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const params = await searchParams;
-  const requested = params.next;
-  const safeNext =
-    requested && requested.startsWith("/") && !requested.startsWith("//") && !requested.startsWith("/\\")
-      ? requested
-      : "/profile";
-  return <LoginView next={safeNext} />;
+  return <LoginView next={sanitizeNextPath(params.next)} />;
 }
 
 export default function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {

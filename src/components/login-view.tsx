@@ -5,46 +5,67 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, ChevronLeft, Phone, Send, ShieldCheck } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs } from "@/components/ui";
+import { Breadcrumbs, buttonStyles } from "@/components/ui";
 import { LogoMark } from "@/components/logo";
+
+const OTP_LENGTH = 6;
+const RESEND_SECONDS = 45;
+/**
+ * Demo builds have no SMS gateway yet. The code is shown to the customer so
+ * the journey stays testable end to end; swap this for the server challenge
+ * when the OTP API is wired up.
+ */
+const DEMO_CODE = "123456";
 
 export function LoginView({ next = "/profile" }: { next?: string }) {
   const router = useRouter();
-  const { login, toast, t } = useApp();
+  const { login, toast, t, loggedIn, ready } = useApp();
   const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
-  const [seconds, setSeconds] = useState(45);
+  const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
+  const [seconds, setSeconds] = useState(0);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
+  // Navigation happens only after auth has committed, so the route guard
+  // cannot bounce a freshly signed-in customer back to /login.
   useEffect(() => {
-    const timer = setInterval(() => setSeconds((value) => (value > 0 ? value - 1 : 0)), 1000);
-    return () => clearInterval(timer);
-  }, []);
+    if (ready && loggedIn) router.replace(next);
+  }, [loggedIn, next, ready, router]);
+
+  useEffect(() => {
+    if (!sent || seconds <= 0) return;
+    const timer = setTimeout(() => setSeconds((value) => Math.max(0, value - 1)), 1000);
+    return () => clearTimeout(timer);
+  }, [seconds, sent]);
 
   const code = otp.join("");
-  const canSubmit = code.length === 6;
+  const canSubmit = sent && code.length === OTP_LENGTH;
   const timer = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 
   const sendCode = () => {
     if (phone.replace(/\D/g, "").length < 10) {
+      setError(t("اكتب رقم موبايل صحيح الأول"));
       toast(t("اكتب رقم موبايل صحيح الأول"), "info");
       return;
     }
     setSent(true);
-    setSeconds(45);
-    toast(t("تم إرسال كود التحقق على موبايلك"), "info");
+    setSeconds(RESEND_SECONDS);
+    setOtp(Array(OTP_LENGTH).fill(""));
+    setError("");
+    toast(t("تم إرسال كود التحقق على موبايلك — كود التجربة {code}", { code: DEMO_CODE }), "info");
     setTimeout(() => inputs.current[0]?.focus(), 120);
   };
 
   const setDigit = (index: number, value: string) => {
     const digit = value.replace(/\D/g, "").slice(-1);
+    setError("");
     setOtp((current) => {
       const next = [...current];
       next[index] = digit;
       return next;
     });
-    if (digit && index < 5) inputs.current[index + 1]?.focus();
+    if (digit && index < OTP_LENGTH - 1) inputs.current[index + 1]?.focus();
   };
 
   const onKeyDown = (index: number, event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -54,27 +75,42 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
   };
 
   const onPaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
-    const text = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    const text = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, OTP_LENGTH);
     if (!text) return;
     event.preventDefault();
-    const next = Array(6)
+    setError("");
+    const next = Array(OTP_LENGTH)
       .fill("")
       .map((_, index) => text[index] ?? "");
     setOtp(next);
-    inputs.current[Math.min(text.length, 5)]?.focus();
+    inputs.current[Math.min(text.length, OTP_LENGTH - 1)]?.focus();
   };
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!canSubmit) return;
+    if (!sent) {
+      setError(t("اطلب كود التحقق الأول"));
+      return;
+    }
+    if (!canSubmit) {
+      setError(t("اكتب كود التحقق كامل"));
+      return;
+    }
+    if (code !== DEMO_CODE) {
+      setError(t("الكود غير صحيح، جرب تاني"));
+      toast(t("الكود غير صحيح، جرب تاني"), "info");
+      setOtp(Array(OTP_LENGTH).fill(""));
+      inputs.current[0]?.focus();
+      return;
+    }
+    setError("");
     login();
-    router.push(next);
   };
 
   const card = (
-    <div className="flex min-h-[calc(100dvh-186px)] flex-col rounded-[24px] bg-white px-4 pb-8 pt-9 shadow-soft lg:min-h-0 lg:rounded-[30px] lg:p-8">
+    <div className="flex min-h-[calc(100dvh-186px)] flex-col rounded-card bg-white px-4 pb-8 pt-9 shadow-soft lg:min-h-0 lg:rounded-[30px] lg:p-8">
       <div className="flex justify-end" dir="ltr">
-        <span className="grid size-14 place-items-center rounded-[18px] bg-[#fff3ec] text-brand lg:size-14">
+        <span className="grid size-14 place-items-center rounded-[18px] bg-brand-soft text-brand lg:size-14">
           <Phone className="size-5 lg:size-6" />
         </span>
       </div>
@@ -84,7 +120,7 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
         {t("ادخل رقم موبايلك، وهنبعتلك كود تحقق برسالة SMS عشان تسجل دخولك وتكمل طلبك.")}
       </p>
 
-      <form onSubmit={submit}>
+      <form onSubmit={submit} noValidate>
         <div className="mt-5">
           <label htmlFor="phone" className="text-xs font-extrabold">
             {t("رقم الموبايل")}
@@ -94,6 +130,7 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
               id="phone"
               type="tel"
               inputMode="tel"
+              autoComplete="tel"
               dir="ltr"
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
@@ -109,7 +146,7 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
             <button
               type="button"
               onClick={sendCode}
-              className="ms-1.5 flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-brand px-3 text-[11px] font-bold text-white transition hover:bg-brand-dark"
+              className={buttonStyles({ variant: "brand", size: "xs", className: "ms-1.5" })}
             >
               <Send className="size-3.5" />
               {t("إرسال")}
@@ -131,11 +168,12 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
                   onChange={(event) => setDigit(index, event.target.value)}
                   onKeyDown={(event) => onKeyDown(index, event)}
                   onPaste={onPaste}
+                  disabled={!sent}
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   maxLength={1}
                   aria-label={t("خانة الكود {n}", { n: index + 1 })}
-                  className={`h-[42px] w-[42px] rounded-xl border-2 text-center text-lg font-extrabold outline-none transition lg:h-14 lg:w-12 lg:text-xl ${
+                  className={`h-[42px] w-[42px] rounded-xl border-2 text-center text-lg font-extrabold outline-none transition disabled:cursor-not-allowed disabled:bg-cream-100 disabled:text-muted lg:h-14 lg:w-12 lg:text-xl ${
                     digit
                       ? "border-brand/60 bg-brand-soft/25 text-brand"
                       : index === 0
@@ -147,14 +185,28 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
               </div>
             ))}
           </div>
-          <p className="mt-2 text-end text-[10px] text-muted">{t("اكتب الكود اللي وصل في الرسالة")}</p>
+          <p className="mt-2 text-end text-[10px] text-muted">
+            {sent
+              ? t("استخدم كود التجربة {code} لإكمال تسجيل الدخول.", { code: DEMO_CODE })
+              : t("اكتب الكود اللي وصل في الرسالة")}
+          </p>
+          {error ? (
+            <p role="alert" className="mt-1.5 text-end text-[11px] font-semibold text-brand">
+              {error}
+            </p>
+          ) : null}
         </div>
 
         <div className="mt-4 flex items-center justify-between gap-3 text-[11px] text-muted">
           <span>{t("موصلش الكود؟")}</span>
-          {seconds > 0 ? (
+          {!sent ? (
+            <span className="font-bold text-ink">{t("اطلب الكود من زر إرسال")}</span>
+          ) : seconds > 0 ? (
             <span>
-              {t("إعادة الإرسال بعد")} <span className="font-bold text-ink" dir="ltr">{timer}</span>
+              {t("إعادة الإرسال بعد")}{" "}
+              <span className="font-bold text-ink" dir="ltr">
+                {timer}
+              </span>
             </span>
           ) : (
             <button type="button" onClick={sendCode} className="font-bold text-brand hover:text-brand-dark">
@@ -166,11 +218,12 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
         <button
           type="submit"
           disabled={!canSubmit}
-          className={`mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-sm font-extrabold transition lg:rounded-full ${
-            canSubmit
-              ? "bg-brand text-white shadow-[0_18px_32px_-20px_rgba(232,69,44,0.95)] hover:bg-brand-dark"
-              : "cursor-not-allowed bg-[#d3d6db] text-[#666b70]"
-          }`}
+          className={buttonStyles({
+            variant: "brand",
+            size: "lg",
+            block: true,
+            className: "mt-5",
+          })}
         >
           {canSubmit ? <Check className="size-4" /> : null}
           {t("تأكيد الكود والمتابعة")}
@@ -178,7 +231,7 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
         </button>
       </form>
 
-      <div className="mt-auto flex items-center gap-3 rounded-2xl bg-[#fff3ec] px-4 py-4 lg:mt-7">
+      <div className="mt-auto flex items-center gap-3 rounded-2xl bg-brand-soft px-4 py-4 lg:mt-7">
         <div className="flex-1">
           <p className="text-[11px] font-extrabold">{t("طلبك محفوظ، ولسه فاضل تأكيده")}</p>
           <p className="mt-1 text-[10px] leading-5 text-muted">
@@ -207,9 +260,7 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
       <div className="hidden lg:block lg:pt-8">
         <div className="shell">
           <div className="flex items-center justify-between">
-            <Breadcrumbs
-              items={[{ label: "الرئيسية", href: "/" }, { label: "تسجيل الدخول" }]}
-            />
+            <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "تسجيل الدخول" }]} />
             <Link
               href="/"
               className="flex items-center gap-1.5 text-sm font-bold text-brand transition hover:text-brand-dark"

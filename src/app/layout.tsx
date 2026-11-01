@@ -4,6 +4,7 @@ import "./globals.css";
 import { AppProvider } from "@/components/providers";
 import { SiteChrome } from "@/components/site-chrome";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
+import { storageKeys } from "@/lib/storage";
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -58,12 +59,17 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" suppressHydrationWarning className={`${cairo.variable} ${baloo.variable}`}>
+    <html
+      lang="ar"
+      dir="rtl"
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+      className={`${cairo.variable} ${baloo.variable}`}
+    >
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html:
-              '(function(){try{if(localStorage.getItem("nawy-lang-v1")===\'"en"\'||localStorage.getItem("nawy-lang-v1")==="en"){document.documentElement.lang="en";document.documentElement.dir="ltr";}}catch(e){}})();',
+            __html: `(function(){try{var v=localStorage.getItem(${JSON.stringify(storageKeys.lang)});if(v==='"en"'||v==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}})();`,
           }}
         />
       </head>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, Home, LayoutGrid } from "lucide-react";
 import { useApp } from "@/components/providers";
+import { buttonStyles } from "@/components/ui";
 import { LogoMark } from "@/components/logo";
 
 export default function NotFound() {
@@ -18,13 +19,13 @@ export default function NotFound() {
         <p className="mx-auto mt-2 max-w-xs text-sm leading-7 text-muted">
           {t("يمكن الرابط اتغير أو الصفحة اتمسحت. يلا نرجعك لحاجة لذيذة بدلها.")}
         </p>
-        <Link href="/" className="btn-brand mt-6 h-12 w-full text-sm">
+        <Link href="/" className={buttonStyles({ size: "md", block: true, className: "mt-6" })}>
           <Home className="size-4" />
           {t("الرئيسية")}
         </Link>
         <Link
           href="/categories"
-          className="mt-2.5 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-soft text-sm font-bold text-brand transition hover:bg-brand/15"
+          className={buttonStyles({ variant: "soft", size: "md", block: true, className: "mt-2.5" })}
         >
           <LayoutGrid className="size-4" />
           {t("تصفح الأقسام")}

@@ -7,7 +7,7 @@ import { Check, ChevronLeft, Info, Minus, Plus, ShoppingCart } from "lucide-reac
 import { categoriesById, formatPrice, type Product } from "@/lib/data";
 import { useApp } from "@/components/providers";
 import { StoreHeader } from "@/components/store-header";
-import { FavoriteButton, HotBadge, MobilePageHeader, Price } from "@/components/ui";
+import { Button, FavoriteButton, HotBadge, MobilePageHeader, Price } from "@/components/ui";
 
 const sizes = [
   { id: "sandwich", label: "ساندوتش فقط", extra: 0, hint: "ساندوتش برجر طازة" },
@@ -271,14 +271,12 @@ export function ProductDetail({ product }: { product: Product }) {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={addToCart}
-                className="btn-brand mt-4 hidden h-12 w-full text-sm lg:flex"
-              >
-                <ShoppingCart className="size-4" />
-                {t("أضف إلى السلة")}
-              </button>
+              <div className="mt-4 hidden lg:block">
+                <Button block onClick={addToCart}>
+                  <ShoppingCart className="size-4" />
+                  {t("أضف إلى السلة")}
+                </Button>
+              </div>
             </div>
 
             <div className="card flex items-start gap-3 p-4 text-xs leading-6 text-muted lg:hidden">

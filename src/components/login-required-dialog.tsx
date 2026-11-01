@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { Clock3, Pencil, UserRound, X } from "lucide-react";
 import { useApp } from "@/components/providers";
+import { loginHref } from "@/lib/routes";
 
 export function LoginRequiredDialog({ onClose }: { onClose: () => void }) {
-  const { t } = useApp();
+  const { t, loginPromptNext } = useApp();
+  const next = loginPromptNext ?? "/cart";
 
   return (
     <div
@@ -44,7 +46,7 @@ export function LoginRequiredDialog({ onClose }: { onClose: () => void }) {
         </p>
 
         <Link
-          href="/login?next=%2Fcart"
+          href={loginHref(next)}
           onClick={onClose}
           className="mt-6 flex h-12 w-full items-center justify-center rounded-full bg-brand text-sm font-extrabold text-white shadow-[0_16px_32px_-18px_rgba(232,69,44,0.9)] transition hover:bg-brand-dark"
         >

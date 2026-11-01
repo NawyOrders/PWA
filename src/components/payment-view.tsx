@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { CartSummary } from "@/components/cart-summary";
-import { CheckoutShell } from "@/components/ui";
+import { CheckoutShell, Button } from "@/components/ui";
 
 type MethodId = "cash" | "instapay" | "wallet";
 type Receipt = { name: string; size: number; url: string };
@@ -337,10 +337,10 @@ export function PaymentView() {
               {t("سيتم مراجعة الإثبات من قبل المطعم خلال دقائق قليلة، وتم إشعارك عند تأكيد الطلب.")}
             </p>
 
-            <button type="button" onClick={finalize} className="btn-brand mt-5 h-12 w-full text-sm">
+            <Button block className="mt-5" onClick={finalize}>
               <Check className="size-4" />
               {t("تأكيد")}
-            </button>
+            </Button>
           </div>
         </div>
       ) : null}

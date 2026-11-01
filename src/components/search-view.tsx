@@ -7,7 +7,7 @@ import { Check, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { categoriesById, homeCategoryOrder, products, type Product } from "@/lib/data";
 import { SearchField } from "@/components/search-field";
 import { StoreHeader } from "@/components/store-header";
-import { Breadcrumbs, MobilePageHeader } from "@/components/ui";
+import { Breadcrumbs, MobilePageHeader, buttonStyles } from "@/components/ui";
 import { ProductCard } from "@/components/product-card";
 import { MenuRow } from "@/components/menu-row";
 import { useApp } from "@/components/providers";
@@ -283,7 +283,7 @@ export function SearchView({ query }: { query: string }) {
               <div className="card px-6 py-14 text-center">
                 <p className="text-lg font-extrabold">{t("مفيش نتائج للبحث ده")}</p>
                 <p className="mt-2 text-sm text-muted">{t("جرّب كلمة تانية أو تصفح الأقسام.")}</p>
-                <Link href="/categories" className="btn-brand mt-5 h-11 px-6 text-sm">
+                <Link href="/categories" className={buttonStyles({ size: "sm", className: "mt-5" })}>
                   {t("تصفح الأقسام")}
                 </Link>
               </div>
