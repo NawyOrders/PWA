@@ -180,6 +180,213 @@
   }
 }
 
+@layer leaflet {
+  .leaflet-host {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    background-color: #f3eadf;
+    outline: none;
+  }
+
+  .leaflet-host.is-dark {
+    background-color: #14120f;
+  }
+
+  /* OSM has no free dark basemap, so the light tiles are inverted for the dark picker. */
+  .leaflet-host.is-dark .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.96) saturate(0.55);
+  }
+
+  .leaflet-host .leaflet-container {
+    height: 100%;
+    width: 100%;
+    background: transparent;
+    font-family: inherit;
+  }
+
+  .leaflet-host .leaflet-control-attribution {
+    margin: 0 0 2px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.72);
+    color: #6f6259;
+    font-size: 9px;
+    line-height: 1.5;
+    backdrop-filter: blur(4px);
+  }
+
+  .leaflet-host.is-dark .leaflet-control-attribution {
+    background: rgba(20, 18, 15, 0.55);
+    color: #b9ada4;
+  }
+
+  .leaflet-host .leaflet-control-attribution a {
+    color: inherit;
+  }
+
+  .leaflet-host .leaflet-marker-icon {
+    background: transparent;
+    border: 0;
+  }
+
+  .nawy-map-icon {
+    display: grid;
+    pointer-events: auto;
+  }
+
+  .nawy-map-pin,
+  .nawy-map-drop {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 3px solid #fff;
+    border-radius: 50% 50% 50% 4px;
+    background: #e8452c;
+    box-shadow: 0 12px 22px -12px rgba(232, 69, 44, 0.95);
+    transform: rotate(-45deg);
+  }
+
+  .nawy-map-pin > svg,
+  .nawy-map-drop > svg {
+    transform: rotate(45deg);
+  }
+
+  .nawy-map-drop {
+    background: #fdf8f2;
+    border-color: #fff;
+    box-shadow: 0 10px 20px -12px rgba(60, 40, 25, 0.6);
+  }
+
+  .nawy-map-drop.is-active {
+    background: #e8452c;
+    box-shadow: 0 12px 22px -12px rgba(232, 69, 44, 0.95);
+  }
+
+  .nawy-map-pin::after,
+  .nawy-map-drop::after {
+    content: "";
+    position: absolute;
+    inset: -14px;
+    z-index: -1;
+    border-radius: 50%;
+    background: rgba(232, 69, 44, 0.16);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .nawy-map-pin.is-active::after,
+  .nawy-map-drop.is-active::after {
+    opacity: 1;
+  }
+
+  .nawy-map-badge {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    background: #fdf8f2;
+    box-shadow: 0 12px 24px -14px rgba(60, 40, 25, 0.75);
+  }
+
+  .nawy-map-badge.is-active {
+    background: #e8452c;
+  }
+
+  .nawy-map-courier {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    background: #f0683f;
+    box-shadow: 0 14px 26px -14px rgba(232, 69, 44, 0.95);
+  }
+
+  .nawy-map-dot {
+    display: block;
+    border: 3px solid #fff;
+    border-radius: 9999px;
+    background: #b7a69a;
+    box-shadow: 0 8px 16px -10px rgba(60, 40, 25, 0.8);
+  }
+
+  .nawy-map-dot.is-active {
+    background: #e8452c;
+  }
+
+  .nawy-map-label {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    z-index: 5;
+    width: max-content;
+    max-width: 190px;
+    padding: 5px 11px;
+    border-radius: 11px;
+    background: #e8452c;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.5;
+    white-space: nowrap;
+    text-align: center;
+    box-shadow: 0 12px 24px -14px rgba(232, 69, 44, 0.9);
+    transform: translateX(-50%) rotate(45deg);
+    transform-origin: bottom center;
+  }
+
+  .nawy-map-icon--courier .nawy-map-label,
+  .nawy-map-icon--store .nawy-map-label {
+    transform: translateX(-50%);
+  }
+
+  .nawy-map-label.is-muted {
+    background: #fdf8f2;
+    color: #201a16;
+    box-shadow: 0 12px 24px -16px rgba(60, 40, 25, 0.7);
+  }
+
+  .nawy-map-label::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    background: inherit;
+    transform: translateX(-50%) rotate(45deg);
+  }
+
+  .nawy-center-pin {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 500;
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border: 3px solid #fff;
+    border-radius: 50% 50% 50% 6px;
+    background: #e8452c;
+    box-shadow: 0 16px 28px -14px rgba(232, 69, 44, 0.95);
+    transform: translate(-50%, -88%) rotate(-45deg);
+    pointer-events: none;
+  }
+
+  .nawy-center-pin > svg {
+    transform: rotate(45deg);
+  }
+}
+
 @keyframes float-in {
   from {
     opacity: 0;

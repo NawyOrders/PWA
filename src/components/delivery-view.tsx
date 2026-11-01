@@ -9,7 +9,8 @@ import { CartSummary } from "@/components/cart-summary";
 import { CheckoutShell } from "@/components/ui";
 
 export function DeliveryView() {
-  const { count, t } = useApp();
+  const { count, t, addresses, selectedAddressId } = useApp();
+  const selected = addresses.find((address) => address.id === selectedAddressId) ?? null;
   const [building, setBuilding] = useState("12");
   const [floor, setFloor] = useState("الثاني");
   const [apartment, setApartment] = useState("8");
@@ -33,18 +34,26 @@ export function DeliveryView() {
       main={
         <>
           <div className="card p-4 lg:p-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="flex items-center gap-2 text-base font-extrabold lg:text-lg">
                 <MapPin className="size-5 text-brand" />
                 {t("عنوان التوصيل")}
               </h2>
-              <Link
-                href="/addresses/new"
-                className="flex items-center gap-1 text-[11px] font-bold text-brand transition hover:text-brand-dark"
-              >
-                <Pencil className="size-3.5" />
-                {t("تغيير العنوان")}
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/addresses"
+                  className="text-[11px] font-bold text-ink/70 underline-offset-4 transition hover:text-brand hover:underline"
+                >
+                  {t("العناوين المحفوظة")}
+                </Link>
+                <Link
+                  href="/addresses/new"
+                  className="flex items-center gap-1 text-[11px] font-bold text-brand transition hover:text-brand-dark"
+                >
+                  <Pencil className="size-3.5" />
+                  {t("تغيير العنوان")}
+                </Link>
+              </div>
             </div>
 
             <div className="mt-4 flex items-start gap-3 rounded-2xl border border-brand/30 bg-brand-soft/35 p-4">
@@ -53,11 +62,17 @@ export function DeliveryView() {
               </span>
               <div className="flex-1 text-start">
                 <p className="flex flex-wrap items-center gap-2 text-xs">
-                  <span className="rounded-full bg-white px-2.5 py-0.5 font-bold text-ink">{t("المنزل")}</span>
+                  <span className="rounded-full bg-white px-2.5 py-0.5 font-bold text-ink">
+                    {selected ? t(selected.title) : t("المنزل")}
+                  </span>
                   <span className="text-[10px] text-muted">{t("العنوان المحدد")}</span>
                 </p>
-                <p className="mt-2 text-sm font-extrabold lg:text-base">{t(user.address)}</p>
-                <p className="mt-1 text-[11px] leading-5 text-muted">{t(user.fullAddress)}</p>
+                <p className="mt-2 text-sm font-extrabold lg:text-base">
+                  {selected ? t(selected.area) : t(user.address)}
+                </p>
+                <p className="mt-1 text-[11px] leading-5 text-muted">
+                  {selected ? t(selected.detail) : t(user.fullAddress)}
+                </p>
               </div>
             </div>
 
@@ -128,11 +143,20 @@ export function DeliveryView() {
           </div>
 
           <div className="card p-4 lg:p-6">
-            <h2 className="flex items-center gap-2 text-base font-extrabold lg:text-lg">
-              <NotebookPen className="size-5 text-brand" />
-              {t("تعليمات التوصيل")}
-              <span className="rounded-full bg-cream-100 px-2 py-0.5 text-[9px] font-semibold text-muted">{t("اختياري")}</span>
-            </h2>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="flex items-center gap-2 text-base font-extrabold lg:text-lg">
+                <NotebookPen className="size-5 text-brand" />
+                {t("تعليمات التوصيل")}
+                <span className="rounded-full bg-cream-100 px-2 py-0.5 text-[9px] font-semibold text-muted">{t("اختياري")}</span>
+              </h2>
+              <Link
+                href="/checkout/pickup"
+                className="flex items-center gap-1 text-[11px] font-bold text-brand transition hover:text-brand-dark"
+              >
+                <Bike className="size-3.5" />
+                {t("تغيير طريقة الاستلام")}
+              </Link>
+            </div>
             <textarea
               value={
                 instructions === "من فضلك اتصل بي قبل الوصول، الجرس مش شغال."

@@ -1,416 +1,527 @@
 "use client";
 
-import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type ComponentType } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  ArrowLeft,
   ArrowRight,
   Briefcase,
-  CalendarDays,
-  ChevronDown,
+  ChevronLeft,
+  Crosshair,
   Home,
-  LocateFixed,
   MapPin,
-  MessageSquare,
+  MapPinOff,
+  Navigation,
+  Pencil,
+  Plus,
   Search,
-  Tag,
-  User,
-  type LucideProps,
+  Store,
+  X,
 } from "lucide-react";
+import { LeafletMap, type MapMarker } from "@/components/leaflet-map";
 import { useApp } from "@/components/providers";
-import { MobilePageHeader } from "@/components/ui";
-import { productsById } from "@/lib/data";
+import { Breadcrumbs } from "@/components/ui";
+import { addressKinds, savedAddresses, type AddressKind, type SavedAddress } from "@/lib/account-data";
+import { areaName, distanceKm, formatCoords, type LatLng } from "@/lib/geo";
 
-type AddressType = "home" | "work" | "other";
+const ALEXANDRIA: [number, number] = [31.1861, 29.9336];
 
-const addressTypes: { id: AddressType; label: string; icon: ComponentType<LucideProps> }[] = [
-  { id: "home", label: "المنزل", icon: Home },
-  { id: "work", label: "العمل", icon: Briefcase },
-  { id: "other", label: "أخرى", icon: MapPin },
-];
-
-const savedAddresses = [
-  {
-    title: "المنزل",
-    address: "اسكندرية، سموحة، شارع محمد بهاء الدين الغوري",
-    note: "آخر استخدام: اليوم",
-    icon: Home,
-  },
-  {
-    title: "العمل",
-    address: "اسكندرية، سموحة، شارع الفريق محمد فوزي",
-    note: "",
-    icon: Briefcase,
-  },
-];
-
-const fieldClass =
-  "h-12 w-full rounded-xl bg-[#fbf4ec] text-sm font-semibold text-ink outline-none transition placeholder:font-normal placeholder:text-muted focus:bg-white focus:ring-2 focus:ring-brand/15";
+const kindIcon: Record<AddressKind, typeof Home> = {
+  home: Home,
+  work: Briefcase,
+  family: Store,
+  cafe: Store,
+  other: MapPin,
+};
 
 export function AddressNewView() {
   const router = useRouter();
-  const { toast, lines, count, t, lang } = useApp();
-  const [type, setType] = useState<AddressType>("home");
-  const [nickname, setNickname] = useState("");
-  const [governorate, setGovernorate] = useState("الإسكندرية");
-  const [area, setArea] = useState("");
-  const [city, setCity] = useState("سموحة");
-  const [building, setBuilding] = useState("120");
-  const [street, setStreet] = useState("شارع الشهيد احمد مصطفي");
-  const [landmark, setLandmark] = useState("");
-  const [instructions, setInstructions] = useState("");
+  const { addresses, selectedAddressId, selectAddress, addAddress, toast, t, lang } = useApp();
+
+  const [center, setCenter] = useState<[number, number]>(ALEXANDRIA);
+  const [pin, setPin] = useState<LatLng | null>(null);
+  const [mode, setMode] = useState<"list" | "form">("list");
   const [query, setQuery] = useState("");
   const [locating, setLocating] = useState(false);
+  const [kind, setKind] = useState<AddressKind>("home");
+  const [customLabel, setCustomLabel] = useState("");
+  const [detail, setDetail] = useState("");
+  const skipNextPick = useRef(false);
 
-  const cityLabel = city === "سموحة" ? t("سموحة") : city;
-  const streetLabel = street === "شارع الشهيد احمد مصطفي" ? t("شارع الشهيد احمد مصطفي") : street;
+  const selected = addresses.find((item) => item.id === selectedAddressId) ?? null;
+  const pinLabel = pin ? areaName(pin, lang) : "";
 
-  const useCurrentLocation = () => {
+  useEffect(() => {
+    if (!selected) return;
+    const locationChanged = selected.lat !== center[0] || selected.lng !== center[1];
+    if (locationChanged) {
+      skipNextPick.current = true;
+      setCenter([selected.lat, selected.lng]);
+    }
+    setPin((current) =>
+      current?.lat === selected.lat && current.lng === selected.lng
+        ? current
+        : { lat: selected.lat, lng: selected.lng },
+    );
+  }, [selected, center]);
+
+  useEffect(() => {
+    if (mode !== "form") return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMode("list");
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mode]);
+  const suggestions = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    if (!term) return [];
+    return savedAddresses.filter(
+      (item) =>
+        [item.title, item.area, item.detail].some(
+          (value) => value.toLowerCase().includes(term) || t(value).toLowerCase().includes(term),
+        ),
+    );
+  }, [query, lang, t]);
+
+  const markers = useMemo<MapMarker[]>(
+    () =>
+      addresses.map((item) => ({
+        id: item.id,
+        lat: item.lat,
+        lng: item.lng,
+        variant: "drop",
+        glyph: item.kind === "home" || item.kind === "family" ? "home" : item.kind === "work" ? "store" : "fork",
+        active: item.id === selectedAddressId,
+      })),
+    [addresses, selectedAddressId],
+  );
+
+  const handlePick = (point: LatLng) => {
+    if (skipNextPick.current) {
+      skipNextPick.current = false;
+      return;
+    }
+    setPin(point);
+    setCenter([point.lat, point.lng]);
+    if (selected && distanceKm(selected, point) > 0.03) selectAddress(null);
+  };
+
+  const pickAddress = (item: SavedAddress) => {
+    skipNextPick.current = true;
+    setPin({ lat: item.lat, lng: item.lng });
+    selectAddress(item.id);
+    setMode("list");
+    setCenter([item.lat, item.lng]);
+  };
+
+  const useMyLocation = () => {
     if (!navigator.geolocation) {
       toast(t("متصفحك مش بيدعم تحديد الموقع"), "info");
       return;
     }
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
-      () => {
+      (position) => {
         setLocating(false);
+        skipNextPick.current = true;
+        selectAddress(null);
+        setPin({ lat: position.coords.latitude, lng: position.coords.longitude });
+        setCenter([position.coords.latitude, position.coords.longitude]);
         toast(t("تم تحديد موقعك الحالي على الخريطة"), "info");
       },
       () => {
         setLocating(false);
-        toast(t("مقدرناش نحدد موقعك، اكتب العنوان يدوي"), "info");
+        toast(t("مقدرناش نحدد موقعك، حرك الخريطة بنفسك"), "info");
       },
       { timeout: 8000 },
     );
   };
 
-  const submit = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!street.trim() || !city.trim() || !area.trim()) {
-      toast(t("اكتب المحافظة والمنطقة والشارع الأول"), "info");
+  const runSearch = () => {
+    const term = query.trim().toLowerCase();
+    if (!term) return;
+    const match = suggestions[0];
+    if (match) {
+      pickAddress(match);
+      toast(t("تم تحديد الموقع على الخريطة"), "info");
       return;
     }
-    toast(t("تم حفظ العنوان بنجاح"), "info");
+    toast(t("مفيش نتيجة مطابقة، جرّب اسم منطقة تاني"), "info");
+  };
+
+  const openForm = () => {
+    setKind("home");
+    setCustomLabel("");
+    setDetail("");
+    setMode("form");
+    if (!pin) {
+      skipNextPick.current = false;
+      setPin({ lat: center[0], lng: center[1] });
+    }
+  };
+
+  const confirmPickedAddress = () => {
+    const customTitle = customLabel.trim();
+    if (kind === "other" && !customTitle) {
+      toast(t("اكتب اسم العنوان أولاً"), "info");
+      return;
+    }
+    const label = kind === "other" ? customTitle : t(addressKinds.find((item) => item.id === kind)!.label);
+    const point = pin ?? { lat: center[0], lng: center[1] };
+    addAddress({
+      id: `addr-${Date.now()}`,
+      title: label,
+      detail: detail.trim() || areaName(point, lang),
+      area: areaName(point, lang),
+      kind,
+      lat: point.lat,
+      lng: point.lng,
+    });
+    setMode("list");
     router.push("/checkout/delivery");
   };
 
+  const confirmSelected = () => {
+    if (!selected) {
+      openForm();
+      return;
+    }
+    toast(t("تم اختيار {name} لعنوان التوصيل", { name: t(selected.title) }), "info");
+    router.push("/checkout/delivery");
+  };
+
+  const listCta =
+    addresses.length === 0
+      ? pin
+        ? { label: "اضف عنوان جديد", onClick: openForm, icon: Plus }
+        : { label: "حدد موقعك", onClick: useMyLocation, icon: MapPin }
+      : selected
+        ? { label: "تأكيد العنوان", onClick: confirmSelected, icon: undefined }
+        : { label: "اضف عنوان جديد", onClick: openForm, icon: Plus };
+
+  const CtaIcon = listCta.icon;
+
   return (
-    <div className="pb-10">
-      <MobilePageHeader title="إضافة عنوان جديد" backHref="/checkout/delivery" />
-
-      <div className="shell">
-        <div className="flex items-center justify-between gap-4 lg:pt-8">
-          <button
-            type="button"
-            onClick={() => router.push("/checkout/delivery")}
-            className="hidden items-center gap-1.5 text-sm font-bold text-brand transition hover:text-brand-dark lg:flex"
+    <div className="lg:pb-10">
+      <div className="relative lg:shell lg:pt-8">
+        <div className="hidden items-center justify-between lg:flex">
+          <Breadcrumbs
+            items={[
+              { label: "الرئيسية", href: "/" },
+              { label: "السلة", href: "/cart" },
+              { label: "اختيار الموقع" },
+            ]}
+          />
+          <Link
+            href="/checkout/delivery"
+            className="flex items-center gap-1.5 text-sm font-bold text-brand transition hover:text-brand-dark"
           >
-            {t("العودة إلى إتمام الطلب")}
-            <ArrowRight className="size-4 ltr:rotate-180" />
-          </button>
+            {t("العودة لبيانات التوصيل")}
+            <ChevronLeft className="size-4 ltr:rotate-180" />
+          </Link>
         </div>
 
-        <div className="hidden text-start lg:mt-3 lg:block">
-          <h1 className="text-[34px] font-extrabold leading-[1.3]">{t("إضافة عنوان جديد")}</h1>
-          <p className="mt-2 text-sm text-muted">{t("أضف عنوان التوصيل وسنحفظه لطلباتك القادمة.")}</p>
+        <div className="hidden pt-4 text-start lg:block">
+          <h1 className="text-[32px] font-extrabold">{t("اختيار الموقع")}</h1>
+          <p className="mt-2 text-sm text-muted">{t("حرك الخريطة أو ابحث عن عنوانك، ثم أكّد موقع التوصيل.")}</p>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:mt-7 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
-          <form onSubmit={submit} className="card order-1 p-5 lg:p-6">
-            <div className="flex items-center gap-2.5">
-              <span className="grid size-10 place-items-center rounded-xl bg-brand-soft text-brand">
-                <MapPin className="size-5" strokeWidth={2} />
+        <div className="relative grid gap-0 lg:mt-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start lg:gap-5">
+          {/* Map */}
+          <div className="relative h-[100dvh] overflow-hidden lg:static lg:h-[560px] lg:overflow-hidden lg:rounded-[28px] lg:shadow-pop">
+            <LeafletMap
+              ariaLabel={t("خريطة اختيار موقع التوصيل")}
+              center={center}
+              zoom={13}
+              theme="light"
+              markers={markers}
+              className="absolute inset-0"
+              onPick={handlePick}
+              onMarkerClick={(id) => {
+                const item = addresses.find((address) => address.id === id);
+                if (item) pickAddress(item);
+              }}
+            />
+
+            {pin && mode === "list" ? (
+              <span className="nawy-center-pin" aria-hidden>
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 2v6a2 2 0 0 0 4 0V2M6 2v20M14 2c-1.7 0-3 2-3 5s1.3 4 3 4v11" />
+                </svg>
               </span>
-              <h2 className="text-lg font-extrabold">{t("تفاصيل العنوان")}</h2>
-            </div>
+            ) : null}
 
-            <div className="mt-5">
-              <span className="mb-2 block text-xs font-bold text-ink/75">{t("نوع العنوان")}</span>
-              <div className="grid grid-cols-3 gap-2.5">
-                {addressTypes.map((item) => {
-                  const Icon = item.icon;
-                  const active = type === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setType(item.id)}
-                      aria-pressed={active}
-                      className={`flex h-14 items-center justify-between gap-1 rounded-xl border px-3 transition ${
-                        active
-                          ? "border-brand bg-brand-soft/25 shadow-[0_0_0_3px_rgba(232,69,44,0.06)]"
-                          : "border-line bg-white hover:border-brand/30"
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <span
-                          className={`grid size-8 place-items-center rounded-lg ${
-                            active ? "bg-brand text-white" : "bg-[#fbf4ec] text-ink/60"
-                          }`}
-                        >
-                          <Icon className="size-4" strokeWidth={1.9} />
-                        </span>
-                        <span className={`text-sm font-bold ${active ? "text-brand" : "text-ink"}`}>
-                          {t(item.label)}
-                        </span>
-                      </span>
-                      <span
-                        className={`grid size-[18px] shrink-0 place-items-center rounded-full border ${
-                          active ? "border-brand" : "border-muted/50"
-                        }`}
-                      >
-                        {active ? <span className="size-2.5 rounded-full bg-brand" /> : null}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <div className="pointer-events-none absolute inset-x-0 top-0 z-[600] px-4 pt-5">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={useMyLocation}
+                  aria-label={t("استخدم موقعي الحالي")}
+                  className="pointer-events-auto grid size-12 shrink-0 place-items-center rounded-full bg-cream text-ink shadow-pop transition active:scale-95"
+                >
+                  <Crosshair className={`size-5 ${locating ? "animate-pulse-soft" : ""}`} strokeWidth={1.9} />
+                </button>
 
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <label className="block">
-                <span className="mb-2 flex items-center gap-1 text-xs font-bold text-ink/75">
-                  {t("اسم مخصص للعنوان (اختياري)")}
-                </span>
-                <span className="relative block">
-                  <User className="pointer-events-none absolute start-3.5 top-1/2 size-4 -translate-y-1/2 text-brand" />
-                  <input
-                    value={nickname}
-                    onChange={(event) => setNickname(event.target.value)}
-                    placeholder={t("مثال: منزل العائلة")}
-                    className={`${fieldClass} ps-11 pe-4`}
-                  />
-                </span>
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-bold text-ink/75">{t("المحافظة")}</span>
-                <span className="relative block">
-                  <MapPin className="pointer-events-none absolute start-3.5 top-1/2 size-4 -translate-y-1/2 text-brand" />
-                  <select
-                    value={governorate}
-                    onChange={(event) => setGovernorate(event.target.value)}
-                    className={`${fieldClass} appearance-none pe-10 ps-11`}
-                  >
-                    <option value="الإسكندرية">{t("الإسكندرية")}</option>
-                    <option value="القاهرة">{t("القاهرة")}</option>
-                    <option value="الجيزة">{t("الجيزة")}</option>
-                    <option value="المنصورة">{t("المنصورة")}</option>
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute end-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" />
-                </span>
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-bold text-ink/75">{t("المدينة")}</span>
-                <span className="relative block">
-                  <MapPin className="pointer-events-none absolute start-3.5 top-1/2 size-4 -translate-y-1/2 text-brand" />
-                  <input
-                    value={lang === "en" ? cityLabel : city}
-                    onChange={(event) => setCity(event.target.value)}
-                    placeholder={t("اكتب المدينة")}
-                    className={`${fieldClass} ps-11 pe-4`}
-                  />
-                </span>
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-bold text-ink/75">{t("المنطقة / الحي")}</span>
-                <span className="relative block">
-                  <MapPin className="pointer-events-none absolute start-3.5 top-1/2 size-4 -translate-y-1/2 text-brand" />
-                  <select
-                    value={area}
-                    onChange={(event) => setArea(event.target.value)}
-                    className={`${fieldClass} appearance-none pe-10 ps-11 ${area ? "" : "text-muted"}`}
-                  >
-                    <option value="">{t("اختر الحي")}</option>
-                    <option value="سموحة">{t("سموحة")}</option>
-                    <option value="سيدي بشر">{t("سيدي بشر")}</option>
-                    <option value="النخيل">{t("النخيل")}</option>
-                    <option value="المعادي">{t("المعادي")}</option>
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute end-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" />
-                </span>
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-bold text-ink/75">{t("اسم الشارع")}</span>
-                <input
-                  value={lang === "en" ? streetLabel : street}
-                  onChange={(event) => setStreet(event.target.value)}
-                  placeholder={t("اكتب اسم الشارع")}
-                  className={`${fieldClass} px-4`}
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-bold text-ink/75">{t("رقم المبنى")}</span>
-                <input
-                  value={building}
-                  onChange={(event) => setBuilding(event.target.value)}
-                  inputMode="numeric"
-                  placeholder={t("مثال: 120")}
-                  className={`${fieldClass} px-4`}
-                />
-              </label>
-            </div>
-
-            <div className="mt-4 space-y-4">
-              <label className="block">
-                <span className="mb-2 block text-xs font-bold text-ink/75">{t("علامة مميزة قريبة")}</span>
-                <span className="relative block">
-                  <Tag className="pointer-events-none absolute start-3.5 top-1/2 size-4 -translate-y-1/2 text-brand" />
-                  <input
-                    value={landmark}
-                    onChange={(event) => setLandmark(event.target.value)}
-                    placeholder={t("مثال: بجوار مقهى ...")}
-                    className={`${fieldClass} ps-11 pe-4`}
-                  />
-                </span>
-              </label>
-
-              <label className="block">
-                <span className="mb-2 flex items-center gap-1 text-xs font-bold text-ink/75">
-                  {t("تعليمات للمندوب (اختياري)")}
-                  <MessageSquare className="size-3.5 text-muted" />
-                </span>
-                <textarea
-                  value={instructions}
-                  onChange={(event) => setInstructions(event.target.value.slice(0, 250))}
-                  rows={3}
-                  placeholder={t("مثال: اترك الطلب عند الباب واطرق الجرس مرة واحدة.")}
-                  className="w-full resize-none rounded-xl bg-[#fbf4ec] px-4 py-3 text-sm font-semibold text-ink outline-none transition placeholder:font-normal placeholder:text-muted focus:bg-white focus:ring-2 focus:ring-brand/15"
-                />
-                <span className="mt-1 block text-end text-[10px] text-muted">{instructions.length} / 250</span>
-              </label>
-            </div>
-
-            <div className="mt-5 flex gap-3">
-              <button
-                type="submit"
-                className="flex h-13 flex-1 items-center justify-center rounded-full bg-brand text-sm font-extrabold text-white shadow-[0_18px_32px_-20px_rgba(232,69,44,0.95)] transition hover:bg-brand-dark"
-              >
-                {t("حفظ العنوان")}
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push("/checkout/delivery")}
-                className="h-13 w-28 rounded-full border border-line bg-white text-sm font-bold text-ink transition hover:bg-cream-50"
-              >
-                {t("إلغاء")}
-              </button>
-            </div>
-          </form>
-
-          <aside className="order-2 space-y-4 lg:sticky lg:top-24">
-            <div className="card overflow-hidden p-2.5">
-              <div className="map-canvas relative h-[260px] overflow-hidden rounded-[20px] lg:h-[300px]">
-                <div className="absolute inset-x-3 top-3">
+                <div className="pointer-events-auto relative flex-1 max-w-sm">
                   <div className="relative">
-                    <Search className="pointer-events-none absolute end-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
+                    <Search className="pointer-events-none absolute end-4 top-1/2 size-4 -translate-y-1/2 text-ink/60" />
                     <input
                       value={query}
                       onChange={(event) => setQuery(event.target.value)}
                       onKeyDown={(event) => {
                         if (event.key === "Enter") {
                           event.preventDefault();
-                          toast(t("تم تحديد الموقع على الخريطة"), "info");
+                          runSearch();
                         }
                       }}
-                      placeholder={t("ابحث عن عنوان أو موقع")}
-                      aria-label={t("ابحث عن عنوان أو موقع")}
-                      className="h-11 w-full rounded-xl border border-line bg-white/95 pe-10 ps-4 text-xs font-semibold shadow-soft outline-none backdrop-blur focus:border-brand/40"
+                      placeholder={t("ابحث عن موقع")}
+                      aria-label={t("ابحث عن موقع")}
+                      className="h-12 w-full rounded-full border-0 bg-cream/95 pe-11 ps-4 text-sm font-semibold text-ink shadow-pop outline-none backdrop-blur placeholder:text-muted"
                     />
                   </div>
+                  {suggestions.length > 0 ? (
+                    <ul className="mt-2 overflow-hidden rounded-2xl bg-white shadow-pop">
+                      {suggestions.map((item) => {
+                        const Icon = kindIcon[item.kind];
+                        return (
+                          <li key={item.id}>
+                            <button
+                              type="button"
+                              onClick={() => pickAddress(item)}
+                              className="flex w-full items-center gap-3 px-4 py-3 text-start transition hover:bg-cream-50"
+                            >
+                              <Icon className="size-4 shrink-0 text-brand" strokeWidth={1.9} />
+                              <span className="min-w-0">
+                                <span className="block truncate text-xs font-bold">{t(item.title)}</span>
+                                <span className="block truncate text-[10px] text-muted">{t(item.area)}</span>
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : null}
                 </div>
-
-                <span className="absolute left-[22%] top-[30%] h-12 w-20 rounded-md bg-[#ece2d5] shadow-[0_6px_14px_-8px_rgba(90,60,30,0.5)]" />
-                <span className="absolute left-[46%] top-[24%] h-16 w-16 rounded-md bg-[#e6dacb] shadow-[0_6px_14px_-8px_rgba(90,60,30,0.5)]" />
-                <span className="absolute left-[12%] top-[55%] h-14 w-24 rounded-md bg-[#efe6da]" />
-                <span className="absolute left-[54%] top-[50%] h-12 w-16 rounded-md bg-[#e8ddcc]" />
-                <span className="absolute left-[36%] top-[44%] -translate-x-1/2 -translate-y-1/2">
-                  <span className="relative block size-10 rounded-full border-4 border-white bg-brand shadow-[0_10px_22px_-8px_rgba(232,69,44,0.9)]">
-                    <span className="absolute inset-0 m-auto size-2.5 rounded-full bg-white" />
-                  </span>
-                  <span className="absolute -inset-3 -z-10 rounded-full bg-brand/15" />
-                </span>
 
                 <button
                   type="button"
-                  onClick={useCurrentLocation}
-                  className="absolute bottom-[72px] start-3 flex h-10 items-center gap-2 rounded-full bg-brand px-4 text-[11px] font-bold text-white shadow-[0_12px_24px_-14px_rgba(232,69,44,1)] transition hover:bg-brand-dark"
+                  onClick={confirmSelected}
+                  aria-label={t("متابعة")}
+                  className="pointer-events-auto grid size-12 shrink-0 place-items-center rounded-full bg-cream text-ink shadow-pop transition active:scale-95"
                 >
-                  <LocateFixed className={`size-4 ${locating ? "animate-pulse-soft" : ""}`} />
-                  {t(locating ? "بنجيب موقعك..." : "استخدم موقعي الحالي")}
+                  <ArrowLeft className="size-5 rtl:rotate-180" strokeWidth={2.1} />
                 </button>
-
-                <div className="absolute inset-x-3 bottom-3 flex items-center gap-2 rounded-xl bg-white px-3 py-2.5 text-[11px] font-bold shadow-soft">
-                  <MapPin className="size-4 shrink-0 text-brand" />
-                  <span className="line-1 flex-1">
-                    {t("اسكندرية، سموحة")}
-                    {lang === "ar" ? "، " : ", "}
-                    {lang === "en" ? streetLabel : street}
-                  </span>
-                </div>
               </div>
             </div>
+          </div>
 
-            <div className="card p-5">
-              <h2 className="text-center text-base font-extrabold">{t("عناوينك المحفوظة")}</h2>
-              <div className="mt-4 space-y-3">
-                {savedAddresses.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <div key={item.title} className="rounded-xl border border-line bg-[#fdf8f3] p-3">
-                      <div className="flex items-start gap-3">
-                        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white text-ink/75 shadow-soft">
-                          <Icon className="size-[18px]" strokeWidth={1.8} />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-extrabold">{t(item.title)}</p>
-                          <p className="mt-0.5 text-[11px] leading-5 text-muted">{t(item.address)}</p>
-                          {item.note ? (
-                            <p className="mt-1.5 flex items-center gap-1 text-[10px] text-muted">
-                              <CalendarDays className="size-3" />
-                              {t(item.note)}
-                            </p>
+          {/* Sheet */}
+          <div
+            className={
+              mode === "form"
+                ? "fixed inset-0 z-[900] flex items-end justify-center bg-ink/55 backdrop-blur-sm lg:items-center lg:p-6"
+                : "absolute inset-x-0 bottom-0 z-[700] lg:relative lg:inset-auto lg:z-auto"
+            }
+            onMouseDown={(event) => {
+              if (mode === "form" && event.target === event.currentTarget) setMode("list");
+            }}
+          >
+            {pin && mode === "list" ? (
+              <div className="mx-auto mb-[-18px] w-fit max-w-[92%] px-2 text-center">
+                <span className="inline-flex items-center gap-2.5 rounded-2xl bg-cream px-4 py-3 shadow-pop">
+                  <span className="grid size-8 place-items-center rounded-full bg-brand text-white">
+                    <Navigation className="size-4" strokeWidth={2} />
+                  </span>
+                  <span className="text-sm font-extrabold text-ink">{pinLabel}</span>
+                </span>
+              </div>
+            ) : null}
+
+            <div
+              role={mode === "form" ? "dialog" : undefined}
+              aria-modal={mode === "form" ? true : undefined}
+              aria-labelledby={mode === "form" ? "address-form-title" : undefined}
+              className={
+                mode === "form"
+                  ? "max-h-[90dvh] w-full overflow-y-auto overscroll-contain rounded-t-[36px] bg-white px-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-6 shadow-pop lg:max-w-[480px] lg:rounded-[28px] lg:px-7"
+                  : "max-h-[50dvh] overflow-y-auto overscroll-contain rounded-t-[36px] bg-white px-5 pb-6 pt-6 shadow-pop lg:max-h-[68dvh] lg:rounded-[28px] lg:px-6"
+              }
+            >
+              {mode === "list" ? (
+                <>
+                  <h2 className="text-center text-lg font-extrabold lg:text-start">{t("اختار عنوان التوصيل")}</h2>
+
+                  {addresses.length === 0 ? (
+                    <div className="flex flex-col items-center px-2 py-8 text-center">
+                      <MapPinOff className="size-24 text-[#c2b4a9]" strokeWidth={1.2} />
+                      <p className="mt-4 text-xl font-extrabold text-ink/80">{t("لا يوجد عناوين سابقة")}</p>
+                      <p className="mt-1 text-sm text-muted">{t("اضف الان")}</p>
+                    </div>
+                  ) : (
+                    <ul className="mt-4 space-y-3">
+                      {addresses.map((item) => {
+                        const Icon = kindIcon[item.kind];
+                        const active = item.id === selectedAddressId;
+                        return (
+                          <li key={item.id}>
+                            <button
+                              type="button"
+                              onClick={() => pickAddress(item)}
+                              aria-pressed={active}
+                              className={`flex w-full items-center gap-3 rounded-2xl border-2 p-3.5 text-start transition ${
+                                active
+                                  ? "border-transparent bg-brand-soft/60"
+                                  : "border-line bg-white hover:border-brand/30"
+                              }`}
+                            >
+                              <span
+                                className={`grid size-5 shrink-0 place-items-center rounded-full border-2 ${
+                                  active ? "border-brand" : "border-[#c9b8a9]"
+                                }`}
+                              >
+                                {active ? <span className="size-2.5 rounded-full bg-brand" /> : null}
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className={`block text-sm font-extrabold ${active ? "text-ink" : "text-ink/80"}`}>
+                                  {t(item.title)}
+                                </span>
+                                <span className={`mt-0.5 block truncate text-[11px] ${active ? "text-ink/70" : "text-muted"}`}>
+                                  {t(item.area)}
+                                  {lang === "ar" ? "، " : ", "}
+                                  {t(item.detail)}
+                                </span>
+                              </span>
+                              <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-cream text-brand">
+                                <Icon className="size-5" strokeWidth={1.8} />
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={listCta.onClick}
+                    className="btn-gradient mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_rgba(232,69,44,0.95)]"
+                  >
+                    {CtaIcon ? <CtaIcon className="size-5" strokeWidth={2.3} /> : null}
+                    {t(listCta.label)}
+                  </button>
+
+                  {addresses.length > 0 ? (
+                    <Link
+                      href="/addresses"
+                      className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-bold text-muted transition hover:text-brand"
+                    >
+                      <Pencil className="size-3.5" />
+                      {t("ادارة العناوين المحفوظة")}
+                    </Link>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 id="address-form-title" className="text-base font-extrabold">{t("العنوان المختار")}</h2>
+                    <button
+                      type="button"
+                      onClick={() => setMode("list")}
+                      aria-label={t("إغلاق")}
+                      className="grid size-9 place-items-center rounded-full bg-cream text-ink transition hover:bg-brand-soft hover:text-brand"
+                    >
+                      <X className="size-4" strokeWidth={2.4} />
+                    </button>
+                  </div>
+
+                  <div className="mt-4 flex items-center gap-3 rounded-2xl bg-cream px-4 py-3.5">
+                    <span className="min-w-0 flex-1 text-end">
+                      <span className="block truncate text-sm font-extrabold">{pinLabel || t("موقع الخريطة")}</span>
+                      <span className="mt-0.5 block text-[11px] text-muted" dir="ltr">
+                        {pin ? formatCoords(pin) : formatCoords({ lat: center[0], lng: center[1] })}
+                      </span>
+                    </span>
+                    <span className="grid size-11 shrink-0 place-items-center rounded-full bg-brand text-white">
+                      <Navigation className="size-5" strokeWidth={2} />
+                    </span>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    {addressKinds.map((item) => {
+                      const Icon = item.icon === "home" ? Home : item.icon === "work" ? Briefcase : item.icon === "family" ? Store : MapPin;
+                      const active = kind === item.id;
+                      return (
+                        <div
+                          key={item.id}
+                          className={`rounded-2xl border-2 bg-white transition ${
+                            active ? "border-brand shadow-[0_0_0_4px_rgba(232,69,44,0.07)]" : "border-line hover:border-brand/30"
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setKind(item.id)}
+                            aria-pressed={active}
+                            className="flex w-full flex-col items-center gap-3 px-3 py-4"
+                          >
+                            <span
+                              className={`grid size-11 place-items-center rounded-2xl ${
+                                active ? "bg-brand text-white" : "bg-cream text-ink/70"
+                              }`}
+                            >
+                              <Icon className="size-5" strokeWidth={1.8} />
+                            </span>
+                            <span className={`text-sm font-extrabold ${active ? "text-brand" : "text-ink/80"}`}>
+                              {t(item.label)}
+                            </span>
+                            {item.id !== "other" ? (
+                              <span
+                                className={`grid size-6 place-items-center rounded-full border-2 ${
+                                  active ? "border-brand" : "border-[#c9b8a9]"
+                                }`}
+                                aria-hidden="true"
+                              >
+                                {active ? <span className="size-3 rounded-full bg-brand" /> : null}
+                              </span>
+                            ) : null}
+                          </button>
+                          {item.id === "other" ? (
+                            <input
+                              value={customLabel}
+                              onChange={(event) => setCustomLabel(event.target.value.slice(0, 24))}
+                              aria-label={t("اسم العنوان")}
+                              placeholder={t("اكتب اسم العنوان")}
+                              className="mb-3 mx-3 h-8 w-[calc(100%-1.5rem)] rounded-full border border-line bg-cream-50 px-3 text-center text-[11px] outline-none focus:border-brand/50"
+                            />
                           ) : null}
                         </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+                      );
+                    })}
+                  </div>
 
-            <div className="card p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div className="text-start">
-                  <h2 className="text-base font-extrabold">{t("ملخص طلبك")}</h2>
-                  <p className="mt-1 text-[11px] text-muted">{t("{count} عناصر في طلبك", { count })}</p>
-                </div>
-                <div className="flex -space-x-2">
-                  {lines.slice(0, 3).map((line) => {
-                    const product = productsById[line.productId];
-                    if (!product) return null;
-                    return (
-                      <span
-                        key={line.key}
-                        className="relative size-11 overflow-hidden rounded-xl border-2 border-white bg-peach shadow-soft"
-                      >
-                        <Image src={product.image} alt={t(product.name)} fill sizes="44px" className="object-cover" />
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-              {lines.length === 0 ? (
-                <p className="mt-4 rounded-xl bg-[#fbf4ec] px-3 py-2.5 text-center text-[11px] text-muted">
-                  {t("السلة فاضية، اختار أطباقك الأول.")}
-                </p>
-              ) : null}
+                  <label className="mt-5 block">
+                    <span className="mb-2 block text-sm font-extrabold">{t("العنوان بالتفصيل")}</span>
+                    <input
+                      value={detail}
+                      onChange={(event) => setDetail(event.target.value)}
+                      placeholder={t("مثال : وسط البلد, جرينفل, شارع المحمدي")}
+                      className="field h-12 text-sm"
+                    />
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={confirmPickedAddress}
+                    className="btn-gradient mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_rgba(232,69,44,0.95)]"
+                  >
+                    <ArrowRight className="size-5 ltr:rotate-180" strokeWidth={2.3} />
+                    {t("تأكيد العنوان")}
+                  </button>
+                </>
+              )}
             </div>
-          </aside>
+          </div>
         </div>
       </div>
     </div>

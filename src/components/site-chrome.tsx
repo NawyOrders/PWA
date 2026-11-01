@@ -17,8 +17,10 @@ const noBottomNav = [
   "/settings",
   "/orders",
   "/profile/edit",
+  "/help",
+  "/about",
 ];
-const noFooter = ["/login", "/checkout", "/addresses", "/offline"];
+const noFooter = ["/login", "/checkout", "/addresses", "/offline", "/help"];
 
 export function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

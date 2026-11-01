@@ -16,10 +16,11 @@ const quickLinks = [
 ];
 
 const companyLinks = [
-  { label: "عن ناوي أوردرز", href: "/settings" },
-  { label: "سياسة الخصوصية", href: "/settings" },
-  { label: "الشروط والأحكام", href: "/settings" },
-  { label: "تواصل معنا", href: "/settings" },
+  { label: "عن ناوي أوردرز", href: "/about" },
+  { label: "سياسة الخصوصية", href: "/help/policies?tab=privacy" },
+  { label: "الشروط والأحكام", href: "/help/policies?tab=terms" },
+  { label: "المساعدة والدعم", href: "/help" },
+  { label: "تواصل معنا", href: "/help/chat" },
 ];
 
 export function Footer() {
