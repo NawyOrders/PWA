@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type ComponentType, type KeyboardEvent } f
 import { Layers, Shield, ShieldCheck, Workflow, X, type LucideProps } from "lucide-react";
 import { LogoMark } from "@/components/logo";
 import { useApp } from "@/components/providers";
-import { MobilePageHeader } from "@/components/ui";
+import { MobilePageHeader, chipStyles } from "@/components/ui";
 import { appVersion, platforms, policies, policyTabs, policyUpdated } from "@/lib/account-data";
 
 type TabId = (typeof policyTabs)[number]["id"];
@@ -88,11 +88,7 @@ export function PoliciesView() {
                     tabIndex={selected ? 0 : -1}
                     onClick={() => setActive(tab.id)}
                     onKeyDown={(event) => onTabKeyDown(event, index)}
-                    className={`flex shrink-0 items-center gap-2.5 rounded-full px-4 py-2.5 text-sm font-extrabold transition ${
-                      selected
-                        ? "bg-brand text-white shadow-[0_16px_30px_-18px_rgba(232,69,44,0.9)]"
-                        : "border border-line bg-white text-ink shadow-soft hover:bg-cream-50"
-                    }`}
+                    className={chipStyles(selected)}
                   >
                     <span
                       className={`grid size-7 shrink-0 place-items-center rounded-[9px] ${
@@ -163,9 +159,9 @@ function PlatformCard({ platform }: { platform: (typeof platforms)[number] }) {
   const { t } = useApp();
   const isBrand = platform.tone === "brand";
   return (
-    <div className="flex items-center gap-3 rounded-[22px] bg-[#2b1a12] p-4 shadow-soft">
+    <div className="flex items-center gap-3 rounded-[22px] bg-cocoa p-4 shadow-soft">
       <div className="min-w-0 flex-1 text-start">
-        <p className={`text-xs font-bold ${isBrand ? "text-gold" : "text-[#c07bff]"}`}>{t(platform.role)}</p>
+        <p className={`text-xs font-bold ${isBrand ? "text-gold" : "text-violet"}`}>{t(platform.role)}</p>
         <p className="mt-1 truncate text-lg font-extrabold text-white" dir="ltr">
           {platform.name}
         </p>
@@ -173,7 +169,7 @@ function PlatformCard({ platform }: { platform: (typeof platforms)[number] }) {
       {isBrand ? (
         <LogoMark className="size-12 shrink-0" />
       ) : (
-        <span className="grid size-12 shrink-0 place-items-center rounded-2xl border border-[#c07bff]/70 bg-[#1a1016] text-[13px] font-extrabold text-[#c07bff]">
+        <span className="grid size-12 shrink-0 place-items-center rounded-2xl border border-violet/70 bg-violet-deep text-[13px] font-extrabold text-violet">
           {platform.initials}
         </span>
       )}

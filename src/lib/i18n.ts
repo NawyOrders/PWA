@@ -299,6 +299,12 @@ const en: Record<string, string> = {
   "خطوة بسيطة قبل ما تأكد عنوانك وتختار طريقة الدفع.": "One quick step before you confirm your address and payment.",
   "اكتب رقم موبايل صحيح الأول": "Enter a valid mobile number first",
   "تم إرسال كود التحقق على موبايلك": "Verification code sent to your mobile",
+  "تم إرسال كود التحقق على موبايلك — كود التجربة {code}": "Verification code sent to your mobile — demo code {code}",
+  "استخدم كود التجربة {code} لإكمال تسجيل الدخول.": "Use demo code {code} to complete sign in.",
+  "اطلب كود التحقق الأول": "Request a verification code first",
+  "اطلب الكود من زر إرسال": "Request the code with the send button",
+  "اكتب كود التحقق كامل": "Enter the full verification code",
+  "الكود غير صحيح، جرب تاني": "Incorrect code, please try again",
 
   // account
   "تعديل الملف الشخصي": "Edit profile",

@@ -14,7 +14,7 @@ import {
   type LucideProps,
 } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs } from "@/components/ui";
+import { Breadcrumbs, buttonStyles } from "@/components/ui";
 import { helpCards } from "@/lib/account-data";
 
 const cardIcons: Record<string, ComponentType<LucideProps>> = {
@@ -102,7 +102,7 @@ export function HelpView() {
 
             <a
               href="tel:19885"
-              className="btn-brand mt-8 flex h-16 w-full rounded-[24px] text-base lg:mt-10"
+              className={buttonStyles({ size: "lg", block: true, className: "mt-8 lg:mt-10" })}
             >
               {t("تواصل معنا")}
               <Phone className="size-5" strokeWidth={2.1} />

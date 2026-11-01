@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowRight, ChevronDown, ChevronUp, Phone, Search } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs } from "@/components/ui";
+import { Breadcrumbs, buttonStyles } from "@/components/ui";
 import { faqItems } from "@/lib/account-data";
 
 export function FaqView() {
@@ -130,7 +130,7 @@ export function FaqView() {
 
             <a
               href="tel:19885"
-              className="btn-brand mt-8 flex h-16 w-full rounded-[24px] text-base lg:mt-10"
+              className={buttonStyles({ size: "lg", block: true, className: "mt-8 lg:mt-10" })}
             >
               {t("اذا لم تجد اجابتك تواصل معنا")}
               <Phone className="size-5 shrink-0" strokeWidth={2.1} />

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Home, LayoutGrid, ShoppingCart, UserRound } from "lucide-react";
 import { LogoMark } from "@/components/logo";
 import { useApp } from "@/components/providers";
+import { loginHref } from "@/lib/routes";
 
 const links = [
   { href: "/", label: "الرئيسية", icon: Home },
@@ -34,7 +35,7 @@ export function Navbar() {
             return (
               <Link
                 key={link.href}
-                href={link.href === "/profile" && !loggedIn ? "/login?next=%2Fprofile" : link.href}
+                href={link.href === "/profile" && !loggedIn ? loginHref("/profile") : link.href}
                 className={`relative flex items-center gap-2.5 py-8 text-[15px] font-semibold transition-colors ${
                   active ? "text-brand" : "text-ink/70 hover:text-brand"
                 }`}

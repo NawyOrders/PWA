@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { ArrowRight, Send, UploadCloud } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs } from "@/components/ui";
+import { Breadcrumbs, Button, Chip } from "@/components/ui";
 import { reportProblemTypes } from "@/lib/account-data";
 
 export function ReportView() {
@@ -81,19 +81,9 @@ export function ReportView() {
                   {reportProblemTypes.map((type) => {
                     const selected = problem === type;
                     return (
-                      <button
-                        key={type}
-                        type="button"
-                        aria-pressed={selected}
-                        onClick={() => setProblem(type)}
-                        className={`h-11 rounded-full px-5 text-sm font-extrabold transition ${
-                          selected
-                            ? "bg-brand text-white shadow-[0_14px_26px_-16px_rgba(232,69,44,0.9)]"
-                            : "border border-line bg-white text-ink hover:border-brand/40"
-                        }`}
-                      >
+                      <Chip key={type} selected={selected} onClick={() => setProblem(type)}>
                         {t(type)}
-                      </button>
+                      </Chip>
                     );
                   })}
                 </div>
@@ -112,7 +102,7 @@ export function ReportView() {
                         onChange={(event) => setOrderNumber(event.target.value)}
                         placeholder={t("مثال 165165#")}
                         inputMode="numeric"
-                        className="field mt-2.5 border-[#8a7466] bg-white text-sm font-bold"
+                        className="field mt-2.5 border-line-strong bg-white text-sm font-bold"
                       />
                     </div>
 
@@ -126,7 +116,7 @@ export function ReportView() {
                         maxLength={500}
                         onChange={(event) => setDetail(event.target.value)}
                         placeholder={t("اكتب تفاصيل المشكلة هنا...")}
-                        className="field mt-2.5 min-h-32 resize-none border-[#8a7466] bg-white text-sm leading-7"
+                        className="field mt-2.5 min-h-32 resize-none border-line-strong bg-white text-sm leading-7"
                       />
                       <p className="mt-2 text-xs text-muted">{detail.length}/500</p>
                     </div>
@@ -134,7 +124,7 @@ export function ReportView() {
 
                   <div>
                     <p className="text-sm font-extrabold">{t("صورة توضيحية (اختياري)")}</p>
-                    <label className="mt-2.5 flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-[#8a7466]/60 bg-peach px-4 py-8 text-center transition hover:border-brand/50">
+                    <label className="mt-2.5 flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-line-strong/60 bg-peach px-4 py-8 text-center transition hover:border-brand/50">
                       <input
                         type="file"
                         accept="image/*"
@@ -161,10 +151,10 @@ export function ReportView() {
                 </div>
               </div>
 
-              <button type="submit" className="btn-brand mt-6 flex h-16 w-full rounded-[24px] text-base lg:mt-8">
+              <Button type="submit" size="lg" block className="mt-6 lg:mt-8">
                 {t("ارسال ابلاغ")}
                 <Send className="size-5 shrink-0 rtl:rotate-180" strokeWidth={2.1} />
-              </button>
+              </Button>
             </form>
           </div>
         </div>
