@@ -108,7 +108,7 @@ function PhoneMockup() {
 }
 
 export function HomeView() {
-  const { t } = useApp();
+  const { t, loggedIn } = useApp();
   const [filter, setFilter] = useState("الكل");
   const [showActiveOrder, setShowActiveOrder] = useState(true);
   const menu = filterMenu(filter);
@@ -217,7 +217,7 @@ export function HomeView() {
             </div>
           </div>
         </div>
-        {activeOrder && showActiveOrder ? (
+        {loggedIn && activeOrder && showActiveOrder ? (
           <>
             <MobileOrderTrackingBanner order={activeOrder} onClose={() => setShowActiveOrder(false)} />
             <DesktopOrderTrackingCard order={activeOrder} onClose={() => setShowActiveOrder(false)} />

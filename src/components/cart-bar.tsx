@@ -6,7 +6,7 @@ import { useApp } from "@/components/providers";
 import { formatPrice, productsById } from "@/lib/data";
 
 export function CartBar() {
-  const { count, subtotal, lines, t, lang } = useApp();
+  const { count, subtotal, lines, t, lang, loggedIn, openLoginPrompt } = useApp();
   if (count === 0) return null;
 
   const names = lines
@@ -22,6 +22,12 @@ export function CartBar() {
     <div className="hidden rounded-[22px] border border-line bg-white px-5 py-4 shadow-soft lg:flex lg:items-center lg:gap-4">
       <Link
         href="/cart"
+        onClick={(event) => {
+          if (!loggedIn) {
+            event.preventDefault();
+            openLoginPrompt();
+          }
+        }}
         className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-sm font-extrabold text-white"
         aria-label={t("عرض السلة")}
       >
@@ -41,7 +47,16 @@ export function CartBar() {
           {formatPrice(subtotal)} <span className="text-[10px] font-bold">{t("جنيه")}</span>
         </p>
       </div>
-      <Link href="/cart" className="flex h-12 items-center gap-2 rounded-full bg-brand px-6 text-sm font-bold text-white transition hover:bg-brand-dark">
+      <Link
+        href="/cart"
+        onClick={(event) => {
+          if (!loggedIn) {
+            event.preventDefault();
+            openLoginPrompt();
+          }
+        }}
+        className="flex h-12 items-center gap-2 rounded-full bg-brand px-6 text-sm font-bold text-white transition hover:bg-brand-dark"
+      >
         {t("متابعة الطلب والدفع")}
         <ArrowLeft className="size-4 ltr:rotate-180" />
       </Link>

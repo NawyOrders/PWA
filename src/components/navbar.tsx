@@ -14,7 +14,7 @@ const links = [
 
 export function Navbar() {
   const pathname = usePathname();
-  const { count, t } = useApp();
+  const { count, t, loggedIn, openLoginPrompt } = useApp();
   const cartActive = pathname === "/cart" || pathname.startsWith("/checkout");
 
   return (
@@ -34,7 +34,7 @@ export function Navbar() {
             return (
               <Link
                 key={link.href}
-                href={link.href}
+                href={link.href === "/profile" && !loggedIn ? "/login?next=%2Fprofile" : link.href}
                 className={`relative flex items-center gap-2.5 py-8 text-[15px] font-semibold transition-colors ${
                   active ? "text-brand" : "text-ink/70 hover:text-brand"
                 }`}
@@ -52,6 +52,12 @@ export function Navbar() {
         <div className="flex w-44 items-center justify-end">
           <Link
             href="/cart"
+            onClick={(event) => {
+              if (!loggedIn) {
+                event.preventDefault();
+                openLoginPrompt();
+              }
+            }}
             className={`flex h-12 items-center gap-2.5 rounded-full px-5 text-sm font-bold transition-colors ${
               cartActive ? "bg-brand text-white" : "bg-brand-soft text-brand hover:bg-brand/15"
             }`}

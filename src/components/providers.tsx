@@ -47,6 +47,10 @@ type AppContextValue = {
   isFavorite: (id: string) => boolean;
   toggleFavorite: (id: string) => void;
   loggedIn: boolean;
+  ready: boolean;
+  loginPromptOpen: boolean;
+  openLoginPrompt: () => void;
+  closeLoginPrompt: () => void;
   login: () => void;
   logout: () => void;
   addresses: SavedAddress[];
@@ -89,7 +93,8 @@ function readStorage<T>(key: string, fallback: T): T {
 export function AppProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>(seedCart);
   const [favorites, setFavorites] = useState<string[]>(seedFavorites);
-  const [loggedIn, setLoggedIn] = useState(true);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [loginPromptOpen, setLoginPromptOpen] = useState(false);
   const [addresses, setAddresses] = useState<SavedAddress[]>(savedAddresses);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(savedAddresses[0].id);
   const [fulfilment, setFulfilment] = useState<"delivery" | "pickup">("delivery");
@@ -103,7 +108,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setLines(readStorage<CartLine[]>(CART_KEY, seedCart));
     setFavorites(readStorage<string[]>(FAVORITES_KEY, seedFavorites));
-    setLoggedIn(readStorage<boolean>(AUTH_KEY, true));
+    setLoggedIn(readStorage<boolean>(AUTH_KEY, false));
     setLang(readStorage<Lang>(LANG_KEY, "ar") === "en" ? "en" : "ar");
     setAddresses(readStorage<SavedAddress[]>(ADDRESSES_KEY, savedAddresses));
     setSelectedAddressId(readStorage<string | null>(SELECTED_ADDRESS_KEY, savedAddresses[0].id));
@@ -221,8 +226,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [toast, t],
   );
 
+  const openLoginPrompt = useCallback(() => setLoginPromptOpen(true), []);
+  const closeLoginPrompt = useCallback(() => setLoginPromptOpen(false), []);
+
   const login = useCallback(() => {
     setLoggedIn(true);
+    setLoginPromptOpen(false);
     toast(t("تم تسجيل الدخول بنجاح"), "info");
   }, [toast, t]);
 
@@ -274,6 +283,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       isFavorite,
       toggleFavorite,
       loggedIn,
+      ready,
+      loginPromptOpen,
+      openLoginPrompt,
+      closeLoginPrompt,
       login,
       logout,
       addresses,
@@ -302,6 +315,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       isFavorite,
       toggleFavorite,
       loggedIn,
+      ready,
+      loginPromptOpen,
+      openLoginPrompt,
+      closeLoginPrompt,
       login,
       logout,
       addresses,

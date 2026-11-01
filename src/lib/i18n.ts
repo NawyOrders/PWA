@@ -273,6 +273,11 @@ const en: Record<string, string> = {
   "الرجوع للتوصيل": "Back to delivery",
 
   // login
+  "سجل الدخول الآن": "Sign in now",
+  "سجل الدخول، علشان تكمل طلبك": "Sign in to complete your order",
+  "سجل دخولك أو أنشئ حساب جديد في خطوة واحدة، علشان تقدر تضيف منتجات وتكمل طلبك بسهولة.": "Sign in or create an account in one quick step to add items and finish your order.",
+  "سجل الآن": "Sign in now",
+  "التسجيل بياخد أقل من 30 ثانية": "Signing up takes less than 30 seconds",
   "ادخل رقم موبايلك، وهنبعتلك كود تحقق برسالة SMS عشان تسجل دخولك وتكمل طلبك.": "Enter your mobile number and we'll text you a verification code to sign in and complete your order.",
   "ادخل رقم موبايلك": "Enter your mobile number",
   "مصر": "Egypt",

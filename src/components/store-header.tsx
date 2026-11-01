@@ -12,16 +12,16 @@ export function StoreHeader({
   className?: string;
   showMobileSearch?: boolean;
 }) {
-  const { t } = useApp();
+  const { t, loggedIn } = useApp();
   return (
     <div className={className}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Link href="/addresses/new" className="group flex items-center gap-2.5">
+          <Link href={loggedIn ? "/addresses/new" : "/login?next=%2F"} className="group flex items-center gap-2.5">
             <div className="text-start">
-              <p className="text-[11px] text-muted">{t("مرحبا أحمد")}</p>
+              <p className="text-[11px] text-muted">{loggedIn ? t("مرحبا أحمد") : t("تسجيل الدخول")}</p>
               <p className="mt-0.5 flex items-center gap-1 text-[13px] font-bold text-ink lg:text-sm">
-                {t("زهراء المعادي، المعراج العلوي")}
+                {loggedIn ? t("زهراء المعادي، المعراج العلوي") : t("سجل الدخول الآن")}
                 <ChevronDown className="size-3.5 text-muted transition group-hover:text-brand" />
               </p>
             </div>

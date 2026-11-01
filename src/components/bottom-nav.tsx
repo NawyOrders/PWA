@@ -14,7 +14,7 @@ const items = [
 
 export function BottomNav() {
   const pathname = usePathname();
-  const { count, t } = useApp();
+  const { count, t, loggedIn, openLoginPrompt } = useApp();
 
   return (
     <nav
@@ -29,7 +29,13 @@ export function BottomNav() {
           return (
             <Link
               key={item.href}
-              href={item.href}
+              href={item.href === "/profile" && !loggedIn ? "/login?next=%2Fprofile" : item.href}
+              onClick={(event) => {
+                if (item.href === "/cart" && !loggedIn) {
+                  event.preventDefault();
+                  openLoginPrompt();
+                }
+              }}
               aria-current={active ? "page" : undefined}
               className={`flex flex-col items-center gap-1.5 rounded-2xl py-1.5 text-[11px] font-semibold transition-colors ${
                 active ? "text-brand" : "text-[#8b847e]"
