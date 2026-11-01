@@ -1,0 +1,179 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
+import { Clock3, MapPin, Store, Trash2, Truck, Wallet } from "lucide-react";
+import { useApp } from "@/components/providers";
+import { productsById, user } from "@/lib/data";
+import { CartSummary } from "@/components/cart-summary";
+import { CheckoutShell, EmptyState, MobilePageHeader, Price, QtyStepper } from "@/components/ui";
+
+function CartItem({ lineKey }: { lineKey: string }) {
+  const { lines, changeQty, removeLine, t, lang } = useApp();
+  const line = lines.find((item) => item.key === lineKey);
+  if (!line) return null;
+  const product = productsById[line.productId];
+  if (!product) return null;
+
+  return (
+    <article className="relative flex gap-3 rounded-[24px] bg-white p-3 shadow-soft lg:gap-4 lg:p-4">
+      <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-peach lg:size-32">
+        <Image src={product.image} alt={t(product.name)} fill sizes="128px" className="object-cover" />
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col justify-center">
+        <h3 className="pe-12 text-base font-extrabold lg:text-lg">{t(product.name)}</h3>
+        <p className="mt-1 line-2 text-[11px] leading-5 text-muted">{t(product.description)}</p>
+        {line.extras?.length ? (
+          <p className="mt-1 text-[10px] font-semibold text-brand">
+            {t("الإضافات: ")}
+            {line.extras.map((extra) => t(extra)).join(lang === "ar" ? "، " : ", ")}
+          </p>
+        ) : null}
+        {line.note ? <p className="mt-1 text-[10px] text-muted">{t("ملاحظات: ")}{line.note}</p> : null}
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <Price value={line.price * line.qty} size="md" />
+          <QtyStepper
+            value={line.qty}
+            min={1}
+            onChange={(next) => changeQty(line.key, next - line.qty)}
+          />
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={() => removeLine(line.key)}
+        className="absolute end-3 top-3 flex items-center gap-1.5 text-[11px] font-semibold text-muted transition hover:text-brand"
+        aria-label={t("حذف {name}", { name: t(product.name) })}
+      >
+        <Trash2 className="size-3.5" />
+        {t("حذف")}
+      </button>
+    </article>
+  );
+}
+
+export function CartView() {
+  const { lines, count, t } = useApp();
+  const [mode, setMode] = useState<"delivery" | "pickup">("delivery");
+  const [notes, setNotes] = useState("");
+
+  if (lines.length === 0) {
+    return (
+      <div>
+        <MobilePageHeader title="السلة" />
+        <div className="shell pb-7 lg:py-12">
+          <EmptyState
+            title="سلتك فاضية"
+            description="لسه مضفتش حاجة، اختار طبقك المفضل من القائمة وابدأ طلبك."
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <CheckoutShell
+      activeStep={0}
+      title="سلتك فيها كل اللي بتحبه"
+      subtitle="راجع طلبك، وعدّل الكمية قبل ما تكمل."
+      backHref="/"
+      backLabel="الرجوع للرئيسية"
+      breadcrumb={[{ label: "الرئيسية", href: "/" }, { label: "السلة" }]}
+      mobileTitle="السلة"
+      main={
+        <>
+          <div className="hidden items-center justify-between lg:flex">
+            <h2 className="text-lg font-extrabold">{t("الأصناف في السلة")}</h2>
+            <span className="text-[11px] text-muted">{count} {t("أصناف")}</span>
+          </div>
+
+          <div className="space-y-3">
+            {lines.map((line) => (
+              <CartItem key={line.key} lineKey={line.key} />
+            ))}
+          </div>
+
+          <div className="card p-4 lg:p-5">
+            <h2 className="flex items-center gap-2 text-sm font-extrabold">
+              {t("ملاحظات على الطلب")}
+              <span className="rounded-full bg-cream-100 px-2 py-0.5 text-[9px] font-semibold text-muted">{t("اختياري")}</span>
+            </h2>
+            <textarea
+              value={notes}
+              onChange={(event) => setNotes(event.target.value.slice(0, 200))}
+              rows={3}
+              placeholder={t("عندك أي طلب خاص؟ اكتبه هنا...")}
+              className="mt-2.5 w-full resize-none rounded-xl border border-line bg-cream-50 px-4 py-3 text-xs leading-6 outline-none transition focus:border-brand/40"
+            />
+          </div>
+        </>
+      }
+      aside={
+        <>
+          <CartSummary
+            ctaLabel="المتابعة لإتمام الطلب"
+            ctaHref={mode === "delivery" ? "/checkout/delivery" : "/checkout/branch"}
+            delivery={mode === "delivery"}
+            note="هتراجع بيانات التوصيل والدفع قبل تأكيد الطلب."
+          >
+            <div className="mt-4 flex rounded-full border border-line bg-cream-50 p-1">
+              <button
+                type="button"
+                onClick={() => setMode("delivery")}
+                className={`flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full text-[11px] font-bold transition ${
+                  mode === "delivery" ? "bg-white text-brand shadow-sm" : "text-muted hover:text-ink"
+                }`}
+              >
+                <Truck className="size-3.5" />
+                {t("التوصيل")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("pickup")}
+                className={`flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full text-[11px] font-bold transition ${
+                  mode === "pickup" ? "bg-white text-brand shadow-sm" : "text-muted hover:text-ink"
+                }`}
+              >
+                <Store className="size-3.5" />
+                {t("الاستلام")}
+              </button>
+            </div>
+          </CartSummary>
+
+          <div className="card p-4">
+            <div className="flex items-center justify-between">
+              <h3 className="flex items-center gap-1.5 text-sm font-extrabold">
+                {mode === "delivery" ? <MapPin className="size-4 text-brand" /> : <Store className="size-4 text-brand" />}
+                {mode === "delivery" ? t("التوصيل إلى") : t("الفرع المختار")}
+              </h3>
+              <Link
+                href={mode === "delivery" ? "/addresses/new" : "/checkout/branch"}
+                className="text-[11px] font-bold text-brand hover:text-brand-dark"
+              >
+                {t("تغيير")}
+              </Link>
+            </div>
+            <p className="mt-3 text-xs font-bold">
+              {mode === "delivery" ? t(user.address) : t("فرع النخيل")}
+            </p>
+            <p className="mt-1 text-[11px] leading-5 text-muted">
+              {mode === "delivery" ? t(user.fullAddress) : t("حي النخيل، شارع السلطان محمد فرع الملك، الإسكندرية")}
+            </p>
+            <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-cream-50 px-2.5 py-2 text-[10px] font-semibold text-muted">
+              <Clock3 className="size-3.5 text-brand" />
+              {mode === "delivery"
+                ? t("وقت التوصيل المتوقع: 30-45 دقيقة")
+                : t("وقت الاستلام المتوقع: 1:00 - 1:30 مساءً")}
+            </p>
+          </div>
+
+          <div className="hidden items-center gap-2 rounded-2xl bg-brand-soft/60 px-4 py-3 text-[11px] font-semibold text-brand-dark lg:flex">
+            <Wallet className="size-4" />
+            {t("جرّب كود NAWY20 واستمتع بخصم 20% لحد 50 جنيه.")}
+          </div>
+        </>
+      }
+    />
+  );
+}
