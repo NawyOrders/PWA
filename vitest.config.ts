@@ -13,6 +13,9 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
+    // User-event interaction tests run several seconds each on CI-class
+    // hardware; the default 5s ceiling is too tight for the slowest flows.
+    testTimeout: 15000,
     setupFiles: ["./src/test/setup.tsx"],
     include: ["src/**/*.test.{ts,tsx}"],
     restoreMocks: true,

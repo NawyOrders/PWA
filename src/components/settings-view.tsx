@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { Breadcrumbs, MobilePageHeader } from "@/components/ui";
+import { useDialogFocus } from "@/hooks/use-dialog-focus";
+import { storageKeys } from "@/lib/storage";
 
 type Row = {
   id: string;
@@ -36,17 +38,16 @@ const rows: Row[] = [
   { id: "about", label: "عن التطبيق", icon: Info, href: "/about" },
 ];
 
-const NOTIFICATIONS_KEY = "nawy-notifications-v1";
-
 export function SettingsView() {
   const router = useRouter();
   const { logout, lang, setLang, t } = useApp();
   const [notificationsOn, setNotificationsOn] = useState(true);
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const logoutDialogRef = useDialogFocus<HTMLDivElement>(logoutOpen, () => setLogoutOpen(false));
 
   useEffect(() => {
     try {
-      const stored = window.localStorage.getItem(NOTIFICATIONS_KEY);
+      const stored = window.localStorage.getItem(storageKeys.notifications);
       if (stored) setNotificationsOn(stored === "on");
     } catch {}
   }, []);
@@ -55,25 +56,11 @@ export function SettingsView() {
     setNotificationsOn((value) => {
       const next = !value;
       try {
-        window.localStorage.setItem(NOTIFICATIONS_KEY, next ? "on" : "off");
+        window.localStorage.setItem(storageKeys.notifications, next ? "on" : "off");
       } catch {}
       return next;
     });
   };
-
-  useEffect(() => {
-    if (!logoutOpen) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setLogoutOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previous;
-    };
-  }, [logoutOpen]);
 
   const confirmLogout = () => {
     setLogoutOpen(false);
@@ -192,7 +179,9 @@ export function SettingsView() {
           onClick={() => setLogoutOpen(false)}
         >
           <div
+            ref={logoutDialogRef}
             role="dialog"
+            tabIndex={-1}
             aria-modal="true"
             aria-labelledby="logout-title"
             onClick={(event) => event.stopPropagation()}

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ArrowLeft, Clock3, MapPin, Store } from "lucide-react";
 import { branches } from "@/lib/data";
 import { CartSummary } from "@/components/cart-summary";
@@ -9,9 +9,8 @@ import { CheckoutShell, buttonStyles } from "@/components/ui";
 import { useApp } from "@/components/providers";
 
 export function BranchView() {
-  const { t, setFulfilment } = useApp();
-  const [selected, setSelected] = useState(branches[0].id);
-  const branch = branches.find((item) => item.id === selected) ?? branches[0];
+  const { t, setFulfilment, selectedBranchId, selectBranch } = useApp();
+  const branch = branches.find((item) => item.id === selectedBranchId) ?? branches[0];
 
   useEffect(() => {
     setFulfilment("pickup");
@@ -44,12 +43,12 @@ export function BranchView() {
 
           <div className="space-y-2.5">
             {branches.map((item) => {
-              const active = item.id === selected;
+              const active = item.id === selectedBranchId;
               return (
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setSelected(item.id)}
+                  onClick={() => selectBranch(item.id)}
                   aria-pressed={active}
                   className={`flex w-full items-center gap-3 rounded-2xl border-2 bg-white p-4 text-start shadow-soft transition ${
                     active ? "border-brand" : "border-transparent hover:border-brand/25"

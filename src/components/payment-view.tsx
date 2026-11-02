@@ -18,6 +18,8 @@ import {
 import { useApp } from "@/components/providers";
 import { CartSummary } from "@/components/cart-summary";
 import { CheckoutShell, Button } from "@/components/ui";
+import { useDialogFocus } from "@/hooks/use-dialog-focus";
+import { RECEIPT_IMAGE_TYPES, validateImageFile } from "@/lib/media";
 
 type MethodId = "cash" | "instapay" | "wallet";
 type Receipt = { name: string; size: number; url: string };
@@ -54,13 +56,15 @@ const methods: {
 
 export function PaymentView() {
   const router = useRouter();
-  const { toast, t, fulfilment, clearCart } = useApp();
+  const { toast, t, fulfilment, clearCart, lines, placeOrder } = useApp();
   const [method, setMethod] = useState<MethodId>("instapay");
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const submittedRef = useRef(false);
+  const dialogRef = useDialogFocus<HTMLDivElement>(showModal, () => setShowModal(false));
 
   useEffect(() => {
     return () => {
@@ -70,12 +74,13 @@ export function PaymentView() {
 
   const pickFile = (file?: File) => {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("ارفع صورة بصيغة JPG أو PNG.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError("حجم الصورة أكبر من 5 ميجا، اختار صورة أصغر.");
+    const check = validateImageFile(file, RECEIPT_IMAGE_TYPES);
+    if (!check.ok) {
+      setError(
+        check.reason === "type"
+          ? "ارفع صورة بصيغة JPG أو PNG."
+          : "حجم الصورة أكبر من 5 ميجا، اختار صورة أصغر.",
+      );
       return;
     }
     setReceipt({ name: file.name || "إيصال الدفع.jpg", size: file.size, url: URL.createObjectURL(file) });
@@ -83,13 +88,29 @@ export function PaymentView() {
   };
 
   const finalize = () => {
+    if (submittedRef.current) return;
+    submittedRef.current = true;
     setShowModal(false);
+
+    const order = placeOrder(method);
+    if (!order) {
+      submittedRef.current = false;
+      toast(t("سلتك فاضية"), "info");
+      router.push("/cart");
+      return;
+    }
+
     clearCart(true);
     toast(t("تم تأكيد طلبك بنجاح، جاري تحضيره الآن"), "info");
     router.push("/orders");
   };
 
   const confirm = () => {
+    if (lines.length === 0) {
+      toast(t("سلتك فاضية"), "info");
+      router.push("/cart");
+      return;
+    }
     if (method === "instapay" && !receipt) {
       setError("ارفع صورة إثبات الدفع الأول قبل تأكيد الطلب.");
       return;
@@ -286,7 +307,11 @@ export function PaymentView() {
             if (event.target === event.currentTarget) setShowModal(false);
           }}
         >
-          <div className="animate-float-in relative w-full max-w-md rounded-[28px] bg-cream p-6 shadow-[0_40px_90px_-30px_rgba(0,0,0,0.45)]">
+          <div
+            ref={dialogRef}
+            tabIndex={-1}
+            className="animate-float-in relative w-full max-w-md rounded-[28px] bg-cream p-6 shadow-[0_40px_90px_-30px_rgba(0,0,0,0.45)]"
+          >
             <button
               type="button"
               aria-label={t("إغلاق")}

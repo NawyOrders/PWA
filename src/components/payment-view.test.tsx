@@ -97,6 +97,12 @@ describe("PaymentView", () => {
 
     await waitFor(() => expect(router.push).toHaveBeenCalledWith("/orders"));
     await waitFor(() => expect(JSON.parse(localStorage.getItem(storageKeys.cart)!)).toEqual([]));
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem(storageKeys.orders)!);
+      expect(stored[0]).toMatchObject({ status: "preparing", paymentMethod: "instapay" });
+      expect(stored[0].items).toHaveLength(3);
+      expect(stored[0].total).toBeGreaterThan(0);
+    });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
@@ -126,6 +132,12 @@ describe("PaymentView", () => {
 
     await waitFor(() => expect(router.push).toHaveBeenCalledWith("/orders"));
     await waitFor(() => expect(JSON.parse(localStorage.getItem(storageKeys.cart)!)).toEqual([]));
+    await waitFor(() =>
+      expect(JSON.parse(localStorage.getItem(storageKeys.orders)!)[0]).toMatchObject({
+        paymentMethod: "cash",
+        status: "preparing",
+      }),
+    );
   });
 
   it("finalizes an e-wallet order and shows the wallet instructions", async () => {

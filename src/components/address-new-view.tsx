@@ -22,7 +22,8 @@ import {
 import { LeafletMap, type MapMarker } from "@/components/leaflet-map";
 import { useApp } from "@/components/providers";
 import { Breadcrumbs } from "@/components/ui";
-import { addressKinds, savedAddresses, type AddressKind, type SavedAddress } from "@/lib/account-data";
+import { useDialogFocus } from "@/hooks/use-dialog-focus";
+import { addressKinds, type AddressKind, type SavedAddress } from "@/lib/account-data";
 import { areaName, distanceKm, formatCoords, type LatLng } from "@/lib/geo";
 
 const ALEXANDRIA: [number, number] = [31.1861, 29.9336];
@@ -48,6 +49,7 @@ export function AddressNewView() {
   const [customLabel, setCustomLabel] = useState("");
   const [detail, setDetail] = useState("");
   const skipNextPick = useRef(false);
+  const formRef = useDialogFocus<HTMLDivElement>(mode === "form", () => setMode("list"));
 
   const selected = addresses.find((item) => item.id === selectedAddressId) ?? null;
   const pinLabel = pin ? areaName(pin, lang) : "";
@@ -66,24 +68,16 @@ export function AddressNewView() {
     );
   }, [selected, center]);
 
-  useEffect(() => {
-    if (mode !== "form") return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMode("list");
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [mode]);
   const suggestions = useMemo(() => {
     const term = query.trim().toLowerCase();
     if (!term) return [];
-    return savedAddresses.filter(
+    return addresses.filter(
       (item) =>
         [item.title, item.area, item.detail].some(
           (value) => value.toLowerCase().includes(term) || t(value).toLowerCase().includes(term),
         ),
     );
-  }, [query, lang, t]);
+  }, [addresses, query, lang, t]);
 
   const markers = useMemo<MapMarker[]>(
     () =>
@@ -340,6 +334,8 @@ export function AddressNewView() {
             ) : null}
 
             <div
+              ref={formRef}
+              tabIndex={mode === "form" ? -1 : undefined}
               role={mode === "form" ? "dialog" : undefined}
               aria-modal={mode === "form" ? true : undefined}
               aria-labelledby={mode === "form" ? "address-form-title" : undefined}

@@ -12,10 +12,14 @@ export const storageKeys = {
   lang: "nawy-lang-v1",
   addresses: "nawy-addresses-v1",
   selectedAddress: "nawy-selected-address-v1",
+  selectedBranch: "nawy-selected-branch-v1",
+  deliveryDetails: "nawy-delivery-details-v1",
+  orders: "nawy-orders-v1",
   coupon: "nawy-coupon-v1",
   orderNote: "nawy-order-note-v1",
   profile: "nawy-profile-v1",
   notifications: "nawy-notifications-v1",
+  notificationRead: "nawy-notification-read-v1",
 } as const;
 
 export function readStorage<T>(key: string, fallback: T): T {

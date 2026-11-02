@@ -9,8 +9,8 @@ import { branches, deliveryFee, formatPrice, user } from "@/lib/data";
 
 export function PickupView() {
   const router = useRouter();
-  const { fulfilment, setFulfilment, subtotal, count, t, lang, addresses, selectedAddressId, coupon } = useApp();
-  const branch = branches[0];
+  const { fulfilment, setFulfilment, subtotal, count, t, lang, addresses, selectedAddressId, selectedBranchId, coupon } = useApp();
+  const branch = branches.find((item) => item.id === selectedBranchId) ?? branches[0];
   const selectedAddress = addresses.find((address) => address.id === selectedAddressId) ?? null;
   const deliveryAddress = selectedAddress
     ? `${t(selectedAddress.area)}${lang === "ar" ? "، " : ", "}${t(selectedAddress.detail)}`

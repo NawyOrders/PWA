@@ -1,16 +1,15 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { OrderTrackingView } from "@/components/order-tracking-view";
-import { orders } from "@/lib/data";
+import { OrderDetailView } from "@/components/order-detail-view";
 
 export const metadata: Metadata = {
   title: "تتبع الطلب",
 };
 
-export function generateStaticParams() {
-  return [...new Set(orders.map((order) => order.id))].map((id) => ({ id }));
-}
+// Order ids are created on the client (localStorage), so the set of valid
+// params is unknown at build time. Mark the route as blocking so the dynamic
+// segment can render at request time instead of failing prerender.
+export const instant = false;
 
 function TrackingFallback() {
   return (
@@ -24,17 +23,11 @@ function TrackingFallback() {
   );
 }
 
-async function OrderTrackingContent({ params }: { params: Promise<{ id: string }> }) {
+export default async function OrderTrackingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const order = orders.find((item) => item.id === id);
-  if (!order) notFound();
-  return <OrderTrackingView order={order} />;
-}
-
-export default function OrderTrackingPage({ params }: { params: Promise<{ id: string }> }) {
   return (
     <Suspense fallback={<TrackingFallback />}>
-      <OrderTrackingContent params={params} />
+      <OrderDetailView orderId={id} />
     </Suspense>
   );
 }

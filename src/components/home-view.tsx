@@ -20,7 +20,6 @@ import {
   filterMenu,
   homeCategoryOrder,
   menuFilters,
-  orders,
   products,
 } from "@/lib/data";
 import { PromoCarousel } from "@/components/promo-carousel";
@@ -109,7 +108,7 @@ function PhoneMockup() {
 }
 
 export function HomeView() {
-  const { t, loggedIn } = useApp();
+  const { t, loggedIn, orders, toast } = useApp();
   const [filter, setFilter] = useState("الكل");
   const [showActiveOrder, setShowActiveOrder] = useState(true);
   const menu = filterMenu(filter);
@@ -283,6 +282,7 @@ export function HomeView() {
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <button
                   type="button"
+                  onClick={() => toast(t("التطبيق هيكون متاح على المتجر قريباً"), "info")}
                   className="flex h-12 items-center gap-3 rounded-xl bg-[#1f1a16] px-5 text-white transition hover:bg-black"
                 >
                   <span className="text-lg leading-none"></span>
@@ -293,6 +293,7 @@ export function HomeView() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => toast(t("التطبيق هيكون متاح على المتجر قريباً"), "info")}
                   className="flex h-12 items-center gap-3 rounded-xl bg-[#1f1a16] px-5 text-white transition hover:bg-black"
                 >
                   <Download className="size-5" />

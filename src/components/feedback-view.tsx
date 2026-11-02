@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, ChevronDown, Send, Star, UploadCloud } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { Breadcrumbs, Button } from "@/components/ui";
 import { feedbackRatings, feedbackTypes } from "@/lib/account-data";
+import { validateImageFile } from "@/lib/media";
 
 export function FeedbackView() {
   const { toast, t } = useApp();
@@ -14,9 +15,26 @@ export function FeedbackView() {
   const [detail, setDetail] = useState("");
   const [image, setImage] = useState<{ name: string; url: string } | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (image) URL.revokeObjectURL(image.url);
+    };
+  }, [image]);
+
   const pickImage = (file: File | undefined) => {
     if (!file) return;
-    if (image) URL.revokeObjectURL(image.url);
+    const check = validateImageFile(file);
+    if (!check.ok) {
+      toast(
+        t(
+          check.reason === "type"
+            ? "اختار صورة بصيغة JPG أو PNG."
+            : "حجم الصورة أكبر من 5 ميجا، اختار صورة أصغر.",
+        ),
+        "info",
+      );
+      return;
+    }
     setImage({ name: file.name, url: URL.createObjectURL(file) });
   };
 
@@ -26,7 +44,6 @@ export function FeedbackView() {
     setStars(0);
     setType(feedbackTypes[0]);
     setDetail("");
-    if (image) URL.revokeObjectURL(image.url);
     setImage(null);
   };
 
@@ -145,7 +162,7 @@ export function FeedbackView() {
                     <label className="mt-2.5 flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-[#8a7466]/60 bg-peach px-4 py-8 text-center transition hover:border-brand/50">
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,image/png,image/webp"
                         className="hidden"
                         onChange={(event) => pickImage(event.target.files?.[0])}
                       />

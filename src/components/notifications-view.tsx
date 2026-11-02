@@ -7,6 +7,18 @@ import { ChevronLeft, CircleCheck, MailCheck, Truck } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { MobilePageHeader } from "@/components/ui";
 import { notifications } from "@/lib/data";
+import { usePersistentState } from "@/hooks/use-persistent-state";
+import { storageKeys } from "@/lib/storage";
+
+const defaultReadIds = notifications
+  .filter((notification) => !notification.unread)
+  .map((notification) => notification.id);
+
+function decodeReadIds(stored: unknown, fallback: string[]): string[] {
+  if (!Array.isArray(stored)) return fallback;
+  const known = new Set(notifications.map((notification) => notification.id));
+  return stored.filter((id): id is string => typeof id === "string" && known.has(id));
+}
 
 const iconMeta = {
   delivery: { icon: Truck, tile: "bg-[#f8e8da] text-ink" },
@@ -16,9 +28,12 @@ const iconMeta = {
 } as const;
 
 export function NotificationsView() {
-  const { toast, t } = useApp();
-  const [readIds, setReadIds] = useState<string[]>(
-    notifications.filter((notification) => !notification.unread).map((notification) => notification.id),
+  const { toast, t, profile } = useApp();
+  const firstName = profile.name.trim().split(/\s+/)[0] || "أحمد";
+  const [readIds, setReadIds] = usePersistentState<string[]>(
+    storageKeys.notificationRead,
+    defaultReadIds,
+    decodeReadIds,
   );
   const [onlyUnread, setOnlyUnread] = useState(false);
 
@@ -58,7 +73,9 @@ export function NotificationsView() {
           <div className="hidden items-center justify-between lg:flex lg:pt-8">
             <div className="text-start">
               <h1 className="text-[32px] font-extrabold">{t("الإشعارات")}</h1>
-              <p className="mt-2 text-sm text-muted">{t("تابع طلباتك، وتمتع بعروض ناوي يا أحمد")}</p>
+              <p className="mt-2 text-sm text-muted">
+                {t("تابع طلباتك، وتمتع بعروض ناوي يا {name}", { name: firstName })}
+              </p>
             </div>
             <Link
               href="/"
@@ -70,7 +87,7 @@ export function NotificationsView() {
           </div>
 
           <p className="px-4 pt-1 text-end text-xs leading-6 text-muted lg:hidden">
-            {t("تابع طلباتك، وتمتع بعروض ناوي يا أحمد")}
+            {t("تابع طلباتك، وتمتع بعروض ناوي يا {name}", { name: firstName })}
           </p>
 
           <div className="mt-3 flex items-center justify-between gap-3 px-4 lg:mt-6 lg:px-0">

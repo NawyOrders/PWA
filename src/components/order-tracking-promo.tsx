@@ -18,10 +18,10 @@ function TrackingBannerContent({
     <>
       <div className="min-w-0 text-end text-white lg:text-center">
         <p className="text-xs font-medium text-white/90 lg:text-xs">
-          {t("الوقت المتبقي للتوصيل")}
+          {t(order.fulfilment === "pickup" ? "وقت الاستلام المتوقع" : "الوقت المتبقي للتوصيل")}
         </p>
         <p className="mt-0.5 text-base font-extrabold leading-tight lg:mt-1 lg:text-base">
-          {t("خلال 30 - 45 دقيقة")}
+          {order.eta ? t(order.eta) : t("خلال 30 - 45 دقيقة")}
         </p>
       </div>
       <Link
