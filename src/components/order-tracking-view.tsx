@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { LeafletMap, type MapMarker } from "@/components/leaflet-map";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs } from "@/components/ui";
+import { Breadcrumbs, MobilePageHeader } from "@/components/ui";
 import {
   courier,
   courierPosition,
@@ -70,8 +70,9 @@ export function OrderTrackingView({ order }: { order: Order }) {
 
   return (
     <div className="pb-10">
+      <MobilePageHeader title="تتبع الطلب" backHref="/orders" />
       <div className="shell lg:pt-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="hidden flex-col gap-4 lg:flex lg:flex-row lg:items-center lg:justify-between">
           <Breadcrumbs
             items={[
               { label: "الرئيسية", href: "/" },
@@ -88,9 +89,9 @@ export function OrderTrackingView({ order }: { order: Order }) {
           </Link>
         </div>
 
-        <div className="mt-4 lg:mt-3">
-          <h1 className="text-[26px] font-extrabold lg:text-[32px]">{t("تتبع الطلب")}</h1>
-          <p className="mt-2 text-sm text-muted">{t("تابع طلبك الحالي وارجع لكل طلباتك السابقة في مكان واحد.")}</p>
+        <div className="mt-1 lg:mt-3">
+          <h1 className="hidden text-[32px] font-extrabold lg:block">{t("تتبع الطلب")}</h1>
+          <p className="text-sm text-muted lg:mt-2">{t("تابع طلبك الحالي وارجع لكل طلباتك السابقة في مكان واحد.")}</p>
         </div>
 
         <div className="mt-5 space-y-4 lg:mt-7 lg:space-y-5">

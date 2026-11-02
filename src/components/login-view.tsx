@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, ChevronLeft, Phone, Send, ShieldCheck } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs, buttonStyles } from "@/components/ui";
+import { BackLink, Breadcrumbs, buttonStyles } from "@/components/ui";
 import { LogoMark } from "@/components/logo";
 
 const OTP_LENGTH = 6;
@@ -253,7 +253,8 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
 
   return (
     <div className="pb-10">
-      <div className="mx-auto mt-[68px] flex h-14 max-w-[343px] items-center justify-center lg:hidden">
+      <div className="relative mx-auto mt-6 flex h-14 max-w-[343px] items-center justify-center lg:hidden">
+        <BackLink href="/" className="absolute start-0 top-0" />
         <LogoMark className="size-14" />
       </div>
 

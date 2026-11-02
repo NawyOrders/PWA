@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight, Flame, Heart, Minus, Plus, ShoppingBag } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, Heart, Minus, Plus, ShoppingBag } from "lucide-react";
 import { formatPrice } from "@/lib/data";
 import { useApp } from "@/components/providers";
 
@@ -268,6 +269,64 @@ export function SectionTitle({
   );
 }
 
+const backTones = {
+  surface: "rounded-2xl border border-line bg-white text-ink shadow-soft hover:text-brand",
+  overlay: "rounded-full bg-white/95 text-ink shadow-pop backdrop-blur hover:text-brand",
+} as const;
+
+type BackControlProps = {
+  href?: string;
+  label?: string;
+  tone?: keyof typeof backTones;
+  className?: string;
+};
+
+function backControlStyles(tone: keyof typeof backTones, className: string): string {
+  return ["grid size-11 shrink-0 place-items-center transition active:scale-95", backTones[tone], className]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function BackIcon() {
+  return <ChevronRight className="size-5 ltr:rotate-180" strokeWidth={2.2} />;
+}
+
+/**
+ * Mobile back control. It uses real history when the tab has somewhere to
+ * return to, and falls back to the screen's parent otherwise so a deep link
+ * never leaves the customer on a page with no way out.
+ */
+export function BackButton({ href = "/", label = "رجوع", tone = "surface", className = "" }: BackControlProps) {
+  const router = useRouter();
+  const { t } = useApp();
+  return (
+    <button
+      type="button"
+      aria-label={t(label)}
+      onClick={() => {
+        if (typeof window !== "undefined" && window.history.length > 1) router.back();
+        else router.push(href);
+      }}
+      className={backControlStyles(tone, className)}
+    >
+      <BackIcon />
+    </button>
+  );
+}
+
+/**
+ * Deterministic back link for screens where history would bounce straight
+ * back (for example the login screen reached from a protected route).
+ */
+export function BackLink({ href = "/", label = "رجوع", tone = "surface", className = "" }: BackControlProps) {
+  const { t } = useApp();
+  return (
+    <Link href={href} aria-label={t(label)} className={backControlStyles(tone, className)}>
+      <BackIcon />
+    </Link>
+  );
+}
+
 export function MobilePageHeader({
   title,
   backHref = "/",
@@ -282,13 +341,7 @@ export function MobilePageHeader({
   const { t } = useApp();
   return (
     <header className={`flex items-center justify-between px-4 pb-4 pt-6 lg:hidden ${className}`}>
-      <Link
-        href={backHref}
-        aria-label={t("رجوع")}
-        className="grid size-11 place-items-center rounded-2xl border border-line bg-white text-ink shadow-soft transition active:scale-95"
-      >
-        <ChevronRight className="size-5 ltr:rotate-180" />
-      </Link>
+      <BackButton href={backHref} />
       <h1 className="text-lg font-extrabold">{t(title)}</h1>
       <div className="flex min-w-11 justify-end">{action}</div>
     </header>
@@ -311,17 +364,7 @@ export function DisplayPageHeader({
   const { t } = useApp();
   return (
     <header className={`px-5 pb-6 pt-6 lg:hidden ${className}`}>
-      <div className="flex justify-start">
-        {action ?? (
-          <Link
-            href={backHref}
-            aria-label={t("رجوع")}
-            className="grid size-12 place-items-center rounded-full bg-white/80 text-ink shadow-soft transition active:scale-95"
-          >
-            <ArrowRight className="size-5 ltr:rotate-180" strokeWidth={2.1} />
-          </Link>
-        )}
-      </div>
+      <div className="flex justify-start">{action ?? <BackButton href={backHref} tone="overlay" />}</div>
       <h1 className="mt-6 text-start font-display text-[42px] font-extrabold leading-[1.15] lg:text-[46px]">
         {t(title)}
       </h1>

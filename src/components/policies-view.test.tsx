@@ -4,6 +4,17 @@ import { describe, expect, it, vi } from "vitest";
 import { PoliciesView } from "@/components/policies-view";
 import { renderApp } from "@/test/render";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    back: vi.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+}));
+
 vi.mock("next/link", () => ({
   default: ({ href, children, ...props }: { href: string | { pathname?: string }; children: React.ReactNode }) => (
     <a href={typeof href === "string" ? href : String(href)} {...props}>
