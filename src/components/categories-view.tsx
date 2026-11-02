@@ -6,17 +6,16 @@ import { useState } from "react";
 import { ChevronLeft, LayoutGrid, SlidersHorizontal } from "lucide-react";
 import {
   categories,
+  catalogCategoryOrder,
   categoriesById,
   categoryCounts,
   desktopCategoryOrder,
-  homeCategoryOrder,
   products,
   type CategoryId,
 } from "@/lib/data";
 import { StoreHeader } from "@/components/store-header";
-import { MobilePageHeader, SectionTitle } from "@/components/ui";
+import { MobilePageHeader } from "@/components/ui";
 import { ProductCard } from "@/components/product-card";
-import { MenuRow } from "@/components/menu-row";
 import { useApp } from "@/components/providers";
 
 const chips = ["الكل", "الأكثر طلباً", "العروض"];
@@ -74,32 +73,25 @@ export function CategoriesView() {
           </Link>
         </div>
 
-        <div className="hide-scrollbar -mx-4 mt-4 flex gap-2.5 overflow-x-auto px-4 pb-1 lg:hidden">
-          {homeCategoryOrder.map((id) => {
+        <div className="mt-4 grid grid-cols-2 gap-3 lg:hidden">
+          {catalogCategoryOrder.map((id) => {
             const item = categoriesById[id];
-            const active = id === categoryId;
             return (
-              <button
+              <Link
                 key={id}
-                type="button"
-                onClick={() => {
-                  setCategoryId(id);
-                  setChip("الكل");
-                }}
-                className="flex w-[60px] shrink-0 flex-col items-center gap-2 text-center"
-                aria-pressed={active}
+                href={`/categories/${id}`}
+                className="flex flex-col items-center rounded-[18px] bg-white px-3 py-4 text-center shadow-soft transition active:scale-[0.98]"
               >
-                <span
-                  className={`grid size-[60px] place-items-center rounded-full border-2 bg-white transition ${
-                    active ? "border-brand shadow-[0_10px_24px_-14px_rgba(232,69,44,0.7)]" : "border-[#ece0d4]"
-                  }`}
-                >
+                <span className="grid size-[68px] place-items-center rounded-full bg-peach/80">
                   <span className="relative size-12 overflow-hidden rounded-full">
                     <Image src={item.image} alt={t(item.name)} fill sizes="48px" className="object-cover" />
                   </span>
                 </span>
-                <span className={`whitespace-nowrap text-[10px] font-bold ${active ? "text-brand" : "text-ink"}`}>{t(item.name)}</span>
-              </button>
+                <span className="mt-2.5 text-[15px] font-extrabold text-ink">{t(item.name)}</span>
+                <span className="mt-1 text-[11px] font-semibold text-muted">
+                  {categoryCounts[id] ?? 0} {t("صنف")}
+                </span>
+              </Link>
             );
           })}
         </div>
@@ -199,31 +191,6 @@ export function CategoriesView() {
             category: t(category.name),
           })}
         </p>
-      </div>
-
-      <div className="shell mt-8 lg:hidden">
-        <SectionTitle
-          title="الأكثر طلباً"
-          icon={<span className="text-brand">🔥</span>}
-          action={{ label: "عرض الكل", href: "/categories" }}
-        />
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          {products
-            .filter((product) => product.category === categoryId)
-            .sort((a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)))
-            .slice(0, 2)
-            .map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-        </div>
-
-        <SectionTitle title="القائمة" className="mt-7" />
-        <div className="mt-3 space-y-3">
-          {items.slice(0, 4).map((product) => (
-            <MenuRow key={product.id} product={product} />
-          ))}
-        </div>
-        {items.length === 0 ? <p className="text-center text-sm text-muted">{t("لا توجد أصناف حالياً.")}</p> : null}
       </div>
 
       <div className="shell mt-8 hidden text-center text-xs text-muted lg:block">

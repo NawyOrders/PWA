@@ -10,7 +10,7 @@ export function ProductCard({
   product,
   className = "",
   showType = false,
-  mediaClassName = "aspect-[1.18/1]",
+  mediaClassName = "aspect-[1.4/1]",
 }: {
   product: Product;
   className?: string;
@@ -39,19 +39,22 @@ export function ProductCard({
               {t(product.type)}
             </span>
           ) : null}
-          {product.popular ? (
-            <div className="absolute bottom-2 start-2">
-              <HotBadge />
-            </div>
-          ) : null}
         </div>
 
-        <h3 className="mt-3 text-center text-base font-bold leading-6 lg:text-lg">{t(product.name)}</h3>
-        <p className="mx-auto mt-1 line-2 min-h-8 max-w-[94%] text-center text-[11px] leading-4 text-muted">
+        {product.popular ? (
+          <div className="mt-2 flex justify-center">
+            <HotBadge />
+          </div>
+        ) : null}
+
+        <h3 className={`${product.popular ? "mt-1.5" : "mt-2"} text-center text-base font-bold leading-6 lg:text-lg`}>
+          {t(product.name)}
+        </h3>
+        <p className="mx-auto mt-0.5 line-2 min-h-7 max-w-[94%] text-center text-[11px] leading-4 text-muted">
           {t(product.description)}
         </p>
 
-        <div className="mt-2 flex min-h-11 items-center justify-start ps-1">
+        <div className="mt-1.5 flex min-h-9 items-center justify-start ps-1">
           <Price value={product.price} oldValue={product.oldPrice} compact />
         </div>
       </Link>

@@ -138,7 +138,7 @@ export function HomeView() {
             return (
               <Link
                 key={id}
-                href="/categories"
+                href={`/categories/${id}`}
                 className="flex w-[60px] shrink-0 flex-col items-center gap-2 text-center"
               >
                 <span
@@ -163,7 +163,7 @@ export function HomeView() {
             return (
               <Link
                 key={id}
-                href="/categories"
+                href={`/categories/${id}`}
                 className={`flex flex-col items-center rounded-2xl border-2 bg-white px-2 py-4 text-center transition hover:-translate-y-1 hover:shadow-soft ${
                   active ? "border-brand" : "border-transparent"
                 }`}
