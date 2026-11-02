@@ -341,6 +341,17 @@ export const desktopCategoryOrder: CategoryId[] = [
   "desserts",
 ];
 
+/** Two-column order used by the mobile category catalogue. */
+export const catalogCategoryOrder: CategoryId[] = [
+  "burger",
+  "pizza",
+  "appetizers",
+  "desserts",
+  "chicken",
+  "drinks",
+  "tost",
+];
+
 export const menuFilters = ["الكل", "برجر لحم", "وجبات العائلة", "اطعمة مميزة", "وجبات اطفال"];
 
 export function filterMenu(filter: string) {

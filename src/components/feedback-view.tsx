@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, ChevronDown, Send, Star, UploadCloud } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs, Button } from "@/components/ui";
+import { BackButton, Breadcrumbs, Button } from "@/components/ui";
 import { feedbackRatings, feedbackTypes } from "@/lib/account-data";
 import { validateImageFile } from "@/lib/media";
 
@@ -50,13 +50,7 @@ export function FeedbackView() {
   return (
     <div className="pb-10">
       <div className="bg-gradient-to-b from-peach to-cream px-4 pb-2 pt-6 lg:hidden">
-        <Link
-          href="/help"
-          aria-label={t("رجوع")}
-          className="grid size-12 place-items-center rounded-full bg-white text-ink shadow-soft transition active:scale-95"
-        >
-          <ArrowRight className="size-5 ltr:rotate-180" strokeWidth={2.2} />
-        </Link>
+        <BackButton href="/help" />
         <h1 className="mt-10 text-start text-[40px] font-extrabold leading-[1.3]">
           {t("ارسال الملاحظات")}
         </h1>

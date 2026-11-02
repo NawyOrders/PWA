@@ -93,6 +93,20 @@ describe("SiteChrome route guard", () => {
     expect(screen.getByRole("navigation", { name: "التنقل الرئيسي" })).toBeInTheDocument();
   });
 
+  it("keeps the bottom navigation on the orders tab root", async () => {
+    renderChrome("/orders", { loggedIn: true });
+
+    expect(await screen.findByText("protected content")).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "التنقل السفلي" })).toBeInTheDocument();
+  });
+
+  it("hides the bottom navigation on order tracking", async () => {
+    renderChrome("/orders/10248", { loggedIn: true });
+
+    expect(await screen.findByText("protected content")).toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "التنقل السفلي" })).not.toBeInTheDocument();
+  });
+
   it("hides chrome on the login route while leaving content visible", async () => {
     renderChrome("/login");
 

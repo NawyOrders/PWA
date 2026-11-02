@@ -111,6 +111,8 @@ const en: Record<string, string> = {
   "أقسام رئيسية": "main categories",
   "كل الأصناف محضرة طازة في مطبخ ناوي أوردرز": "every item is freshly prepared in the Nawy Orders kitchen",
   "عرض {count} من {total} أطباق في قسم {category}": "Showing {count} of {total} items in {category}",
+  "قسم «ال{name}»": "Category “{name}”",
+  "قسم غير موجود": "Category not found",
   "{count} أقسام رئيسية — كل الأصناف محضرة طازة في مطبخ ناوي أوردرز": "{count} main categories — everything is freshly prepared in the Nawy Orders kitchen",
 
   // search page
@@ -331,6 +333,7 @@ const en: Record<string, string> = {
   "تم حفظ التغييرات بنجاح": "Changes saved successfully",
 
   // orders
+  "طلباتك": "Your orders",
   "تابع طلبك الحالي واطلب تاني أطباقك المفضلة.": "Track your current order and reorder your favorites.",
   "طلبك الحالي": "Current order",
   "الطلبات السابقة": "Previous orders",

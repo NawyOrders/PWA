@@ -272,6 +272,7 @@ export function SectionTitle({
 const backTones = {
   surface: "rounded-2xl border border-line bg-white text-ink shadow-soft hover:text-brand",
   overlay: "rounded-full bg-white/95 text-ink shadow-pop backdrop-blur hover:text-brand",
+  soft: "rounded-full bg-peach text-ink hover:bg-brand-soft hover:text-brand",
 } as const;
 
 type BackControlProps = {

@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LayoutGrid, ShoppingCart, UserRound } from "lucide-react";
+import { ClipboardList, Home, ShoppingCart, UserRound } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { loginHref } from "@/lib/routes";
 
 const items = [
   { href: "/", label: "الرئيسية", icon: Home },
-  { href: "/categories", label: "الاقسام", icon: LayoutGrid },
+  { href: "/orders", label: "طلباتي", icon: ClipboardList },
   { href: "/cart", label: "السلة", icon: ShoppingCart },
   { href: "/profile", label: "حسابي", icon: UserRound },
 ];
@@ -27,10 +27,11 @@ export function BottomNav() {
           const active =
             item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
+          const needsLogin = !loggedIn && (item.href === "/profile" || item.href === "/orders");
           return (
             <Link
               key={item.href}
-              href={item.href === "/profile" && !loggedIn ? loginHref("/profile") : item.href}
+              href={needsLogin ? loginHref(item.href) : item.href}
               onClick={(event) => {
                 if (item.href === "/cart" && !loggedIn) {
                   event.preventDefault();

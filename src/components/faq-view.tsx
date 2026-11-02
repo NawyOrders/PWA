@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowRight, ChevronDown, ChevronUp, Phone, Search } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs, buttonStyles } from "@/components/ui";
+import { BackButton, Breadcrumbs, buttonStyles } from "@/components/ui";
 import { faqItems } from "@/lib/account-data";
 
 export function FaqView() {
@@ -25,13 +25,7 @@ export function FaqView() {
   return (
     <div className="pb-10">
       <div className="bg-gradient-to-b from-peach to-cream px-4 pb-2 pt-6 lg:hidden">
-        <Link
-          href="/help"
-          aria-label={t("رجوع")}
-          className="grid size-12 place-items-center rounded-full bg-white text-ink shadow-soft transition active:scale-95"
-        >
-          <ArrowRight className="size-5 ltr:rotate-180" strokeWidth={2.2} />
-        </Link>
+        <BackButton href="/help" />
         <h1 className="mt-10 text-start text-[40px] font-extrabold leading-[1.3]">
           {t("الاسئلة الشائعة")}
         </h1>

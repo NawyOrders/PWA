@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowRight, Bot, MoreVertical, Paperclip, Send } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs } from "@/components/ui";
+import { BackButton, Breadcrumbs } from "@/components/ui";
 import { agentReplies, chatSeed, type ChatMessage } from "@/lib/account-data";
 import { validateImageFile } from "@/lib/media";
 
@@ -68,7 +68,11 @@ export function ChatView() {
           />
         </div>
 
-        <div className="mx-auto max-w-[640px] px-4 pt-6 lg:max-w-3xl lg:px-0">
+        <div className="sticky top-0 z-30 bg-cream/95 px-4 pb-1 pt-4 backdrop-blur lg:hidden">
+          <BackButton href="/help" tone="soft" />
+        </div>
+
+        <div className="mx-auto max-w-[640px] px-4 pt-2 lg:max-w-3xl lg:px-0 lg:pt-6">
           <div className="relative lg:mt-6 lg:rounded-[28px] lg:bg-cream-50 lg:p-8 lg:shadow-soft">
             <Link
               href="/help"
@@ -89,13 +93,6 @@ export function ChatView() {
               <span className="grid size-12 shrink-0 place-items-center rounded-full bg-brand text-white shadow-[0_14px_26px_-14px_rgba(232,69,44,0.9)]">
                 <Bot className="size-6" strokeWidth={1.9} />
               </span>
-              <Link
-                href="/help"
-                aria-label={t("رجوع")}
-                className="grid size-10 shrink-0 place-items-center rounded-full bg-peach text-ink transition hover:bg-brand-soft lg:hidden"
-              >
-                <ArrowRight className="size-5 ltr:rotate-180" strokeWidth={2.2} />
-              </Link>
             </div>
 
             <div className="mt-6 flex justify-center">

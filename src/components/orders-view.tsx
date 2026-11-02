@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { ChevronLeft, ReceiptText, RotateCcw, Truck } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { MobilePageHeader } from "@/components/ui";
 import { formatPrice, paymentMethodLabels, productsById, toArabicDigits, user, type Order } from "@/lib/data";
 
 export function OrdersView() {
@@ -15,6 +14,7 @@ export function OrdersView() {
   const current = orders.filter((order) => order.status === "preparing");
   const previous = orders.filter((order) => order.status === "delivered");
   const orderNumber = (id: string) => (lang === "en" ? id : toArabicDigits(id));
+  const display = (value: string | number) => (lang === "ar" ? toArabicDigits(value) : String(value));
 
   const reorder = (order: Order) => {
     const items = order.items ?? [];
@@ -62,14 +62,14 @@ export function OrdersView() {
           </div>
           <div className="min-w-0 flex-1 pt-1">
             <h3 className="text-[15px] font-extrabold leading-6">{t(order.title)}</h3>
-            <p className="mt-1 text-[11px] leading-5 text-muted">{t(order.date)}</p>
+            <p className="mt-1 text-[11px] leading-5 text-muted">{display(t(order.date))}</p>
             <p className="mt-0.5 line-2 text-[11px] leading-5 text-muted">{t(order.description)}</p>
           </div>
         </div>
 
         {isCurrent && order.eta ? (
           <p className="mt-3 rounded-xl bg-[#fbf4ec] px-3 py-2.5 text-center text-[11px] font-semibold text-muted">
-            {t("وقت الوصول المتوقع")}: {t(order.eta)}
+            {t("وقت الوصول المتوقع")}: {display(t(order.eta))}
           </p>
         ) : null}
 
@@ -95,7 +95,19 @@ export function OrdersView() {
         ) : null}
 
         <div className="mt-4 flex items-center justify-between gap-2 border-t border-line pt-4">
+          <span className="whitespace-nowrap text-base font-extrabold">
+            {display(formatPrice(order.total))} <span className="text-xs font-bold">{t("ج.م")}</span>
+          </span>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setExpandedId(expanded ? null : key)}
+              aria-expanded={expanded}
+              className="flex h-9 items-center gap-1.5 rounded-full px-2 text-[11px] font-bold text-ink/70 transition hover:text-brand"
+            >
+              {t("التفاصيل")}
+              <ReceiptText className="size-4" strokeWidth={1.7} />
+            </button>
             {isCurrent ? (
               <Link
                 href={`/orders/${order.id}`}
@@ -114,19 +126,7 @@ export function OrdersView() {
                 {t("اطلب تاني")}
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => setExpandedId(expanded ? null : key)}
-              aria-expanded={expanded}
-              className="flex h-9 items-center gap-1.5 rounded-full px-2 text-[11px] font-bold text-ink/70 transition hover:text-brand"
-            >
-              {t("التفاصيل")}
-              <ReceiptText className="size-4" strokeWidth={1.7} />
-            </button>
           </div>
-          <span className="whitespace-nowrap text-base font-extrabold">
-            {formatPrice(order.total)} <span className="text-xs font-bold">{t("ج.م")}</span>
-          </span>
         </div>
       </article>
     );
@@ -134,7 +134,7 @@ export function OrdersView() {
 
   return (
     <div className="pb-10">
-      <MobilePageHeader title="سجل الطلبات" backHref="/profile" />
+      <h1 className="px-4 pb-4 pt-6 text-center text-lg font-extrabold lg:hidden">{t("طلباتك")}</h1>
 
       <div className="shell">
         <div className="mx-auto max-w-3xl">
@@ -152,12 +152,14 @@ export function OrdersView() {
             </Link>
           </div>
 
-          <div className="space-y-7 px-4 pt-2 lg:mt-7 lg:px-0">
+          <div className="space-y-7 pt-2 lg:mt-7">
             <section>
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-extrabold">{t("طلبك الحالي")}</h2>
                 <span className="text-xs text-muted">
-                  {current.length === 1 ? t("طلب واحد") : t("{count} طلبات", { count: current.length })}
+                  {current.length === 1
+                    ? t("طلب واحد")
+                    : t("{count} طلبات", { count: display(current.length) })}
                 </span>
               </div>
               <div className="mt-3 space-y-3">
@@ -174,7 +176,7 @@ export function OrdersView() {
             <section>
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-extrabold">{t("الطلبات السابقة")}</h2>
-                <span className="text-xs text-muted">{t("آخر {count} طلبات", { count: previous.length })}</span>
+                <span className="text-xs text-muted">{t("آخر {count} طلبات", { count: display(previous.length) })}</span>
               </div>
               <div className="mt-3 space-y-3">
                 {previous.length > 0 ? (

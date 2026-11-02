@@ -18,7 +18,7 @@ const noBottomNav = [
   "/favorites",
   "/notifications",
   "/settings",
-  "/orders",
+  "/categories",
   "/profile/edit",
   "/help",
   "/about",
@@ -33,7 +33,9 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
   // Never paint account/checkout content before the session has been restored:
   // a signed-out visitor would otherwise see private UI for one frame.
   const hideProtectedPage = protectedPath && (!ready || !loggedIn);
-  const hideBottomNav = noBottomNav.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+  const hideBottomNav =
+    noBottomNav.some((path) => pathname === path || pathname.startsWith(`${path}/`)) ||
+    pathname.startsWith("/orders/");
   const hideFooter = noFooter.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
   useEffect(() => {
