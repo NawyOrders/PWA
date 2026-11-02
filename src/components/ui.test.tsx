@@ -1,18 +1,53 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   AddButton,
+  BackButton,
+  BackLink,
   Button,
   Chip,
   FavoriteButton,
   HotBadge,
+  MobilePageHeader,
   Price,
   QtyStepper,
   buttonStyles,
   chipStyles,
 } from "@/components/ui";
 import { renderApp } from "@/test/render";
+
+const router = vi.hoisted(() => ({ back: vi.fn(), push: vi.fn() }));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    back: router.back,
+    push: router.push,
+    replace: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+}));
+
+vi.mock("next/link", () => ({
+  default: ({ href, children, ...props }: { href: string | { pathname?: string }; children: React.ReactNode }) => (
+    <a href={typeof href === "string" ? href : String(href)} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
+/** jsdom always reports a single entry; override it to model an in-app history. */
+function setHistoryLength(value: number) {
+  Object.defineProperty(window.history, "length", { configurable: true, value });
+}
+
+afterEach(() => {
+  Reflect.deleteProperty(window.history, "length");
+  router.back.mockReset();
+  router.push.mockReset();
+});
 
 describe("buttonStyles", () => {
   it("builds the default brand button recipe", () => {
@@ -178,5 +213,47 @@ describe("HotBadge", () => {
   it("renders the translated default label", () => {
     renderApp(<HotBadge />);
     expect(screen.getByText("الأكثر طلباً")).toBeInTheDocument();
+  });
+});
+
+describe("BackButton", () => {
+  it("falls back to the parent route when the tab has no previous screen", async () => {
+    const user = userEvent.setup();
+    renderApp(<BackButton href="/orders" />);
+
+    const back = screen.getByRole("button", { name: "رجوع" });
+    expect(back).toHaveAttribute("type", "button");
+
+    await user.click(back);
+
+    expect(router.push).toHaveBeenCalledWith("/orders");
+    expect(router.back).not.toHaveBeenCalled();
+  });
+
+  it("uses real history when the customer navigated within the app", async () => {
+    setHistoryLength(2);
+    const user = userEvent.setup();
+    renderApp(<BackButton href="/orders" />);
+
+    await user.click(screen.getByRole("button", { name: "رجوع" }));
+
+    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it("is reachable by its accessible name inside the mobile header", () => {
+    renderApp(<MobilePageHeader title="السلة" backHref="/cart" />);
+
+    expect(screen.getByRole("heading", { name: "السلة" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "رجوع" })).toBeInTheDocument();
+  });
+});
+
+describe("BackLink", () => {
+  it("renders a deterministic, labelled link for screens that must not bounce", () => {
+    renderApp(<BackLink href="/" />);
+
+    const link = screen.getByRole("link", { name: "رجوع" });
+    expect(link).toHaveAttribute("href", "/");
   });
 });

@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { LeafletMap, type MapMarker } from "@/components/leaflet-map";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs } from "@/components/ui";
+import { BackButton, Breadcrumbs } from "@/components/ui";
 import { useDialogFocus } from "@/hooks/use-dialog-focus";
 import { addressKinds, type AddressKind, type SavedAddress } from "@/lib/account-data";
 import { areaName, distanceKm, formatCoords, type LatLng } from "@/lib/geo";
@@ -249,6 +249,12 @@ export function AddressNewView() {
 
             <div className="pointer-events-none absolute inset-x-0 top-0 z-[600] px-4 pt-5">
               <div className="flex items-center gap-3">
+                <BackButton
+                  href="/addresses"
+                  tone="overlay"
+                  className="pointer-events-auto lg:hidden"
+                />
+
                 <button
                   type="button"
                   onClick={useMyLocation}
