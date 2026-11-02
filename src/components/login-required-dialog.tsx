@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { Clock3, Pencil, UserRound, X } from "lucide-react";
 import { useApp } from "@/components/providers";
+import { useDialogFocus } from "@/hooks/use-dialog-focus";
 import { loginHref } from "@/lib/routes";
 
 export function LoginRequiredDialog({ onClose }: { onClose: () => void }) {
   const { t, loginPromptNext } = useApp();
   const next = loginPromptNext ?? "/cart";
+  const dialogRef = useDialogFocus<HTMLElement>(true, onClose);
 
   return (
     <div
@@ -17,6 +19,8 @@ export function LoginRequiredDialog({ onClose }: { onClose: () => void }) {
       }}
     >
       <section
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="login-required-title"

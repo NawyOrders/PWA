@@ -30,7 +30,9 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { loggedIn, ready, loginPromptOpen, openLoginPrompt, closeLoginPrompt } = useApp();
   const protectedPath = isProtectedPath(pathname);
-  const hideProtectedPage = ready && protectedPath && !loggedIn;
+  // Never paint account/checkout content before the session has been restored:
+  // a signed-out visitor would otherwise see private UI for one frame.
+  const hideProtectedPage = protectedPath && (!ready || !loggedIn);
   const hideBottomNav = noBottomNav.some((path) => pathname === path || pathname.startsWith(`${path}/`));
   const hideFooter = noFooter.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 

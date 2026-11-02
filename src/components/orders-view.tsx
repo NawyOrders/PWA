@@ -6,16 +6,10 @@ import { useState } from "react";
 import { ChevronLeft, ReceiptText, RotateCcw, Truck } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { MobilePageHeader } from "@/components/ui";
-import { formatPrice, orders, productsById, toArabicDigits, user, type Order } from "@/lib/data";
-
-const reorderMap: Record<string, string[]> = {
-  "كومبو برجر لحم": ["family-box"],
-  "بيتزا بيبروني": ["pizza-pepperoni", "cola"],
-  "وجبة فرايد تشيكن": ["chicken-bucket", "fries"],
-};
+import { formatPrice, paymentMethodLabels, productsById, toArabicDigits, user, type Order } from "@/lib/data";
 
 export function OrdersView() {
-  const { addItem, toast, t, lang } = useApp();
+  const { addItem, toast, t, lang, orders } = useApp();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const current = orders.filter((order) => order.status === "preparing");
@@ -23,10 +17,21 @@ export function OrdersView() {
   const orderNumber = (id: string) => (lang === "en" ? id : toArabicDigits(id));
 
   const reorder = (order: Order) => {
-    const items = reorderMap[order.title] ?? [];
-    items.forEach((productId) => {
-      const product = productsById[productId];
-      if (product) addItem(productId, { price: product.price });
+    const items = order.items ?? [];
+    if (items.length === 0) {
+      toast(t("مفيش أصناف محفوظة للطلب ده"), "info");
+      return;
+    }
+    items.forEach((item) => {
+      const product = productsById[item.productId];
+      if (!product) return;
+      addItem(item.productId, {
+        qty: item.qty,
+        price: item.price > 0 ? item.price : product.price,
+        size: item.size,
+        extras: item.extras,
+        note: item.note,
+      });
     });
     toast(t("تمت إضافة طلبك السابق إلى السلة"));
   };
@@ -64,7 +69,7 @@ export function OrdersView() {
 
         {isCurrent && order.eta ? (
           <p className="mt-3 rounded-xl bg-[#fbf4ec] px-3 py-2.5 text-center text-[11px] font-semibold text-muted">
-            {t(order.eta)}
+            {t("وقت الوصول المتوقع")}: {t(order.eta)}
           </p>
         ) : null}
 
@@ -72,15 +77,19 @@ export function OrdersView() {
           <div className="mt-3 space-y-1.5 rounded-2xl bg-[#fbf4ec] px-4 py-3.5 text-[11px] leading-6 text-muted">
             <p>
               <span className="font-bold text-ink">{t("الأصناف: ")}</span>
-              {t(order.description)}
+              {order.items?.length
+                ? order.items.map((item) => `${item.qty} × ${t(item.name)}`).join(lang === "ar" ? "، " : ", ")
+                : t(order.description)}
             </p>
             <p>
               <span className="font-bold text-ink">{t("طريقة الدفع: ")}</span>
-              {t(isCurrent ? "انستا باي" : "الدفع عند الاستلام")}
+              {order.paymentMethod ? t(paymentMethodLabels[order.paymentMethod]) : t("غير محدد")}
             </p>
             <p>
-              <span className="font-bold text-ink">{t("العنوان: ")}</span>
-              {t(user.address)}
+              <span className="font-bold text-ink">
+                {t(order.fulfilment === "pickup" ? "الاستلام من: " : "العنوان: ")}
+              </span>
+              {order.address ? t(order.address) : t(user.address)}
             </p>
           </div>
         ) : null}
@@ -151,7 +160,15 @@ export function OrdersView() {
                   {current.length === 1 ? t("طلب واحد") : t("{count} طلبات", { count: current.length })}
                 </span>
               </div>
-              <div className="mt-3 space-y-3">{current.map(renderOrder)}</div>
+              <div className="mt-3 space-y-3">
+                {current.length > 0 ? (
+                  current.map(renderOrder)
+                ) : (
+                  <p className="rounded-2xl bg-white px-4 py-6 text-center text-xs text-muted shadow-soft">
+                    {t("مفيش طلبات جارية حالياً")}
+                  </p>
+                )}
+              </div>
             </section>
 
             <section>
@@ -159,7 +176,15 @@ export function OrdersView() {
                 <h2 className="text-lg font-extrabold">{t("الطلبات السابقة")}</h2>
                 <span className="text-xs text-muted">{t("آخر {count} طلبات", { count: previous.length })}</span>
               </div>
-              <div className="mt-3 space-y-3">{previous.map(renderOrder)}</div>
+              <div className="mt-3 space-y-3">
+                {previous.length > 0 ? (
+                  previous.map(renderOrder)
+                ) : (
+                  <p className="rounded-2xl bg-white px-4 py-6 text-center text-xs text-muted shadow-soft">
+                    {t("مفيش طلبات سابقة")}
+                  </p>
+                )}
+              </div>
             </section>
           </div>
         </div>

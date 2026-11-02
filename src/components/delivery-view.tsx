@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Bike, Clock3, MapPin, NotebookPen, Pencil, Phone, ShieldCheck } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { user } from "@/lib/data";
@@ -9,14 +9,17 @@ import { CartSummary } from "@/components/cart-summary";
 import { CheckoutShell } from "@/components/ui";
 
 export function DeliveryView() {
-  const { count, t, addresses, selectedAddressId, setFulfilment } = useApp();
+  const {
+    count,
+    t,
+    addresses,
+    selectedAddressId,
+    setFulfilment,
+    deliveryDetails,
+    updateDeliveryDetails,
+  } = useApp();
   const selected = addresses.find((address) => address.id === selectedAddressId) ?? null;
-  const [building, setBuilding] = useState("12");
-  const [floor, setFloor] = useState("الثاني");
-  const [apartment, setApartment] = useState("8");
-  const [name, setName] = useState("أحمد محمد");
-  const [phone, setPhone] = useState("010 1234 5678");
-  const [instructions, setInstructions] = useState("من فضلك اتصل بي قبل الوصول، الجرس مش شغال.");
+  const nameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setFulfilment("delivery");
@@ -84,24 +87,24 @@ export function DeliveryView() {
               <label className="block">
                 <span className="mb-1.5 block text-[11px] font-semibold text-muted">{t("رقم العمارة")}</span>
                 <input
-                  value={building}
-                  onChange={(event) => setBuilding(event.target.value)}
+                  value={deliveryDetails.building}
+                  onChange={(event) => updateDeliveryDetails({ building: event.target.value })}
                   className="field h-11 px-3 py-0 text-sm font-bold"
                 />
               </label>
               <label className="block">
                 <span className="mb-1.5 block text-[11px] font-semibold text-muted">{t("الدور")}</span>
                 <input
-                  value={floor === "الثاني" ? t("الثاني") : floor}
-                  onChange={(event) => setFloor(event.target.value)}
+                  value={deliveryDetails.floor}
+                  onChange={(event) => updateDeliveryDetails({ floor: event.target.value })}
                   className="field h-11 px-3 py-0 text-sm font-bold"
                 />
               </label>
               <label className="block">
                 <span className="mb-1.5 block text-[11px] font-semibold text-muted">{t("رقم الشقة")}</span>
                 <input
-                  value={apartment}
-                  onChange={(event) => setApartment(event.target.value)}
+                  value={deliveryDetails.apartment}
+                  onChange={(event) => updateDeliveryDetails({ apartment: event.target.value })}
                   className="field h-11 px-3 py-0 text-sm font-bold"
                 />
               </label>
@@ -114,7 +117,14 @@ export function DeliveryView() {
                 <Phone className="size-5 text-brand" />
                 {t("بيانات التواصل")}
               </h2>
-              <button type="button" className="flex items-center gap-1 text-[11px] font-bold text-brand">
+              <button
+                type="button"
+                onClick={() => {
+                  nameRef.current?.focus();
+                  nameRef.current?.select();
+                }}
+                className="flex items-center gap-1 text-[11px] font-bold text-brand"
+              >
                 <Pencil className="size-3.5" />
                 {t("تعديل")}
               </button>
@@ -124,16 +134,17 @@ export function DeliveryView() {
               <label className="block">
                 <span className="mb-1.5 block text-[11px] font-semibold text-muted">{t("اسم المستلم")}</span>
                 <input
-                  value={name === "أحمد محمد" ? t("أحمد محمد") : name}
-                  onChange={(event) => setName(event.target.value)}
+                  ref={nameRef}
+                  value={deliveryDetails.name}
+                  onChange={(event) => updateDeliveryDetails({ name: event.target.value })}
                   className="field h-11 px-3 py-0 text-sm font-bold"
                 />
               </label>
               <label className="block">
                 <span className="mb-1.5 block text-[11px] font-semibold text-muted">{t("رقم الموبايل")}</span>
                 <input
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
+                  value={deliveryDetails.phone}
+                  onChange={(event) => updateDeliveryDetails({ phone: event.target.value })}
                   inputMode="tel"
                   dir="ltr"
                   className="field h-11 px-3 py-0 text-start text-sm font-bold"
@@ -162,12 +173,9 @@ export function DeliveryView() {
               </Link>
             </div>
             <textarea
-              value={
-                instructions === "من فضلك اتصل بي قبل الوصول، الجرس مش شغال."
-                  ? t("من فضلك اتصل بي قبل الوصول، الجرس مش شغال.")
-                  : instructions
-              }
-              onChange={(event) => setInstructions(event.target.value.slice(0, 200))}
+              value={deliveryDetails.instructions}
+              onChange={(event) => updateDeliveryDetails({ instructions: event.target.value })}
+              placeholder={t("مثال: من غير بصل، والصوص على جنب...")}
               rows={3}
               className="mt-3 w-full resize-none rounded-xl border border-line bg-cream-50 px-4 py-3 text-xs leading-6 outline-none transition focus:border-brand/40"
             />

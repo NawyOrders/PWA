@@ -110,12 +110,23 @@ describe("service worker", () => {
 
   it("serves navigations network-first and updates the cache", async () => {
     const { listeners, fetch, stores } = createHarness();
-    const nav = request(`${ORIGIN}/orders`, { mode: "navigate" });
+    const nav = request(`${ORIGIN}/categories`, { mode: "navigate" });
     const { result } = await dispatch(listeners.get("fetch")!, { request: nav });
     await flush();
     expect(fetch).toHaveBeenCalledWith(nav);
     expect((result as Response).status).toBe(200);
     expect(stores.get("nawy-orders-v1")?.has(nav.url)).toBe(true);
+  });
+
+  it("never persists private navigations in the HTTP cache", async () => {
+    const { listeners, fetch, stores } = createHarness();
+    for (const path of ["/orders", "/orders/10248", "/profile", "/checkout", "/addresses", "/settings", "/notifications", "/favorites", "/login"]) {
+      const nav = request(`${ORIGIN}${path}`, { mode: "navigate" });
+      await dispatch(listeners.get("fetch")!, { request: nav });
+      await flush();
+      expect(fetch).toHaveBeenCalledWith(nav);
+      expect(stores.get("nawy-orders-v1")?.has(nav.url) ?? false).toBe(false);
+    }
   });
 
   it("falls back to the cached navigation when offline", async () => {

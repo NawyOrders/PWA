@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, Send, UploadCloud } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { Breadcrumbs, Button, Chip } from "@/components/ui";
 import { reportProblemTypes } from "@/lib/account-data";
+import { validateImageFile } from "@/lib/media";
 
 export function ReportView() {
   const { toast, t } = useApp();
@@ -14,9 +15,26 @@ export function ReportView() {
   const [detail, setDetail] = useState("");
   const [image, setImage] = useState<{ name: string; url: string } | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (image) URL.revokeObjectURL(image.url);
+    };
+  }, [image]);
+
   const pickImage = (file: File | undefined) => {
     if (!file) return;
-    if (image) URL.revokeObjectURL(image.url);
+    const check = validateImageFile(file);
+    if (!check.ok) {
+      toast(
+        t(
+          check.reason === "type"
+            ? "اختار صورة بصيغة JPG أو PNG."
+            : "حجم الصورة أكبر من 5 ميجا، اختار صورة أصغر.",
+        ),
+        "info",
+      );
+      return;
+    }
     setImage({ name: file.name, url: URL.createObjectURL(file) });
   };
 
@@ -26,7 +44,6 @@ export function ReportView() {
     setProblem(reportProblemTypes[0]);
     setOrderNumber("");
     setDetail("");
-    if (image) URL.revokeObjectURL(image.url);
     setImage(null);
   };
 
@@ -127,7 +144,7 @@ export function ReportView() {
                     <label className="mt-2.5 flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-line-strong/60 bg-peach px-4 py-8 text-center transition hover:border-brand/50">
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,image/png,image/webp"
                         className="hidden"
                         onChange={(event) => pickImage(event.target.files?.[0])}
                       />

@@ -46,6 +46,16 @@ describe("route policy", () => {
     },
   );
 
+  it.each([
+    "/\t/evil.example",
+    "/\n/evil.example",
+    "/\r/evil.example",
+    "/ /evil.example",
+    "/cart\\evil.example",
+  ])("rejects destinations carrying control characters or backslashes %j", (payload) => {
+    expect(sanitizeNextPath(payload)).toBe(DEFAULT_AUTH_REDIRECT);
+  });
+
   it("prevents a login redirect loop", () => {
     expect(sanitizeNextPath("/login")).toBe(DEFAULT_AUTH_REDIRECT);
     expect(sanitizeNextPath("/login?next=/profile")).toBe(DEFAULT_AUTH_REDIRECT);

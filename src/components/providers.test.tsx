@@ -2,7 +2,7 @@ import { act, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { useApp } from "@/components/providers";
 import { renderAppHook } from "@/test/render";
-import { seedCart, productsById } from "@/lib/data";
+import { seedCart, productsById, orders as seedOrders, branches, type Order } from "@/lib/data";
 import { savedAddresses } from "@/lib/account-data";
 import { storageKeys } from "@/lib/storage";
 
@@ -152,6 +152,198 @@ describe("AppProvider — favorites, profile and language", () => {
     act(() => result.current.setFulfilment("pickup"));
     expect(result.current.fulfilment).toBe("pickup");
     expect(localStorage.getItem("nawy-fulfilment-v1")).toBeNull();
+  });
+});
+
+describe("AppProvider — checkout details", () => {
+  it("persists the selected branch and ignores unknown branches", async () => {
+    const { result } = await app();
+    expect(result.current.selectedBranchId).toBe(branches[0].id);
+
+    act(() => result.current.selectBranch("smouha"));
+    expect(result.current.selectedBranchId).toBe("smouha");
+    await waitFor(() =>
+      expect(JSON.parse(localStorage.getItem(storageKeys.selectedBranch)!)).toBe("smouha"),
+    );
+
+    act(() => result.current.selectBranch("does-not-exist"));
+    expect(result.current.selectedBranchId).toBe("smouha");
+  });
+
+  it("hydrates a stored branch but falls back when it is no longer valid", async () => {
+    localStorage.setItem(storageKeys.selectedBranch, JSON.stringify("maadi"));
+    const first = await app();
+    expect(first.result.current.selectedBranchId).toBe("maadi");
+    first.unmount();
+
+    localStorage.setItem(storageKeys.selectedBranch, JSON.stringify("closed-store"));
+    const second = await app();
+    expect(second.result.current.selectedBranchId).toBe(branches[0].id);
+  });
+
+  it("updates delivery details, caps long input and persists them", async () => {
+    const { result } = await app();
+    act(() =>
+      result.current.updateDeliveryDetails({
+        building: "5",
+        floor: "3",
+        instructions: "ا".repeat(300),
+        name: "منى",
+      }),
+    );
+    expect(result.current.deliveryDetails.building).toBe("5");
+    expect(result.current.deliveryDetails.floor).toBe("3");
+    expect(result.current.deliveryDetails.name).toBe("منى");
+    expect(result.current.deliveryDetails.instructions).toHaveLength(200);
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem(storageKeys.deliveryDetails)!);
+      expect(stored.building).toBe("5");
+      expect(stored.instructions).toHaveLength(200);
+    });
+  });
+
+  it("merges stored delivery details over defaults and drops wrong types", async () => {
+    localStorage.setItem(
+      storageKeys.deliveryDetails,
+      JSON.stringify({ building: 42, name: "ن".repeat(120), phone: null }),
+    );
+    const { result } = await app();
+    expect(result.current.deliveryDetails.building).toBe("12");
+    expect(result.current.deliveryDetails.name).toHaveLength(80);
+    expect(typeof result.current.deliveryDetails.phone).toBe("string");
+  });
+});
+
+describe("AppProvider — order lifecycle", () => {
+  it("records a delivery order from the current cart and persists it", async () => {
+    const { result } = await app();
+    expect(result.current.orders).toHaveLength(seedOrders.length);
+
+    let placed: Order | null = null;
+    act(() => {
+      placed = result.current.placeOrder("cash");
+    });
+
+    expect(placed).not.toBeNull();
+    expect(placed!.id).toBe("10249");
+    expect(placed!.status).toBe("preparing");
+    expect(placed!.paymentMethod).toBe("cash");
+    expect(placed!.fulfilment).toBe("delivery");
+    expect(placed!.total).toBe(345 + 30);
+    expect(placed!.items).toHaveLength(seedCart.length);
+    expect(placed!.items?.[0]).toMatchObject({ productId: seedCart[0].productId, qty: seedCart[0].qty });
+    expect(placed!.branchId).toBeUndefined();
+    expect(placed!.address).toContain(savedAddresses[0].detail);
+    expect(result.current.orders[0].id).toBe("10249");
+    expect(result.current.orders).toHaveLength(seedOrders.length + 1);
+
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem(storageKeys.orders)!);
+      expect(stored[0].id).toBe("10249");
+      expect(stored[0].items).toHaveLength(seedCart.length);
+    });
+  });
+
+  it("applies coupon and pickup branch to the recorded order", async () => {
+    const { result } = await app();
+    act(() => result.current.setFulfilment("pickup"));
+    act(() => result.current.selectBranch("smouha"));
+    act(() => result.current.applyCoupon("nawy20"));
+
+    let placed: Order | null = null;
+    act(() => {
+      placed = result.current.placeOrder("wallet");
+    });
+
+    expect(placed!.total).toBe(345 - 50);
+    expect(placed!.fulfilment).toBe("pickup");
+    expect(placed!.branchId).toBe("smouha");
+    expect(placed!.address).toBe("فرع سموحة");
+    expect(placed!.paymentMethod).toBe("wallet");
+  });
+
+  it("increments order ids without reusing earlier ids", async () => {
+    const { result } = await app();
+    let first: Order | null = null;
+    let second: Order | null = null;
+    act(() => {
+      first = result.current.placeOrder("cash");
+    });
+    act(() => {
+      second = result.current.placeOrder("cash");
+    });
+    expect(first!.id).toBe("10249");
+    expect(second!.id).toBe("10250");
+  });
+
+  it("refuses to place an empty order", async () => {
+    const { result } = await app();
+    act(() => result.current.clearCart(true));
+    let placed: Order | null = null;
+    act(() => {
+      placed = result.current.placeOrder("cash");
+    });
+    expect(placed).toBeNull();
+    expect(result.current.orders).toHaveLength(seedOrders.length);
+  });
+
+  it("drops malformed stored orders and repairs unsafe fields", async () => {
+    localStorage.setItem(
+      storageKeys.orders,
+      JSON.stringify([
+        { id: "9001", title: "طلب صالح", description: "وصف", total: 120, status: "delivered", image: "//evil.example/x.png" },
+        { id: "9002", title: "ناقص", description: "وصف", total: -1, status: "preparing" },
+        { id: "", title: "بدون رقم", description: "وصف", total: 10, status: "preparing" },
+        { id: "../settings", title: "مسار غريب", description: "وصف", total: 10, status: "preparing" },
+        { id: "9003", title: "حالة غلط", description: "وصف", total: 10, status: "flying" },
+        null,
+        "order",
+      ]),
+    );
+    const { result } = await app();
+    expect(result.current.orders).toHaveLength(1);
+    expect(result.current.orders[0]).toMatchObject({ id: "9001", status: "delivered" });
+    expect(result.current.orders[0].image).toBe("/images/burger.webp");
+  });
+});
+
+describe("AppProvider — untrusted storage", () => {
+  it("drops unknown favorite ids and duplicates", async () => {
+    localStorage.setItem(
+      storageKeys.favorites,
+      JSON.stringify(["beef-burger", "not-a-product", "beef-burger", 9]),
+    );
+    const { result } = await app();
+    expect(result.current.favorites).toEqual(["beef-burger"]);
+  });
+
+  it("drops malformed addresses and out-of-range coordinates", async () => {
+    localStorage.setItem(
+      storageKeys.addresses,
+      JSON.stringify([
+        { ...savedAddresses[0], id: "kept" },
+        { ...savedAddresses[1], id: "bad-lat", lat: 900 },
+        { ...savedAddresses[2], id: "bad-kind", kind: "castle" },
+        { ...savedAddresses[0], id: "kept" },
+        "address",
+      ]),
+    );
+    const { result } = await app();
+    expect(result.current.addresses.map((address) => address.id)).toEqual(["kept"]);
+  });
+
+  it("repairs tampered cart quantities and prices", async () => {
+    localStorage.setItem(
+      storageKeys.cart,
+      JSON.stringify([
+        { key: "beef-burger|", productId: "beef-burger", qty: 500, price: -10 },
+        { key: "pizza|", productId: "pizza-pepperoni", qty: 0, price: 100 },
+      ]),
+    );
+    const { result } = await app();
+    expect(result.current.lines[0].qty).toBe(99);
+    expect(result.current.lines[0].price).toBe(productsById["beef-burger"].price);
+    expect(result.current.lines[1].qty).toBe(1);
   });
 });
 

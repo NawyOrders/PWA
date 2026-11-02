@@ -6,6 +6,7 @@ import { ArrowRight, Bot, MoreVertical, Paperclip, Send } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { Breadcrumbs } from "@/components/ui";
 import { agentReplies, chatSeed, type ChatMessage } from "@/lib/account-data";
+import { validateImageFile } from "@/lib/media";
 
 function formatTime(t: (text: string) => string) {
   const now = new Date();
@@ -15,7 +16,7 @@ function formatTime(t: (text: string) => string) {
 }
 
 export function ChatView() {
-  const { t } = useApp();
+  const { t, toast } = useApp();
   const [messages, setMessages] = useState<ChatMessage[]>(chatSeed);
   const [draft, setDraft] = useState("");
   const [attachment, setAttachment] = useState<string | null>(null);
@@ -139,11 +140,25 @@ export function ChatView() {
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 className="hidden"
                 onChange={(event) => {
                   const file = event.target.files?.[0];
-                  if (file) setAttachment(file.name);
+                  if (file) {
+                    const check = validateImageFile(file);
+                    if (check.ok) {
+                      setAttachment(file.name);
+                    } else {
+                      toast(
+                        t(
+                          check.reason === "type"
+                            ? "اختار صورة بصيغة JPG أو PNG."
+                            : "حجم الصورة أكبر من 5 ميجا، اختار صورة أصغر.",
+                        ),
+                        "info",
+                      );
+                    }
+                  }
                   event.target.value = "";
                 }}
               />

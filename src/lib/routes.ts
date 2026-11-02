@@ -23,16 +23,37 @@ export function loginHref(next: string = DEFAULT_AUTH_REDIRECT): string {
 }
 
 /**
+ * Characters that browsers silently strip (or that cannot appear literally in
+ * a URL). A tab in `/\t/evil.com` is ignored by the URL parser, turning the
+ * value into the protocol-relative `//evil.com`, so these are rejected up front.
+ */
+const UNSAFE_PATH_CHARS = /[\u0000-\u0020\u007f\\]/;
+const PARSE_BASE = "https://nawy.invalid";
+
+/**
  * Only in-app absolute paths are accepted as a post-login destination.
- * Rejects protocol-relative (`//evil`), backslash tricks and non-path values.
+ * Rejects protocol-relative (`//evil`), backslash/control-character tricks,
+ * cross-origin values and login loops.
  */
 export function sanitizeNextPath(
   requested: string | null | undefined,
   fallback: string = DEFAULT_AUTH_REDIRECT,
 ): string {
   if (!requested) return fallback;
-  if (!requested.startsWith("/")) return fallback;
-  if (requested.startsWith("//") || requested.startsWith("/\\")) return fallback;
-  if (requested === "/login" || requested.startsWith("/login?")) return fallback;
+  if (!requested.startsWith("/") || requested.startsWith("//")) return fallback;
+  if (UNSAFE_PATH_CHARS.test(requested)) return fallback;
+
+  let url: URL;
+  try {
+    url = new URL(requested, PARSE_BASE);
+  } catch {
+    return fallback;
+  }
+
+  // Normalisation must keep us on the same origin and inside a real path.
+  if (url.origin !== PARSE_BASE) return fallback;
+  if (url.pathname.startsWith("//")) return fallback;
+  if (url.pathname === "/login" || url.pathname.startsWith("/login/")) return fallback;
+
   return requested;
 }

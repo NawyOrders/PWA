@@ -142,7 +142,10 @@ export function AddressesView() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => focus(item)}
+                        onClick={() => {
+                          selectAddress(item.id);
+                          focus(item);
+                        }}
                         className="min-w-0 flex-1 text-start"
                       >
                         <span className="block text-sm font-extrabold">{t(item.title)}</span>
@@ -254,7 +257,10 @@ export function AddressesView() {
                   onPick={(point) => setCenter([point.lat, point.lng])}
                   onMarkerClick={(id) => {
                     const item = addresses.find((address) => address.id === id);
-                    if (item) focus(item);
+                    if (item) {
+                      selectAddress(item.id);
+                      focus(item);
+                    }
                   }}
                 />
 
