@@ -115,21 +115,23 @@ export function CategoriesView() {
                   setChip("الكل");
                 }}
                 aria-pressed={active}
-                className={`group flex flex-col items-center rounded-2xl border-2 bg-white px-2 py-4 text-center transition duration-300 hover:-translate-y-1 hover:shadow-soft active:scale-[0.98] ${
-                  active ? "border-brand" : "border-transparent"
+                className={`group flex flex-col items-center rounded-[18px] bg-white px-3 py-4 text-center shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.98] ${
+                  active ? "ring-2 ring-inset ring-brand/60" : ""
                 }`}
               >
-                <span className="relative size-14 overflow-hidden rounded-full bg-cream-50">
-                  <Image
-                    src={item.image}
-                    alt={t(item.name)}
-                    fill
-                    sizes="56px"
-                    className="object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
+                <span className="grid size-[68px] place-items-center rounded-full bg-peach/80 transition-colors duration-300 group-hover:bg-brand-soft">
+                  <span className="relative size-12 overflow-hidden rounded-full">
+                    <Image
+                      src={item.image}
+                      alt={t(item.name)}
+                      fill
+                      sizes="48px"
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                  </span>
                 </span>
-                <span className={`mt-3 text-sm font-bold ${active ? "text-brand" : "text-ink"}`}>{t(item.name)}</span>
-                <span className="mt-0.5 text-[10px] text-muted">{categoryCounts[id] ?? 0} {t("صنف")}</span>
+                <span className={`mt-2.5 text-sm font-extrabold ${active ? "text-brand" : "text-ink"}`}>{t(item.name)}</span>
+                <span className="mt-1 text-[10px] font-semibold text-muted">{categoryCounts[id] ?? 0} {t("صنف")}</span>
               </button>
             );
           })}

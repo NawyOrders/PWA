@@ -1,6 +1,6 @@
 "use client";
 
-import { useApp } from "@/components/providers";
+import { useOptionalApp } from "@/components/providers";
 
 type LogoProps = {
   className?: string;
@@ -8,13 +8,16 @@ type LogoProps = {
 };
 
 export function LogoMark({ className = "size-14", title }: LogoProps) {
-  const { t } = useApp();
+  // Optional: the root loading fallback is prerendered inside /_global-error,
+  // which renders without AppProvider.
+  const app = useOptionalApp();
+  const label = title ?? app?.t("ناوي أوردرز") ?? "ناوي أوردرز";
   return (
     <span
       className={`relative grid place-items-center overflow-hidden rounded-[30%] text-[#FBF3EA] ${className}`}
       style={{ backgroundColor: "#E8452C" }}
       role="img"
-      aria-label={title ?? t("ناوي أوردرز")}
+      aria-label={label}
     >
       <svg viewBox="0 0 64 64" className="h-full w-full" aria-hidden="true">
         <path
@@ -34,10 +37,11 @@ export function LogoMark({ className = "size-14", title }: LogoProps) {
 }
 
 export function BrandWordmark({ className = "" }: { className?: string }) {
-  const { t } = useApp();
+  const app = useOptionalApp();
+  const name = app?.t("ناوي أوردرز") ?? "ناوي أوردرز";
   return (
     <span className={`flex flex-col items-center leading-none ${className}`}>
-      <span className="font-display text-2xl font-extrabold tracking-tight text-brand">{t("ناوي أوردرز")}</span>
+      <span className="font-display text-2xl font-extrabold tracking-tight text-brand">{name}</span>
       <span className="mt-1 text-[9px] font-semibold uppercase tracking-[0.35em] text-muted">Nawy Orders</span>
     </span>
   );
