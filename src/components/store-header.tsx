@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { Bell, ChevronDown, MapPin } from "lucide-react";
 import { SearchField } from "@/components/search-field";
+import { LanguageToggle } from "@/components/language-toggle";
 import { LocationPicker } from "@/components/location-picker";
 import { useApp } from "@/components/providers";
 import { user } from "@/lib/data";
@@ -60,14 +61,17 @@ export function StoreHeader({
           )}
         </div>
 
-        <Link
-          href="/notifications"
-          aria-label={t("الإشعارات")}
-          className="motion-press relative grid size-11 place-items-center rounded-2xl border border-line bg-white text-ink shadow-soft transition hover:-rotate-3 hover:text-brand lg:hidden"
-        >
-          <Bell className="size-5" />
-          <span className="animate-pulse-soft absolute end-2.5 top-2.5 size-1.5 rounded-full bg-brand" />
-        </Link>
+        <div className="flex items-center gap-2 lg:hidden">
+          <LanguageToggle variant="chip" />
+          <Link
+            href="/notifications"
+            aria-label={t("الإشعارات")}
+            className="motion-press relative grid size-11 place-items-center rounded-2xl border border-line bg-white text-ink shadow-soft transition hover:-rotate-3 hover:text-brand"
+          >
+            <Bell className="size-5" />
+            <span className="animate-pulse-soft absolute end-2.5 top-2.5 size-1.5 rounded-full bg-brand" />
+          </Link>
+        </div>
 
         <div className="hidden w-[46%] max-w-xl lg:block">
           <SearchField />

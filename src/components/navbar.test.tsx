@@ -53,4 +53,12 @@ describe("Navbar", () => {
 
     await waitFor(() => expect(screen.getByRole("link", { name: "الطلبات" })).toHaveAttribute("aria-current", "page"));
   });
+
+  it("puts the language switch beside the cart", async () => {
+    renderApp(<Navbar />);
+
+    const toggle = await screen.findByRole("button", { name: "تغيير اللغة إلى الإنجليزية" });
+    expect(toggle).toHaveTextContent("EN");
+    expect(toggle.closest("div")?.className).toContain("justify-end");
+  });
 });

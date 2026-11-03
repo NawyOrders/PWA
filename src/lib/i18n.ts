@@ -380,6 +380,8 @@ const en: Record<string, string> = {
   "تشغيل الإشعارات": "Enable notifications",
   "هل أنت متأكد أنك تريد تسجيل خروج؟": "Are you sure you want to sign out?",
   "عربي": "Arabic",
+  "تغيير اللغة إلى الإنجليزية": "Switch to English",
+  "تغيير اللغة إلى العربية": "Switch to Arabic",
   "فريق ناوي أوردرز معاك يومياً من 10 صباحاً لـ 12 بالليل. كلمنا على 19885 أو ابعتلنا رسالة وهنساعدك في أي مشكلة في الطلب أو التوصيل.": "The Nawy Orders team is here daily from 10 AM to midnight. Call 19885 or message us and we'll help with any order or delivery issue.",
   "بنتعامل مع بياناتك بحرص، وبنستخدمها بس لتوصيل طلباتك وتحسين تجربتك. بياناتك محفوظة ومش بنشاركها مع أي طرف تالت من غير موافقتك.": "We handle your data carefully and use it only to deliver your orders and improve your experience. Your data is stored securely and never shared with third parties without your consent.",
   "استخدامك للتطبيق معناه موافقتك على شروط الخدمة وسياسة الإلغاء والاسترجاع. الأسعار والمنتجات قابلة للتغيير، وبنأكد طلبك قبل بدء التحضير.": "Using the app means you agree to our terms of service and cancellation and refund policy. Prices and products may change, and we confirm your order before preparation starts.",
