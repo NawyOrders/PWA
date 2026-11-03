@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { StoreHeader } from "@/components/store-header";
@@ -47,5 +47,16 @@ describe("StoreHeader", () => {
     const link = await screen.findByRole("link", { name: /سجل الدخول الآن/ });
     expect(link).toHaveAttribute("href", expect.stringContaining("/login"));
     expect(screen.queryByRole("button", { name: "اختر مكان التوصيل" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the language switch next to the notifications bell on mobile", async () => {
+    const user = userEvent.setup();
+    renderApp(<StoreHeader />);
+
+    const toggle = await screen.findByRole("button", { name: "تغيير اللغة إلى الإنجليزية" });
+    expect(toggle.parentElement).toContainElement(screen.getByRole("link", { name: "الإشعارات" }));
+
+    await user.click(toggle);
+    await waitFor(() => expect(window.localStorage.getItem("nawy-lang-v1")).toBe('"en"'));
   });
 });

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ClipboardList, Home, ShoppingCart, UserRound } from "lucide-react";
 import { LogoMark } from "@/components/logo";
+import { LanguageToggle } from "@/components/language-toggle";
 import { useApp } from "@/components/providers";
 import { loginHref } from "@/lib/routes";
 
@@ -21,7 +22,7 @@ export function Navbar() {
   return (
     <header className="motion-header sticky top-0 z-40 hidden border-b border-line bg-white/95 backdrop-blur lg:block">
       <div className="shell flex h-[88px] items-center">
-        <div className="flex w-44 items-center justify-start">
+        <div className="flex w-60 items-center justify-start">
           <Link href="/" aria-label={t("ناوي أوردرز - الرئيسية")} className="motion-press inline-flex">
             <LogoMark className="size-14 transition-transform duration-300 hover:-rotate-3" />
           </Link>
@@ -54,7 +55,8 @@ export function Navbar() {
           })}
         </nav>
 
-        <div className="flex w-44 items-center justify-end">
+        <div className="flex w-60 items-center justify-end gap-2.5">
+          <LanguageToggle />
           <Link
             href="/cart"
             onClick={(event) => {
