@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
+  Building2,
   CalendarDays,
   ChevronLeft,
   Crosshair,
@@ -20,6 +21,7 @@ import { LocationPicker } from "@/components/location-picker";
 import { useApp } from "@/components/providers";
 import { Breadcrumbs, DisplayPageHeader } from "@/components/ui";
 import { areaName, type LatLng } from "@/lib/geo";
+import { searchPlaces, type Place } from "@/lib/place-search";
 
 const ALEXANDRIA: [number, number] = [31.1861, 29.9336];
 
@@ -48,22 +50,30 @@ export function AddressesView() {
 
   const focus = (point: LatLng) => setCenter([point.lat, point.lng]);
 
-  const runSearch = () => {
-    const term = query.trim().toLowerCase();
-    if (!term) return;
-    const match = addresses.find(
-      (item) =>
-        item.title.toLowerCase().includes(term) ||
-        item.area.toLowerCase().includes(term) ||
-        item.detail.toLowerCase().includes(term),
-    );
-    if (match) {
-      selectAddress(match.id);
-      focus(match);
+  const suggestions = useMemo(
+    () => searchPlaces({ query, addresses, lang, t }),
+    [addresses, lang, query, t],
+  );
+
+  /** Saved addresses become the active delivery address; districts only move the map. */
+  const goToPlace = (place: Place) => {
+    focus({ lat: place.lat, lng: place.lng });
+    setQuery("");
+    if (place.saved && place.addressId) {
+      selectAddress(place.addressId);
       toast(t("تم تحديد الموقع على الخريطة"), "info");
       return;
     }
-    toast(t("مفيش نتيجة مطابقة، جرّب اسم منطقة تاني"), "info");
+    toast(t("تم تحريك الخريطة للمنطقة"), "info");
+  };
+
+  const runSearch = () => {
+    const first = suggestions[0];
+    if (first) {
+      goToPlace(first);
+      return;
+    }
+    if (query.trim()) toast(t("مفيش نتيجة مطابقة، جرّب اسم منطقة تاني"), "info");
   };
 
   const useMyLocation = () => {
@@ -293,6 +303,34 @@ export function AddressesView() {
                       >
                         <X className="size-4" strokeWidth={2.4} />
                       </button>
+                    ) : null}
+
+                    {query.trim() ? (
+                      <ul className="mt-2 max-h-56 overflow-y-auto rounded-2xl bg-white p-1 shadow-pop">
+                        {suggestions.map((item) => {
+                          const Icon = item.saved ? Building2 : MapPin;
+                          return (
+                            <li key={item.key}>
+                              <button
+                                type="button"
+                                onClick={() => goToPlace(item)}
+                                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-start transition hover:bg-cream-50"
+                              >
+                                <Icon className="size-4 shrink-0 text-brand" strokeWidth={1.9} />
+                                <span className="min-w-0">
+                                  <span className="block truncate text-xs font-bold">{t(item.title)}</span>
+                                  <span className="block truncate text-[10px] text-muted">{t(item.subtitle)}</span>
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                        {suggestions.length === 0 ? (
+                          <li className="px-3 py-2.5 text-[11px] font-semibold text-muted">
+                            {t("مفيش نتيجة مطابقة")}
+                          </li>
+                        ) : null}
+                      </ul>
                     ) : null}
                   </div>
                 </div>

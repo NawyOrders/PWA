@@ -19,6 +19,7 @@ import { Chip } from "@/components/ui";
 import { useDialogFocus } from "@/hooks/use-dialog-focus";
 import type { AddressKind } from "@/lib/account-data";
 import { areaName } from "@/lib/geo";
+import { searchPlaces } from "@/lib/place-search";
 
 const ALEXANDRIA: [number, number] = [31.1861, 29.9336];
 
@@ -116,16 +117,10 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const suggestions = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    if (!term) return [];
-    return addresses.filter(
-      (item) =>
-        [item.title, item.area, item.detail].some(
-          (value) => value.toLowerCase().includes(term) || t(value).toLowerCase().includes(term),
-        ),
-    );
-  }, [addresses, query, t]);
+  const suggestions = useMemo(
+    () => searchPlaces({ query, addresses, lang, t }),
+    [addresses, lang, query, t],
+  );
 
   const close = () => {
     setStage("sheet");
@@ -355,26 +350,32 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
                   aria-label={t("ابحث عن موقع")}
                   className="h-12 w-full rounded-full border-0 bg-white/95 pe-4 ps-11 text-sm font-semibold text-ink shadow-pop outline-none backdrop-blur placeholder:text-muted focus:ring-2 focus:ring-brand/20"
                 />
-                {suggestions.length > 0 ? (
-                  <ul className="mt-2 overflow-hidden rounded-2xl bg-white shadow-pop">
-                    {suggestions.map((item) => (
-                      <li key={item.id}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCenter([item.lat, item.lng]);
-                            setQuery("");
-                          }}
-                          className="flex w-full items-center gap-3 px-4 py-3 text-start transition hover:bg-cream-50"
-                        >
-                          <MapPin className="size-4 shrink-0 text-brand" strokeWidth={1.9} />
-                          <span className="min-w-0">
-                            <span className="block truncate text-xs font-bold">{t(item.title)}</span>
-                            <span className="block truncate text-[10px] text-muted">{t(item.area)}</span>
-                          </span>
-                        </button>
-                      </li>
-                    ))}
+                {query.trim() ? (
+                  <ul className="mt-2 max-h-60 overflow-y-auto rounded-2xl bg-white shadow-pop">
+                    {suggestions.map((item) => {
+                      const Icon = item.saved ? Building2 : MapPin;
+                      return (
+                        <li key={item.key}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCenter([item.lat, item.lng]);
+                              setQuery("");
+                            }}
+                            className="flex w-full items-center gap-3 px-4 py-3 text-start transition hover:bg-cream-50"
+                          >
+                            <Icon className="size-4 shrink-0 text-brand" strokeWidth={1.9} />
+                            <span className="min-w-0">
+                              <span className="block truncate text-xs font-bold">{t(item.title)}</span>
+                              <span className="block truncate text-[10px] text-muted">{t(item.subtitle)}</span>
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                    {suggestions.length === 0 ? (
+                      <li className="px-4 py-3 text-[11px] font-semibold text-muted">{t("مفيش نتيجة مطابقة")}</li>
+                    ) : null}
                   </ul>
                 ) : null}
               </div>

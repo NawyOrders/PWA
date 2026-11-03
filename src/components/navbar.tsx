@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LayoutGrid, ShoppingCart, UserRound } from "lucide-react";
+import { ClipboardList, Home, ShoppingCart, UserRound } from "lucide-react";
 import { LogoMark } from "@/components/logo";
 import { useApp } from "@/components/providers";
 import { loginHref } from "@/lib/routes";
 
 const links = [
   { href: "/", label: "الرئيسية", icon: Home },
-  { href: "/categories", label: "الاقسام", icon: LayoutGrid },
+  { href: "/orders", label: "الطلبات", icon: ClipboardList },
   { href: "/profile", label: "حسابي", icon: UserRound },
 ];
 
@@ -32,10 +32,14 @@ export function Navbar() {
             const active =
               link.href === "/" ? pathname === "/" : pathname === link.href || pathname.startsWith(`${link.href}/`);
             const Icon = link.icon;
+            // Account and orders are private: guests get the same login hand-off
+            // the mobile bottom nav uses.
+            const needsLogin = !loggedIn && (link.href === "/profile" || link.href === "/orders");
             return (
               <Link
                 key={link.href}
-                href={link.href === "/profile" && !loggedIn ? loginHref("/profile") : link.href}
+                href={needsLogin ? loginHref(link.href) : link.href}
+                aria-current={active ? "page" : undefined}
                 className={`group relative flex items-center gap-2.5 py-8 text-[15px] font-semibold transition-colors ${
                   active ? "text-brand" : "text-ink/70 hover:text-brand"
                 }`}

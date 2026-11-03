@@ -28,6 +28,7 @@ export default defineConfig({
         "src/lib/**/*.ts",
         "src/hooks/**/*.ts",
         "src/components/providers.tsx",
+        "src/components/addresses-view.tsx",
         "src/components/login-view.tsx",
         "src/components/location-picker.tsx",
         "src/components/policies-view.tsx",
