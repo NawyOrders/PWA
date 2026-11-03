@@ -58,7 +58,6 @@ src/app/         App Router routes (home, categories, search, product, cart, che
 src/components/  UI and feature components
 src/lib/data.ts  Products, categories, orders and seeded demo data
 public/          Service worker, icons, generated imagery, OG cover
-scripts/         Asset generation and headless-Chrome screenshot helpers
 ```
 
 ## Design tokens
