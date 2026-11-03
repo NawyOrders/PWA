@@ -39,7 +39,7 @@ export function AboutView() {
             <LogoMark className="size-14 shrink-0" />
           </div>
 
-          <div className="mt-4 space-y-3">
+          <div className="motion-stagger mt-4 space-y-3">
             {links.map((link) => {
               const Icon = link.icon;
               return (
@@ -60,7 +60,7 @@ export function AboutView() {
 
           <h2 className="mt-8 text-start text-xl font-extrabold text-ink">{t("المنصة")}</h2>
 
-          <div className="mt-4 space-y-3">
+          <div className="motion-stagger mt-4 space-y-3">
             {platforms.map((platform) => (
               <PlatformCard key={platform.id} platform={platform} />
             ))}

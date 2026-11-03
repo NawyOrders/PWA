@@ -55,7 +55,13 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Navbar />
-      <main className={hideBottomNav ? "" : "pb-24 lg:pb-0"}>{hideProtectedPage ? null : children}</main>
+      <main className={hideBottomNav ? "" : "pb-24 lg:pb-0"}>
+        {hideProtectedPage ? null : (
+          <div key={pathname} className="motion-page">
+            {children}
+          </div>
+        )}
+      </main>
       {hideFooter ? null : <Footer />}
       {hideBottomNav ? null : <BottomNav />}
       {loginPromptOpen ? <LoginRequiredDialog onClose={closeLoginPrompt} /> : null}

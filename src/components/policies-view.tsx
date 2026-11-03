@@ -126,7 +126,7 @@ export function PoliciesView() {
 
               <aside className="mt-8 hidden lg:mt-1 lg:block">
                 <h2 className="text-start text-lg font-extrabold text-ink">{t("المنصات")}</h2>
-                <div className="mt-4 space-y-3">
+                <div className="motion-stagger mt-4 space-y-3">
                   {platforms.map((platform) => (
                     <PlatformCard key={platform.id} platform={platform} />
                   ))}
@@ -138,7 +138,7 @@ export function PoliciesView() {
 
           <aside className="mt-8 lg:hidden">
             <h2 className="text-start text-lg font-extrabold text-ink">{t("المنصات")}</h2>
-            <div className="mt-4 space-y-3">
+            <div className="motion-stagger mt-4 space-y-3">
               {platforms.map((platform) => (
                 <PlatformCard key={platform.id} platform={platform} />
               ))}

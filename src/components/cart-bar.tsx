@@ -23,7 +23,7 @@ export function CartBar() {
     .join(lang === "ar" ? "، " : ", ");
 
   return (
-    <div className="hidden rounded-[22px] border border-line bg-white px-5 py-4 shadow-soft lg:flex lg:items-center lg:gap-4">
+    <div className="motion-rise hidden rounded-[22px] border border-line bg-white px-5 py-4 shadow-soft lg:flex lg:items-center lg:gap-4">
       <Link
         href="/cart"
         onClick={(event) => {
@@ -32,10 +32,10 @@ export function CartBar() {
             openLoginPrompt();
           }
         }}
-        className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-sm font-extrabold text-white"
+        className="motion-press grid size-10 shrink-0 place-items-center rounded-full bg-brand text-sm font-extrabold text-white transition hover:scale-105"
         aria-label={t("عرض السلة")}
       >
-        {count}
+        <span key={count} className="motion-badge-pop inline-block">{count}</span>
       </Link>
       <div className="min-w-0">
         <p className="text-sm font-extrabold">{t("لديك {count} وجبات في سلة الطلب", { count })}</p>
@@ -59,7 +59,7 @@ export function CartBar() {
             openLoginPrompt();
           }
         }}
-        className="flex h-12 items-center gap-2 rounded-full bg-brand px-6 text-sm font-bold text-white transition hover:bg-brand-dark"
+        className="motion-press flex h-12 items-center gap-2 rounded-full bg-brand px-6 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-dark"
       >
         {t("متابعة الطلب والدفع")}
         <ArrowLeft className="size-4 ltr:rotate-180" />

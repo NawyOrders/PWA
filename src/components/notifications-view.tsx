@@ -113,14 +113,14 @@ export function NotificationsView() {
             </button>
           </div>
 
-          <div className="mt-6 space-y-6 px-4 lg:px-0">
+          <div className="motion-stagger mt-6 space-y-6 px-4 lg:px-0">
             {groups.map((group) => {
               const items = visible.filter((notification) => notification.group === group.key);
               if (items.length === 0) return null;
               return (
                 <section key={group.key}>
                   <h2 className="mb-3 text-sm font-bold text-muted">{t(group.label)}</h2>
-                  <div className="space-y-3">
+                  <div className="motion-stagger space-y-3">
                     {items.map((notification) => {
                       const unread = !readIds.includes(notification.id);
                       const meta = iconMeta[notification.icon];

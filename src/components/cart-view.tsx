@@ -15,7 +15,7 @@ function CartItem({ lineKey }: { lineKey: string }) {
   if (!product) return null;
 
   return (
-    <article className="relative flex gap-3 rounded-[24px] bg-white p-3 shadow-soft lg:gap-4 lg:p-4">
+    <article className="relative flex gap-3 rounded-[24px] bg-white p-3 shadow-soft transition duration-300 hover:shadow-pop lg:gap-4 lg:p-4">
       <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-peach lg:size-32">
         <Image src={product.image} alt={t(product.name)} fill sizes="128px" className="object-cover" />
       </div>
@@ -84,13 +84,13 @@ export function CartView() {
             <span className="text-[11px] text-muted">{count} {t("أصناف")}</span>
           </div>
 
-          <div className="space-y-3">
+          <div className="motion-stagger space-y-3">
             {lines.map((line) => (
               <CartItem key={line.key} lineKey={line.key} />
             ))}
           </div>
 
-          <div className="card p-4 lg:p-5">
+          <div className="card p-4 motion-rise lg:p-5">
             <h2 className="flex items-center gap-2 text-sm font-extrabold">
               {t("ملاحظات على الطلب")}
               <span className="rounded-full bg-cream-100 px-2 py-0.5 text-[9px] font-semibold text-muted">{t("اختياري")}</span>

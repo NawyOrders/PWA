@@ -156,7 +156,7 @@ export function PaymentView() {
                 </span>
               </div>
 
-              <div className="mt-4 space-y-2.5">
+              <div className="motion-stagger mt-4 space-y-2.5">
                 {methods.map((item) => {
                   const active = method === item.id;
                   return (

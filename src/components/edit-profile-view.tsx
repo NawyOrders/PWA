@@ -155,7 +155,7 @@ export function EditProfileView() {
             </button>
           </div>
 
-          <div className="mt-7 space-y-5">
+          <div className="motion-stagger mt-7 space-y-5">
             <div>
               <label htmlFor="full-name" className="text-sm font-bold text-ink/75">
                 {t("الاسم الكامل")}

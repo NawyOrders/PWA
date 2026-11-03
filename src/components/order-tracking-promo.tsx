@@ -26,7 +26,7 @@ function TrackingBannerContent({
       </div>
       <Link
         href={`/orders/${order.id}`}
-        className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-white px-3 text-xs font-extrabold text-brand shadow-sm transition hover:bg-cream-50 active:scale-[0.98] lg:h-9 lg:gap-1.5 lg:px-3 lg:text-[11px]"
+        className="motion-press inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-white px-3 text-xs font-extrabold text-brand shadow-sm transition hover:scale-105 hover:bg-cream-50 active:scale-[0.98] lg:h-9 lg:gap-1.5 lg:px-3 lg:text-[11px]"
       >
         <Navigation className="size-4 fill-brand lg:size-4" strokeWidth={1.8} />
         {t("تتبع الطلب")}
@@ -51,7 +51,7 @@ export function MobileOrderTrackingBanner({ order, onClose }: { order: Order; on
   return (
     <aside
       aria-label={t("تتبع الطلب")}
-      className="fixed inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-30 flex min-h-[88px] items-center justify-between gap-2 rounded-t-[28px] bg-gradient-to-r from-[#f04b27] via-[#fa5c27] to-[#e9361d] px-4 py-3 shadow-[0_-12px_38px_-18px_rgba(232,69,44,0.65)] lg:hidden"
+      className="motion-nav-in fixed inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-30 flex min-h-[88px] items-center justify-between gap-2 rounded-t-[28px] bg-gradient-to-r from-[#f04b27] via-[#fa5c27] to-[#e9361d] px-4 py-3 shadow-[0_-12px_38px_-18px_rgba(232,69,44,0.65)] lg:hidden"
     >
       <TrackingBannerContent order={order} onClose={onClose} showMobileClose />
     </aside>
@@ -64,7 +64,7 @@ export function DesktopOrderTrackingCard({ order, onClose }: { order: Order; onC
   return (
     <aside
       aria-label={t("تتبع الطلب")}
-      className="pointer-events-auto fixed right-5 top-1/2 z-50 hidden w-[220px] max-w-[calc(100vw-2.5rem)] -translate-y-1/2 flex-col items-center gap-3 rounded-[24px] bg-gradient-to-r from-[#f04b27] via-[#fa5c27] to-[#e9361d] px-4 pb-4 pt-9 text-white shadow-[0_18px_38px_-18px_rgba(232,69,44,0.65)] lg:flex"
+      className="motion-fade pointer-events-auto fixed right-5 top-1/2 z-50 hidden w-[220px] max-w-[calc(100vw-2.5rem)] -translate-y-1/2 flex-col items-center gap-3 rounded-[24px] bg-gradient-to-r from-[#f04b27] via-[#fa5c27] to-[#e9361d] px-4 pb-4 pt-9 text-white shadow-[0_18px_38px_-18px_rgba(232,69,44,0.65)] lg:flex"
     >
       <button
         type="button"

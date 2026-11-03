@@ -81,7 +81,7 @@ export function FaqView() {
               {t("الأسئلة الأكثر شيوعاً")}
             </div>
 
-            <div className="mt-3 space-y-3">
+            <div className="motion-stagger mt-3 space-y-3">
               {visible.map((item) => {
                 const open = openId === item.id;
                 return (

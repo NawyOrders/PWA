@@ -10,9 +10,9 @@ export default function NotFound() {
   const { t } = useApp();
   return (
     <div className="shell flex min-h-[72vh] items-center justify-center py-10">
-      <div className="card w-full max-w-[460px] px-6 py-10 text-center">
+      <div className="motion-pop card w-full max-w-[460px] px-6 py-10 text-center">
         <div className="flex justify-center">
-          <LogoMark className="size-16" />
+          <LogoMark className="motion-float size-16" />
         </div>
         <p className="mt-6 font-display text-5xl font-extrabold text-brand">404</p>
         <h1 className="mt-2 text-xl font-extrabold">{t("الصفحة مش موجودة")}</h1>

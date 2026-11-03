@@ -30,7 +30,7 @@ export function CategoryDetailView({ categoryId }: { categoryId: CategoryId }) {
 
       <div className="shell">
         <div className="mx-auto max-w-5xl">
-          <div className="mt-2 lg:mt-8">
+          <div className="motion-header mt-2 lg:mt-8">
             <Breadcrumbs
               items={[
                 { label: "الرئيسية", href: "/" },
@@ -52,7 +52,7 @@ export function CategoryDetailView({ categoryId }: { categoryId: CategoryId }) {
                 {t("الأكثر طلباً")}
                 <Flame className="size-4 fill-brand/20 text-brand lg:size-5" />
               </h2>
-              <div className="mt-3 grid grid-cols-2 gap-3 lg:mt-4 lg:grid-cols-4 lg:gap-4">
+              <div className="motion-stagger mt-3 grid grid-cols-2 gap-3 lg:mt-4 lg:grid-cols-4 lg:gap-4">
                 {popular.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
@@ -62,7 +62,7 @@ export function CategoryDetailView({ categoryId }: { categoryId: CategoryId }) {
 
           {rest.length > 0 ? (
             <section className="mt-5 lg:mt-7">
-              <div className="grid gap-3 lg:grid-cols-2 lg:gap-4">
+              <div className="motion-stagger grid gap-3 lg:grid-cols-2 lg:gap-4">
                 {rest.map((product) => (
                   <MenuRow key={product.id} product={product} />
                 ))}

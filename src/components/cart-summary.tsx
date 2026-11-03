@@ -47,7 +47,7 @@ export function CartSummary({
     }
   };
 
-  const ctaClasses = `mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full text-sm font-bold transition ${
+  const ctaClasses = `motion-press mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full text-sm font-bold transition ${
     ctaDisabled
       ? "cursor-not-allowed bg-line text-muted"
       : "bg-brand text-white shadow-[0_16px_30px_-18px_rgba(232,69,44,0.9)] hover:bg-brand-dark"
@@ -121,7 +121,7 @@ export function CartSummary({
         </div>
         {error ? <p className="mt-1.5 text-[11px] font-semibold text-brand">{t(error)}</p> : null}
         {coupon ? (
-          <p className="mt-1.5 text-[11px] font-semibold text-success">
+          <p className="motion-fade mt-1.5 text-[11px] font-semibold text-success">
             {t("تم تطبيق كود {code} — خصم 20%", { code: coupon })}
           </p>
         ) : null}

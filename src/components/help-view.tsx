@@ -71,7 +71,7 @@ export function HelpView() {
               <p className="mt-2 text-sm text-muted">{t("نحن هنا لمساعدتك في ايه وقت")}</p>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-4 lg:mt-12 lg:gap-5">
+            <div className="motion-stagger mt-6 grid grid-cols-2 gap-4 lg:mt-12 lg:gap-5">
               {helpCards.map((card) => {
                 const Icon = cardIcons[card.icon];
                 return (

@@ -362,7 +362,7 @@ export function AddressNewView() {
                       <p className="mt-1 text-sm text-muted">{t("اضف الان")}</p>
                     </div>
                   ) : (
-                    <ul className="mt-4 space-y-3">
+                    <ul className="motion-stagger mt-4 space-y-3">
                       {addresses.map((item) => {
                         const Icon = kindIcon[item.kind];
                         const active = item.id === selectedAddressId;
@@ -450,7 +450,7 @@ export function AddressNewView() {
                     </span>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="motion-stagger mt-4 grid grid-cols-2 gap-3">
                     {addressKinds.map((item) => {
                       const Icon = item.icon === "home" ? Home : item.icon === "work" ? Briefcase : item.icon === "family" ? Store : MapPin;
                       const active = kind === item.id;

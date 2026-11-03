@@ -57,7 +57,7 @@ export function Footer() {
           <ul className="mt-5 space-y-3 text-sm text-muted">
             {quickLinks.map((link) => (
               <li key={link.label}>
-                <Link href={link.href} className="transition hover:text-brand">
+                <Link href={link.href} className="motion-underline transition hover:text-brand">
                   {t(link.label)}
                 </Link>
               </li>
@@ -91,7 +91,7 @@ export function Footer() {
           <ul className="mt-5 space-y-3 text-sm text-muted">
             {companyLinks.map((link) => (
               <li key={link.label}>
-                <Link href={link.href} className="transition hover:text-brand">
+                <Link href={link.href} className="motion-underline transition hover:text-brand">
                   {t(link.label)}
                 </Link>
               </li>
@@ -106,16 +106,16 @@ export function Footer() {
       <div className="border-t border-line">
         <div className="shell flex items-center justify-between py-5 text-xs text-muted">
           <div className="flex items-center gap-5">
-            <Link href="/profile" className="hover:text-brand">
+            <Link href="/profile" className="motion-underline transition hover:text-brand">
               {t("حسابي")}
             </Link>
-            <Link href="/categories" className="hover:text-brand">
+            <Link href="/categories" className="motion-underline transition hover:text-brand">
               {t("الأقسام")}
             </Link>
-            <Link href="/cart" className="hover:text-brand">
+            <Link href="/cart" className="motion-underline transition hover:text-brand">
               {t("السلة")}
             </Link>
-            <Link href="/" className="hover:text-brand">
+            <Link href="/" className="motion-underline transition hover:text-brand">
               {t("الرئيسية")}
             </Link>
           </div>
