@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bike, Clock3, MapPin, NotebookPen, Pencil, Phone, ShieldCheck } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { user } from "@/lib/data";
 import { CartSummary } from "@/components/cart-summary";
+import { LocationPicker } from "@/components/location-picker";
 import { CheckoutShell } from "@/components/ui";
 
 export function DeliveryView() {
@@ -18,6 +19,7 @@ export function DeliveryView() {
     deliveryDetails,
     updateDeliveryDetails,
   } = useApp();
+  const [pickerOpen, setPickerOpen] = useState(false);
   const selected = addresses.find((address) => address.id === selectedAddressId) ?? null;
   const nameRef = useRef<HTMLInputElement>(null);
 
@@ -53,13 +55,14 @@ export function DeliveryView() {
                 >
                   {t("العناوين المحفوظة")}
                 </Link>
-                <Link
-                  href="/addresses/new"
+                <button
+                  type="button"
+                  onClick={() => setPickerOpen(true)}
                   className="flex items-center gap-1 text-[11px] font-bold text-brand transition hover:text-brand-dark"
                 >
                   <Pencil className="size-3.5" />
                   {t("تغيير العنوان")}
-                </Link>
+                </button>
               </div>
             </div>
 
@@ -191,6 +194,8 @@ export function DeliveryView() {
               {t("رسوم التوصيل")}: 30 {t("جنيه")} — {count} {t("أصناف")}
             </span>
           </div>
+
+          <LocationPicker open={pickerOpen} onClose={() => setPickerOpen(false)} />
         </>
       }
       aside={

@@ -819,3 +819,13 @@ export function useApp() {
   if (!context) throw new Error("useApp must be used within AppProvider");
   return context;
 }
+
+/**
+ * Context-optional read for chrome that can legitimately render outside the
+ * provider tree — the root loading fallback is prerendered inside
+ * `/_global-error`, where AppProvider does not exist. Components using this
+ * must fall back to untranslated (Arabic-first) copy.
+ */
+export function useOptionalApp() {
+  return useContext(AppContext);
+}

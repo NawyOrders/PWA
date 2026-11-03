@@ -16,6 +16,7 @@ import {
 import { AccountSidebar } from "@/components/account-sidebar";
 import { AddressKindIcon } from "@/components/address-icon";
 import { LeafletMap, type MapMarker } from "@/components/leaflet-map";
+import { LocationPicker } from "@/components/location-picker";
 import { useApp } from "@/components/providers";
 import { Breadcrumbs, DisplayPageHeader } from "@/components/ui";
 import { areaName, type LatLng } from "@/lib/geo";
@@ -28,6 +29,7 @@ export function AddressesView() {
   const [center, setCenter] = useState<[number, number]>(ALEXANDRIA);
   const [query, setQuery] = useState("");
   const [locating, setLocating] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const selected = addresses.find((item) => item.id === selectedAddressId) ?? null;
 
@@ -172,13 +174,14 @@ export function AddressesView() {
                   );
                 })}
               </div>
-              <Link
-                href="/addresses/new"
+              <button
+                type="button"
+                onClick={() => setPickerOpen(true)}
                 className="mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#d9c8b8] text-sm font-extrabold text-ink/80 transition hover:border-brand/60 hover:text-brand"
               >
                 <Plus className="size-5" strokeWidth={2.3} />
                 {t("اضافة عنوان جديد")}
-              </Link>
+              </button>
             </div>
 
             <div className="card overflow-hidden p-3 lg:hidden">
@@ -228,13 +231,14 @@ export function AddressesView() {
                 )}
               </div>
 
-              <Link
-                href="/addresses/new"
+              <button
+                type="button"
+                onClick={() => setPickerOpen(true)}
                 className="mt-3 flex h-16 w-full items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-brand/60 bg-brand-soft/20 text-base font-extrabold text-brand"
               >
                 <Plus className="size-5" strokeWidth={2.4} />
                 {t("اضف عنوان جديد")}
-              </Link>
+              </button>
 
               <button
                 type="button"
@@ -318,11 +322,17 @@ export function AddressesView() {
         {addresses.length === 0 ? (
           <p className="mt-6 text-center text-[11px] text-muted">
             {t("مفيش عناوين محفوظة، ")}
-            <Link href="/addresses/new" className="font-bold text-brand">
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              className="font-bold text-brand transition hover:text-brand-dark"
+            >
               {t("اضف عنوان جديد")}
-            </Link>
+            </button>
           </p>
         ) : null}
+
+        <LocationPicker open={pickerOpen} onClose={() => setPickerOpen(false)} />
       </div>
     </div>
   );
