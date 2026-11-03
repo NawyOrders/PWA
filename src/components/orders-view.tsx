@@ -148,10 +148,10 @@ export function OrdersView() {
               <p className="mt-2 text-sm text-muted">{t("تابع طلبك الحالي واطلب تاني أطباقك المفضلة.")}</p>
             </div>
             <Link
-              href="/profile"
+              href="/"
               className="flex items-center gap-1.5 text-sm font-bold text-brand transition hover:text-brand-dark"
             >
-              {t("العودة للملف الشخصي")}
+              {t("العودة للرئيسية")}
               <ChevronLeft className="size-4 ltr:rotate-180" />
             </Link>
           </div>

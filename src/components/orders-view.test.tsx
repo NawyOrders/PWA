@@ -32,6 +32,15 @@ describe("OrdersView", () => {
     expect(screen.queryByRole("button", { name: "رجوع" })).not.toBeInTheDocument();
   });
 
+  // Orders is reached from the tab bar, so the desktop escape hatch points back
+  // to the storefront rather than the account screen.
+  it("sends the desktop back link to home instead of the profile", async () => {
+    renderApp(<OrdersView />);
+
+    expect(await screen.findByRole("link", { name: /العودة للرئيسية/ })).toHaveAttribute("href", "/");
+    expect(screen.queryByRole("link", { name: /العودة للملف الشخصي/ })).not.toBeInTheDocument();
+  });
+
   it("keeps order tracking and reorder actions reachable", async () => {
     renderApp(<OrdersView />);
 
