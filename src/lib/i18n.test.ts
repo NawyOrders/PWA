@@ -11,6 +11,30 @@ describe("translation layer", () => {
     expect(translate("en", "السلة")).toBe("Cart");
   });
 
+  // The delivery-location sheet is built on Arabic-only copy from the designs,
+  // so these labels used to fall through and stay Arabic in English mode.
+  it("translates the top bar and delivery-location labels", () => {
+    expect(translate("en", "اختر مكان التوصيل")).toBe("Choose your delivery spot");
+    expect(translate("en", "العنواين المحفوظة")).toBe("Saved addresses");
+    expect(translate("en", "التوصيل لمكان اخر")).toBe("Deliver somewhere else");
+    expect(translate("en", "التوصيل لمكانك الحالي")).toBe("Deliver to my current location");
+    expect(translate("en", "طلبك هيوصل هنا")).toBe("Your order arrives here");
+    expect(translate("en", "ازالة")).toBe("Remove");
+    expect(translate("en", "شقة")).toBe("Apartment");
+    expect(translate("en", "عمارة")).toBe("Building");
+  });
+
+  it("translates the seeded delivery times and the greeting name", () => {
+    expect(translate("en", "25 - 35 دقيقة")).toBe("25–35 min");
+    expect(translate("en", "20 - 30 دقيقة")).toBe("20–30 min");
+    expect(translate("en", "أحمد")).toBe("Ahmed");
+  });
+
+  it("keeps Arabic copy untouched when the language is Arabic", () => {
+    expect(translate("ar", "اختر مكان التوصيل")).toBe("اختر مكان التوصيل");
+    expect(translate("ar", "شقة")).toBe("شقة");
+  });
+
   it("falls back to the Arabic key for missing English entries", () => {
     expect(translate("en", "نص غير مترجم")).toBe("نص غير مترجم");
   });
