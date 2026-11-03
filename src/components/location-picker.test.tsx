@@ -189,4 +189,33 @@ describe("LocationPicker", () => {
     expect(screen.getByTestId("map")).toHaveAttribute("data-center", "31.1906,29.9131");
     expect(search).toHaveValue("مفيش كده");
   });
+
+  it("suggests delivery districts, not only saved addresses", async () => {
+    const user = userEvent.setup();
+    renderApp(<LocationPicker open onClose={vi.fn()} />);
+
+    await user.click(await screen.findByRole("button", { name: /التوصيل لمكان اخر/ }));
+    const search = await screen.findByLabelText("ابحث عن موقع");
+
+    await user.type(search, "سيدي بشر");
+    await user.click(await screen.findByRole("button", { name: /سيدي بشر/ }));
+
+    expect(screen.getByTestId("map")).toHaveAttribute("data-center", "31.2139,29.9611");
+  });
+
+  it("says so when a search matches nothing", async () => {
+    const user = userEvent.setup();
+    renderApp(<LocationPicker open onClose={vi.fn()} />);
+
+    await user.click(await screen.findByRole("button", { name: /التوصيل لمكان اخر/ }));
+    const search = await screen.findByLabelText("ابحث عن موقع");
+
+    await user.type(search, "زفتة");
+    expect(await screen.findByText("مفيش نتيجة مطابقة")).toBeInTheDocument();
+
+    // Districts outside the delivery range are never offered.
+    await user.clear(search);
+    await user.type(search, "المعادي");
+    expect(screen.queryByRole("button", { name: /المعادي/ })).not.toBeInTheDocument();
+  });
 });

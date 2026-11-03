@@ -448,6 +448,7 @@ const en: Record<string, string> = {
   "تم تحديد موقعك الحالي على الخريطة": "Your current location is set on the map",
   "مقدرناش نحدد موقعك، اكتب العنوان يدوي": "We couldn't locate you. Enter the address manually.",
   "تم تحديد الموقع على الخريطة": "Location set on the map",
+  "تم تحريك الخريطة للمنطقة": "Map moved to that area",
 
   // misc pages
   "الصفحة مش موجودة": "Page not found",
@@ -566,7 +567,9 @@ const en: Record<string, string> = {
   "العودة لبيانات التوصيل": "Back to delivery details",
   "خريطة اختيار موقع التوصيل": "Delivery location map",
   "ابحث عن موقع": "Search for a location",
+  "مفيش نتيجة مطابقة": "No matching place",
   "مفيش نتيجة مطابقة، جرّب اسم منطقة تاني": "No match found — try another area name",
+  "منطقة توصيل": "Delivery area",
   "اختار عنوان التوصيل": "Choose the delivery address",
   "لا يوجد عناوين سابقة": "No saved addresses yet",
   "اضف الان": "Add one now",

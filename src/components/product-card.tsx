@@ -42,7 +42,7 @@ export function ProductCard({
         </div>
 
         {product.popular ? (
-          <div className="mt-2 flex justify-center">
+          <div className="mt-2 flex justify-start ps-1">
             <HotBadge />
           </div>
         ) : null}
