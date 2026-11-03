@@ -56,14 +56,14 @@ export function PickupView() {
       ]}
       mobileTitle="طريقة الاستلام"
       main={
-        <div className="space-y-4 pb-28 lg:pb-0">
+        <div className="motion-stagger space-y-4 pb-28 lg:pb-0">
           <section className="card p-4 sm:p-5 lg:p-6">
             <h2 className="text-base font-extrabold lg:text-lg">{t("اختر طريقة استلام الطلب")}</h2>
             <p className="mt-2 text-[11px] leading-6 text-muted sm:text-xs">
               {t("يرجى اختيار طريقة الاستلام سواء التوصيل حتى باب المنزل أو العمل أو الاستلام من أحد فروعنا")}
             </p>
 
-            <div className="mt-5 space-y-3 sm:space-y-4" role="radiogroup" aria-label={t("اختر طريقة استلام الطلب")}>
+            <div className="motion-stagger mt-5 space-y-3 sm:space-y-4" role="radiogroup" aria-label={t("اختر طريقة استلام الطلب")}>
               {options.map((option) => {
                 const active = fulfilment === option.id;
                 const Icon = option.icon;

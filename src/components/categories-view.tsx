@@ -73,18 +73,24 @@ export function CategoriesView() {
           </Link>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-3 lg:hidden">
+        <div className="motion-stagger mt-4 grid grid-cols-2 gap-3 lg:hidden">
           {catalogCategoryOrder.map((id) => {
             const item = categoriesById[id];
             return (
               <Link
                 key={id}
                 href={`/categories/${id}`}
-                className="flex flex-col items-center rounded-[18px] bg-white px-3 py-4 text-center shadow-soft transition active:scale-[0.98]"
+                className="group flex flex-col items-center rounded-[18px] bg-white px-3 py-4 text-center shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.98]"
               >
-                <span className="grid size-[68px] place-items-center rounded-full bg-peach/80">
+                <span className="grid size-[68px] place-items-center rounded-full bg-peach/80 transition-colors duration-300 group-hover:bg-brand-soft">
                   <span className="relative size-12 overflow-hidden rounded-full">
-                    <Image src={item.image} alt={t(item.name)} fill sizes="48px" className="object-cover" />
+                    <Image
+                      src={item.image}
+                      alt={t(item.name)}
+                      fill
+                      sizes="48px"
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
                   </span>
                 </span>
                 <span className="mt-2.5 text-[15px] font-extrabold text-ink">{t(item.name)}</span>
@@ -96,7 +102,7 @@ export function CategoriesView() {
           })}
         </div>
 
-        <div className="mt-5 hidden grid-cols-7 gap-3 lg:grid">
+        <div className="motion-stagger mt-5 hidden grid-cols-7 gap-3 lg:grid">
           {desktopCategoryOrder.map((id) => {
             const item = categoriesById[id];
             const active = id === categoryId;
@@ -109,12 +115,18 @@ export function CategoriesView() {
                   setChip("الكل");
                 }}
                 aria-pressed={active}
-                className={`flex flex-col items-center rounded-2xl border-2 bg-white px-2 py-4 text-center transition hover:-translate-y-1 hover:shadow-soft ${
+                className={`group flex flex-col items-center rounded-2xl border-2 bg-white px-2 py-4 text-center transition duration-300 hover:-translate-y-1 hover:shadow-soft active:scale-[0.98] ${
                   active ? "border-brand" : "border-transparent"
                 }`}
               >
                 <span className="relative size-14 overflow-hidden rounded-full bg-cream-50">
-                  <Image src={item.image} alt={t(item.name)} fill sizes="56px" className="object-cover" />
+                  <Image
+                    src={item.image}
+                    alt={t(item.name)}
+                    fill
+                    sizes="56px"
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
                 </span>
                 <span className={`mt-3 text-sm font-bold ${active ? "text-brand" : "text-ink"}`}>{t(item.name)}</span>
                 <span className="mt-0.5 text-[10px] text-muted">{categoryCounts[id] ?? 0} {t("صنف")}</span>
@@ -159,7 +171,7 @@ export function CategoriesView() {
                 type="button"
                 onClick={() => setChip(item)}
                 aria-pressed={chip === item}
-                className={`h-9 shrink-0 rounded-full px-4 text-xs font-bold transition ${
+                className={`motion-press h-9 shrink-0 rounded-full px-4 text-xs font-bold transition ${
                   chip === item
                     ? "border border-brand bg-white text-brand"
                     : "border border-line bg-white text-ink/70 hover:border-brand/30"
@@ -172,7 +184,7 @@ export function CategoriesView() {
           <span className="shrink-0 text-[11px] text-muted lg:hidden">{items.length} {t("أطباق")}</span>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-3 lg:mt-4 lg:grid-cols-5 lg:gap-4">
+        <div className="motion-stagger mt-4 grid grid-cols-2 gap-3 lg:mt-4 lg:grid-cols-5 lg:gap-4">
           {items.map((product) => (
             <ProductCard key={product.id} product={product} className="lg:p-2.5" />
           ))}

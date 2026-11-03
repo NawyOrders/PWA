@@ -38,7 +38,7 @@ export function AccountSidebar({ active }: { active: string }) {
     <aside className="hidden w-full shrink-0 space-y-4 lg:sticky lg:top-24 lg:block lg:w-[320px]">
       <div className="card p-4">
         <p className="px-2 text-[11px] font-semibold text-muted">{t("إدارة الحساب")}</p>
-        <div className="mt-3 space-y-1.5">
+        <div className="motion-stagger mt-3 space-y-1.5">
           {navItems.map((item) => {
             const isActive = item.href === active;
             const Icon = item.icon;

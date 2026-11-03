@@ -10,13 +10,13 @@ export function OfflineView() {
   const { t } = useApp();
   return (
     <div className="shell flex min-h-[78vh] items-center justify-center py-10">
-      <div className="card w-full max-w-[460px] px-6 py-10 text-center">
+      <div className="motion-pop card w-full max-w-[460px] px-6 py-10 text-center">
         <div className="flex justify-center">
-          <LogoMark className="size-16" />
+          <LogoMark className="motion-float size-16" />
         </div>
         <BrandWordmark className="mt-4" />
 
-        <span className="mx-auto mt-8 grid size-16 place-items-center rounded-full bg-brand-soft text-brand">
+        <span className="mx-auto mt-8 grid size-16 place-items-center rounded-full bg-brand-soft text-brand motion-pop">
           <WifiOff className="size-7" strokeWidth={1.8} />
         </span>
         <h1 className="mt-5 text-2xl font-extrabold">{t("انت غير متصل بالإنترنت")}</h1>

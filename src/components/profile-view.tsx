@@ -35,13 +35,13 @@ export function ProfileView() {
 
   return (
     <div className="pb-8">
-      <h1 className="px-4 pb-4 pt-6 text-center text-lg font-extrabold lg:hidden">{t("الملف الشخصي")}</h1>
+      <h1 className="motion-header px-4 pb-4 pt-6 text-center text-lg font-extrabold lg:hidden">{t("الملف الشخصي")}</h1>
 
       <div className="shell">
         <h1 className="mb-7 hidden text-[32px] font-extrabold lg:block">{t("الملف الشخصي")}</h1>
 
         <div className="mx-auto max-w-[640px] space-y-4">
-          <section className="card relative overflow-hidden px-5 py-8 text-center lg:px-10 lg:py-10">
+          <section className="motion-rise card relative overflow-hidden px-5 py-8 text-center lg:px-10 lg:py-10">
             <div className="pointer-events-none absolute -start-16 -top-24 size-56 rounded-full bg-brand-soft/60 blur-2xl" />
 
             <div className="relative mx-auto w-fit">
@@ -72,7 +72,7 @@ export function ProfileView() {
               {t("تعديل الملف الشخصي")}
             </Link>
 
-            <div className="mt-7 grid grid-cols-3 gap-2">
+            <div className="motion-stagger mt-7 grid grid-cols-3 gap-2">
               {stats.map((stat) => {
                 const Icon = stat.icon;
                 return (
@@ -90,7 +90,7 @@ export function ProfileView() {
             </div>
           </section>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="motion-stagger grid grid-cols-2 gap-4">
             <Link
               href="/favorites"
               className="card flex flex-col items-center gap-3 px-4 py-6 transition hover:-translate-y-1 hover:shadow-pop"
@@ -111,7 +111,7 @@ export function ProfileView() {
             </Link>
           </div>
 
-          <div className="card divide-y divide-line overflow-hidden">
+          <div className="motion-stagger card divide-y divide-line overflow-hidden">
             {accountLinks.map((link) => {
               const Icon = link.icon;
               return (

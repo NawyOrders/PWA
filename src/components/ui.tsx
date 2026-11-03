@@ -42,7 +42,7 @@ export function buttonStyles({
   className?: string;
 } = {}): string {
   return [
-    "inline-flex items-center justify-center gap-2 rounded-full font-extrabold transition active:scale-[0.985]",
+    "motion-press inline-flex items-center justify-center gap-2 rounded-full font-extrabold transition active:scale-[0.985]",
     "disabled:pointer-events-none disabled:bg-cream-100 disabled:text-muted disabled:shadow-none",
     buttonVariants[variant],
     buttonSizes[size],
@@ -71,7 +71,7 @@ export function Button({
 /** Selected/unselected pill used for tabs, filters and option pickers. */
 export function chipStyles(selected: boolean, className = ""): string {
   return [
-    "inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-extrabold transition",
+    "motion-press inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-extrabold transition",
     selected
       ? "border border-brand bg-brand text-white shadow-[0_16px_30px_-18px_rgba(232,69,44,0.9)]"
       : "border border-line bg-white text-ink shadow-soft hover:border-brand/40 hover:bg-cream-50",
@@ -155,12 +155,13 @@ export function FavoriteButton({
         event.stopPropagation();
         toggleFavorite(productId);
       }}
-      className={`grid place-items-center rounded-full transition active:scale-90 ${
+      className={`motion-press grid place-items-center rounded-full transition active:scale-90 ${
         alwaysWhite || active ? "bg-white shadow-[0_8px_20px_-12px_rgba(60,30,15,0.5)]" : "bg-white/90"
       } ${className}`}
     >
       <Heart
-        className={`size-[46%] transition ${active ? "fill-brand text-brand" : "text-[#7f746c]"}`}
+        key={active ? "active" : "idle"}
+        className={`size-[46%] transition ${active ? "motion-heart-pop fill-brand text-brand" : "text-[#7f746c]"}`}
         strokeWidth={1.8}
       />
     </button>
@@ -186,7 +187,7 @@ export function AddButton({
         event.stopPropagation();
         onClick();
       }}
-      className={`grid place-items-center rounded-full bg-brand text-white shadow-[0_12px_24px_-12px_rgba(232,69,44,0.9)] transition hover:bg-brand-dark active:scale-90 ${className}`}
+      className={`motion-press grid place-items-center rounded-full bg-brand text-white shadow-[0_12px_24px_-12px_rgba(232,69,44,0.9)] transition hover:scale-105 hover:bg-brand-dark active:scale-90 ${className}`}
     >
       <Plus className="size-[50%]" strokeWidth={2.4} />
     </button>
@@ -251,7 +252,7 @@ export function SectionTitle({
 }) {
   const { t } = useApp();
   return (
-    <div className={`flex items-center justify-between gap-3 ${className}`}>
+    <div className={`motion-header flex items-center justify-between gap-3 ${className}`}>
       <h2 className="flex items-center gap-2 text-lg font-extrabold lg:text-xl">
         {icon}
         {t(title)}
@@ -283,7 +284,7 @@ type BackControlProps = {
 };
 
 function backControlStyles(tone: keyof typeof backTones, className: string): string {
-  return ["grid size-11 shrink-0 place-items-center transition active:scale-95", backTones[tone], className]
+  return ["motion-press grid size-11 shrink-0 place-items-center transition active:scale-95", backTones[tone], className]
     .filter(Boolean)
     .join(" ");
 }
@@ -341,7 +342,7 @@ export function MobilePageHeader({
 }) {
   const { t } = useApp();
   return (
-    <header className={`flex items-center justify-between px-4 pb-4 pt-6 lg:hidden ${className}`}>
+    <header className={`motion-header flex items-center justify-between px-4 pb-4 pt-6 lg:hidden ${className}`}>
       <BackButton href={backHref} />
       <h1 className="text-lg font-extrabold">{t(title)}</h1>
       <div className="flex min-w-11 justify-end">{action}</div>
@@ -364,7 +365,7 @@ export function DisplayPageHeader({
 }) {
   const { t } = useApp();
   return (
-    <header className={`px-5 pb-6 pt-6 lg:hidden ${className}`}>
+    <header className={`motion-header px-5 pb-6 pt-6 lg:hidden ${className}`}>
       <div className="flex justify-start">{action ?? <BackButton href={backHref} tone="overlay" />}</div>
       <h1 className="mt-6 text-start font-display text-[42px] font-extrabold leading-[1.15] lg:text-[46px]">
         {t(title)}
@@ -493,8 +494,8 @@ export function CheckoutShell({
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-5 lg:mt-8 lg:grid-cols-[minmax(0,1fr)_370px] lg:items-start">
-          <div className="min-w-0 space-y-4 lg:space-y-5">{main}</div>
-          <aside className="w-full space-y-4 lg:sticky lg:top-24">{aside}</aside>
+          <div className="motion-stagger min-w-0 space-y-4 lg:space-y-5">{main}</div>
+          <aside className="motion-stagger w-full space-y-4 lg:sticky lg:top-24">{aside}</aside>
         </div>
       </div>
     </div>
@@ -514,7 +515,7 @@ export function EmptyState({
 }) {
   const { t } = useApp();
   return (
-    <div className="card flex flex-col items-center px-6 py-14 text-center">
+    <div className="motion-pop card flex flex-col items-center px-6 py-14 text-center">
       <span className="grid size-16 place-items-center rounded-full bg-brand-soft text-brand">
         <ShoppingBag className="size-7" />
       </span>

@@ -82,7 +82,7 @@ export function ProductDetail({ product }: { product: Product }) {
 
         <div className="mt-5 grid gap-4 lg:mt-6 lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-6">
           <div className="order-1">
-            <div className="relative aspect-[2.1/1] overflow-hidden rounded-[24px] bg-peach shadow-soft lg:aspect-[1.55/1] lg:rounded-[30px]">
+            <div className="motion-fade relative aspect-[2.1/1] overflow-hidden rounded-[24px] bg-peach shadow-soft lg:aspect-[1.55/1] lg:rounded-[30px]">
               <Image
                 src={product.image}
                 alt={t(product.name)}
@@ -125,7 +125,7 @@ export function ProductDetail({ product }: { product: Product }) {
           </div>
 
           <div className="order-2 space-y-3 lg:space-y-4">
-            <div className="card p-4 lg:p-6">
+            <div className="motion-rise card p-4 lg:p-6">
               <div className="hidden text-center lg:block">
                 <h2 className="text-xl font-extrabold">{t("خطط طلبك على مزاجك")}</h2>
                 {customizable ? (
@@ -291,7 +291,7 @@ export function ProductDetail({ product }: { product: Product }) {
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/97 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-12px_30px_-22px_rgba(80,40,20,0.5)] backdrop-blur lg:hidden">
+      <div className="motion-nav-in fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/97 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-12px_30px_-22px_rgba(80,40,20,0.5)] backdrop-blur lg:hidden">
         <div className="mx-auto max-w-lg">
           <div className="flex items-center justify-between">
             <span className="text-sm font-extrabold">{t("الكمية")}</span>
@@ -318,7 +318,7 @@ export function ProductDetail({ product }: { product: Product }) {
           <button
             type="button"
             onClick={addToCart}
-            className="btn-brand mt-2.5 flex h-12 w-full items-center justify-between px-5 text-sm"
+            className="btn-brand motion-press mt-2.5 flex h-12 w-full items-center justify-between px-5 text-sm"
           >
             <span className="flex items-center gap-2">
               <ShoppingCart className="size-4" />

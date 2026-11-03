@@ -113,7 +113,7 @@ export function FeedbackView() {
 
               <div className="card mt-4 p-5 lg:rounded-none lg:bg-transparent lg:p-0 lg:shadow-none">
                 <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
-                  <div className="space-y-5">
+                  <div className="motion-stagger space-y-5">
                     <div>
                       <label htmlFor="feedback-type" className="block text-sm font-extrabold">
                         {t("نوع الملاحظة")}

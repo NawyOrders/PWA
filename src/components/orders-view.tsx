@@ -42,16 +42,20 @@ export function OrdersView() {
     const expanded = expandedId === key;
 
     return (
-      <article key={key} className="rounded-[26px] bg-white p-4 shadow-soft lg:p-5">
+      <article key={key} className="rounded-[26px] bg-white p-4 shadow-soft transition duration-300 hover:shadow-pop lg:p-5">
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm font-extrabold">
             {t("طلب رقم")} {orderNumber(order.id)}
           </span>
           <span
-            className={`rounded-full px-3.5 py-1.5 text-[11px] font-bold ${
+            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[11px] font-bold ${
               isCurrent ? "bg-brand-soft text-brand" : "bg-success-soft text-success"
             }`}
           >
+            <span
+              aria-hidden="true"
+              className={`size-1.5 rounded-full ${isCurrent ? "animate-pulse-soft bg-brand" : "bg-success"}`}
+            />
             {t(isCurrent ? "قيد التحضير" : "تم التوصيل")}
           </span>
         </div>
@@ -74,7 +78,7 @@ export function OrdersView() {
         ) : null}
 
         {expanded ? (
-          <div className="mt-3 space-y-1.5 rounded-2xl bg-[#fbf4ec] px-4 py-3.5 text-[11px] leading-6 text-muted">
+          <div className="motion-rise mt-3 space-y-1.5 rounded-2xl bg-[#fbf4ec] px-4 py-3.5 text-[11px] leading-6 text-muted">
             <p>
               <span className="font-bold text-ink">{t("الأصناف: ")}</span>
               {order.items?.length
@@ -134,7 +138,7 @@ export function OrdersView() {
 
   return (
     <div className="pb-10">
-      <h1 className="px-4 pb-4 pt-6 text-center text-lg font-extrabold lg:hidden">{t("طلباتك")}</h1>
+      <h1 className="motion-header px-4 pb-4 pt-6 text-center text-lg font-extrabold lg:hidden">{t("طلباتك")}</h1>
 
       <div className="shell">
         <div className="mx-auto max-w-3xl">
@@ -162,7 +166,7 @@ export function OrdersView() {
                     : t("{count} طلبات", { count: display(current.length) })}
                 </span>
               </div>
-              <div className="mt-3 space-y-3">
+              <div className="motion-stagger mt-3 space-y-3">
                 {current.length > 0 ? (
                   current.map(renderOrder)
                 ) : (
@@ -178,7 +182,7 @@ export function OrdersView() {
                 <h2 className="text-lg font-extrabold">{t("الطلبات السابقة")}</h2>
                 <span className="text-xs text-muted">{t("آخر {count} طلبات", { count: display(previous.length) })}</span>
               </div>
-              <div className="mt-3 space-y-3">
+              <div className="motion-stagger mt-3 space-y-3">
                 {previous.length > 0 ? (
                   previous.map(renderOrder)
                 ) : (

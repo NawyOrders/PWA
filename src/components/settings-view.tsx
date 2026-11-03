@@ -142,7 +142,7 @@ export function SettingsView() {
               </button>
             </div>
 
-            <div className="mt-2.5 space-y-2.5">
+            <div className="motion-stagger mt-2.5 space-y-2.5">
               {rows.map((row) => {
                 const Icon = row.icon;
                 return (

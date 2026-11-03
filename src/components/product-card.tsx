@@ -21,7 +21,7 @@ export function ProductCard({
 
   return (
     <article
-      className={`group relative rounded-[26px] bg-white p-2.5 pb-3 shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop ${className}`}
+      className={`group relative rounded-[26px] bg-white p-2.5 pb-3 shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.99] ${className}`}
     >
       <FavoriteButton productId={product.id} className="absolute end-4 top-4 z-20 size-10" />
 

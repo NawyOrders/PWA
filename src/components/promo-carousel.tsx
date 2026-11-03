@@ -74,7 +74,9 @@ export function PromoCarousel() {
               fill
               priority={slideIndex === 0}
               sizes="(max-width: 1024px) 100vw, 900px"
-              className={`object-cover ${isHero && heroIsMirrored(lang) ? "ltr:-scale-x-100" : ""}`}
+              className={`object-cover transition-transform duration-700 ${
+                isHero && heroIsMirrored(lang) ? "ltr:-scale-x-100" : ""
+              } ${slideIndex === index ? "motion-zoom" : ""}`}
             />
             <div
               className={`absolute inset-0 ${
@@ -83,7 +85,11 @@ export function PromoCarousel() {
                   : "from-cream/95 via-cream/55 to-transparent"
               } ${lang === "en" ? "bg-gradient-to-r" : "bg-gradient-to-l"}`}
             />
-            <div className="absolute inset-y-0 start-0 flex w-[68%] flex-col justify-center gap-2 ps-4 text-start sm:w-[55%] lg:w-[48%] lg:gap-3 lg:ps-10">
+            <div
+              className={`absolute inset-y-0 start-0 flex w-[68%] flex-col justify-center gap-2 ps-4 text-start sm:w-[55%] lg:w-[48%] lg:gap-3 lg:ps-10 ${
+                slideIndex === index ? "motion-slide" : ""
+              }`}
+            >
               <span
                 className={`w-fit rounded-full px-2.5 py-1 text-[9px] font-bold lg:text-[10px] ${
                   item.theme === "dark" ? "bg-white/20 text-white backdrop-blur" : "bg-white/80 text-brand"
@@ -132,8 +138,8 @@ export function PromoCarousel() {
             aria-selected={dotIndex === index}
             aria-label={t("العرض {n}", { n: dotIndex + 1 })}
             onClick={() => setIndex(dotIndex)}
-            className={`h-1.5 rounded-full transition-all ${
-              dotIndex === index ? "w-4 bg-brand" : "w-1.5 bg-[#d9ccc0] hover:bg-brand/50"
+            className={`h-1.5 rounded-full transition-all duration-300 ${
+              dotIndex === index ? "w-4 bg-brand" : "w-1.5 bg-[#d9ccc0] hover:w-2.5 hover:bg-brand/50"
             }`}
           />
         ))}

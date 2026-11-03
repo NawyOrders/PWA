@@ -119,10 +119,10 @@ export function AddressesView() {
         <div className="mt-4 flex flex-col-reverse gap-5 lg:mt-7 lg:flex-row lg:items-start lg:justify-end">
           <AccountSidebar active="/addresses" />
 
-          <div className="min-w-0 flex-1 space-y-4">
+          <div className="motion-stagger min-w-0 flex-1 space-y-4">
             <div className="card hidden p-5 lg:block">
               <h2 className="text-center text-lg font-extrabold">{t("عناوينك المحفوظة")}</h2>
-              <div className="mt-5 space-y-3">
+              <div className="motion-stagger mt-5 space-y-3">
                 {addresses.map((item) => {
                   const active = item.id === selectedAddressId;
                   return (
@@ -182,7 +182,7 @@ export function AddressesView() {
             </div>
 
             <div className="card overflow-hidden p-3 lg:hidden">
-              <div className="space-y-3">
+              <div className="motion-stagger space-y-3">
                 {addresses.length === 0 ? (
                   <p className="px-3 py-8 text-center text-sm text-muted">{t("لا يوجد عناوين سابقة")}</p>
                 ) : (

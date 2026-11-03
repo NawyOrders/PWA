@@ -11,7 +11,7 @@ export function MenuRow({ product, className = "" }: { product: Product; classNa
 
   return (
     <article
-      className={`relative flex min-h-[128px] overflow-hidden rounded-[24px] bg-white shadow-soft transition hover:shadow-pop lg:min-h-[148px] ${className}`}
+      className={`group relative flex min-h-[128px] overflow-hidden rounded-[24px] bg-white shadow-soft transition duration-300 hover:-translate-y-0.5 hover:shadow-pop active:scale-[0.995] lg:min-h-[148px] ${className}`}
     >
       <div className="relative w-[116px] shrink-0 lg:w-[150px]">
         <Link
@@ -24,7 +24,7 @@ export function MenuRow({ product, className = "" }: { product: Product; classNa
             alt={t(product.name)}
             fill
             sizes="150px"
-            className="object-cover transition-transform duration-500 hover:scale-105"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         </Link>
       </div>

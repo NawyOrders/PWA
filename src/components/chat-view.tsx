@@ -101,7 +101,7 @@ export function ChatView() {
               </span>
             </div>
 
-            <div className="mt-6 space-y-4">
+            <div className="motion-stagger mt-6 space-y-4">
               {messages.map((message) =>
                 message.from === "agent" ? (
                   <div key={message.id} className="flex items-end justify-start gap-2">

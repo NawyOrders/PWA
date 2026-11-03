@@ -108,7 +108,7 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
   };
 
   const card = (
-    <div className="flex min-h-[calc(100dvh-186px)] flex-col rounded-card bg-white px-4 pb-8 pt-9 shadow-soft lg:min-h-0 lg:rounded-[30px] lg:p-8">
+    <div className="motion-pop flex min-h-[calc(100dvh-186px)] flex-col rounded-card bg-white px-4 pb-8 pt-9 shadow-soft lg:min-h-0 lg:rounded-[30px] lg:p-8">
       <div className="flex justify-end" dir="ltr">
         <span className="grid size-14 place-items-center rounded-[18px] bg-brand-soft text-brand lg:size-14">
           <Phone className="size-5 lg:size-6" />
@@ -191,7 +191,7 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
               : t("اكتب الكود اللي وصل في الرسالة")}
           </p>
           {error ? (
-            <p role="alert" className="mt-1.5 text-end text-[11px] font-semibold text-brand">
+            <p role="alert" className="motion-fade mt-1.5 text-end text-[11px] font-semibold text-brand">
               {error}
             </p>
           ) : null}
@@ -255,7 +255,7 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
     <div className="pb-10">
       <div className="relative mx-auto mt-6 flex h-14 max-w-[343px] items-center justify-center lg:hidden">
         <BackLink href="/" className="absolute start-0 top-0" />
-        <LogoMark className="size-14" />
+        <LogoMark className="motion-pop size-14" />
       </div>
 
       <div className="hidden lg:block lg:pt-8">

@@ -94,7 +94,7 @@ export function OrderTrackingView({ order }: { order: Order }) {
           <p className="text-sm text-muted lg:mt-2">{t("تابع طلبك الحالي وارجع لكل طلباتك السابقة في مكان واحد.")}</p>
         </div>
 
-        <div className="mt-5 space-y-4 lg:mt-7 lg:space-y-5">
+        <div className="motion-stagger mt-5 space-y-4 lg:mt-7 lg:space-y-5">
           <div className="card flex items-center justify-between gap-3 px-5 py-4">
             <span className="text-sm font-bold text-ink lg:text-base">
               {delivered
@@ -103,7 +103,7 @@ export function OrderTrackingView({ order }: { order: Order }) {
                   ? t("وقت الاستلام المتوقع")
                   : t("وقت الوصول المتوقع")}
             </span>
-            <span className="text-xl font-extrabold text-brand lg:text-2xl">
+            <span className="motion-fade text-xl font-extrabold text-brand lg:text-2xl">
               {delivered ? t(pickup ? "تم الاستلام" : "تم التوصيل") : t(order.eta ?? trackingEta)}
             </span>
           </div>
@@ -171,7 +171,7 @@ export function OrderTrackingView({ order }: { order: Order }) {
                 style={{ insetInlineStart: `${TRACK_INSET}%`, width: `${TRACK_SPAN}%` }}
               />
               <span
-                className="absolute top-5 h-[3px] rounded-full bg-brand transition-[width] duration-500 lg:top-[22px]"
+                className="motion-progress absolute top-5 h-[3px] rounded-full bg-brand transition-[width] duration-500 lg:top-[22px]"
                 style={{ insetInlineStart: `${TRACK_INSET}%`, width: `${progress}%` }}
               />
               <ol className="relative flex">

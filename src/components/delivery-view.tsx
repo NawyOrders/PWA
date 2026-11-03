@@ -83,7 +83,7 @@ export function DeliveryView() {
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-2.5 lg:gap-3">
+            <div className="motion-stagger mt-4 grid grid-cols-3 gap-2.5 lg:gap-3">
               <label className="block">
                 <span className="mb-1.5 block text-[11px] font-semibold text-muted">{t("رقم العمارة")}</span>
                 <input
@@ -130,7 +130,7 @@ export function DeliveryView() {
               </button>
             </div>
 
-            <div className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:gap-3">
+            <div className="motion-stagger mt-4 grid gap-2.5 sm:grid-cols-2 lg:gap-3">
               <label className="block">
                 <span className="mb-1.5 block text-[11px] font-semibold text-muted">{t("اسم المستلم")}</span>
                 <input
