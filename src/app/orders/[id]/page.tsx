@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { OrderDetailView } from "@/components/order-detail-view";
+import { LoadingIndicator } from "@/components/loading-indicator";
 
 export const metadata: Metadata = {
   title: "تتبع الطلب",
@@ -13,12 +14,8 @@ export const instant = false;
 
 function TrackingFallback() {
   return (
-    <div className="shell min-h-[60vh] py-8" aria-hidden="true">
-      <div className="mx-auto max-w-5xl animate-pulse space-y-5">
-        <div className="h-8 w-48 rounded-lg bg-cream" />
-        <div className="h-64 rounded-3xl bg-cream" />
-        <div className="h-28 rounded-3xl bg-cream" />
-      </div>
+    <div className="shell flex min-h-[60vh] items-center justify-center py-8">
+      <LoadingIndicator className="size-16" />
     </div>
   );
 }

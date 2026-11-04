@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { LoginView } from "@/components/login-view";
+import { LoadingIndicator } from "@/components/loading-indicator";
 import { sanitizeNextPath } from "@/lib/routes";
 
 export const metadata: Metadata = {
@@ -16,8 +17,8 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ ne
   return (
     <Suspense
       fallback={
-        <div className="shell flex min-h-[60vh] items-center justify-center py-8" aria-hidden="true">
-          <div className="h-[440px] w-full max-w-[540px] animate-pulse rounded-[30px] bg-white/70" />
+        <div className="shell flex min-h-[60vh] items-center justify-center py-8">
+          <LoadingIndicator className="size-16" />
         </div>
       }
     >
