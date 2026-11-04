@@ -28,6 +28,7 @@ import { savedAddresses, type AddressKind, type SavedAddress } from "@/lib/accou
 import { translate, type Lang, type Vars } from "@/lib/i18n";
 import { storageKeys } from "@/lib/storage";
 import { usePersistentState } from "@/hooks/use-persistent-state";
+import { LoadingIndicator } from "@/components/loading-indicator";
 
 export type CartLine = {
   key: string;
@@ -788,7 +789,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider value={value}>
-      {children}
+      <div aria-hidden={!ready} inert={!ready}>
+        {children}
+      </div>
+      {!ready ? (
+        <div className="fixed inset-0 z-[200] grid min-h-[100dvh] w-full place-items-center bg-cream-50">
+          <LoadingIndicator className="size-16" />
+        </div>
+      ) : null}
       {toastState ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[90] flex justify-center px-4 lg:bottom-8">
           <div

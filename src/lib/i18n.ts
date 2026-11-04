@@ -15,6 +15,8 @@ const en: Record<string, string> = {
   "المفضلة": "Favorites",
   "الاعدادات": "Settings",
   "الإعدادات": "Settings",
+  "العودة للاعدادات": "Back to settings",
+  "العودة للمساعدة": "Back to help",
   "الملف الشخصي": "Profile",
   "تسجيل الدخول": "Sign in",
   "تسجيل الخروج": "Sign out",

@@ -9,7 +9,6 @@ import {
   ChevronRight,
   Crosshair,
   Home,
-  LoaderCircle,
   MapPin,
   Search,
   X,
@@ -17,6 +16,7 @@ import {
 import { LeafletMap } from "@/components/leaflet-map";
 import { useApp } from "@/components/providers";
 import { Chip } from "@/components/ui";
+import { LoadingIndicator } from "@/components/loading-indicator";
 import { useDialogFocus } from "@/hooks/use-dialog-focus";
 import { useMapPlaces, useReversePlaceName } from "@/hooks/use-map-places";
 import type { AddressKind } from "@/lib/account-data";
@@ -229,7 +229,7 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
             role="dialog"
             aria-modal="true"
             aria-labelledby="location-picker-title"
-            className="motion-pop max-h-[86dvh] w-full overflow-y-auto overscroll-contain rounded-t-[32px] bg-white px-5 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-3 shadow-pop lg:max-w-[440px] lg:rounded-[28px] lg:px-6 lg:pt-5"
+            className="location-picker-scrollbar motion-pop max-h-[86dvh] w-full overflow-y-auto overscroll-contain rounded-t-[32px] bg-white px-5 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-3 shadow-pop lg:max-w-[440px] lg:rounded-[28px] lg:px-6 lg:pt-5"
           >
             <div className="mx-auto h-1.5 w-12 rounded-full bg-line lg:hidden" aria-hidden="true" />
 
@@ -295,7 +295,11 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
                 onClick={useCurrentLocation}
                 className="motion-press flex w-full items-center gap-3 rounded-2xl border border-line bg-white px-4 py-3.5 text-start shadow-soft transition hover:border-brand/40"
               >
-                <Crosshair className={`size-[18px] shrink-0 text-ink/70 ${locating ? "animate-pulse-soft" : ""}`} strokeWidth={1.9} />
+                {locating ? (
+                  <LoadingIndicator className="size-[18px]" label={t("جارٍ تحديد الموقع")} />
+                ) : (
+                  <Crosshair className="size-[18px] shrink-0 text-ink/70" strokeWidth={1.9} />
+                )}
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-extrabold text-ink">{t("التوصيل لمكانك الحالي")}</span>
                   <span className="mt-0.5 block truncate text-[11px] text-muted">{regionLabel}</span>
@@ -378,7 +382,7 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
                     })}
                     {suggestions.length === 0 ? (
                       <li className="flex justify-center px-4 py-3 text-[11px] font-semibold text-muted">
-                        {searching ? <LoaderCircle className="size-4 animate-spin" aria-label={t("البحث")} /> : t("مفيش نتيجة مطابقة")}
+                        {searching ? <LoadingIndicator className="size-4" label={t("البحث")} /> : t("مفيش نتيجة مطابقة")}
                       </li>
                     ) : null}
                   </ul>

@@ -5,11 +5,9 @@ import Link from "next/link";
 import { useState } from "react";
 import {
   ChevronDown,
-  Download,
   Flame,
   LayoutGrid,
   ListFilter,
-  MapPin,
   Smartphone,
   Sparkles,
 } from "lucide-react";
@@ -21,6 +19,7 @@ import {
   homeCategoryOrder,
   menuFilters,
   products,
+  type CategoryId,
 } from "@/lib/data";
 import { PromoCarousel } from "@/components/promo-carousel";
 import { ProductCard } from "@/components/product-card";
@@ -30,78 +29,32 @@ import { InstallButton } from "@/components/install-button";
 import { MenuFilters } from "@/components/menu-filters";
 import { SectionTitle } from "@/components/ui";
 import { StoreHeader } from "@/components/store-header";
-import { DesktopOrderTrackingCard, MobileOrderTrackingBanner } from "@/components/order-tracking-promo";
+import {
+  DesktopOrderTrackingCard,
+  MobileOrderTrackingBanner,
+} from "@/components/order-tracking-promo";
 import { useApp } from "@/components/providers";
 
 function PhoneMockup() {
-  const { t } = useApp();
+  const { lang, t } = useApp();
+  const isEnglish = lang === "en";
+  const mockup = isEnglish ? "/images/phonomockupen.PNG" : "/images/phonomockupar.PNG";
+  const mockupDimensions = isEnglish
+    ? { width: 728, height: 1356 }
+    : { width: 740, height: 1360 };
+
   return (
-    <div className="relative mx-auto h-[430px] w-[232px] shrink-0 rounded-[42px] border-[7px] border-[#241b16] bg-cream shadow-[0_40px_70px_-35px_rgba(70,30,15,0.55)]">
-      <div className="absolute left-1/2 top-2.5 z-20 h-4 w-20 -translate-x-1/2 rounded-full bg-[#241b16]" />
-      <div className="absolute inset-0 overflow-hidden rounded-[35px]">
-        <div className="flex items-center justify-between px-4 pt-3 text-[7px] font-bold">
-          <span>9:41</span>
-          <span className="flex gap-1">‖▮ ▮</span>
-        </div>
-        <div className="mt-2 flex items-center justify-between px-3.5">
-          <div>
-            <p className="text-[6px] text-muted">{t("مرحبا أحمد")}</p>
-            <p className="text-[8px] font-bold">{t("زهراء المعادي، المعراج العلوي")}</p>
-          </div>
-          <span className="grid size-5 place-items-center rounded-full bg-[#f6a723] text-white">
-            <MapPin className="size-3" />
-          </span>
-        </div>
-        <div className="mx-3.5 mt-2 h-6 rounded-full bg-white shadow-sm" />
-        <div className="relative mx-3.5 mt-2.5 h-[74px] overflow-hidden rounded-xl">
-          <Image src="/images/banner.webp" alt="" fill sizes="200px" className="object-cover ltr:-scale-x-100" />
-          <div className="absolute inset-y-0 start-0 flex w-[62%] flex-col justify-center gap-1 pe-2 ps-3">
-            <p className="text-[9px] font-extrabold text-white">{t("كومبو برجر ببلاش")}</p>
-            <p className="text-[5px] text-white/80">{t("جرّب انهيارة عرض الشقاوة.. عرض برجر الشقاوة على الكومبو لآخر اليوم.")}</p>
-            <span className="mt-0.5 w-fit rounded-full bg-[#cb2f19] px-2 py-0.5 text-[5px] font-bold text-white">
-              {t("اطلب الان")}
-            </span>
-          </div>
-        </div>
-        <div className="mt-2.5 flex justify-between px-4">
-          {["برجر", "بيتزا", "توست", "تشيكن"].map((label, index) => (
-            <div key={label} className="flex flex-col items-center gap-1">
-              <span
-                className={`relative size-8 overflow-hidden rounded-full border ${
-                  index === 0 ? "border-brand" : "border-line"
-                } bg-white`}
-              >
-                <Image
-                  src={["/images/burger.webp", "/images/pizza.webp", "/images/tost.webp", "/images/chicken.webp"][index]}
-                  alt=""
-                  fill
-                  sizes="32px"
-                  className="object-cover"
-                />
-              </span>
-              <span className="text-[5px] font-semibold">{t(label)}</span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-2.5 px-3.5">
-          <p className="text-[7px] font-extrabold">{t("الأكثر طلباً")}</p>
-          <div className="mt-1.5 grid grid-cols-2 gap-1.5">
-            {[0, 1].map((item) => (
-              <div key={item} className="rounded-lg bg-white p-1">
-                <div className="relative h-[52px] overflow-hidden rounded-md bg-peach">
-                  <Image src="/images/burger.webp" alt="" fill sizes="80px" className="object-cover" />
-                </div>
-                <p className="mt-1 text-[5px] font-bold">{t("برجر لحم")}</p>
-                <p className="text-[5px] font-bold text-brand">120 {t("جنيه")}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="absolute inset-x-0 bottom-0 flex items-center justify-around border-t border-line bg-white py-2">
-          {[0, 1, 2, 3].map((item) => (
-            <span key={item} className={`size-2.5 rounded ${item === 0 ? "bg-brand" : "bg-[#c9beb3]"}`} />
-          ))}
-        </div>
+    <div className="relative h-[480px] w-[258px] shrink-0 rounded-t-[52px] bg-gradient-to-br from-[#f58b78] via-[#ed604a] to-[#ffd2c3] p-[6px] shadow-[0_32px_70px_-30px_rgba(115,43,27,0.6)]">
+      <div className="relative h-full w-full overflow-hidden rounded-t-[46px] bg-cream">
+        <Image
+          src={mockup}
+          alt={t("Nawy Orders mobile app")}
+          {...mockupDimensions}
+          sizes="246px"
+          unoptimized
+          className="absolute inset-x-0 top-6 h-auto w-full"
+        />
+        <span className="absolute left-1/2 top-3 z-10 h-3 w-9 -translate-x-1/2 rounded-full bg-black" />
       </div>
     </div>
   );
@@ -110,9 +63,24 @@ function PhoneMockup() {
 export function HomeView() {
   const { t, loggedIn, orders, toast } = useApp();
   const [filter, setFilter] = useState("الكل");
+  const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(
+    "burger",
+  );
   const [showActiveOrder, setShowActiveOrder] = useState(true);
-  const menu = filterMenu(filter);
+  const menu = selectedCategory
+    ? products.filter((product) => product.category === selectedCategory)
+    : filterMenu(filter);
   const activeOrder = orders.find((order) => order.status === "preparing");
+
+  const selectCategory = (categoryId: CategoryId) => {
+    setSelectedCategory(categoryId);
+    setFilter("الكل");
+  };
+
+  const selectMenuFilter = (value: string) => {
+    setSelectedCategory(null);
+    setFilter(value);
+  };
 
   return (
     <div className="pb-6 lg:pb-0">
@@ -134,16 +102,20 @@ export function HomeView() {
         <div className="motion-stagger hide-scrollbar -mx-4 mt-3 flex gap-2.5 overflow-x-auto px-4 pb-1 lg:hidden">
           {homeCategoryOrder.map((id) => {
             const category = categoriesById[id];
-            const active = id === "burger";
+            const active = id === selectedCategory;
             return (
-              <Link
+              <button
                 key={id}
-                href={`/categories/${id}`}
+                type="button"
+                aria-pressed={active}
+                onClick={() => selectCategory(id)}
                 className="group flex w-[60px] shrink-0 flex-col items-center gap-2 text-center"
               >
                 <span
                   className={`grid size-[60px] place-items-center rounded-full border-2 bg-white transition duration-300 group-hover:-translate-y-1 group-hover:border-brand/60 ${
-                    active ? "border-brand shadow-[0_10px_24px_-14px_rgba(232,69,44,0.7)]" : "border-[#ece0d4]"
+                    active
+                      ? "border-brand shadow-[0_10px_24px_-14px_rgba(232,69,44,0.7)]"
+                      : "border-[#ece0d4]"
                   }`}
                 >
                   <span className="relative size-12 overflow-hidden rounded-full">
@@ -156,8 +128,12 @@ export function HomeView() {
                     />
                   </span>
                 </span>
-                <span className={`whitespace-nowrap text-[10px] font-bold ${active ? "text-brand" : "text-ink"}`}>{t(category.name)}</span>
-              </Link>
+                <span
+                  className={`whitespace-nowrap text-[10px] font-bold ${active ? "text-brand" : "text-ink"}`}
+                >
+                  {t(category.name)}
+                </span>
+              </button>
             );
           })}
         </div>
@@ -165,11 +141,13 @@ export function HomeView() {
         <div className="motion-stagger mt-4 hidden grid-cols-7 gap-3 lg:grid">
           {desktopCategoryOrder.map((id) => {
             const category = categoriesById[id];
-            const active = id === "burger";
+            const active = id === selectedCategory;
             return (
-              <Link
+              <button
                 key={id}
-                href={`/categories/${id}`}
+                type="button"
+                aria-pressed={active}
+                onClick={() => selectCategory(id)}
                 className={`group flex flex-col items-center rounded-[18px] bg-white px-3 py-4 text-center shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.98] ${
                   active ? "ring-2 ring-inset ring-brand/60" : ""
                 }`}
@@ -185,9 +163,15 @@ export function HomeView() {
                     />
                   </span>
                 </span>
-                <span className={`mt-2.5 text-sm font-extrabold ${active ? "text-brand" : "text-ink"}`}>{t(category.name)}</span>
-                <span className="mt-1 text-[10px] font-semibold text-muted">{categoryCounts[id] ?? 0} {t("صنف")}</span>
-              </Link>
+                <span
+                  className={`mt-2.5 text-sm font-extrabold ${active ? "text-brand" : "text-ink"}`}
+                >
+                  {t(category.name)}
+                </span>
+                <span className="mt-1 text-[10px] font-semibold text-muted">
+                  {categoryCounts[id] ?? 0} {t("صنف")}
+                </span>
+              </button>
             );
           })}
         </div>
@@ -197,13 +181,16 @@ export function HomeView() {
         <SectionTitle
           title="الأكثر طلباً"
           icon={<Flame className="size-5 fill-brand/20 text-brand lg:size-6" />}
-          action={{ label: "عرض الكل", href: "/categories", icon: <LayoutGrid className="size-4" /> }}
           className="translate-x-1.5"
         />
         <div className="motion-stagger mt-3 grid grid-cols-2 gap-3 lg:mt-5 lg:grid-cols-5 lg:gap-4">
           {products
-            .filter((product) => product.category === "burger")
-            .sort((a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)))
+            .filter(
+              (product) => product.category === (selectedCategory ?? "burger"),
+            )
+            .sort(
+              (a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)),
+            )
             .slice(0, 4)
             .map((product) => (
               <ProductCard key={product.id} product={product} />
@@ -220,7 +207,9 @@ export function HomeView() {
                 <Sparkles className="size-5" />
               </span>
               <div className="mt-10">
-                <p className="text-[11px] font-semibold text-white/80">{t("عرض محدود")}</p>
+                <p className="text-[11px] font-semibold text-white/80">
+                  {t("عرض محدود")}
+                </p>
                 <p className="mt-1 text-xl font-extrabold leading-7">
                   {t("توصيل مجاني")}
                   <br />
@@ -238,21 +227,30 @@ export function HomeView() {
         </div>
         {loggedIn && activeOrder && showActiveOrder ? (
           <>
-            <MobileOrderTrackingBanner order={activeOrder} onClose={() => setShowActiveOrder(false)} />
-            <DesktopOrderTrackingCard order={activeOrder} onClose={() => setShowActiveOrder(false)} />
+            <MobileOrderTrackingBanner
+              order={activeOrder}
+              onClose={() => setShowActiveOrder(false)}
+            />
+            <DesktopOrderTrackingCard
+              order={activeOrder}
+              onClose={() => setShowActiveOrder(false)}
+            />
           </>
         ) : null}
       </section>
 
       <section className="shell mt-8 lg:mt-11">
-        <SectionTitle
-          title="قائمة الطعام"
-          icon={<ListFilter className="size-5 text-brand lg:size-6" />}
-          action={{ label: "عرض الكل", href: "/categories" }}
-        />
-
-        <div className="mt-4 hidden lg:block">
-          <MenuFilters filters={menuFilters} value={filter} onChange={setFilter} />
+        <div className="motion-header flex items-center justify-between gap-3">
+          <h2 className="flex shrink-0 items-center gap-2 text-lg font-extrabold lg:text-xl">
+            <ListFilter className="size-5 text-brand lg:size-6" />
+            {t("قائمة الطعام")}
+          </h2>
+          <MenuFilters
+            filters={menuFilters}
+            value={filter}
+            onChange={selectMenuFilter}
+            className="hidden lg:flex"
+          />
         </div>
 
         <div className="motion-stagger mt-3 grid gap-3 lg:mt-5 lg:grid-cols-2 lg:gap-4">
@@ -277,16 +275,11 @@ export function HomeView() {
       </div>
 
       <section className="shell mt-12 hidden lg:block">
-        <div
-          className="relative overflow-hidden rounded-[32px] p-10"
-          style={{ backgroundImage: "linear-gradient(285deg, #fce2d8 0%, #f8cdbc 55%, #f4b19a 100%)" }}
-        >
-          <div className="motion-float absolute -right-16 -top-24 size-72 rounded-full bg-white/35 blur-2xl" />
-          <div
-            className="motion-float absolute -bottom-24 left-1/3 size-72 rounded-full bg-[#e8452c]/10 blur-2xl"
-            style={{ animationDelay: "2s" }}
-          />
-          <div className="relative grid grid-cols-[1fr_auto] items-center gap-10">
+        <div className="relative h-[448px] overflow-hidden rounded-[36px] bg-[linear-gradient(110deg,#f9d6ce_0%,#f8c1b2_48%,#f25b43_100%)] px-10 py-8 lg:px-11">
+          <div className="absolute -right-16 -top-40 size-[410px] rounded-full bg-[#ff9b73]/35" />
+          <div className="absolute -bottom-48 left-[8%] size-[390px] rounded-full bg-[#f47b55]/45" />
+          <div className="absolute -bottom-64 right-[28%] size-[360px] rounded-full bg-[#ffad8b]/35" />
+          <div className="relative grid h-full grid-cols-1 items-center">
             <div className="max-w-xl">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/60 px-3.5 py-1.5 text-[11px] font-bold text-ink/70">
                 <Smartphone className="size-3.5 text-brand" />
@@ -297,35 +290,74 @@ export function HomeView() {
                 <br />
                 {t("المفضل بلمسة واحدة")}
               </h2>
-              <p className="mt-4 max-w-md text-sm leading-7 text-ink/60">
-                {t("حمّل التطبيق عشان تحصل على عروض حصرية، وتتبع طلبك لحظة بلحظة، وتوصيل أسرع على مزاجك.")}
+              <p className="mt-4 max-w-md text-sm font-bold leading-7 text-ink/70">
+                {t(
+                  "حمّل التطبيق عشان تحصل على عروض حصرية، وتتبع طلبك لحظة بلحظة، وتوصيل أسرع على مزاجك.",
+                )}
               </p>
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => toast(t("التطبيق هيكون متاح على المتجر قريباً"), "info")}
-                  className="flex h-12 items-center gap-3 rounded-xl bg-[#1f1a16] px-5 text-white transition hover:bg-black"
+                  onClick={() =>
+                    toast(t("التطبيق هيكون متاح على المتجر قريباً"), "info")
+                  }
+                  className="flex h-14 w-32 items-center justify-center gap-2 rounded-xl bg-[#1f1a16] px-3 text-white transition hover:bg-black"
                 >
-                  <span className="text-lg leading-none"></span>
                   <span className="text-start leading-tight">
-                    <span className="block text-[9px] text-white/70">{t("حمل من")}</span>
+                    <span className="block text-[9px] text-white/70">
+                      {t("حمل من")}
+                    </span>
                     <span className="text-sm font-bold">{t("متجر آبل")}</span>
                   </span>
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="size-9 shrink-0 fill-current"
+                    aria-hidden="true"
+                  >
+                    <path d="M16.37 12.21c.02 2.13 1.87 2.84 1.89 2.85-.02.05-.3 1.04-.98 2.06-.59.88-1.21 1.75-2.18 1.77-.95.02-1.25-.57-2.33-.57-1.08 0-1.42.55-2.32.59-.93.04-1.64-.95-2.23-1.83-1.21-1.78-2.14-5.03-.9-7.22a3.44 3.44 0 0 1 2.9-1.76c.91-.02 1.77.62 2.33.62.56 0 1.61-.77 2.71-.66.46.02 1.77.18 2.61 1.41-.07.04-1.56.91-1.5 2.74ZM14.6 6.96c.49-.59.82-1.41.73-2.23-.7.03-1.55.46-2.06 1.05-.45.52-.85 1.35-.74 2.15.78.06 1.57-.4 2.07-.97Z" />
+                  </svg>
                 </button>
                 <button
                   type="button"
-                  onClick={() => toast(t("التطبيق هيكون متاح على المتجر قريباً"), "info")}
-                  className="flex h-12 items-center gap-3 rounded-xl bg-[#1f1a16] px-5 text-white transition hover:bg-black"
+                  onClick={() =>
+                    toast(t("التطبيق هيكون متاح على المتجر قريباً"), "info")
+                  }
+                  className="flex h-14 w-36 items-center justify-center gap-2 rounded-xl bg-[#1f1a16] px-3 text-white transition hover:bg-black"
                 >
-                  <Download className="size-5" />
                   <span className="text-start leading-tight">
-                    <span className="block text-[9px] text-white/70">{t("حمل من")}</span>
+                    <span className="block text-[9px] text-white/70">
+                      {t("حمل من")}
+                    </span>
                     <span className="text-sm font-bold">{t("جوجل بلاي")}</span>
                   </span>
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="size-7 shrink-0"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M3.3 2.8c-.2.3-.3.7-.3 1.2v16c0 .5.1.9.3 1.2l9-9.2-9-9.2Z"
+                      fill="#4285F4"
+                    />
+                    <path
+                      d="m15.3 15.1-3-3.1-9 9.2c.4.4 1.1.5 1.8.1l10.2-6.2Z"
+                      fill="#34A853"
+                    />
+                    <path
+                      d="m20.2 10.4-3.1-1.9-3.4 3.5 3.4 3.5 3.1-1.9c1.2-.7 1.2-2.4 0-3.2Z"
+                      fill="#FBBC04"
+                    />
+                    <path
+                      d="  M5.1 2.7c-.7-.4-1.4-.3-1.8.1l9 9.2 3.4-3.5L5.1 2.7Z"
+                      fill="#EA4335"
+                    />
+                  </svg>
                 </button>
                 <InstallButton />
               </div>
             </div>
+          </div>
+          <div className="absolute left-[7%] right-auto top-10 ltr:left-auto ltr:right-[7%]">
             <PhoneMockup />
           </div>
         </div>

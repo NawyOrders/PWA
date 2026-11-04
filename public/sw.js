@@ -1,11 +1,10 @@
-const VERSION = "nawy-orders-v1";
+const VERSION = "nawy-orders-v2";
 
 const CORE = [
   "/",
   "/offline",
   "/manifest.webmanifest",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
+  "/icons/logo.svg",
   "/images/burger.webp",
   "/images/banner.webp",
 ];

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowRight, Bot, MoreVertical, Paperclip, Send } from "lucide-react";
+import { ChevronLeft, Bot, MoreVertical, Paperclip, Send } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { BackButton, Breadcrumbs } from "@/components/ui";
 import { agentReplies, chatSeed, type ChatMessage } from "@/lib/account-data";
@@ -50,7 +50,12 @@ export function ChatView() {
     setTimeout(() => {
       setMessages((current) => [
         ...current,
-        { id: `a-${Date.now()}`, from: "agent", text: reply, time: formatTime(t) },
+        {
+          id: `a-${Date.now()}`,
+          from: "agent",
+          text: reply,
+          time: formatTime(t),
+        },
       ]);
     }, 1200);
   };
@@ -58,7 +63,7 @@ export function ChatView() {
   return (
     <div className="pb-10">
       <div className="shell">
-        <div className="hidden pt-6 lg:block">
+        <div className="hidden items-center justify-between pt-6 lg:flex">
           <Breadcrumbs
             items={[
               { label: "الرئيسية", href: "/" },
@@ -66,6 +71,13 @@ export function ChatView() {
               { label: "الدعم الفني", href: "/help/chat" },
             ]}
           />
+          <Link
+            href="/help"
+            className="flex items-center gap-1.5 text-sm font-bold text-brand transition hover:text-brand-dark"
+          >
+            {t("العودة للمساعدة")}
+            <ChevronLeft className="size-4 ltr:rotate-180" />
+          </Link>
         </div>
 
         <div className="sticky top-0 z-30 bg-cream/95 px-4 pb-1 pt-4 backdrop-blur lg:hidden">
@@ -74,25 +86,23 @@ export function ChatView() {
 
         <div className="mx-auto max-w-[640px] px-4 pt-2 lg:max-w-3xl lg:px-0 lg:pt-6">
           <div className="relative lg:mt-6 lg:rounded-[28px] lg:bg-cream-50 lg:p-8 lg:shadow-soft">
-            <Link
-              href="/help"
-              aria-label={t("رجوع")}
-              className="absolute start-6 top-6 hidden size-12 place-items-center rounded-full border border-line bg-white text-ink transition hover:text-brand lg:grid"
-            >
-              <ArrowRight className="size-5 ltr:rotate-180" strokeWidth={2.2} />
-            </Link>
-
-            <div className="card flex items-center gap-3 p-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-peach text-ink">
-                <MoreVertical className="size-5" strokeWidth={2.2} />
-              </span>
-              <div className="min-w-0 flex-1 text-start">
-                <h1 className="truncate text-base font-extrabold lg:text-lg">{t("الدعم الفني")}</h1>
-                <p className="text-xs font-bold text-success">{t("متصل حاليا")}</p>
+            <div className="flex items-center gap-3">
+              <div className="card flex min-w-0 flex-1 items-center gap-3 p-3">
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-peach text-ink">
+                  <MoreVertical className="size-5" strokeWidth={2.2} />
+                </span>
+                <div className="min-w-0 flex-1 text-start">
+                  <h1 className="truncate text-base font-extrabold lg:text-lg">
+                    {t("الدعم الفني")}
+                  </h1>
+                  <p className="text-xs font-bold text-success">
+                    {t("متصل حاليا")}
+                  </p>
+                </div>
+                <span className="grid size-12 shrink-0 place-items-center rounded-full bg-brand text-white shadow-[0_14px_26px_-14px_rgba(232,69,44,0.9)]">
+                  <Bot className="size-6" strokeWidth={1.9} />
+                </span>
               </div>
-              <span className="grid size-12 shrink-0 place-items-center rounded-full bg-brand text-white shadow-[0_14px_26px_-14px_rgba(232,69,44,0.9)]">
-                <Bot className="size-6" strokeWidth={1.9} />
-              </span>
             </div>
 
             <div className="mt-6 flex justify-center">
@@ -104,10 +114,17 @@ export function ChatView() {
             <div className="motion-stagger mt-6 space-y-4">
               {messages.map((message) =>
                 message.from === "agent" ? (
-                  <div key={message.id} className="flex items-end justify-start gap-2">
+                  <div
+                    key={message.id}
+                    className="flex items-end justify-start gap-2"
+                  >
                     <div className="max-w-[82%] rounded-2xl bg-white p-4 shadow-soft">
-                      <p className="text-sm font-semibold leading-7">{t(message.text)}</p>
-                      <span className="mt-1 block text-end text-[11px] text-muted">{message.time}</span>
+                      <p className="text-sm font-semibold leading-7">
+                        {t(message.text)}
+                      </p>
+                      <span className="mt-1 block text-end text-[11px] text-muted">
+                        {message.time}
+                      </span>
                     </div>
                     <span className="grid size-8 shrink-0 place-items-center rounded-full bg-brand text-white">
                       <Bot className="size-4" strokeWidth={2} />
@@ -116,8 +133,12 @@ export function ChatView() {
                 ) : (
                   <div key={message.id} className="flex justify-end">
                     <div className="max-w-[82%] rounded-2xl bg-brand p-4 text-white shadow-[0_18px_32px_-20px_rgba(232,69,44,0.9)]">
-                      <p className="text-sm font-semibold leading-7">{t(message.text)}</p>
-                      <span className="mt-1 block text-start text-[11px] text-white/70">{message.time}</span>
+                      <p className="text-sm font-semibold leading-7">
+                        {t(message.text)}
+                      </p>
+                      <span className="mt-1 block text-start text-[11px] text-white/70">
+                        {message.time}
+                      </span>
                     </div>
                   </div>
                 ),
@@ -125,7 +146,10 @@ export function ChatView() {
               <div ref={bottomRef} />
             </div>
 
-            <form onSubmit={send} className="mt-6 flex items-center gap-2 rounded-full bg-white p-2 shadow-soft">
+            <form
+              onSubmit={send}
+              className="mt-6 flex items-center gap-2 rounded-full bg-white p-2 shadow-soft"
+            >
               <button
                 type="button"
                 aria-label={t("إرفاق صورة")}

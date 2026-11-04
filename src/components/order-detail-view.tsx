@@ -4,18 +4,15 @@ import Link from "next/link";
 import { PackageSearch } from "lucide-react";
 import { OrderTrackingView } from "@/components/order-tracking-view";
 import { useApp } from "@/components/providers";
+import { LoadingIndicator } from "@/components/loading-indicator";
 
 export function OrderDetailView({ orderId }: { orderId: string }) {
   const { orders, ready, t } = useApp();
 
   if (!ready) {
     return (
-      <div className="shell min-h-[60vh] py-8" aria-hidden="true">
-        <div className="mx-auto max-w-5xl animate-pulse space-y-5">
-          <div className="h-8 w-48 rounded-lg bg-cream" />
-          <div className="h-64 rounded-3xl bg-cream" />
-          <div className="h-28 rounded-3xl bg-cream" />
-        </div>
+      <div className="shell flex min-h-[60vh] items-center justify-center py-8">
+        <LoadingIndicator className="size-16" />
       </div>
     );
   }

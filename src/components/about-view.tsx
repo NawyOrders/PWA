@@ -27,7 +27,17 @@ export function AboutView() {
 
       <div className="shell">
         <div className="mx-auto max-w-[640px] lg:max-w-4xl">
-          <h1 className="text-start font-display text-[40px] font-extrabold leading-[1.15] text-ink">
+          <div className="hidden justify-end pt-8 lg:flex">
+            <Link
+              href="/settings"
+              className="flex items-center gap-1.5 text-sm font-bold text-brand transition hover:text-brand-dark"
+            >
+              {t("العودة للاعدادات")}
+              <ChevronLeft className="size-4 ltr:rotate-180" />
+            </Link>
+          </div>
+
+          <h1 className="mt-6 text-start font-display text-[40px] font-extrabold leading-[1.15] text-ink lg:mt-8">
             {t("عن التطبيق")}
           </h1>
 
