@@ -53,7 +53,7 @@ export function PoliciesView() {
           <div className="card relative mt-6 px-5 py-7 lg:mt-8 lg:px-8 lg:py-9">
 
             <Link
-              href="/help"
+              href="/settings"
               aria-label={t("إغلاق")}
               className="absolute top-6 grid size-11 place-items-center rounded-full border border-line bg-white text-ink shadow-soft transition hover:text-brand start-6 hidden lg:grid"
             >

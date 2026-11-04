@@ -37,6 +37,12 @@ describe("PoliciesView", () => {
     expect(screen.getByRole("tabpanel")).toHaveAttribute("aria-labelledby", "policy-tab-privacy");
   });
 
+  it("returns to settings from the close button", () => {
+    renderApp(<PoliciesView />);
+
+    expect(screen.getByRole("link", { name: "إغلاق" })).toHaveAttribute("href", "/settings");
+  });
+
   it("honours a ?tab= deep link after mount", async () => {
     window.history.replaceState({}, "", "/help/policies?tab=terms");
     renderApp(<PoliciesView />);
