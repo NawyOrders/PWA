@@ -8,6 +8,7 @@ import {
   CalendarDays,
   ChevronLeft,
   Crosshair,
+  LoaderCircle,
   MapPin,
   Plus,
   Search,
@@ -19,9 +20,10 @@ import { AddressKindIcon } from "@/components/address-icon";
 import { LeafletMap, type MapMarker } from "@/components/leaflet-map";
 import { LocationPicker } from "@/components/location-picker";
 import { useApp } from "@/components/providers";
+import { useMapPlaces } from "@/hooks/use-map-places";
 import { Breadcrumbs, DisplayPageHeader } from "@/components/ui";
 import { areaName, type LatLng } from "@/lib/geo";
-import { searchPlaces, type Place } from "@/lib/place-search";
+import type { Place } from "@/lib/place-search";
 
 const ALEXANDRIA: [number, number] = [31.1861, 29.9336];
 
@@ -50,10 +52,7 @@ export function AddressesView() {
 
   const focus = (point: LatLng) => setCenter([point.lat, point.lng]);
 
-  const suggestions = useMemo(
-    () => searchPlaces({ query, addresses, lang, t }),
-    [addresses, lang, query, t],
-  );
+  const { places: suggestions, searchNow, searching } = useMapPlaces(query, addresses, lang, t);
 
   /** Saved addresses become the active delivery address; districts only move the map. */
   const goToPlace = (place: Place) => {
@@ -67,8 +66,8 @@ export function AddressesView() {
     toast(t("تم تحريك الخريطة للمنطقة"), "info");
   };
 
-  const runSearch = () => {
-    const first = suggestions[0];
+  const runSearch = async () => {
+    const first = suggestions[0] ?? (await searchNow(query))[0];
     if (first) {
       goToPlace(first);
       return;
@@ -327,7 +326,7 @@ export function AddressesView() {
                         })}
                         {suggestions.length === 0 ? (
                           <li className="px-3 py-2.5 text-[11px] font-semibold text-muted">
-                            {t("مفيش نتيجة مطابقة")}
+                            {searching ? <LoaderCircle className="mx-auto size-4 animate-spin" aria-label={t("البحث")} /> : t("مفيش نتيجة مطابقة")}
                           </li>
                         ) : null}
                       </ul>

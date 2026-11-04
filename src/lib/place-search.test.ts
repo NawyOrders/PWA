@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { savedAddresses, type SavedAddress } from "@/lib/account-data";
 import { translate } from "@/lib/i18n";
-import { RANGE_LIMIT_KM, deliveryAreaLabel, searchPlaces } from "@/lib/place-search";
+import { deliveryAreaLabel, searchPlaces } from "@/lib/place-search";
 
 const t = (text: string) => translate("ar", text);
 
@@ -49,10 +49,9 @@ describe("searchPlaces", () => {
     expect(results.map((place) => place.saved)).toContain(false);
   });
 
-  it("never offers a district outside the delivery range", () => {
-    expect(search("maadi")).toEqual([]);
-    expect(search("المعادي")).toEqual([]);
-    expect(RANGE_LIMIT_KM).toBeLessThan(100);
+  it("allows map searches to move to districts outside the delivery range", () => {
+    expect(search("maadi")).toMatchObject([{ key: "area-maadi", lat: 29.9603, lng: 31.2569 }]);
+    expect(search("المعادي")).toMatchObject([{ key: "area-maadi" }]);
   });
 
   it("caps the list so the dropdown stays scannable", () => {

@@ -56,11 +56,14 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
     <>
       <Navbar />
       <main className={hideBottomNav ? "" : "pb-24 lg:pb-0"}>
-        {hideProtectedPage ? null : (
-          <div key={pathname} className="motion-page">
-            {children}
-          </div>
-        )}
+        <div
+          key={pathname}
+          className={`motion-page${hideProtectedPage ? " invisible" : ""}`}
+          aria-hidden={hideProtectedPage}
+          inert={hideProtectedPage}
+        >
+          {children}
+        </div>
       </main>
       {hideFooter ? null : <Footer />}
       {hideBottomNav ? null : <BottomNav />}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Briefcase,
   Building2,
@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Crosshair,
   Home,
+  LoaderCircle,
   MapPin,
   Search,
   X,
@@ -17,9 +18,9 @@ import { LeafletMap } from "@/components/leaflet-map";
 import { useApp } from "@/components/providers";
 import { Chip } from "@/components/ui";
 import { useDialogFocus } from "@/hooks/use-dialog-focus";
+import { useMapPlaces, useReversePlaceName } from "@/hooks/use-map-places";
 import type { AddressKind } from "@/lib/account-data";
 import { areaName } from "@/lib/geo";
-import { searchPlaces } from "@/lib/place-search";
 
 const ALEXANDRIA: [number, number] = [31.1861, 29.9336];
 
@@ -104,7 +105,12 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
   const rootRef = useDialogFocus<HTMLDivElement>(open, onClose);
 
   const selected = addresses.find((item) => item.id === selectedAddressId) ?? null;
-  const regionLabel = areaName({ lat: center[0], lng: center[1] }, lang);
+  const regionLabel = useReversePlaceName(
+    { lat: center[0], lng: center[1] },
+    lang,
+    areaName({ lat: center[0], lng: center[1] }, lang),
+    open && stage !== "sheet",
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -117,10 +123,7 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const suggestions = useMemo(
-    () => searchPlaces({ query, addresses, lang, t }),
-    [addresses, lang, query, t],
-  );
+  const { places: suggestions, searchNow, searching } = useMapPlaces(query, addresses, lang, t);
 
   const close = () => {
     setStage("sheet");
@@ -163,8 +166,8 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
     });
   };
 
-  const runSearch = () => {
-    const match = suggestions[0];
+  const runSearch = async () => {
+    const match = suggestions[0] ?? (await searchNow(query))[0];
     if (match) {
       setCenter([match.lat, match.lng]);
       setQuery("");
@@ -198,8 +201,8 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
     addAddress({
       id,
       title,
-      detail: parts.join(" - ") || areaName(point, lang),
-      area: areaName(point, lang),
+      detail: parts.join(" - ") || regionLabel,
+      area: regionLabel,
       kind: type.kind,
       lat: point.lat,
       lng: point.lng,
@@ -374,7 +377,9 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
                       );
                     })}
                     {suggestions.length === 0 ? (
-                      <li className="px-4 py-3 text-[11px] font-semibold text-muted">{t("مفيش نتيجة مطابقة")}</li>
+                      <li className="flex justify-center px-4 py-3 text-[11px] font-semibold text-muted">
+                        {searching ? <LoaderCircle className="size-4 animate-spin" aria-label={t("البحث")} /> : t("مفيش نتيجة مطابقة")}
+                      </li>
                     ) : null}
                   </ul>
                 ) : null}
