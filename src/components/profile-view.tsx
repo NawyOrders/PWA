@@ -25,24 +25,23 @@ const accountLinks: { label: string; href: string; icon: React.ComponentType<Luc
   { label: "عن التطبيق", href: "/about", icon: Info },
 ];
 
-const stats = [
-  { key: "favorites", label: "المفضلة", value: 15, icon: Heart, tile: "bg-[#fde3e8] text-[#e24467]" },
-  { key: "orders", label: "الطلبات", value: 8, icon: ShoppingBag, tile: "bg-[#fbdcd2] text-[#e8452c]" },
-  { key: "points", label: "النقاط", value: 320, icon: Star, tile: "bg-[#fcecc9] text-[#eaa41c]" },
-];
-
 export function ProfileView() {
-  const { favorites, t } = useApp();
+  const { favorites, profile, orders, t } = useApp();
+  const stats = [
+    { key: "favorites", label: "المفضلة", value: favorites.length, icon: Heart, tile: "bg-[#fde3e8] text-[#e24467]" },
+    { key: "orders", label: "الطلبات", value: orders.length, icon: ShoppingBag, tile: "bg-[#fbdcd2] text-[#e8452c]" },
+    { key: "points", label: "النقاط", value: user.points, icon: Star, tile: "bg-[#fcecc9] text-[#eaa41c]" },
+  ];
 
   return (
     <div className="pb-8">
-      <h1 className="px-4 pb-4 pt-6 text-center text-lg font-extrabold lg:hidden">{t("الملف الشخصي")}</h1>
+      <h1 className="motion-header px-4 pb-4 pt-6 text-center text-lg font-extrabold lg:hidden">{t("الملف الشخصي")}</h1>
 
       <div className="shell">
         <h1 className="mb-7 hidden text-[32px] font-extrabold lg:block">{t("الملف الشخصي")}</h1>
 
         <div className="mx-auto max-w-[640px] space-y-4">
-          <section className="card relative overflow-hidden px-5 py-8 text-center lg:px-10 lg:py-10">
+          <section className="motion-rise card relative overflow-hidden px-5 py-8 text-center lg:px-10 lg:py-10">
             <div className="pointer-events-none absolute -start-16 -top-24 size-56 rounded-full bg-brand-soft/60 blur-2xl" />
 
             <div className="relative mx-auto w-fit">
@@ -51,18 +50,19 @@ export function ProfileView() {
                 <span className="absolute end-0 top-6 block h-8 w-4 rotate-[40deg] rounded-full bg-[#f6a723]" />
               </div>
               <Image
-                src={user.avatar}
-                alt={t(user.name)}
+                src={profile.avatar}
+                alt={t(profile.name)}
                 width={144}
                 height={144}
                 priority
+                unoptimized={profile.avatar.startsWith("data:")}
                 className="relative size-[124px] rounded-full object-cover ring-[5px] ring-brand/80 ring-offset-4 ring-offset-white lg:size-[144px]"
               />
             </div>
 
-            <h2 className="mt-6 text-2xl font-extrabold">{t(user.name)}</h2>
+            <h2 className="mt-6 text-2xl font-extrabold">{t(profile.name)}</h2>
             <p className="mt-1.5 text-sm text-muted" dir="ltr">
-              {user.phone}
+              {profile.phone}
             </p>
 
             <Link
@@ -72,7 +72,7 @@ export function ProfileView() {
               {t("تعديل الملف الشخصي")}
             </Link>
 
-            <div className="mt-7 grid grid-cols-3 gap-2">
+            <div className="motion-stagger mt-7 grid grid-cols-3 gap-2">
               {stats.map((stat) => {
                 const Icon = stat.icon;
                 return (
@@ -81,7 +81,7 @@ export function ProfileView() {
                       <Icon className="size-5" strokeWidth={2} />
                     </span>
                     <span className="text-sm font-extrabold">
-                      {stat.key === "favorites" ? favorites.length : stat.value}
+                      {stat.value}
                     </span>
                     <span className="text-[11px] text-muted">{t(stat.label)}</span>
                   </div>
@@ -90,7 +90,7 @@ export function ProfileView() {
             </div>
           </section>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="motion-stagger grid grid-cols-2 gap-4">
             <Link
               href="/favorites"
               className="card flex flex-col items-center gap-3 px-4 py-6 transition hover:-translate-y-1 hover:shadow-pop"
@@ -111,7 +111,7 @@ export function ProfileView() {
             </Link>
           </div>
 
-          <div className="card divide-y divide-line overflow-hidden">
+          <div className="motion-stagger card divide-y divide-line overflow-hidden">
             {accountLinks.map((link) => {
               const Icon = link.icon;
               return (

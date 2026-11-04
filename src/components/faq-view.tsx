@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowRight, ChevronDown, ChevronUp, Phone, Search } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs } from "@/components/ui";
+import { BackButton, Breadcrumbs, buttonStyles } from "@/components/ui";
 import { faqItems } from "@/lib/account-data";
 
 export function FaqView() {
@@ -13,23 +13,19 @@ export function FaqView() {
   const [openId, setOpenId] = useState<string | null>(faqItems[0].id);
 
   const visible = useMemo(() => {
-    const needle = query.trim();
+    const needle = query.trim().toLowerCase();
     if (!needle) return faqItems;
-    return faqItems.filter(
-      (item) => item.question.includes(needle) || item.answer.includes(needle),
-    );
-  }, [query]);
+    return faqItems.filter((item) => {
+      const question = t(item.question).toLowerCase();
+      const answer = t(item.answer).toLowerCase();
+      return question.includes(needle) || answer.includes(needle);
+    });
+  }, [query, t]);
 
   return (
     <div className="pb-10">
       <div className="bg-gradient-to-b from-peach to-cream px-4 pb-2 pt-6 lg:hidden">
-        <Link
-          href="/help"
-          aria-label={t("رجوع")}
-          className="grid size-12 place-items-center rounded-full bg-white text-ink shadow-soft transition active:scale-95"
-        >
-          <ArrowRight className="size-5 ltr:rotate-180" strokeWidth={2.2} />
-        </Link>
+        <BackButton href="/help" />
         <h1 className="mt-10 text-start text-[40px] font-extrabold leading-[1.3]">
           {t("الاسئلة الشائعة")}
         </h1>
@@ -85,7 +81,7 @@ export function FaqView() {
               {t("الأسئلة الأكثر شيوعاً")}
             </div>
 
-            <div className="mt-3 space-y-3">
+            <div className="motion-stagger mt-3 space-y-3">
               {visible.map((item) => {
                 const open = openId === item.id;
                 return (
@@ -128,7 +124,7 @@ export function FaqView() {
 
             <a
               href="tel:19885"
-              className="btn-brand mt-8 flex h-16 w-full rounded-[24px] text-base lg:mt-10"
+              className={buttonStyles({ size: "lg", block: true, className: "mt-8 lg:mt-10" })}
             >
               {t("اذا لم تجد اجابتك تواصل معنا")}
               <Phone className="size-5 shrink-0" strokeWidth={2.1} />

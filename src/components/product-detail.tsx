@@ -7,7 +7,7 @@ import { Check, ChevronLeft, Info, Minus, Plus, ShoppingCart } from "lucide-reac
 import { categoriesById, formatPrice, type Product } from "@/lib/data";
 import { useApp } from "@/components/providers";
 import { StoreHeader } from "@/components/store-header";
-import { FavoriteButton, HotBadge, MobilePageHeader, Price } from "@/components/ui";
+import { Button, FavoriteButton, HotBadge, MobilePageHeader, Price } from "@/components/ui";
 
 const sizes = [
   { id: "sandwich", label: "ساندوتش فقط", extra: 0, hint: "ساندوتش برجر طازة" },
@@ -27,23 +27,29 @@ export function ProductDetail({ product }: { product: Product }) {
   const [note, setNote] = useState("");
   const [qty, setQty] = useState(1);
 
-  const size = sizes.find((item) => item.id === sizeId) ?? sizes[0];
-  const extrasPrice = extras.reduce((total, id) => total + (extrasList.find((item) => item.id === id)?.price ?? 0), 0);
-  const unitPrice = product.price + size.extra + extrasPrice;
+  const customizable = product.category === "burger";
+  const size = customizable ? (sizes.find((item) => item.id === sizeId) ?? sizes[0]) : null;
+  const extrasPrice = customizable
+    ? extras.reduce((total, id) => total + (extrasList.find((item) => item.id === id)?.price ?? 0), 0)
+    : 0;
+  const unitPrice = product.price + (size?.extra ?? 0) + extrasPrice;
   const total = unitPrice * qty;
   const category = categoriesById[product.category];
 
   const selectedExtras = useMemo(
-    () => extras.map((id) => extrasList.find((item) => item.id === id)?.label ?? "").filter(Boolean),
-    [extras],
+    () =>
+      customizable
+        ? extras.map((id) => extrasList.find((item) => item.id === id)?.label ?? "").filter(Boolean)
+        : [],
+    [customizable, extras],
   );
 
   const addToCart = () => {
     addItem(product.id, {
       qty,
       price: unitPrice,
-      size: size.label,
-      extras: selectedExtras,
+      size: size?.label,
+      extras: customizable ? selectedExtras : undefined,
       note,
     });
   };
@@ -76,7 +82,7 @@ export function ProductDetail({ product }: { product: Product }) {
 
         <div className="mt-5 grid gap-4 lg:mt-6 lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-6">
           <div className="order-1">
-            <div className="relative aspect-[2.1/1] overflow-hidden rounded-[24px] bg-peach shadow-soft lg:aspect-[1.55/1] lg:rounded-[30px]">
+            <div className="motion-fade relative aspect-[2.1/1] overflow-hidden rounded-[24px] bg-peach shadow-soft lg:aspect-[1.55/1] lg:rounded-[30px]">
               <Image
                 src={product.image}
                 alt={t(product.name)}
@@ -119,101 +125,107 @@ export function ProductDetail({ product }: { product: Product }) {
           </div>
 
           <div className="order-2 space-y-3 lg:space-y-4">
-            <div className="card p-4 lg:p-6">
+            <div className="motion-rise card p-4 lg:p-6">
               <div className="hidden text-center lg:block">
                 <h2 className="text-xl font-extrabold">{t("خطط طلبك على مزاجك")}</h2>
-                <p className="mt-1 text-xs text-muted">{t("اختار وجبتك وإضافاتك المفضلة")}</p>
+                {customizable ? (
+                  <p className="mt-1 text-xs text-muted">{t("اختار وجبتك وإضافاتك المفضلة")}</p>
+                ) : null}
               </div>
 
-              <div className="mt-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold">{t("اختار وجبتك")}</h3>
-                  <span className="text-[10px] text-muted">{t("مطلوب · اختار واحد")}</span>
+              {customizable ? (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold">{t("اختار وجبتك")}</h3>
+                    <span className="text-[10px] text-muted">{t("مطلوب · اختار واحد")}</span>
+                  </div>
+                  <div className="mt-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:mt-3">
+                    {sizes.map((item) => {
+                      const active = sizeId === item.id;
+                      return (
+                        <label
+                          key={item.id}
+                          className={`flex cursor-pointer flex-col gap-0.5 rounded-xl border-2 px-4 py-3 transition ${
+                            active ? "border-brand bg-brand-soft/45" : "border-line bg-white hover:border-brand/30"
+                          }`}
+                        >
+                          <span className="flex items-center justify-between gap-2">
+                            <span className="flex items-center gap-2 text-sm font-bold">
+                              <span
+                                className={`grid size-4 place-items-center rounded-full border-2 ${
+                                  active ? "border-brand" : "border-[#d8c9bc]"
+                                }`}
+                              >
+                                {active ? <span className="size-2 rounded-full bg-brand" /> : null}
+                              </span>
+                              {t(item.label)}
+                            </span>
+                            <span className="text-[11px] font-bold text-brand">
+                              {item.extra
+                                ? `+ ${item.extra} ${t("جنيه")}`
+                                : `${formatPrice(product.price)} ${t("جنيه")}`}
+                            </span>
+                          </span>
+                          <span className="ps-6 text-[10px] text-muted">{t(item.hint)}</span>
+                          <input
+                            type="radio"
+                            name="size"
+                            className="sr-only"
+                            checked={active}
+                            onChange={() => setSizeId(item.id)}
+                          />
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="mt-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:mt-3">
-                  {sizes.map((item) => {
-                    const active = sizeId === item.id;
-                    return (
-                      <label
-                        key={item.id}
-                        className={`flex cursor-pointer flex-col gap-0.5 rounded-xl border-2 px-4 py-3 transition ${
-                          active ? "border-brand bg-brand-soft/45" : "border-line bg-white hover:border-brand/30"
-                        }`}
-                      >
-                        <span className="flex items-center justify-between gap-2">
-                          <span className="flex items-center gap-2 text-sm font-bold">
+              ) : null}
+
+              {customizable ? (
+                <div className="mt-5">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold">{t("إضافات على مزاجك")}</h3>
+                    <span className="text-[10px] text-muted">{t("اختياري · اختر اللي يعجبك")}</span>
+                  </div>
+                  <div className="mt-2.5 space-y-2 lg:space-y-2.5">
+                    {extrasList.map((item) => {
+                      const active = extras.includes(item.id);
+                      return (
+                        <label
+                          key={item.id}
+                          className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border-2 px-4 py-3 transition ${
+                            active ? "border-brand/40 bg-brand-soft/40" : "border-line bg-white hover:border-brand/25"
+                          }`}
+                        >
+                          <span className="flex items-center gap-2 text-sm">
                             <span
-                              className={`grid size-4 place-items-center rounded-full border-2 ${
-                                active ? "border-brand" : "border-[#d8c9bc]"
+                              className={`grid size-4 place-items-center rounded border ${
+                                active ? "border-brand bg-brand text-white" : "border-[#d8c9bc] bg-white"
                               }`}
                             >
-                              {active ? <span className="size-2 rounded-full bg-brand" /> : null}
+                              {active ? <Check className="size-3" strokeWidth={3} /> : null}
                             </span>
                             {t(item.label)}
                           </span>
-                          <span className="text-[11px] font-bold text-brand">
-                            {item.extra
-                              ? `+ ${item.extra} ${t("جنيه")}`
-                              : `${formatPrice(product.price)} ${t("جنيه")}`}
-                          </span>
-                        </span>
-                        <span className="ps-6 text-[10px] text-muted">{t(item.hint)}</span>
-                        <input
-                          type="radio"
-                          name="size"
-                          className="sr-only"
-                          checked={active}
-                          onChange={() => setSizeId(item.id)}
-                        />
-                      </label>
-                    );
-                  })}
+                          <span className="text-[11px] font-bold text-brand">+ {item.price} {t("جنيه")}</span>
+                          <input
+                            type="checkbox"
+                            className="sr-only"
+                            checked={active}
+                            onChange={() =>
+                              setExtras((current) =>
+                                current.includes(item.id)
+                                  ? current.filter((id) => id !== item.id)
+                                  : [...current, item.id],
+                              )
+                            }
+                          />
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-
-              <div className="mt-5">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold">{t("إضافات على مزاجك")}</h3>
-                  <span className="text-[10px] text-muted">{t("اختياري · اختر اللي يعجبك")}</span>
-                </div>
-                <div className="mt-2.5 space-y-2 lg:space-y-2.5">
-                  {extrasList.map((item) => {
-                    const active = extras.includes(item.id);
-                    return (
-                      <label
-                        key={item.id}
-                        className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border-2 px-4 py-3 transition ${
-                          active ? "border-brand/40 bg-brand-soft/40" : "border-line bg-white hover:border-brand/25"
-                        }`}
-                      >
-                        <span className="flex items-center gap-2 text-sm">
-                          <span
-                            className={`grid size-4 place-items-center rounded border ${
-                              active ? "border-brand bg-brand text-white" : "border-[#d8c9bc] bg-white"
-                            }`}
-                          >
-                            {active ? <Check className="size-3" strokeWidth={3} /> : null}
-                          </span>
-                          {t(item.label)}
-                        </span>
-                        <span className="text-[11px] font-bold text-brand">+ {item.price} {t("جنيه")}</span>
-                        <input
-                          type="checkbox"
-                          className="sr-only"
-                          checked={active}
-                          onChange={() =>
-                            setExtras((current) =>
-                              current.includes(item.id)
-                                ? current.filter((id) => id !== item.id)
-                                : [...current, item.id],
-                            )
-                          }
-                        />
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
+              ) : null}
 
               <div className="mt-5">
                 <div className="flex items-center justify-between">
@@ -259,14 +271,12 @@ export function ProductDetail({ product }: { product: Product }) {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={addToCart}
-                className="btn-brand mt-4 hidden h-12 w-full text-sm lg:flex"
-              >
-                <ShoppingCart className="size-4" />
-                {t("أضف إلى السلة")}
-              </button>
+              <div className="mt-4 hidden lg:block">
+                <Button block onClick={addToCart}>
+                  <ShoppingCart className="size-4" />
+                  {t("أضف إلى السلة")}
+                </Button>
+              </div>
             </div>
 
             <div className="card flex items-start gap-3 p-4 text-xs leading-6 text-muted lg:hidden">
@@ -281,7 +291,7 @@ export function ProductDetail({ product }: { product: Product }) {
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/97 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-12px_30px_-22px_rgba(80,40,20,0.5)] backdrop-blur lg:hidden">
+      <div className="motion-nav-in fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/97 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-12px_30px_-22px_rgba(80,40,20,0.5)] backdrop-blur lg:hidden">
         <div className="mx-auto max-w-lg">
           <div className="flex items-center justify-between">
             <span className="text-sm font-extrabold">{t("الكمية")}</span>
@@ -308,7 +318,7 @@ export function ProductDetail({ product }: { product: Product }) {
           <button
             type="button"
             onClick={addToCart}
-            className="btn-brand mt-2.5 flex h-12 w-full items-center justify-between px-5 text-sm"
+            className="btn-brand motion-press mt-2.5 flex h-12 w-full items-center justify-between px-5 text-sm"
           >
             <span className="flex items-center gap-2">
               <ShoppingCart className="size-4" />

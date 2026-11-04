@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, ChevronDown, Send, Star, UploadCloud } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs } from "@/components/ui";
+import { BackButton, Breadcrumbs, Button } from "@/components/ui";
 import { feedbackRatings, feedbackTypes } from "@/lib/account-data";
+import { validateImageFile } from "@/lib/media";
 
 export function FeedbackView() {
   const { toast, t } = useApp();
@@ -14,9 +15,26 @@ export function FeedbackView() {
   const [detail, setDetail] = useState("");
   const [image, setImage] = useState<{ name: string; url: string } | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (image) URL.revokeObjectURL(image.url);
+    };
+  }, [image]);
+
   const pickImage = (file: File | undefined) => {
     if (!file) return;
-    if (image) URL.revokeObjectURL(image.url);
+    const check = validateImageFile(file);
+    if (!check.ok) {
+      toast(
+        t(
+          check.reason === "type"
+            ? "اختار صورة بصيغة JPG أو PNG."
+            : "حجم الصورة أكبر من 5 ميجا، اختار صورة أصغر.",
+        ),
+        "info",
+      );
+      return;
+    }
     setImage({ name: file.name, url: URL.createObjectURL(file) });
   };
 
@@ -26,20 +44,13 @@ export function FeedbackView() {
     setStars(0);
     setType(feedbackTypes[0]);
     setDetail("");
-    if (image) URL.revokeObjectURL(image.url);
     setImage(null);
   };
 
   return (
     <div className="pb-10">
       <div className="bg-gradient-to-b from-peach to-cream px-4 pb-2 pt-6 lg:hidden">
-        <Link
-          href="/help"
-          aria-label={t("رجوع")}
-          className="grid size-12 place-items-center rounded-full bg-white text-ink shadow-soft transition active:scale-95"
-        >
-          <ArrowRight className="size-5 ltr:rotate-180" strokeWidth={2.2} />
-        </Link>
+        <BackButton href="/help" />
         <h1 className="mt-10 text-start text-[40px] font-extrabold leading-[1.3]">
           {t("ارسال الملاحظات")}
         </h1>
@@ -102,7 +113,7 @@ export function FeedbackView() {
 
               <div className="card mt-4 p-5 lg:rounded-none lg:bg-transparent lg:p-0 lg:shadow-none">
                 <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
-                  <div className="space-y-5">
+                  <div className="motion-stagger space-y-5">
                     <div>
                       <label htmlFor="feedback-type" className="block text-sm font-extrabold">
                         {t("نوع الملاحظة")}
@@ -145,7 +156,7 @@ export function FeedbackView() {
                     <label className="mt-2.5 flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-[#8a7466]/60 bg-peach px-4 py-8 text-center transition hover:border-brand/50">
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,image/png,image/webp"
                         className="hidden"
                         onChange={(event) => pickImage(event.target.files?.[0])}
                       />
@@ -169,10 +180,10 @@ export function FeedbackView() {
                 </div>
               </div>
 
-              <button type="submit" className="btn-brand mt-6 flex h-16 w-full rounded-[24px] text-base lg:mt-8">
+              <Button type="submit" size="lg" block className="mt-6 lg:mt-8">
                 {t("ارسال")}
                 <Send className="size-5 shrink-0 rtl:rotate-180" strokeWidth={2.1} />
-              </button>
+              </Button>
             </form>
           </div>
         </div>

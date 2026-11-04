@@ -55,8 +55,6 @@ export function PromoCarousel() {
     return () => clearInterval(timer);
   }, []);
 
-  const slide = slides[index];
-
   return (
     <div>
       <div className="relative aspect-[2.5/1] overflow-hidden rounded-[22px] bg-peach shadow-soft sm:aspect-[3.4/1] lg:aspect-[4.75/1] lg:rounded-[26px]">
@@ -67,7 +65,7 @@ export function PromoCarousel() {
             key={item.id}
             aria-hidden={slideIndex !== index}
             className={`absolute inset-0 transition-opacity duration-700 ${
-              slideIndex === index ? "opacity-100" : "opacity-0"
+              slideIndex === index ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
             }`}
           >
             <Image
@@ -76,7 +74,9 @@ export function PromoCarousel() {
               fill
               priority={slideIndex === 0}
               sizes="(max-width: 1024px) 100vw, 900px"
-              className={`object-cover ${isHero && heroIsMirrored(lang) ? "ltr:-scale-x-100" : ""}`}
+              className={`object-cover transition-transform duration-700 ${
+                isHero && heroIsMirrored(lang) ? "ltr:-scale-x-100" : ""
+              } ${slideIndex === index ? "motion-zoom" : ""}`}
             />
             <div
               className={`absolute inset-0 ${
@@ -85,7 +85,11 @@ export function PromoCarousel() {
                   : "from-cream/95 via-cream/55 to-transparent"
               } ${lang === "en" ? "bg-gradient-to-r" : "bg-gradient-to-l"}`}
             />
-            <div className="absolute inset-y-0 start-0 flex w-[68%] flex-col justify-center gap-2 ps-4 text-start sm:w-[55%] lg:w-[48%] lg:gap-3 lg:ps-10">
+            <div
+              className={`absolute inset-y-0 start-0 flex w-[68%] flex-col justify-center gap-2 ps-4 text-start sm:w-[55%] lg:w-[48%] lg:gap-3 lg:ps-10 ${
+                slideIndex === index ? "motion-slide" : ""
+              }`}
+            >
               <span
                 className={`w-fit rounded-full px-2.5 py-1 text-[9px] font-bold lg:text-[10px] ${
                   item.theme === "dark" ? "bg-white/20 text-white backdrop-blur" : "bg-white/80 text-brand"
@@ -108,14 +112,15 @@ export function PromoCarousel() {
                 {t(item.text)}
               </p>
               <Link
-                href={slide.href}
+                href={item.href}
+                tabIndex={slideIndex === index ? 0 : -1}
                 className={`mt-1 inline-flex h-9 w-fit items-center gap-2 rounded-full px-4 text-[11px] font-bold transition lg:h-11 lg:px-6 lg:text-sm ${
                   item.theme === "dark"
                     ? "bg-[#cb2f19] text-white hover:bg-[#b32612]"
                     : "bg-brand text-white hover:bg-brand-dark"
                 }`}
               >
-                {t(slide.cta)}
+                {t(item.cta)}
                 <ArrowLeft className="size-3.5 lg:size-4 ltr:rotate-180" />
               </Link>
             </div>
@@ -133,8 +138,8 @@ export function PromoCarousel() {
             aria-selected={dotIndex === index}
             aria-label={t("العرض {n}", { n: dotIndex + 1 })}
             onClick={() => setIndex(dotIndex)}
-            className={`h-1.5 rounded-full transition-all ${
-              dotIndex === index ? "w-4 bg-brand" : "w-1.5 bg-[#d9ccc0] hover:bg-brand/50"
+            className={`h-1.5 rounded-full transition-all duration-300 ${
+              dotIndex === index ? "w-4 bg-brand" : "w-1.5 bg-[#d9ccc0] hover:w-2.5 hover:bg-brand/50"
             }`}
           />
         ))}

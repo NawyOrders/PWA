@@ -15,11 +15,11 @@ import {
 } from "lucide-react";
 import {
   categoriesById,
+  categoryCounts,
   desktopCategoryOrder,
   filterMenu,
   homeCategoryOrder,
   menuFilters,
-  orders,
   products,
 } from "@/lib/data";
 import { PromoCarousel } from "@/components/promo-carousel";
@@ -38,7 +38,7 @@ function PhoneMockup() {
   return (
     <div className="relative mx-auto h-[430px] w-[232px] shrink-0 rounded-[42px] border-[7px] border-[#241b16] bg-cream shadow-[0_40px_70px_-35px_rgba(70,30,15,0.55)]">
       <div className="absolute left-1/2 top-2.5 z-20 h-4 w-20 -translate-x-1/2 rounded-full bg-[#241b16]" />
-      <div className="h-full overflow-hidden rounded-[35px]">
+      <div className="absolute inset-0 overflow-hidden rounded-[35px]">
         <div className="flex items-center justify-between px-4 pt-3 text-[7px] font-bold">
           <span>9:41</span>
           <span className="flex gap-1">‖▮ ▮</span>
@@ -108,7 +108,7 @@ function PhoneMockup() {
 }
 
 export function HomeView() {
-  const { t, loggedIn } = useApp();
+  const { t, loggedIn, orders, toast } = useApp();
   const [filter, setFilter] = useState("الكل");
   const [showActiveOrder, setShowActiveOrder] = useState(true);
   const menu = filterMenu(filter);
@@ -131,23 +131,29 @@ export function HomeView() {
           action={{ label: "عرض كل الأصناف (12)", href: "/categories" }}
         />
 
-        <div className="hide-scrollbar -mx-4 mt-3 flex gap-2.5 overflow-x-auto px-4 pb-1 lg:hidden">
+        <div className="motion-stagger hide-scrollbar -mx-4 mt-3 flex gap-2.5 overflow-x-auto px-4 pb-1 lg:hidden">
           {homeCategoryOrder.map((id) => {
             const category = categoriesById[id];
             const active = id === "burger";
             return (
               <Link
                 key={id}
-                href="/categories"
-                className="flex w-[60px] shrink-0 flex-col items-center gap-2 text-center"
+                href={`/categories/${id}`}
+                className="group flex w-[60px] shrink-0 flex-col items-center gap-2 text-center"
               >
                 <span
-                  className={`grid size-[60px] place-items-center rounded-full border-2 bg-white transition ${
+                  className={`grid size-[60px] place-items-center rounded-full border-2 bg-white transition duration-300 group-hover:-translate-y-1 group-hover:border-brand/60 ${
                     active ? "border-brand shadow-[0_10px_24px_-14px_rgba(232,69,44,0.7)]" : "border-[#ece0d4]"
                   }`}
                 >
                   <span className="relative size-12 overflow-hidden rounded-full">
-                    <Image src={category.image} alt={t(category.name)} fill sizes="48px" className="object-cover" />
+                    <Image
+                      src={category.image}
+                      alt={t(category.name)}
+                      fill
+                      sizes="48px"
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
                   </span>
                 </span>
                 <span className={`whitespace-nowrap text-[10px] font-bold ${active ? "text-brand" : "text-ink"}`}>{t(category.name)}</span>
@@ -156,23 +162,31 @@ export function HomeView() {
           })}
         </div>
 
-        <div className="mt-4 hidden grid-cols-7 gap-3 lg:grid">
+        <div className="motion-stagger mt-4 hidden grid-cols-7 gap-3 lg:grid">
           {desktopCategoryOrder.map((id) => {
             const category = categoriesById[id];
             const active = id === "burger";
             return (
               <Link
                 key={id}
-                href="/categories"
-                className={`flex flex-col items-center rounded-2xl border-2 bg-white px-2 py-4 text-center transition hover:-translate-y-1 hover:shadow-soft ${
-                  active ? "border-brand" : "border-transparent"
+                href={`/categories/${id}`}
+                className={`group flex flex-col items-center rounded-[18px] bg-white px-3 py-4 text-center shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.98] ${
+                  active ? "ring-2 ring-inset ring-brand/60" : ""
                 }`}
               >
-                <span className="relative size-14 overflow-hidden rounded-full bg-cream-50">
-                  <Image src={category.image} alt={t(category.name)} fill sizes="56px" className="object-cover" />
+                <span className="grid size-[68px] place-items-center rounded-full bg-peach/80 transition-colors duration-300 group-hover:bg-brand-soft">
+                  <span className="relative size-12 overflow-hidden rounded-full">
+                    <Image
+                      src={category.image}
+                      alt={t(category.name)}
+                      fill
+                      sizes="48px"
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                  </span>
                 </span>
-                <span className={`mt-3 text-sm font-bold ${active ? "text-brand" : "text-ink"}`}>{t(category.name)}</span>
-                <span className="mt-0.5 text-[10px] text-muted">{category.count} {t("صنف")}</span>
+                <span className={`mt-2.5 text-sm font-extrabold ${active ? "text-brand" : "text-ink"}`}>{t(category.name)}</span>
+                <span className="mt-1 text-[10px] font-semibold text-muted">{categoryCounts[id] ?? 0} {t("صنف")}</span>
               </Link>
             );
           })}
@@ -184,18 +198,23 @@ export function HomeView() {
           title="الأكثر طلباً"
           icon={<Flame className="size-5 fill-brand/20 text-brand lg:size-6" />}
           action={{ label: "عرض الكل", href: "/categories", icon: <LayoutGrid className="size-4" /> }}
+          className="translate-x-1.5"
         />
-        <div className="mt-3 grid grid-cols-2 gap-3 lg:mt-5 lg:grid-cols-5 lg:gap-4">
+        <div className="motion-stagger mt-3 grid grid-cols-2 gap-3 lg:mt-5 lg:grid-cols-5 lg:gap-4">
           {products
             .filter((product) => product.category === "burger")
+            .sort((a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)))
             .slice(0, 4)
             .map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
 
-          <div className="relative hidden overflow-hidden rounded-[26px] bg-[#e8452c] p-5 text-white shadow-soft lg:block">
-            <div className="absolute -right-10 -top-10 size-40 rounded-full bg-white/10" />
-            <div className="absolute -bottom-14 -left-8 size-40 rounded-full bg-[#f6a723]/25" />
+          <div className="motion-lift relative hidden overflow-hidden rounded-[26px] bg-[#e8452c] p-5 text-white shadow-soft lg:block">
+            <div className="motion-float absolute -right-10 -top-10 size-40 rounded-full bg-white/10" />
+            <div
+              className="motion-float absolute -bottom-14 -left-8 size-40 rounded-full bg-[#f6a723]/25"
+              style={{ animationDelay: "1.4s" }}
+            />
             <div className="relative flex h-full flex-col justify-between">
               <span className="grid size-11 place-items-center rounded-full bg-white/15 backdrop-blur">
                 <Sparkles className="size-5" />
@@ -236,7 +255,7 @@ export function HomeView() {
           <MenuFilters filters={menuFilters} value={filter} onChange={setFilter} />
         </div>
 
-        <div className="mt-3 grid gap-3 lg:mt-5 lg:grid-cols-2 lg:gap-4">
+        <div className="motion-stagger mt-3 grid gap-3 lg:mt-5 lg:grid-cols-2 lg:gap-4">
           {menu.slice(0, 6).map((product) => (
             <MenuRow key={product.id} product={product} />
           ))}
@@ -262,8 +281,11 @@ export function HomeView() {
           className="relative overflow-hidden rounded-[32px] p-10"
           style={{ backgroundImage: "linear-gradient(285deg, #fce2d8 0%, #f8cdbc 55%, #f4b19a 100%)" }}
         >
-          <div className="absolute -right-16 -top-24 size-72 rounded-full bg-white/35 blur-2xl" />
-          <div className="absolute -bottom-24 left-1/3 size-72 rounded-full bg-[#e8452c]/10 blur-2xl" />
+          <div className="motion-float absolute -right-16 -top-24 size-72 rounded-full bg-white/35 blur-2xl" />
+          <div
+            className="motion-float absolute -bottom-24 left-1/3 size-72 rounded-full bg-[#e8452c]/10 blur-2xl"
+            style={{ animationDelay: "2s" }}
+          />
           <div className="relative grid grid-cols-[1fr_auto] items-center gap-10">
             <div className="max-w-xl">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/60 px-3.5 py-1.5 text-[11px] font-bold text-ink/70">
@@ -281,6 +303,7 @@ export function HomeView() {
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <button
                   type="button"
+                  onClick={() => toast(t("التطبيق هيكون متاح على المتجر قريباً"), "info")}
                   className="flex h-12 items-center gap-3 rounded-xl bg-[#1f1a16] px-5 text-white transition hover:bg-black"
                 >
                   <span className="text-lg leading-none"></span>
@@ -291,6 +314,7 @@ export function HomeView() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => toast(t("التطبيق هيكون متاح على المتجر قريباً"), "info")}
                   className="flex h-12 items-center gap-3 rounded-xl bg-[#1f1a16] px-5 text-white transition hover:bg-black"
                 >
                   <Download className="size-5" />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, X } from "lucide-react";
 import { useApp } from "@/components/providers";
 
@@ -21,6 +21,10 @@ export function SearchField({
   const router = useRouter();
   const { t } = useApp();
   const [value, setValue] = useState(defaultValue);
+
+  useEffect(() => {
+    setValue(defaultValue);
+  }, [defaultValue]);
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();

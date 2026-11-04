@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
 import { Trash2, Wallet } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { productsById } from "@/lib/data";
@@ -16,7 +15,7 @@ function CartItem({ lineKey }: { lineKey: string }) {
   if (!product) return null;
 
   return (
-    <article className="relative flex gap-3 rounded-[24px] bg-white p-3 shadow-soft lg:gap-4 lg:p-4">
+    <article className="relative flex gap-3 rounded-[24px] bg-white p-3 shadow-soft transition duration-300 hover:shadow-pop lg:gap-4 lg:p-4">
       <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-peach lg:size-32">
         <Image src={product.image} alt={t(product.name)} fill sizes="128px" className="object-cover" />
       </div>
@@ -53,8 +52,7 @@ function CartItem({ lineKey }: { lineKey: string }) {
 }
 
 export function CartView() {
-  const { lines, count, t, fulfilment: mode } = useApp();
-  const [notes, setNotes] = useState("");
+  const { lines, count, t, fulfilment: mode, orderNote, setOrderNote } = useApp();
 
   if (lines.length === 0) {
     return (
@@ -86,20 +84,20 @@ export function CartView() {
             <span className="text-[11px] text-muted">{count} {t("أصناف")}</span>
           </div>
 
-          <div className="space-y-3">
+          <div className="motion-stagger space-y-3">
             {lines.map((line) => (
               <CartItem key={line.key} lineKey={line.key} />
             ))}
           </div>
 
-          <div className="card p-4 lg:p-5">
+          <div className="card p-4 motion-rise lg:p-5">
             <h2 className="flex items-center gap-2 text-sm font-extrabold">
               {t("ملاحظات على الطلب")}
               <span className="rounded-full bg-cream-100 px-2 py-0.5 text-[9px] font-semibold text-muted">{t("اختياري")}</span>
             </h2>
             <textarea
-              value={notes}
-              onChange={(event) => setNotes(event.target.value.slice(0, 200))}
+              value={orderNote}
+              onChange={(event) => setOrderNote(event.target.value.slice(0, 200))}
               rows={3}
               placeholder={t("عندك أي طلب خاص؟ اكتبه هنا...")}
               className="mt-2.5 w-full resize-none rounded-xl border border-line bg-cream-50 px-4 py-3 text-xs leading-6 outline-none transition focus:border-brand/40"

@@ -137,6 +137,9 @@ export function LeafletMap({
   const pickRef = useRef(onPick);
   const clickRef = useRef(onMarkerClick);
   const didFit = useRef(false);
+  // Leaflet has no "who moved me" flag, so programmatic moves are matched against this target and
+  // only genuine gestures are reported through onPick.
+  const pendingMove = useRef<[number, number] | null>(null);
 
   pickRef.current = onPick;
   clickRef.current = onMarkerClick;
@@ -159,6 +162,7 @@ export function LeafletMap({
       inertia: interactive,
     });
     map.attributionControl.setPrefix(false);
+    pendingMove.current = [center[0], center[1]];
 
     const tiles = L.tileLayer(TILES.url, {
       attribution: TILES.attribution,
@@ -171,10 +175,19 @@ export function LeafletMap({
 
     map.on("click", (event: L.LeafletMouseEvent) => {
       if (!pickRef.current) return;
+      pickRef.current({ lat: event.latlng.lat, lng: event.latlng.lng });
+      pendingMove.current = [event.latlng.lat, event.latlng.lng];
       map.panTo(event.latlng, { animate: true });
     });
+    // Only a real gesture lifts the suppression, so resize and tile-driven moveends never move the pin.
+    map.on("dragstart zoomstart", () => {
+      pendingMove.current = null;
+    });
+    map.getContainer().addEventListener("keydown", () => {
+      pendingMove.current = null;
+    });
     map.on("moveend", () => {
-      if (!pickRef.current) return;
+      if (!pickRef.current || pendingMove.current) return;
       const c = map.getCenter();
       pickRef.current({ lat: c.lat, lng: c.lng });
     });
@@ -204,8 +217,11 @@ export function LeafletMap({
     if (!fitToContent) return;
     const points = [...markers.map((marker) => [marker.lat, marker.lng] as [number, number]), ...routes.flatMap((route) => route.positions)];
     if (points.length > 1) {
-      map.fitBounds(L.latLngBounds(points), { padding: [46, 46] });
+      const bounds = L.latLngBounds(points);
+      pendingMove.current = [bounds.getCenter().lat, bounds.getCenter().lng];
+      map.fitBounds(bounds, { padding: [46, 46] });
     } else {
+      pendingMove.current = [center[0], center[1]];
       map.setView(center, zoom);
     }
     didFit.current = true;
@@ -214,6 +230,7 @@ export function LeafletMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || fitToContent) return;
+    pendingMove.current = [center[0], center[1]];
     map.setView(center, map.getZoom(), { animate: true });
   }, [center[0], center[1], fitToContent]);
 

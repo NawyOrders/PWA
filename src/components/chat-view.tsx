@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowRight, Bot, MoreVertical, Paperclip, Send } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs } from "@/components/ui";
+import { BackButton, Breadcrumbs } from "@/components/ui";
 import { agentReplies, chatSeed, type ChatMessage } from "@/lib/account-data";
+import { validateImageFile } from "@/lib/media";
 
 function formatTime(t: (text: string) => string) {
   const now = new Date();
@@ -15,7 +16,7 @@ function formatTime(t: (text: string) => string) {
 }
 
 export function ChatView() {
-  const { t } = useApp();
+  const { t, toast } = useApp();
   const [messages, setMessages] = useState<ChatMessage[]>(chatSeed);
   const [draft, setDraft] = useState("");
   const [attachment, setAttachment] = useState<string | null>(null);
@@ -67,7 +68,11 @@ export function ChatView() {
           />
         </div>
 
-        <div className="mx-auto max-w-[640px] px-4 pt-6 lg:max-w-3xl lg:px-0">
+        <div className="sticky top-0 z-30 bg-cream/95 px-4 pb-1 pt-4 backdrop-blur lg:hidden">
+          <BackButton href="/help" tone="soft" />
+        </div>
+
+        <div className="mx-auto max-w-[640px] px-4 pt-2 lg:max-w-3xl lg:px-0 lg:pt-6">
           <div className="relative lg:mt-6 lg:rounded-[28px] lg:bg-cream-50 lg:p-8 lg:shadow-soft">
             <Link
               href="/help"
@@ -88,13 +93,6 @@ export function ChatView() {
               <span className="grid size-12 shrink-0 place-items-center rounded-full bg-brand text-white shadow-[0_14px_26px_-14px_rgba(232,69,44,0.9)]">
                 <Bot className="size-6" strokeWidth={1.9} />
               </span>
-              <Link
-                href="/help"
-                aria-label={t("رجوع")}
-                className="grid size-10 shrink-0 place-items-center rounded-full bg-peach text-ink transition hover:bg-brand-soft lg:hidden"
-              >
-                <ArrowRight className="size-5 ltr:rotate-180" strokeWidth={2.2} />
-              </Link>
             </div>
 
             <div className="mt-6 flex justify-center">
@@ -103,7 +101,7 @@ export function ChatView() {
               </span>
             </div>
 
-            <div className="mt-6 space-y-4">
+            <div className="motion-stagger mt-6 space-y-4">
               {messages.map((message) =>
                 message.from === "agent" ? (
                   <div key={message.id} className="flex items-end justify-start gap-2">
@@ -139,11 +137,25 @@ export function ChatView() {
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 className="hidden"
                 onChange={(event) => {
                   const file = event.target.files?.[0];
-                  if (file) setAttachment(file.name);
+                  if (file) {
+                    const check = validateImageFile(file);
+                    if (check.ok) {
+                      setAttachment(file.name);
+                    } else {
+                      toast(
+                        t(
+                          check.reason === "type"
+                            ? "اختار صورة بصيغة JPG أو PNG."
+                            : "حجم الصورة أكبر من 5 ميجا، اختار صورة أصغر.",
+                        ),
+                        "info",
+                      );
+                    }
+                  }
                   event.target.value = "";
                 }}
               />

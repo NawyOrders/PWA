@@ -4,7 +4,6 @@ import Link from "next/link";
 import type { ComponentType } from "react";
 import {
   AlertTriangle,
-  ArrowRight,
   ChevronLeft,
   CircleHelp,
   MessageCircle,
@@ -14,7 +13,7 @@ import {
   type LucideProps,
 } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs } from "@/components/ui";
+import { BackButton, Breadcrumbs, buttonStyles } from "@/components/ui";
 import { helpCards } from "@/lib/account-data";
 
 const cardIcons: Record<string, ComponentType<LucideProps>> = {
@@ -37,13 +36,7 @@ export function HelpView() {
   return (
     <div className="pb-10">
       <div className="bg-gradient-to-b from-peach to-cream px-4 pb-2 pt-6 lg:hidden">
-        <Link
-          href="/settings"
-          aria-label={t("رجوع")}
-          className="grid size-12 place-items-center rounded-full bg-white text-ink shadow-soft transition active:scale-95"
-        >
-          <ArrowRight className="size-5 ltr:rotate-180" strokeWidth={2.2} />
-        </Link>
+        <BackButton href="/settings" />
         <h1 className="mt-10 text-start text-[40px] font-extrabold leading-[1.3]">
           {t("المساعدة والدعم")}
         </h1>
@@ -78,7 +71,7 @@ export function HelpView() {
               <p className="mt-2 text-sm text-muted">{t("نحن هنا لمساعدتك في ايه وقت")}</p>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-4 lg:mt-12 lg:gap-5">
+            <div className="motion-stagger mt-6 grid grid-cols-2 gap-4 lg:mt-12 lg:gap-5">
               {helpCards.map((card) => {
                 const Icon = cardIcons[card.icon];
                 return (
@@ -102,7 +95,7 @@ export function HelpView() {
 
             <a
               href="tel:19885"
-              className="btn-brand mt-8 flex h-16 w-full rounded-[24px] text-base lg:mt-10"
+              className={buttonStyles({ size: "lg", block: true, className: "mt-8 lg:mt-10" })}
             >
               {t("تواصل معنا")}
               <Phone className="size-5" strokeWidth={2.1} />

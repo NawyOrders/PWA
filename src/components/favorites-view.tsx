@@ -43,7 +43,7 @@ export function FavoritesView() {
             />
           </div>
         ) : (
-          <div className="mt-4 grid grid-cols-2 gap-3 px-4 lg:mt-6 lg:grid-cols-4 lg:gap-5 lg:px-0">
+          <div className="motion-stagger mt-4 grid grid-cols-2 gap-3 px-4 lg:mt-6 lg:grid-cols-4 lg:gap-5 lg:px-0">
             {favoriteProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

@@ -111,6 +111,8 @@ const en: Record<string, string> = {
   "أقسام رئيسية": "main categories",
   "كل الأصناف محضرة طازة في مطبخ ناوي أوردرز": "every item is freshly prepared in the Nawy Orders kitchen",
   "عرض {count} من {total} أطباق في قسم {category}": "Showing {count} of {total} items in {category}",
+  "قسم «ال{name}»": "Category “{name}”",
+  "قسم غير موجود": "Category not found",
   "{count} أقسام رئيسية — كل الأصناف محضرة طازة في مطبخ ناوي أوردرز": "{count} main categories — everything is freshly prepared in the Nawy Orders kitchen",
 
   // search page
@@ -299,6 +301,12 @@ const en: Record<string, string> = {
   "خطوة بسيطة قبل ما تأكد عنوانك وتختار طريقة الدفع.": "One quick step before you confirm your address and payment.",
   "اكتب رقم موبايل صحيح الأول": "Enter a valid mobile number first",
   "تم إرسال كود التحقق على موبايلك": "Verification code sent to your mobile",
+  "تم إرسال كود التحقق على موبايلك — كود التجربة {code}": "Verification code sent to your mobile — demo code {code}",
+  "استخدم كود التجربة {code} لإكمال تسجيل الدخول.": "Use demo code {code} to complete sign in.",
+  "اطلب كود التحقق الأول": "Request a verification code first",
+  "اطلب الكود من زر إرسال": "Request the code with the send button",
+  "اكتب كود التحقق كامل": "Enter the full verification code",
+  "الكود غير صحيح، جرب تاني": "Incorrect code, please try again",
 
   // account
   "تعديل الملف الشخصي": "Edit profile",
@@ -325,6 +333,7 @@ const en: Record<string, string> = {
   "تم حفظ التغييرات بنجاح": "Changes saved successfully",
 
   // orders
+  "طلباتك": "Your orders",
   "تابع طلبك الحالي واطلب تاني أطباقك المفضلة.": "Track your current order and reorder your favorites.",
   "طلبك الحالي": "Current order",
   "الطلبات السابقة": "Previous orders",
@@ -371,6 +380,8 @@ const en: Record<string, string> = {
   "تشغيل الإشعارات": "Enable notifications",
   "هل أنت متأكد أنك تريد تسجيل خروج؟": "Are you sure you want to sign out?",
   "عربي": "Arabic",
+  "تغيير اللغة إلى الإنجليزية": "Switch to English",
+  "تغيير اللغة إلى العربية": "Switch to Arabic",
   "فريق ناوي أوردرز معاك يومياً من 10 صباحاً لـ 12 بالليل. كلمنا على 19885 أو ابعتلنا رسالة وهنساعدك في أي مشكلة في الطلب أو التوصيل.": "The Nawy Orders team is here daily from 10 AM to midnight. Call 19885 or message us and we'll help with any order or delivery issue.",
   "بنتعامل مع بياناتك بحرص، وبنستخدمها بس لتوصيل طلباتك وتحسين تجربتك. بياناتك محفوظة ومش بنشاركها مع أي طرف تالت من غير موافقتك.": "We handle your data carefully and use it only to deliver your orders and improve your experience. Your data is stored securely and never shared with third parties without your consent.",
   "استخدامك للتطبيق معناه موافقتك على شروط الخدمة وسياسة الإلغاء والاسترجاع. الأسعار والمنتجات قابلة للتغيير، وبنأكد طلبك قبل بدء التحضير.": "Using the app means you agree to our terms of service and cancellation and refund policy. Prices and products may change, and we confirm your order before preparation starts.",
@@ -439,6 +450,7 @@ const en: Record<string, string> = {
   "تم تحديد موقعك الحالي على الخريطة": "Your current location is set on the map",
   "مقدرناش نحدد موقعك، اكتب العنوان يدوي": "We couldn't locate you. Enter the address manually.",
   "تم تحديد الموقع على الخريطة": "Location set on the map",
+  "تم تحريك الخريطة للمنطقة": "Map moved to that area",
 
   // misc pages
   "الصفحة مش موجودة": "Page not found",
@@ -549,6 +561,7 @@ const en: Record<string, string> = {
   "المعادي، شارع 9، القاهرة، مصر": "Maadi, Street 9, Cairo, Egypt",
   "حي النخيل، شارع السلطان محمد فرع الملك، الإسكندرية، مصر": "Al Nakheel, Sultan Mohamed St., Alexandria, Egypt",
   "جميل جمال": "Gamal Gamal",
+  "أحمد": "Ahmed",
   "شارع النصر، عمارة 12، بجوار صيدلية العربي": "Al Nasr St., Building 12, next to Al Araby Pharmacy",
 
   // location picker
@@ -557,7 +570,9 @@ const en: Record<string, string> = {
   "العودة لبيانات التوصيل": "Back to delivery details",
   "خريطة اختيار موقع التوصيل": "Delivery location map",
   "ابحث عن موقع": "Search for a location",
+  "مفيش نتيجة مطابقة": "No matching place",
   "مفيش نتيجة مطابقة، جرّب اسم منطقة تاني": "No match found — try another area name",
+  "منطقة توصيل": "Delivery area",
   "اختار عنوان التوصيل": "Choose the delivery address",
   "لا يوجد عناوين سابقة": "No saved addresses yet",
   "اضف الان": "Add one now",
@@ -577,6 +592,29 @@ const en: Record<string, string> = {
   "خريطة العناوين المحفوظة": "Saved addresses map",
   "موقع الخريطة": "Map location",
   "متابعة": "Continue",
+  "اختر مكان التوصيل": "Choose your delivery spot",
+  "العنواين المحفوظة": "Saved addresses",
+  "التوصيل لمكان اخر": "Deliver somewhere else",
+  "حدد المكان علي الخريطة": "Pick the spot on the map",
+  "التوصيل لمكانك الحالي": "Deliver to my current location",
+  "حدد مكان التوصيل على الخريطة": "Set the delivery spot on the map",
+  "خريطة تحديد مكان التوصيل": "Delivery location map",
+  "طلبك هيوصل هنا": "Your order arrives here",
+  "ازالة": "Remove",
+  "معاينة موقع العنوان": "Address location preview",
+  "المنطقة": "Area",
+  "اسم العقار": "Building name",
+  "مثال: 12331": "e.g. 12331",
+  "الشارع": "Street",
+  "علامة مميزة": "Landmark",
+  "مثال: كلب بلدي تحت العمارة": "e.g. the stray dog under the building",
+  "مثال: البيت": "e.g. the house",
+  "اختار اسم العنوان لحفظه لكي يختار بينهم بسهولة مثل (المنزل , المكتب)":
+    "Name this saved address so you can tell them apart easily, like (Home, Work)",
+  "شقة": "Apartment",
+  "فيلا": "Villa",
+  "مكتب": "Office",
+  "عمارة": "Building",
 
   // saved addresses
   "العناوين المحفوظة": "Saved addresses",
@@ -642,6 +680,8 @@ const en: Record<string, string> = {
   "خريطة تتبع مسار الطلب": "Live order route map",
   "وقت الوصول المتوقع": "Estimated arrival",
   "٣٥-٥٠ دقيقة": "35–50 min",
+  "25 - 35 دقيقة": "25–35 min",
+  "20 - 30 دقيقة": "20–30 min",
   "على الوصول {n} دقيقة": "Arriving in {n} min",
   "إجمالي الطلب": "Order total",
   "التوصيل لعنوانك المحدد": "Delivered to your selected address",
@@ -781,6 +821,24 @@ const en: Record<string, string> = {
   "مطور بواسطة": "Developed by",
   "13 أكتوبر 2026": "October 13, 2026",
   "© {year} كرم الشام. جميع الحقوق محفوظة.": "© {year} Karm El Sham. All rights reserved.",
+  "عرض كل الأصناف ({count})": "View all {count} items",
+  "الرجوع للفرع": "Back to branch",
+  "حجم الصورة أكبر من 5 ميجا، اختار صورة أصغر.": "Image is larger than 5 MB, please choose a smaller one.",
+  "اختار صورة بصيغة JPG أو PNG.": "Choose a JPG or PNG image.",
+  "مرحبا {name}": "Hi {name}",
+  "تابع طلباتك، وتمتع بعروض ناوي يا {name}": "Track your orders and enjoy Nawy offers, {name}",
+  "وقت الاستلام المتوقع": "Estimated pickup",
+  "الاستلام من الفرع": "Pickup from the branch",
+  "جاهز للاستلام": "Ready for pickup",
+  "حالة الطلب": "Order status",
+  "غير محدد": "Not specified",
+  "الاستلام من: ": "Pickup from: ",
+  "مفيش أصناف محفوظة للطلب ده": "No saved items for this order",
+  "مفيش طلبات جارية حالياً": "No active orders right now",
+  "مفيش طلبات سابقة": "No past orders",
+  "التطبيق هيكون متاح على المتجر قريباً": "The app will be available on the store soon",
+  "الطلب غير موجود": "Order not found",
+  "مفيش طلب بالرقم ده، يمكن يكون اتحذف أو الرابط غلط.": "There is no order with this number; it may have been removed or the link is wrong.",
 
   // misc
   "الطبق غير موجود": "Dish not found",

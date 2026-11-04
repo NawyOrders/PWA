@@ -37,6 +37,16 @@ export type OrderLine = {
   price: number;
 };
 
+export type OrderItem = {
+  productId: string;
+  name: string;
+  qty: number;
+  price: number;
+  size?: string;
+  extras?: string[];
+  note?: string;
+};
+
 export type Order = {
   id: string;
   status: "preparing" | "delivered";
@@ -46,6 +56,12 @@ export type Order = {
   total: number;
   image: string;
   eta?: string;
+  items?: OrderItem[];
+  paymentMethod?: PaymentMethodId;
+  fulfilment?: "delivery" | "pickup";
+  branchId?: string;
+  address?: string;
+  createdAt?: number;
 };
 
 export type AppNotification = {
@@ -305,6 +321,14 @@ export const productsById = Object.fromEntries(products.map((product) => [produc
 
 export const popularProducts = products.filter((product) => product.popular);
 
+export const categoryCounts: Record<string, number> = products.reduce<Record<string, number>>(
+  (counts, product) => {
+    counts[product.category] = (counts[product.category] ?? 0) + 1;
+    return counts;
+  },
+  {},
+);
+
 export const homeCategoryOrder: CategoryId[] = ["burger", "pizza", "tost", "chicken", "drinks"];
 
 export const desktopCategoryOrder: CategoryId[] = [
@@ -315,6 +339,17 @@ export const desktopCategoryOrder: CategoryId[] = [
   "drinks",
   "appetizers",
   "desserts",
+];
+
+/** Two-column order used by the mobile category catalogue. */
+export const catalogCategoryOrder: CategoryId[] = [
+  "burger",
+  "pizza",
+  "appetizers",
+  "desserts",
+  "chicken",
+  "drinks",
+  "tost",
 ];
 
 export const menuFilters = ["الكل", "برجر لحم", "وجبات العائلة", "اطعمة مميزة", "وجبات اطفال"];
@@ -350,9 +385,18 @@ export const orders: Order[] = [
     title: "كومبو برجر لحم",
     date: "اليوم، 27 أكتوبر 2026 • 8:15 م",
     description: "2 برجر لحم + بطاطس + 2 كولا",
-    total: 320,
+    total: 365,
     image: "/images/burger.webp",
-    eta: "وقت الوصول المتوقع: 25 - 35 دقيقة",
+    eta: "25 - 35 دقيقة",
+    paymentMethod: "instapay",
+    fulfilment: "delivery",
+    address: "زهراء المعادي، المعراج العلوي",
+    items: [
+      { productId: "beef-burger", name: "برجر لحم", qty: 2, price: 120, size: "ساندوتش فقط" },
+      { productId: "fries", name: "بطاطس مقرمشة", qty: 1, price: 45 },
+      { productId: "cola", name: "كوب كولا", qty: 2, price: 25 },
+    ],
+    createdAt: Date.UTC(2026, 9, 27, 20, 15),
   },
   {
     id: "10193",
@@ -360,17 +404,16 @@ export const orders: Order[] = [
     title: "بيتزا بيبروني",
     date: "24 أكتوبر 2026 • 7:30 م",
     description: "1 بيتزا كبيرة + 2 كولا",
-    total: 285,
+    total: 260,
     image: "/images/pizza.webp",
-  },
-  {
-    id: "10193",
-    status: "delivered",
-    title: "بيتزا بيبروني",
-    date: "24 أكتوبر 2026 • 7:30 م",
-    description: "1 بيتزا كبيرة + 2 كولا",
-    total: 285,
-    image: "/images/pizza.webp",
+    paymentMethod: "cash",
+    fulfilment: "delivery",
+    address: "زهراء المعادي، المعراج العلوي",
+    items: [
+      { productId: "pizza-pepperoni", name: "بيتزا بيبروني", qty: 1, price: 180 },
+      { productId: "cola", name: "كوب كولا", qty: 2, price: 25 },
+    ],
+    createdAt: Date.UTC(2026, 9, 24, 19, 30),
   },
   {
     id: "10136",
@@ -378,8 +421,17 @@ export const orders: Order[] = [
     title: "وجبة فرايد تشيكن",
     date: "20 أكتوبر 2026 • 9:00 م",
     description: "4 قطع دجاج + بطاطس + كول سلو",
-    total: 240,
+    total: 235,
     image: "/images/chicken.webp",
+    paymentMethod: "cash",
+    fulfilment: "pickup",
+    branchId: "nakheel",
+    address: "فرع النخيل",
+    items: [
+      { productId: "chicken-bucket", name: "وجبة فرايد تشيكن", qty: 1, price: 160 },
+      { productId: "fries", name: "بطاطس مقرمشة", qty: 1, price: 45 },
+    ],
+    createdAt: Date.UTC(2026, 9, 20, 21, 0),
   },
 ];
 
@@ -417,15 +469,6 @@ export const notifications: AppNotification[] = [
   },
   {
     id: "n4",
-    title: "التوصيل علينا",
-    body: "استمتع بتوصيل مجاني على طلبك الجاي من 200 جنيه.",
-    time: "أمس، 12:00 ظهراً",
-    group: "yesterday",
-    unread: false,
-    icon: "free",
-  },
-  {
-    id: "n5",
     title: "التوصيل علينا",
     body: "استمتع بتوصيل مجاني على طلبك الجاي من 200 جنيه.",
     time: "أمس، 12:00 ظهراً",
@@ -501,8 +544,16 @@ export const paymentMethods = [
 
 export type PaymentMethodId = (typeof paymentMethods)[number]["id"];
 
+export const paymentMethodLabels = Object.fromEntries(
+  paymentMethods.map((method) => [method.id, method.title]),
+) as Record<PaymentMethodId, string>;
+
 export function formatPrice(value: number) {
   return value.toLocaleString("en-US");
+}
+
+export function toArabicDigits(value: string | number) {
+  return String(value).replace(/[0-9]/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[Number(digit)]);
 }
 
 export const deliveryFee = 30;

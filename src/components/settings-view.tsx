@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { Breadcrumbs, MobilePageHeader } from "@/components/ui";
+import { useDialogFocus } from "@/hooks/use-dialog-focus";
+import { storageKeys } from "@/lib/storage";
 
 type Row = {
   id: string;
@@ -41,20 +43,24 @@ export function SettingsView() {
   const { logout, lang, setLang, t } = useApp();
   const [notificationsOn, setNotificationsOn] = useState(true);
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const logoutDialogRef = useDialogFocus<HTMLDivElement>(logoutOpen, () => setLogoutOpen(false));
 
   useEffect(() => {
-    if (!logoutOpen) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setLogoutOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previous;
-    };
-  }, [logoutOpen]);
+    try {
+      const stored = window.localStorage.getItem(storageKeys.notifications);
+      if (stored) setNotificationsOn(stored === "on");
+    } catch {}
+  }, []);
+
+  const toggleNotifications = () => {
+    setNotificationsOn((value) => {
+      const next = !value;
+      try {
+        window.localStorage.setItem(storageKeys.notifications, next ? "on" : "off");
+      } catch {}
+      return next;
+    });
+  };
 
   const confirmLogout = () => {
     setLogoutOpen(false);
@@ -123,7 +129,7 @@ export function SettingsView() {
                 role="switch"
                 aria-checked={notificationsOn}
                 aria-label={t("تشغيل الإشعارات")}
-                onClick={() => setNotificationsOn((value) => !value)}
+                onClick={toggleNotifications}
                 className={`relative h-8 w-14 shrink-0 rounded-full p-1 transition ${
                   notificationsOn ? "bg-brand" : "bg-line"
                 }`}
@@ -136,7 +142,7 @@ export function SettingsView() {
               </button>
             </div>
 
-            <div className="mt-2.5 space-y-2.5">
+            <div className="motion-stagger mt-2.5 space-y-2.5">
               {rows.map((row) => {
                 const Icon = row.icon;
                 return (
@@ -173,7 +179,9 @@ export function SettingsView() {
           onClick={() => setLogoutOpen(false)}
         >
           <div
+            ref={logoutDialogRef}
             role="dialog"
+            tabIndex={-1}
             aria-modal="true"
             aria-labelledby="logout-title"
             onClick={(event) => event.stopPropagation()}

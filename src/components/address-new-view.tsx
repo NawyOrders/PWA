@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   Crosshair,
   Home,
+  LoaderCircle,
   MapPin,
   MapPinOff,
   Navigation,
@@ -21,9 +22,12 @@ import {
 } from "lucide-react";
 import { LeafletMap, type MapMarker } from "@/components/leaflet-map";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs } from "@/components/ui";
-import { addressKinds, savedAddresses, type AddressKind, type SavedAddress } from "@/lib/account-data";
+import { BackButton, Breadcrumbs } from "@/components/ui";
+import { useDialogFocus } from "@/hooks/use-dialog-focus";
+import { useMapPlaces, useReversePlaceName } from "@/hooks/use-map-places";
+import { addressKinds, type AddressKind, type SavedAddress } from "@/lib/account-data";
 import { areaName, distanceKm, formatCoords, type LatLng } from "@/lib/geo";
+import type { Place } from "@/lib/place-search";
 
 const ALEXANDRIA: [number, number] = [31.1861, 29.9336];
 
@@ -47,43 +51,24 @@ export function AddressNewView() {
   const [kind, setKind] = useState<AddressKind>("home");
   const [customLabel, setCustomLabel] = useState("");
   const [detail, setDetail] = useState("");
-  const skipNextPick = useRef(false);
+  const formRef = useDialogFocus<HTMLDivElement>(mode === "form", () => setMode("list"));
 
   const selected = addresses.find((item) => item.id === selectedAddressId) ?? null;
-  const pinLabel = pin ? areaName(pin, lang) : "";
+  const pinLabel = useReversePlaceName(pin ?? { lat: center[0], lng: center[1] }, lang, pin ? areaName(pin, lang) : "", Boolean(pin));
+  /** Saved addresses carry their own area and street, so never overwrite them with a geocoder guess. */
+  const locationLabel = selected ? [selected.area, selected.detail].filter(Boolean).map((part) => t(part)).join("، ") : pinLabel;
 
   useEffect(() => {
     if (!selected) return;
-    const locationChanged = selected.lat !== center[0] || selected.lng !== center[1];
-    if (locationChanged) {
-      skipNextPick.current = true;
-      setCenter([selected.lat, selected.lng]);
-    }
+    setCenter([selected.lat, selected.lng]);
     setPin((current) =>
       current?.lat === selected.lat && current.lng === selected.lng
         ? current
         : { lat: selected.lat, lng: selected.lng },
     );
-  }, [selected, center]);
+  }, [selected]);
 
-  useEffect(() => {
-    if (mode !== "form") return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMode("list");
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [mode]);
-  const suggestions = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    if (!term) return [];
-    return savedAddresses.filter(
-      (item) =>
-        [item.title, item.area, item.detail].some(
-          (value) => value.toLowerCase().includes(term) || t(value).toLowerCase().includes(term),
-        ),
-    );
-  }, [query, lang, t]);
+  const { places: suggestions, searchNow, searching } = useMapPlaces(query, addresses, lang, t);
 
   const markers = useMemo<MapMarker[]>(
     () =>
@@ -99,21 +84,28 @@ export function AddressNewView() {
   );
 
   const handlePick = (point: LatLng) => {
-    if (skipNextPick.current) {
-      skipNextPick.current = false;
-      return;
-    }
     setPin(point);
     setCenter([point.lat, point.lng]);
     if (selected && distanceKm(selected, point) > 0.03) selectAddress(null);
   };
 
   const pickAddress = (item: SavedAddress) => {
-    skipNextPick.current = true;
     setPin({ lat: item.lat, lng: item.lng });
     selectAddress(item.id);
     setMode("list");
     setCenter([item.lat, item.lng]);
+  };
+
+  const pickPlace = (place: Place) => {
+    const savedAddress = place.addressId ? addresses.find((item) => item.id === place.addressId) : undefined;
+    if (savedAddress) {
+      pickAddress(savedAddress);
+      return;
+    }
+    selectAddress(null);
+    setPin({ lat: place.lat, lng: place.lng });
+    setCenter([place.lat, place.lng]);
+    setQuery("");
   };
 
   const useMyLocation = () => {
@@ -125,7 +117,6 @@ export function AddressNewView() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setLocating(false);
-        skipNextPick.current = true;
         selectAddress(null);
         setPin({ lat: position.coords.latitude, lng: position.coords.longitude });
         setCenter([position.coords.latitude, position.coords.longitude]);
@@ -139,12 +130,12 @@ export function AddressNewView() {
     );
   };
 
-  const runSearch = () => {
+  const runSearch = async () => {
     const term = query.trim().toLowerCase();
     if (!term) return;
-    const match = suggestions[0];
+    const match = suggestions[0] ?? (await searchNow(query))[0];
     if (match) {
-      pickAddress(match);
+      pickPlace(match);
       toast(t("تم تحديد الموقع على الخريطة"), "info");
       return;
     }
@@ -156,10 +147,7 @@ export function AddressNewView() {
     setCustomLabel("");
     setDetail("");
     setMode("form");
-    if (!pin) {
-      skipNextPick.current = false;
-      setPin({ lat: center[0], lng: center[1] });
-    }
+    if (!pin) setPin({ lat: center[0], lng: center[1] });
   };
 
   const confirmPickedAddress = () => {
@@ -173,8 +161,8 @@ export function AddressNewView() {
     addAddress({
       id: `addr-${Date.now()}`,
       title: label,
-      detail: detail.trim() || areaName(point, lang),
-      area: areaName(point, lang),
+      detail: detail.trim() || pinLabel || areaName(point, lang),
+      area: pinLabel || areaName(point, lang),
       kind,
       lat: point.lat,
       lng: point.lng,
@@ -254,7 +242,13 @@ export function AddressNewView() {
             ) : null}
 
             <div className="pointer-events-none absolute inset-x-0 top-0 z-[600] px-4 pt-5">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <BackButton
+                  href="/addresses"
+                  tone="overlay"
+                  className="pointer-events-auto lg:hidden"
+                />
+
                 <button
                   type="button"
                   onClick={useMyLocation}
@@ -264,7 +258,7 @@ export function AddressNewView() {
                   <Crosshair className={`size-5 ${locating ? "animate-pulse-soft" : ""}`} strokeWidth={1.9} />
                 </button>
 
-                <div className="pointer-events-auto relative flex-1 max-w-sm">
+                <div className="pointer-events-auto relative min-w-0 flex-1 basis-48 max-w-sm">
                   <div className="relative">
                     <Search className="pointer-events-none absolute end-4 top-1/2 size-4 -translate-y-1/2 text-ink/60" />
                     <input
@@ -281,26 +275,32 @@ export function AddressNewView() {
                       className="h-12 w-full rounded-full border-0 bg-cream/95 pe-11 ps-4 text-sm font-semibold text-ink shadow-pop outline-none backdrop-blur placeholder:text-muted"
                     />
                   </div>
-                  {suggestions.length > 0 ? (
-                    <ul className="mt-2 overflow-hidden rounded-2xl bg-white shadow-pop">
+                  {suggestions.length > 0 || searching || query.trim().length >= 3 ? (
+                    <ul className="mt-2 max-h-60 overflow-y-auto rounded-2xl bg-white shadow-pop">
                       {suggestions.map((item) => {
-                        const Icon = kindIcon[item.kind];
+                        const savedAddress = item.addressId ? addresses.find((address) => address.id === item.addressId) : undefined;
+                        const Icon = savedAddress ? kindIcon[savedAddress.kind] : MapPin;
                         return (
-                          <li key={item.id}>
+                          <li key={item.key}>
                             <button
                               type="button"
-                              onClick={() => pickAddress(item)}
+                              onClick={() => pickPlace(item)}
                               className="flex w-full items-center gap-3 px-4 py-3 text-start transition hover:bg-cream-50"
                             >
                               <Icon className="size-4 shrink-0 text-brand" strokeWidth={1.9} />
                               <span className="min-w-0">
                                 <span className="block truncate text-xs font-bold">{t(item.title)}</span>
-                                <span className="block truncate text-[10px] text-muted">{t(item.area)}</span>
+                                <span className="block truncate text-[10px] text-muted">{t(item.subtitle)}</span>
                               </span>
                             </button>
                           </li>
                         );
                       })}
+                      {suggestions.length === 0 ? (
+                        <li className="flex justify-center px-4 py-3 text-[11px] font-semibold text-muted">
+                          {searching ? <LoaderCircle className="size-4 animate-spin" aria-label={t("البحث")} /> : t("مفيش نتيجة مطابقة")}
+                        </li>
+                      ) : null}
                     </ul>
                   ) : null}
                 </div>
@@ -334,12 +334,14 @@ export function AddressNewView() {
                   <span className="grid size-8 place-items-center rounded-full bg-brand text-white">
                     <Navigation className="size-4" strokeWidth={2} />
                   </span>
-                  <span className="text-sm font-extrabold text-ink">{pinLabel}</span>
+                  <span className="text-sm font-extrabold text-ink">{locationLabel}</span>
                 </span>
               </div>
             ) : null}
 
             <div
+              ref={formRef}
+              tabIndex={mode === "form" ? -1 : undefined}
               role={mode === "form" ? "dialog" : undefined}
               aria-modal={mode === "form" ? true : undefined}
               aria-labelledby={mode === "form" ? "address-form-title" : undefined}
@@ -360,7 +362,7 @@ export function AddressNewView() {
                       <p className="mt-1 text-sm text-muted">{t("اضف الان")}</p>
                     </div>
                   ) : (
-                    <ul className="mt-4 space-y-3">
+                    <ul className="motion-stagger mt-4 space-y-3">
                       {addresses.map((item) => {
                         const Icon = kindIcon[item.kind];
                         const active = item.id === selectedAddressId;
@@ -438,7 +440,7 @@ export function AddressNewView() {
 
                   <div className="mt-4 flex items-center gap-3 rounded-2xl bg-cream px-4 py-3.5">
                     <span className="min-w-0 flex-1 text-end">
-                      <span className="block truncate text-sm font-extrabold">{pinLabel || t("موقع الخريطة")}</span>
+                      <span className="block truncate text-sm font-extrabold">{locationLabel || t("موقع الخريطة")}</span>
                       <span className="mt-0.5 block text-[11px] text-muted" dir="ltr">
                         {pin ? formatCoords(pin) : formatCoords({ lat: center[0], lng: center[1] })}
                       </span>
@@ -448,7 +450,7 @@ export function AddressNewView() {
                     </span>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="motion-stagger mt-4 grid grid-cols-2 gap-3">
                     {addressKinds.map((item) => {
                       const Icon = item.icon === "home" ? Home : item.icon === "work" ? Briefcase : item.icon === "family" ? Store : MapPin;
                       const active = kind === item.id;

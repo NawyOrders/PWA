@@ -10,6 +10,23 @@ const CORE = [
   "/images/banner.webp",
 ];
 
+// Account and checkout pages must never be written to the HTTP cache: a shared
+// device could otherwise see a previous customer's session shell after logout.
+const PRIVATE_PREFIXES = [
+  "/profile",
+  "/checkout",
+  "/orders",
+  "/addresses",
+  "/settings",
+  "/notifications",
+  "/favorites",
+  "/login",
+];
+
+function isPrivatePath(pathname) {
+  return PRIVATE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
@@ -40,8 +57,10 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(VERSION).then((cache) => cache.put(request, copy));
+          if (response.ok && !isPrivatePath(url.pathname)) {
+            const copy = response.clone();
+            caches.open(VERSION).then((cache) => cache.put(request, copy));
+          }
           return response;
         })
         .catch(async () => {

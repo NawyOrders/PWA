@@ -6,16 +6,16 @@ import { useState } from "react";
 import { ChevronLeft, LayoutGrid, SlidersHorizontal } from "lucide-react";
 import {
   categories,
+  catalogCategoryOrder,
   categoriesById,
+  categoryCounts,
   desktopCategoryOrder,
-  homeCategoryOrder,
   products,
   type CategoryId,
 } from "@/lib/data";
 import { StoreHeader } from "@/components/store-header";
-import { MobilePageHeader, SectionTitle } from "@/components/ui";
+import { MobilePageHeader } from "@/components/ui";
 import { ProductCard } from "@/components/product-card";
-import { MenuRow } from "@/components/menu-row";
 import { useApp } from "@/components/providers";
 
 const chips = ["الكل", "الأكثر طلباً", "العروض"];
@@ -33,7 +33,9 @@ export function CategoriesView() {
   const [sort, setSort] = useState("popular");
 
   const category = categoriesById[categoryId];
-  let items = products.filter((product) => product.category === categoryId);
+  const categoryItems = products.filter((product) => product.category === categoryId);
+  const categoryTotal = categoryItems.length;
+  let items = categoryItems;
 
   if (chip === "الأكثر طلباً") items = items.filter((product) => product.popular);
   if (chip === "العروض") items = items.filter((product) => product.offer);
@@ -66,49 +68,41 @@ export function CategoriesView() {
             </span>
             {t("الأقسام")}
           </h1>
-          <button
-            type="button"
-            className="text-xs font-bold text-brand lg:hidden"
-            onClick={() => setCategoryId("burger")}
-          >
-            {t("عرض الكل")}
-          </button>
           <Link href="/categories" className="hidden text-sm font-bold text-brand hover:text-brand-dark lg:block">
-            {t("عرض كل الأصناف (12)")}
+            {t("عرض كل الأصناف ({count})", { count: products.length })}
           </Link>
         </div>
 
-        <div className="hide-scrollbar -mx-4 mt-4 flex gap-2.5 overflow-x-auto px-4 pb-1 lg:hidden">
-          {homeCategoryOrder.map((id) => {
+        <div className="motion-stagger mt-4 grid grid-cols-2 gap-3 lg:hidden">
+          {catalogCategoryOrder.map((id) => {
             const item = categoriesById[id];
-            const active = id === categoryId;
             return (
-              <button
+              <Link
                 key={id}
-                type="button"
-                onClick={() => {
-                  setCategoryId(id);
-                  setChip("الكل");
-                }}
-                className="flex w-[60px] shrink-0 flex-col items-center gap-2 text-center"
-                aria-pressed={active}
+                href={`/categories/${id}`}
+                className="group flex flex-col items-center rounded-[18px] bg-white px-3 py-4 text-center shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.98]"
               >
-                <span
-                  className={`grid size-[60px] place-items-center rounded-full border-2 bg-white transition ${
-                    active ? "border-brand shadow-[0_10px_24px_-14px_rgba(232,69,44,0.7)]" : "border-[#ece0d4]"
-                  }`}
-                >
+                <span className="grid size-[68px] place-items-center rounded-full bg-peach/80 transition-colors duration-300 group-hover:bg-brand-soft">
                   <span className="relative size-12 overflow-hidden rounded-full">
-                    <Image src={item.image} alt={t(item.name)} fill sizes="48px" className="object-cover" />
+                    <Image
+                      src={item.image}
+                      alt={t(item.name)}
+                      fill
+                      sizes="48px"
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
                   </span>
                 </span>
-                <span className={`whitespace-nowrap text-[10px] font-bold ${active ? "text-brand" : "text-ink"}`}>{t(item.name)}</span>
-              </button>
+                <span className="mt-2.5 text-[15px] font-extrabold text-ink">{t(item.name)}</span>
+                <span className="mt-1 text-[11px] font-semibold text-muted">
+                  {categoryCounts[id] ?? 0} {t("صنف")}
+                </span>
+              </Link>
             );
           })}
         </div>
 
-        <div className="mt-5 hidden grid-cols-7 gap-3 lg:grid">
+        <div className="motion-stagger mt-5 hidden grid-cols-7 gap-3 lg:grid">
           {desktopCategoryOrder.map((id) => {
             const item = categoriesById[id];
             const active = id === categoryId;
@@ -121,15 +115,23 @@ export function CategoriesView() {
                   setChip("الكل");
                 }}
                 aria-pressed={active}
-                className={`flex flex-col items-center rounded-2xl border-2 bg-white px-2 py-4 text-center transition hover:-translate-y-1 hover:shadow-soft ${
-                  active ? "border-brand" : "border-transparent"
+                className={`group flex flex-col items-center rounded-[18px] bg-white px-3 py-4 text-center shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.98] ${
+                  active ? "ring-2 ring-inset ring-brand/60" : ""
                 }`}
               >
-                <span className="relative size-14 overflow-hidden rounded-full bg-cream-50">
-                  <Image src={item.image} alt={t(item.name)} fill sizes="56px" className="object-cover" />
+                <span className="grid size-[68px] place-items-center rounded-full bg-peach/80 transition-colors duration-300 group-hover:bg-brand-soft">
+                  <span className="relative size-12 overflow-hidden rounded-full">
+                    <Image
+                      src={item.image}
+                      alt={t(item.name)}
+                      fill
+                      sizes="48px"
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                  </span>
                 </span>
-                <span className={`mt-3 text-sm font-bold ${active ? "text-brand" : "text-ink"}`}>{t(item.name)}</span>
-                <span className="mt-0.5 text-[10px] text-muted">{item.count} {t("صنف")}</span>
+                <span className={`mt-2.5 text-sm font-extrabold ${active ? "text-brand" : "text-ink"}`}>{t(item.name)}</span>
+                <span className="mt-1 text-[10px] font-semibold text-muted">{categoryCounts[id] ?? 0} {t("صنف")}</span>
               </button>
             );
           })}
@@ -171,7 +173,7 @@ export function CategoriesView() {
                 type="button"
                 onClick={() => setChip(item)}
                 aria-pressed={chip === item}
-                className={`h-9 shrink-0 rounded-full px-4 text-xs font-bold transition ${
+                className={`motion-press h-9 shrink-0 rounded-full px-4 text-xs font-bold transition ${
                   chip === item
                     ? "border border-brand bg-white text-brand"
                     : "border border-line bg-white text-ink/70 hover:border-brand/30"
@@ -184,7 +186,7 @@ export function CategoriesView() {
           <span className="shrink-0 text-[11px] text-muted lg:hidden">{items.length} {t("أطباق")}</span>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-3 lg:mt-4 lg:grid-cols-5 lg:gap-4">
+        <div className="motion-stagger mt-4 grid grid-cols-2 gap-3 lg:mt-4 lg:grid-cols-5 lg:gap-4">
           {items.map((product) => (
             <ProductCard key={product.id} product={product} className="lg:p-2.5" />
           ))}
@@ -199,34 +201,10 @@ export function CategoriesView() {
         <p className="mt-6 hidden text-center text-xs text-muted lg:block">
           {t("عرض {count} من {total} أطباق في قسم {category}", {
             count: items.length,
-            total: items.length,
+            total: categoryTotal,
             category: t(category.name),
           })}
         </p>
-      </div>
-
-      <div className="shell mt-8 lg:hidden">
-        <SectionTitle
-          title="الأكثر طلباً"
-          icon={<span className="text-brand">🔥</span>}
-          action={{ label: "عرض الكل", href: "/categories" }}
-        />
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          {products
-            .filter((product) => product.category === categoryId)
-            .slice(0, 2)
-            .map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-        </div>
-
-        <SectionTitle title="القائمة" className="mt-7" />
-        <div className="mt-3 space-y-3">
-          {items.slice(0, 4).map((product) => (
-            <MenuRow key={product.id} product={product} />
-          ))}
-        </div>
-        {items.length === 0 ? <p className="text-center text-sm text-muted">{t("لا توجد أصناف حالياً.")}</p> : null}
       </div>
 
       <div className="shell mt-8 hidden text-center text-xs text-muted lg:block">

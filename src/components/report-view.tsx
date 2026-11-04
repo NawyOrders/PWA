@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, Send, UploadCloud } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs } from "@/components/ui";
+import { BackButton, Breadcrumbs, Button, Chip } from "@/components/ui";
 import { reportProblemTypes } from "@/lib/account-data";
+import { validateImageFile } from "@/lib/media";
 
 export function ReportView() {
   const { toast, t } = useApp();
@@ -14,9 +15,26 @@ export function ReportView() {
   const [detail, setDetail] = useState("");
   const [image, setImage] = useState<{ name: string; url: string } | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (image) URL.revokeObjectURL(image.url);
+    };
+  }, [image]);
+
   const pickImage = (file: File | undefined) => {
     if (!file) return;
-    if (image) URL.revokeObjectURL(image.url);
+    const check = validateImageFile(file);
+    if (!check.ok) {
+      toast(
+        t(
+          check.reason === "type"
+            ? "اختار صورة بصيغة JPG أو PNG."
+            : "حجم الصورة أكبر من 5 ميجا، اختار صورة أصغر.",
+        ),
+        "info",
+      );
+      return;
+    }
     setImage({ name: file.name, url: URL.createObjectURL(file) });
   };
 
@@ -26,20 +44,13 @@ export function ReportView() {
     setProblem(reportProblemTypes[0]);
     setOrderNumber("");
     setDetail("");
-    if (image) URL.revokeObjectURL(image.url);
     setImage(null);
   };
 
   return (
     <div className="pb-10">
       <div className="bg-gradient-to-b from-peach to-cream px-4 pb-2 pt-6 lg:hidden">
-        <Link
-          href="/help"
-          aria-label={t("رجوع")}
-          className="grid size-12 place-items-center rounded-full bg-white text-ink shadow-soft transition active:scale-95"
-        >
-          <ArrowRight className="size-5 ltr:rotate-180" strokeWidth={2.2} />
-        </Link>
+        <BackButton href="/help" />
         <h1 className="mt-10 text-start text-[40px] font-extrabold leading-[1.3]">
           {t("الابلاغ عن مشكلة")}
         </h1>
@@ -81,19 +92,9 @@ export function ReportView() {
                   {reportProblemTypes.map((type) => {
                     const selected = problem === type;
                     return (
-                      <button
-                        key={type}
-                        type="button"
-                        aria-pressed={selected}
-                        onClick={() => setProblem(type)}
-                        className={`h-11 rounded-full px-5 text-sm font-extrabold transition ${
-                          selected
-                            ? "bg-brand text-white shadow-[0_14px_26px_-16px_rgba(232,69,44,0.9)]"
-                            : "border border-line bg-white text-ink hover:border-brand/40"
-                        }`}
-                      >
+                      <Chip key={type} selected={selected} onClick={() => setProblem(type)}>
                         {t(type)}
-                      </button>
+                      </Chip>
                     );
                   })}
                 </div>
@@ -101,7 +102,7 @@ export function ReportView() {
 
               <div className="card mt-4 p-5 lg:rounded-none lg:bg-transparent lg:p-0 lg:shadow-none">
                 <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
-                  <div className="space-y-5">
+                  <div className="motion-stagger space-y-5">
                     <div>
                       <label htmlFor="report-order" className="block text-sm font-extrabold">
                         {t("رقم الطلب")}
@@ -112,7 +113,7 @@ export function ReportView() {
                         onChange={(event) => setOrderNumber(event.target.value)}
                         placeholder={t("مثال 165165#")}
                         inputMode="numeric"
-                        className="field mt-2.5 border-[#8a7466] bg-white text-sm font-bold"
+                        className="field mt-2.5 border-line-strong bg-white text-sm font-bold"
                       />
                     </div>
 
@@ -126,7 +127,7 @@ export function ReportView() {
                         maxLength={500}
                         onChange={(event) => setDetail(event.target.value)}
                         placeholder={t("اكتب تفاصيل المشكلة هنا...")}
-                        className="field mt-2.5 min-h-32 resize-none border-[#8a7466] bg-white text-sm leading-7"
+                        className="field mt-2.5 min-h-32 resize-none border-line-strong bg-white text-sm leading-7"
                       />
                       <p className="mt-2 text-xs text-muted">{detail.length}/500</p>
                     </div>
@@ -134,10 +135,10 @@ export function ReportView() {
 
                   <div>
                     <p className="text-sm font-extrabold">{t("صورة توضيحية (اختياري)")}</p>
-                    <label className="mt-2.5 flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-[#8a7466]/60 bg-peach px-4 py-8 text-center transition hover:border-brand/50">
+                    <label className="mt-2.5 flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-line-strong/60 bg-peach px-4 py-8 text-center transition hover:border-brand/50">
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,image/png,image/webp"
                         className="hidden"
                         onChange={(event) => pickImage(event.target.files?.[0])}
                       />
@@ -161,10 +162,10 @@ export function ReportView() {
                 </div>
               </div>
 
-              <button type="submit" className="btn-brand mt-6 flex h-16 w-full rounded-[24px] text-base lg:mt-8">
+              <Button type="submit" size="lg" block className="mt-6 lg:mt-8">
                 {t("ارسال ابلاغ")}
                 <Send className="size-5 shrink-0 rtl:rotate-180" strokeWidth={2.1} />
-              </button>
+              </Button>
             </form>
           </div>
         </div>

@@ -4,19 +4,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bike, MapPin, PackageCheck } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { CheckoutShell } from "@/components/ui";
+import { CheckoutShell, Button } from "@/components/ui";
 import { branches, deliveryFee, formatPrice, user } from "@/lib/data";
 
 export function PickupView() {
   const router = useRouter();
-  const { fulfilment, setFulfilment, subtotal, count, t, lang, addresses, selectedAddressId } = useApp();
-  const branch = branches[0];
+  const { fulfilment, setFulfilment, subtotal, count, t, lang, addresses, selectedAddressId, selectedBranchId, coupon } = useApp();
+  const branch = branches.find((item) => item.id === selectedBranchId) ?? branches[0];
   const selectedAddress = addresses.find((address) => address.id === selectedAddressId) ?? null;
   const deliveryAddress = selectedAddress
     ? `${t(selectedAddress.area)}${lang === "ar" ? "، " : ", "}${t(selectedAddress.detail)}`
     : t(user.fullAddress);
   const fee = fulfilment === "delivery" && subtotal > 0 ? deliveryFee : 0;
-  const total = subtotal + fee;
+  const discount = coupon ? Math.min(Math.round(subtotal * 0.2), 50) : 0;
+  const total = Math.max(0, subtotal - discount + fee);
 
   function confirmFulfilment() {
     router.push(fulfilment === "delivery" ? "/checkout/delivery" : "/checkout/branch");
@@ -55,14 +56,14 @@ export function PickupView() {
       ]}
       mobileTitle="طريقة الاستلام"
       main={
-        <div className="space-y-4 pb-28 lg:pb-0">
+        <div className="motion-stagger space-y-4 pb-28 lg:pb-0">
           <section className="card p-4 sm:p-5 lg:p-6">
             <h2 className="text-base font-extrabold lg:text-lg">{t("اختر طريقة استلام الطلب")}</h2>
             <p className="mt-2 text-[11px] leading-6 text-muted sm:text-xs">
               {t("يرجى اختيار طريقة الاستلام سواء التوصيل حتى باب المنزل أو العمل أو الاستلام من أحد فروعنا")}
             </p>
 
-            <div className="mt-5 space-y-3 sm:space-y-4" role="radiogroup" aria-label={t("اختر طريقة استلام الطلب")}>
+            <div className="motion-stagger mt-5 space-y-3 sm:space-y-4" role="radiogroup" aria-label={t("اختر طريقة استلام الطلب")}>
               {options.map((option) => {
                 const active = fulfilment === option.id;
                 const Icon = option.icon;
@@ -146,6 +147,12 @@ export function PickupView() {
                 <dt className="text-muted">{t("رسوم التوصيل")}</dt>
                 <dd className="font-bold">{formatPrice(fee)} {t("جنيه")}</dd>
               </div>
+              {discount > 0 ? (
+                <div className="flex items-center justify-between gap-4 text-success">
+                  <dt>{t("الخصم (NAWY20)")}</dt>
+                  <dd className="font-bold">- {formatPrice(discount)} {t("جنيه")}</dd>
+                </div>
+              ) : null}
               <div className="flex items-center justify-between gap-4 border-t border-line pt-3">
                 <dt className="text-sm font-extrabold sm:text-base">{t("الإجمالي")}</dt>
                 <dd className="text-lg font-extrabold text-brand sm:text-xl">{formatPrice(total)} {t("جنيه")}</dd>
@@ -156,9 +163,9 @@ export function PickupView() {
       }
       aside={
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-cream/95 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-pop backdrop-blur lg:static lg:rounded-2xl lg:border-0 lg:bg-white lg:p-4 lg:shadow-soft">
-          <button type="button" onClick={confirmFulfilment} className="btn-brand h-14 w-full text-sm sm:text-base">
+          <Button size="lg" block onClick={confirmFulfilment}>
             {t("تأكيد طريقة الاستلام")}
-          </button>
+          </Button>
           <p className="mt-2 hidden text-center text-[10px] leading-5 text-muted lg:block">
             {t("هتختار طريقة الدفع في الخطوة الجاية.")}
           </p>

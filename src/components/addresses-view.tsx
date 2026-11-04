@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
+  Building2,
   CalendarDays,
   ChevronLeft,
   Crosshair,
+  LoaderCircle,
   MapPin,
   Plus,
   Search,
@@ -16,9 +18,12 @@ import {
 import { AccountSidebar } from "@/components/account-sidebar";
 import { AddressKindIcon } from "@/components/address-icon";
 import { LeafletMap, type MapMarker } from "@/components/leaflet-map";
+import { LocationPicker } from "@/components/location-picker";
 import { useApp } from "@/components/providers";
+import { useMapPlaces } from "@/hooks/use-map-places";
 import { Breadcrumbs, DisplayPageHeader } from "@/components/ui";
 import { areaName, type LatLng } from "@/lib/geo";
+import type { Place } from "@/lib/place-search";
 
 const ALEXANDRIA: [number, number] = [31.1861, 29.9336];
 
@@ -28,6 +33,7 @@ export function AddressesView() {
   const [center, setCenter] = useState<[number, number]>(ALEXANDRIA);
   const [query, setQuery] = useState("");
   const [locating, setLocating] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const selected = addresses.find((item) => item.id === selectedAddressId) ?? null;
 
@@ -46,22 +52,27 @@ export function AddressesView() {
 
   const focus = (point: LatLng) => setCenter([point.lat, point.lng]);
 
-  const runSearch = () => {
-    const term = query.trim().toLowerCase();
-    if (!term) return;
-    const match = addresses.find(
-      (item) =>
-        item.title.toLowerCase().includes(term) ||
-        item.area.toLowerCase().includes(term) ||
-        item.detail.toLowerCase().includes(term),
-    );
-    if (match) {
-      selectAddress(match.id);
-      focus(match);
+  const { places: suggestions, searchNow, searching } = useMapPlaces(query, addresses, lang, t);
+
+  /** Saved addresses become the active delivery address; districts only move the map. */
+  const goToPlace = (place: Place) => {
+    focus({ lat: place.lat, lng: place.lng });
+    setQuery("");
+    if (place.saved && place.addressId) {
+      selectAddress(place.addressId);
       toast(t("تم تحديد الموقع على الخريطة"), "info");
       return;
     }
-    toast(t("مفيش نتيجة مطابقة، جرّب اسم منطقة تاني"), "info");
+    toast(t("تم تحريك الخريطة للمنطقة"), "info");
+  };
+
+  const runSearch = async () => {
+    const first = suggestions[0] ?? (await searchNow(query))[0];
+    if (first) {
+      goToPlace(first);
+      return;
+    }
+    if (query.trim()) toast(t("مفيش نتيجة مطابقة، جرّب اسم منطقة تاني"), "info");
   };
 
   const useMyLocation = () => {
@@ -119,10 +130,10 @@ export function AddressesView() {
         <div className="mt-4 flex flex-col-reverse gap-5 lg:mt-7 lg:flex-row lg:items-start lg:justify-end">
           <AccountSidebar active="/addresses" />
 
-          <div className="min-w-0 flex-1 space-y-4">
+          <div className="motion-stagger min-w-0 flex-1 space-y-4">
             <div className="card hidden p-5 lg:block">
               <h2 className="text-center text-lg font-extrabold">{t("عناوينك المحفوظة")}</h2>
-              <div className="mt-5 space-y-3">
+              <div className="motion-stagger mt-5 space-y-3">
                 {addresses.map((item) => {
                   const active = item.id === selectedAddressId;
                   return (
@@ -142,7 +153,10 @@ export function AddressesView() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => focus(item)}
+                        onClick={() => {
+                          selectAddress(item.id);
+                          focus(item);
+                        }}
                         className="min-w-0 flex-1 text-start"
                       >
                         <span className="block text-sm font-extrabold">{t(item.title)}</span>
@@ -169,17 +183,18 @@ export function AddressesView() {
                   );
                 })}
               </div>
-              <Link
-                href="/addresses/new"
+              <button
+                type="button"
+                onClick={() => setPickerOpen(true)}
                 className="mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#d9c8b8] text-sm font-extrabold text-ink/80 transition hover:border-brand/60 hover:text-brand"
               >
                 <Plus className="size-5" strokeWidth={2.3} />
                 {t("اضافة عنوان جديد")}
-              </Link>
+              </button>
             </div>
 
             <div className="card overflow-hidden p-3 lg:hidden">
-              <div className="space-y-3">
+              <div className="motion-stagger space-y-3">
                 {addresses.length === 0 ? (
                   <p className="px-3 py-8 text-center text-sm text-muted">{t("لا يوجد عناوين سابقة")}</p>
                 ) : (
@@ -225,13 +240,14 @@ export function AddressesView() {
                 )}
               </div>
 
-              <Link
-                href="/addresses/new"
+              <button
+                type="button"
+                onClick={() => setPickerOpen(true)}
                 className="mt-3 flex h-16 w-full items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-brand/60 bg-brand-soft/20 text-base font-extrabold text-brand"
               >
                 <Plus className="size-5" strokeWidth={2.4} />
                 {t("اضف عنوان جديد")}
-              </Link>
+              </button>
 
               <button
                 type="button"
@@ -254,7 +270,10 @@ export function AddressesView() {
                   onPick={(point) => setCenter([point.lat, point.lng])}
                   onMarkerClick={(id) => {
                     const item = addresses.find((address) => address.id === id);
-                    if (item) focus(item);
+                    if (item) {
+                      selectAddress(item.id);
+                      focus(item);
+                    }
                   }}
                 />
 
@@ -284,6 +303,34 @@ export function AddressesView() {
                         <X className="size-4" strokeWidth={2.4} />
                       </button>
                     ) : null}
+
+                    {query.trim() ? (
+                      <ul className="mt-2 max-h-56 overflow-y-auto rounded-2xl bg-white p-1 shadow-pop">
+                        {suggestions.map((item) => {
+                          const Icon = item.saved ? Building2 : MapPin;
+                          return (
+                            <li key={item.key}>
+                              <button
+                                type="button"
+                                onClick={() => goToPlace(item)}
+                                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-start transition hover:bg-cream-50"
+                              >
+                                <Icon className="size-4 shrink-0 text-brand" strokeWidth={1.9} />
+                                <span className="min-w-0">
+                                  <span className="block truncate text-xs font-bold">{t(item.title)}</span>
+                                  <span className="block truncate text-[10px] text-muted">{t(item.subtitle)}</span>
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                        {suggestions.length === 0 ? (
+                          <li className="px-3 py-2.5 text-[11px] font-semibold text-muted">
+                            {searching ? <LoaderCircle className="mx-auto size-4 animate-spin" aria-label={t("البحث")} /> : t("مفيش نتيجة مطابقة")}
+                          </li>
+                        ) : null}
+                      </ul>
+                    ) : null}
                   </div>
                 </div>
 
@@ -312,11 +359,17 @@ export function AddressesView() {
         {addresses.length === 0 ? (
           <p className="mt-6 text-center text-[11px] text-muted">
             {t("مفيش عناوين محفوظة، ")}
-            <Link href="/addresses/new" className="font-bold text-brand">
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              className="font-bold text-brand transition hover:text-brand-dark"
+            >
               {t("اضف عنوان جديد")}
-            </Link>
+            </button>
           </p>
         ) : null}
+
+        <LocationPicker open={pickerOpen} onClose={() => setPickerOpen(false)} />
       </div>
     </div>
   );

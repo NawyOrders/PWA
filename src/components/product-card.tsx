@@ -10,7 +10,7 @@ export function ProductCard({
   product,
   className = "",
   showType = false,
-  mediaClassName = "aspect-[1.18/1]",
+  mediaClassName = "aspect-[1.4/1]",
 }: {
   product: Product;
   className?: string;
@@ -21,11 +21,11 @@ export function ProductCard({
 
   return (
     <article
-      className={`group relative rounded-[26px] bg-white p-2.5 pb-3 shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop ${className}`}
+      className={`group relative flex flex-col rounded-[26px] bg-white p-2.5 pb-3 shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.99] ${className}`}
     >
       <FavoriteButton productId={product.id} className="absolute end-4 top-4 z-20 size-10" />
 
-      <Link href={`/product/${product.id}`} className="block">
+      <Link href={`/product/${product.id}`} className="flex flex-1 flex-col">
         <div className={`relative overflow-hidden rounded-[20px] bg-peach ${mediaClassName}`}>
           <Image
             src={product.image}
@@ -39,19 +39,22 @@ export function ProductCard({
               {t(product.type)}
             </span>
           ) : null}
+        </div>
+
+        <div className="mt-2 flex min-h-7 justify-start ps-1">
           {product.popular ? (
-            <div className="absolute bottom-2 start-2">
-              <HotBadge />
-            </div>
+            <HotBadge />
           ) : null}
         </div>
 
-        <h3 className="mt-3 text-center text-base font-bold leading-6 lg:text-lg">{t(product.name)}</h3>
-        <p className="mx-auto mt-1 line-2 min-h-8 max-w-[94%] text-center text-[11px] leading-4 text-muted">
+        <h3 className="mt-1.5 text-center text-base font-bold leading-6 lg:text-lg">
+          {t(product.name)}
+        </h3>
+        <p className="mx-auto mt-auto line-2 min-h-7 max-w-[94%] pt-0.5 text-center text-[11px] leading-4 text-muted">
           {t(product.description)}
         </p>
 
-        <div className="mt-2 flex min-h-11 items-center justify-start ps-1">
+        <div className="mt-1.5 flex min-h-9 items-center justify-start ps-1">
           <Price value={product.price} oldValue={product.oldPrice} compact />
         </div>
       </Link>

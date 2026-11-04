@@ -7,6 +7,7 @@ import { BottomNav } from "@/components/bottom-nav";
 import { Footer } from "@/components/footer";
 import { LoginRequiredDialog } from "@/components/login-required-dialog";
 import { useApp } from "@/components/providers";
+import { isProtectedPath, loginHref } from "@/lib/routes";
 
 const noBottomNav = [
   "/login",
@@ -17,7 +18,7 @@ const noBottomNav = [
   "/favorites",
   "/notifications",
   "/settings",
-  "/orders",
+  "/categories",
   "/profile/edit",
   "/help",
   "/about",
@@ -28,9 +29,13 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { loggedIn, ready, loginPromptOpen, openLoginPrompt, closeLoginPrompt } = useApp();
-  const restrictedProfile = pathname === "/profile" || pathname.startsWith("/profile/");
-  const hideRestrictedProfile = ready && restrictedProfile && !loggedIn;
-  const hideBottomNav = noBottomNav.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+  const protectedPath = isProtectedPath(pathname);
+  // Never paint account/checkout content before the session has been restored:
+  // a signed-out visitor would otherwise see private UI for one frame.
+  const hideProtectedPage = protectedPath && (!ready || !loggedIn);
+  const hideBottomNav =
+    noBottomNav.some((path) => pathname === path || pathname.startsWith(`${path}/`)) ||
+    pathname.startsWith("/orders/");
   const hideFooter = noFooter.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
   useEffect(() => {
@@ -38,19 +43,28 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   useEffect(() => {
-    if (ready && pathname === "/cart" && !loggedIn) openLoginPrompt();
+    if (ready && pathname === "/cart" && !loggedIn) openLoginPrompt(pathname);
   }, [loggedIn, openLoginPrompt, pathname, ready]);
 
   useEffect(() => {
-    if (ready && restrictedProfile && !loggedIn) {
-      router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+    if (ready && protectedPath && !loggedIn) {
+      router.replace(loginHref(pathname));
     }
-  }, [loggedIn, pathname, ready, restrictedProfile, router]);
+  }, [loggedIn, pathname, protectedPath, ready, router]);
 
   return (
     <>
       <Navbar />
-      <main className={hideBottomNav ? "" : "pb-24 lg:pb-0"}>{hideRestrictedProfile ? null : children}</main>
+      <main className={hideBottomNav ? "" : "pb-24 lg:pb-0"}>
+        <div
+          key={pathname}
+          className={`motion-page${hideProtectedPage ? " invisible" : ""}`}
+          aria-hidden={hideProtectedPage}
+          inert={hideProtectedPage}
+        >
+          {children}
+        </div>
+      </main>
       {hideFooter ? null : <Footer />}
       {hideBottomNav ? null : <BottomNav />}
       {loginPromptOpen ? <LoginRequiredDialog onClose={closeLoginPrompt} /> : null}

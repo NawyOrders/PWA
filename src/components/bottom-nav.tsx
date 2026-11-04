@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LayoutGrid, ShoppingCart, UserRound } from "lucide-react";
+import { ClipboardList, Home, ShoppingCart, UserRound } from "lucide-react";
 import { useApp } from "@/components/providers";
+import { loginHref } from "@/lib/routes";
 
 const items = [
   { href: "/", label: "الرئيسية", icon: Home },
-  { href: "/categories", label: "الاقسام", icon: LayoutGrid },
+  { href: "/orders", label: "طلباتي", icon: ClipboardList },
   { href: "/cart", label: "السلة", icon: ShoppingCart },
   { href: "/profile", label: "حسابي", icon: UserRound },
 ];
@@ -18,7 +19,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line/70 bg-white/97 pb-[env(safe-area-inset-bottom)] shadow-[0_-14px_40px_-28px_rgba(80,40,20,0.5)] backdrop-blur lg:hidden"
+      className="motion-nav-in fixed inset-x-0 bottom-0 z-40 border-t border-line/70 bg-white/97 pb-[env(safe-area-inset-bottom)] shadow-[0_-14px_40px_-28px_rgba(80,40,20,0.5)] backdrop-blur lg:hidden"
       aria-label={t("التنقل السفلي")}
     >
       <div className="mx-auto grid max-w-lg grid-cols-4 px-2 pb-1 pt-2.5">
@@ -26,10 +27,11 @@ export function BottomNav() {
           const active =
             item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
+          const needsLogin = !loggedIn && (item.href === "/profile" || item.href === "/orders");
           return (
             <Link
               key={item.href}
-              href={item.href === "/profile" && !loggedIn ? "/login?next=%2Fprofile" : item.href}
+              href={needsLogin ? loginHref(item.href) : item.href}
               onClick={(event) => {
                 if (item.href === "/cart" && !loggedIn) {
                   event.preventDefault();
@@ -37,19 +39,32 @@ export function BottomNav() {
                 }
               }}
               aria-current={active ? "page" : undefined}
-              className={`flex flex-col items-center gap-1.5 rounded-2xl py-1.5 text-[11px] font-semibold transition-colors ${
+              className={`group relative flex flex-col items-center gap-1.5 rounded-2xl py-1.5 text-[11px] font-semibold transition-colors ${
                 active ? "text-brand" : "text-[#8b847e]"
               }`}
             >
               <span className="relative">
-                <Icon className="size-[25px]" strokeWidth={active ? 2.4 : 1.7} />
+                <Icon
+                  className={`size-[25px] transition-transform duration-300 group-active:scale-90 ${
+                    active ? "-translate-y-0.5 scale-110" : ""
+                  }`}
+                  strokeWidth={active ? 2.4 : 1.7}
+                />
                 {item.href === "/cart" && count > 0 ? (
-                  <span className="absolute -end-2.5 -top-2 grid size-[17px] place-items-center rounded-full bg-brand text-[9px] font-bold text-white ring-2 ring-white">
+                  <span
+                    key={count}
+                    className="motion-badge-pop absolute -end-2.5 -top-2 grid size-[17px] place-items-center rounded-full bg-brand text-[9px] font-bold text-white ring-2 ring-white"
+                  >
                     {count}
                   </span>
                 ) : null}
               </span>
               {t(item.label)}
+              <span
+                className={`absolute -bottom-0.5 h-1 w-1 rounded-full bg-brand transition-all duration-300 ${
+                  active ? "scale-100 opacity-100" : "scale-0 opacity-0"
+                }`}
+              />
             </Link>
           );
         })}
