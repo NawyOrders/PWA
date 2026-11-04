@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Search, X } from "lucide-react";
 import { useApp } from "@/components/providers";
+import { LoadingIndicator } from "@/components/loading-indicator";
 
 export function SearchField({
   defaultValue = "",
@@ -21,6 +22,7 @@ export function SearchField({
   const router = useRouter();
   const { t } = useApp();
   const [value, setValue] = useState(defaultValue);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     setValue(defaultValue);
@@ -29,15 +31,18 @@ export function SearchField({
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     const query = value.trim() || t("برجر");
-    router.push(`/search?q=${encodeURIComponent(query)}`);
+    startTransition(() => {
+      router.push(`/search?q=${encodeURIComponent(query)}`);
+    });
   };
 
   return (
-    <form onSubmit={submit} role="search" className={`relative ${className}`}>
+    <form onSubmit={submit} role="search" aria-busy={isPending} className={`relative ${className}`}>
       <button
         type="submit"
         aria-label={t("بحث")}
-        className="absolute start-4 top-1/2 z-10 -translate-y-1/2 text-muted transition hover:text-brand"
+        disabled={isPending}
+        className="absolute start-4 top-1/2 z-10 -translate-y-1/2 text-muted transition hover:text-brand disabled:cursor-wait"
       >
         <Search className="size-5" />
       </button>
@@ -59,6 +64,11 @@ export function SearchField({
         >
           <X className="size-4.5" />
         </button>
+      ) : null}
+      {isPending ? (
+        <div className="fixed inset-0 z-[200] grid min-h-[100dvh] w-full place-items-center bg-cream-50">
+          <LoadingIndicator className="size-16" label={t("جارٍ البحث")} />
+        </div>
       ) : null}
     </form>
   );

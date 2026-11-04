@@ -10,7 +10,6 @@ import {
   ChevronLeft,
   Crosshair,
   Home,
-  LoaderCircle,
   MapPin,
   MapPinOff,
   Navigation,
@@ -23,6 +22,7 @@ import {
 import { LeafletMap, type MapMarker } from "@/components/leaflet-map";
 import { useApp } from "@/components/providers";
 import { BackButton, Breadcrumbs } from "@/components/ui";
+import { LoadingIndicator } from "@/components/loading-indicator";
 import { useDialogFocus } from "@/hooks/use-dialog-focus";
 import { useMapPlaces, useReversePlaceName } from "@/hooks/use-map-places";
 import { addressKinds, type AddressKind, type SavedAddress } from "@/lib/account-data";
@@ -255,7 +255,11 @@ export function AddressNewView() {
                   aria-label={t("استخدم موقعي الحالي")}
                   className="pointer-events-auto grid size-12 shrink-0 place-items-center rounded-full bg-cream text-ink shadow-pop transition active:scale-95"
                 >
-                  <Crosshair className={`size-5 ${locating ? "animate-pulse-soft" : ""}`} strokeWidth={1.9} />
+                  {locating ? (
+                    <LoadingIndicator className="size-5" label={t("جارٍ تحديد الموقع")} />
+                  ) : (
+                    <Crosshair className="size-5" strokeWidth={1.9} />
+                  )}
                 </button>
 
                 <div className="pointer-events-auto relative min-w-0 flex-1 basis-48 max-w-sm">
@@ -298,7 +302,7 @@ export function AddressNewView() {
                       })}
                       {suggestions.length === 0 ? (
                         <li className="flex justify-center px-4 py-3 text-[11px] font-semibold text-muted">
-                          {searching ? <LoaderCircle className="size-4 animate-spin" aria-label={t("البحث")} /> : t("مفيش نتيجة مطابقة")}
+                          {searching ? <LoadingIndicator className="size-4" label={t("البحث")} /> : t("مفيش نتيجة مطابقة")}
                         </li>
                       ) : null}
                     </ul>

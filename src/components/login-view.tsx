@@ -7,6 +7,7 @@ import { ArrowLeft, Check, ChevronLeft, Phone, Send, ShieldCheck } from "lucide-
 import { useApp } from "@/components/providers";
 import { BackLink, Breadcrumbs, buttonStyles } from "@/components/ui";
 import { LogoMark } from "@/components/logo";
+import { LoadingIndicator } from "@/components/loading-indicator";
 
 const OTP_LENGTH = 6;
 const RESEND_SECONDS = 45;
@@ -25,6 +26,7 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
   const [seconds, setSeconds] = useState(0);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Navigation happens only after auth has committed, so the route guard
@@ -104,6 +106,7 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
       return;
     }
     setError("");
+    setSubmitting(true);
     login();
   };
 
@@ -217,7 +220,8 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
 
         <button
           type="submit"
-          disabled={!canSubmit}
+          disabled={!canSubmit || submitting}
+          aria-busy={submitting}
           className={buttonStyles({
             variant: "brand",
             size: "lg",
@@ -225,9 +229,15 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
             className: "mt-5",
           })}
         >
-          {canSubmit ? <Check className="size-4" /> : null}
-          {t("تأكيد الكود والمتابعة")}
-          <ArrowLeft className="size-4 ltr:rotate-180" />
+          {submitting ? (
+            <LoadingIndicator className="size-6" label={t("جارٍ تسجيل الدخول")} />
+          ) : (
+            <>
+              {canSubmit ? <Check className="size-4" /> : null}
+              {t("تأكيد الكود والمتابعة")}
+              <ArrowLeft className="size-4 ltr:rotate-180" />
+            </>
+          )}
         </button>
       </form>
 

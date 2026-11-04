@@ -122,6 +122,7 @@ describe("LoginView", () => {
     await user.click(screen.getByRole("button", { name: /تأكيد الكود والمتابعة/ }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/checkout/payment"));
+    expect(screen.getByRole("status", { name: "جارٍ تسجيل الدخول" })).toBeInTheDocument();
     expect(JSON.parse(localStorage.getItem(storageKeys.auth)!)).toBe(true);
     expect(JSON.parse(localStorage.getItem(storageKeys.cart)!)).toHaveLength(3);
   });
