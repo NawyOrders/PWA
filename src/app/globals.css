@@ -202,6 +202,31 @@
     display: none;
   }
 
+  @media (min-width: 1024px) {
+    .location-picker-scrollbar {
+      scrollbar-color: #cbb6a5 #fbf3ea;
+      scrollbar-width: thin;
+    }
+
+    .location-picker-scrollbar::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .location-picker-scrollbar::-webkit-scrollbar-track {
+      background: #fbf3ea;
+    }
+
+    .location-picker-scrollbar::-webkit-scrollbar-thumb {
+      border: 3px solid #fbf3ea;
+      border-radius: 9999px;
+      background-color: #cbb6a5;
+    }
+
+    .location-picker-scrollbar::-webkit-scrollbar-thumb:hover {
+      background-color: var(--color-brand);
+    }
+  }
+
   .line-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;

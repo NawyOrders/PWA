@@ -1,6 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LocationPicker } from "@/components/location-picker";
 import { useApp } from "@/components/providers";
 import { renderApp } from "@/test/render";
@@ -10,6 +10,14 @@ vi.mock("@/components/leaflet-map", () => ({
     <div data-testid="map" aria-label={ariaLabel} data-center={center.join(",")} />
   ),
 }));
+
+beforeEach(() => {
+  vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new Error("offline"))));
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 function AddressProbe() {
   const { addresses, selectedAddressId } = useApp();
@@ -138,6 +146,44 @@ describe("LocationPicker", () => {
     });
   });
 
+  it("saves the geocoded area shown on the map instead of the offline guess", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: async () => ({
+            features: [
+              {
+                geometry: { coordinates: [31.2639, 30.0792] },
+                properties: { name: "El Sakakini", city: "Cairo", country: "Egypt" },
+              },
+            ],
+          }),
+        }),
+      ),
+    );
+    const user = userEvent.setup();
+    renderApp(<LocationPicker open onClose={vi.fn()} />);
+
+    await user.click(await screen.findByRole("button", { name: /التوصيل لمكان اخر/ }));
+    await screen.findByText("El Sakakini, Cairo, Egypt", {}, { timeout: 3000 });
+
+    await user.click(screen.getByRole("button", { name: "تأكيد العنوان" }));
+    expect(await screen.findByRole("heading", { name: "تفاصيل العنوان" })).toBeInTheDocument();
+    expect(screen.getByText("El Sakakini, Cairo, Egypt")).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("اسم العنوان"), "الشغل");
+    await user.click(screen.getByRole("button", { name: "حفظ العنوان" }));
+
+    await waitFor(() => {
+      const stored = JSON.parse(window.localStorage.getItem("nawy-addresses-v1") ?? "[]") as {
+        area: string;
+      }[];
+      expect(stored[stored.length - 1]?.area).toBe("El Sakakini, Cairo, Egypt");
+    });
+  });
+
   it("centers the map on the browser location when it is available", async () => {
     Object.defineProperty(window.navigator, "geolocation", {
       configurable: true,
@@ -212,10 +258,5 @@ describe("LocationPicker", () => {
 
     await user.type(search, "زفتة");
     expect(await screen.findByText("مفيش نتيجة مطابقة")).toBeInTheDocument();
-
-    // Districts outside the delivery range are never offered.
-    await user.clear(search);
-    await user.type(search, "المعادي");
-    expect(screen.queryByRole("button", { name: /المعادي/ })).not.toBeInTheDocument();
   });
 });

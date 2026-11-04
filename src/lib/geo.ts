@@ -59,8 +59,12 @@ export function nearestArea(point: LatLng): Area {
 
 export function areaName(point: LatLng, lang: "ar" | "en") {
   const area = nearestArea(point);
+  // A district name is only honest while the pin is actually near one.
+  if (distanceKm(point, area) > OFFLINE_LABEL_RADIUS_KM) return formatCoords(point);
   return lang === "ar" ? area.name : area.nameEn;
 }
+
+export const OFFLINE_LABEL_RADIUS_KM = 40;
 
 export function formatCoords(point: LatLng) {
   return `${point.lat.toFixed(4)},${point.lng.toFixed(4)}`;

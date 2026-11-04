@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Briefcase,
   Building2,
@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Crosshair,
   Home,
+  LoaderCircle,
   MapPin,
   Search,
   X,
@@ -17,9 +18,9 @@ import { LeafletMap } from "@/components/leaflet-map";
 import { useApp } from "@/components/providers";
 import { Chip } from "@/components/ui";
 import { useDialogFocus } from "@/hooks/use-dialog-focus";
+import { useMapPlaces, useReversePlaceName } from "@/hooks/use-map-places";
 import type { AddressKind } from "@/lib/account-data";
 import { areaName } from "@/lib/geo";
-import { searchPlaces } from "@/lib/place-search";
 
 const ALEXANDRIA: [number, number] = [31.1861, 29.9336];
 
@@ -68,7 +69,7 @@ function DetailsField({
   const filled = value.trim().length > 0;
   return (
     <label className={`block ${className}`.trim()}>
-      <span className="mb-1.5 block text-[11px] font-semibold text-muted">{label}</span>
+      <span className="mb-1.5 block text-[11px] font-semibold text-muted lg:text-ink/70">{label}</span>
       <span className="relative block">
         <input
           value={value}
@@ -104,7 +105,12 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
   const rootRef = useDialogFocus<HTMLDivElement>(open, onClose);
 
   const selected = addresses.find((item) => item.id === selectedAddressId) ?? null;
-  const regionLabel = areaName({ lat: center[0], lng: center[1] }, lang);
+  const regionLabel = useReversePlaceName(
+    { lat: center[0], lng: center[1] },
+    lang,
+    areaName({ lat: center[0], lng: center[1] }, lang),
+    open && stage !== "sheet",
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -117,10 +123,7 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const suggestions = useMemo(
-    () => searchPlaces({ query, addresses, lang, t }),
-    [addresses, lang, query, t],
-  );
+  const { places: suggestions, searchNow, searching } = useMapPlaces(query, addresses, lang, t);
 
   const close = () => {
     setStage("sheet");
@@ -163,8 +166,8 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
     });
   };
 
-  const runSearch = () => {
-    const match = suggestions[0];
+  const runSearch = async () => {
+    const match = suggestions[0] ?? (await searchNow(query))[0];
     if (match) {
       setCenter([match.lat, match.lng]);
       setQuery("");
@@ -198,8 +201,8 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
     addAddress({
       id,
       title,
-      detail: parts.join(" - ") || areaName(point, lang),
-      area: areaName(point, lang),
+      detail: parts.join(" - ") || regionLabel,
+      area: regionLabel,
       kind: type.kind,
       lat: point.lat,
       lng: point.lng,
@@ -374,7 +377,9 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
                       );
                     })}
                     {suggestions.length === 0 ? (
-                      <li className="px-4 py-3 text-[11px] font-semibold text-muted">{t("مفيش نتيجة مطابقة")}</li>
+                      <li className="flex justify-center px-4 py-3 text-[11px] font-semibold text-muted">
+                        {searching ? <LoaderCircle className="size-4 animate-spin" aria-label={t("البحث")} /> : t("مفيش نتيجة مطابقة")}
+                      </li>
                     ) : null}
                   </ul>
                 ) : null}
@@ -408,14 +413,14 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
 
       {/* Form stage */}
       {stage === "form" ? (
-        <div className="absolute inset-0 overflow-y-auto overscroll-contain bg-cream-50 lg:flex lg:items-center lg:justify-center lg:bg-ink/55 lg:backdrop-blur-sm">
+        <div className="absolute inset-0 overflow-y-auto overscroll-contain bg-cream-50 lg:flex lg:items-center lg:justify-center lg:overflow-hidden lg:bg-ink/55 lg:backdrop-blur-sm">
           <section
             role="dialog"
             aria-modal="true"
             aria-labelledby="address-details-title"
-            className="min-h-full w-full pb-8 lg:max-h-[90dvh] lg:min-h-0 lg:max-w-xl lg:overflow-y-auto lg:rounded-[28px] lg:shadow-pop"
+            className="min-h-full w-full pb-8 lg:flex lg:max-h-[90dvh] lg:min-h-0 lg:max-w-xl lg:flex-col lg:overflow-hidden lg:rounded-[28px] lg:border lg:border-line lg:bg-cream-50 lg:shadow-pop"
           >
-            <header className="sticky top-0 z-10 flex items-center justify-between bg-cream-50/95 px-4 pb-3 pt-5 backdrop-blur lg:px-6">
+            <header className="sticky top-0 z-10 flex items-center justify-between bg-cream-50/95 px-4 pb-3 pt-5 backdrop-blur lg:static lg:shrink-0 lg:border-b lg:border-line lg:bg-white lg:px-6 lg:py-4 lg:backdrop-blur-none">
               <button
                 type="button"
                 onClick={() => setStage("map")}
@@ -436,7 +441,7 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
               </button>
             </header>
 
-            <div className="px-4 lg:px-6">
+            <div className="px-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-6 lg:pb-8 location-picker-scrollbar">
               <div className="relative h-44 overflow-hidden rounded-2xl border border-line shadow-soft">
                 <LeafletMap
                   ariaLabel={t("معاينة موقع العنوان")}

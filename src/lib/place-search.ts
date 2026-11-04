@@ -1,5 +1,5 @@
 import type { SavedAddress } from "@/lib/account-data";
-import { areas, defaultCenter, distanceKm, type Area } from "@/lib/geo";
+import { areas } from "@/lib/geo";
 import type { Lang } from "@/lib/i18n";
 
 /** One searchable target on the delivery map: a saved address or a known district. */
@@ -14,22 +14,13 @@ export type Place = {
   addressId?: string;
 };
 
-/**
- * Search only offers places inside the delivery range, never a far-away city —
- * otherwise typing "Maadi" would fly the map 180 km from Alexandria.
- */
-export const RANGE_LIMIT_KM = 40;
-
-const inRangeAreas: Area[] = areas.filter(
-  (area) => distanceKm(defaultCenter, { lat: area.lat, lng: area.lng }) <= RANGE_LIMIT_KM,
-);
+export type Provider = "nominatim" | "photon";
 
 export const deliveryAreaLabel = (lang: Lang) => (lang === "ar" ? "منطقة توصيل" : "Delivery area");
 
 /**
- * Offline place search shared by every map surface (the delivery picker sheet and
- * the desktop addresses map), so both speak Arabic *and* English and both offer
- * districts as well as the customer's own saved addresses.
+ * Local place search shared by every map surface; worldwide results are added
+ * from the map geocoder in use-map-places.
  */
 export function searchPlaces({
   query,
@@ -62,7 +53,7 @@ export function searchPlaces({
       saved: true,
     }));
 
-  const fromAreas = inRangeAreas
+  const fromAreas = areas
     .filter((area) => matches(area.name) || area.nameEn.toLowerCase().includes(term))
     .map<Place>((area) => ({
       key: `area-${area.id}`,

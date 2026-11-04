@@ -73,7 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <AppProvider>
           <SiteChrome>{children}</SiteChrome>
         </AppProvider>

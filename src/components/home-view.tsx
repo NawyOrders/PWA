@@ -38,7 +38,7 @@ function PhoneMockup() {
   return (
     <div className="relative mx-auto h-[430px] w-[232px] shrink-0 rounded-[42px] border-[7px] border-[#241b16] bg-cream shadow-[0_40px_70px_-35px_rgba(70,30,15,0.55)]">
       <div className="absolute left-1/2 top-2.5 z-20 h-4 w-20 -translate-x-1/2 rounded-full bg-[#241b16]" />
-      <div className="h-full overflow-hidden rounded-[35px]">
+      <div className="absolute inset-0 overflow-hidden rounded-[35px]">
         <div className="flex items-center justify-between px-4 pt-3 text-[7px] font-bold">
           <span>9:41</span>
           <span className="flex gap-1">‖▮ ▮</span>
