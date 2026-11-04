@@ -2,102 +2,27 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
-  Building2,
   CalendarDays,
   ChevronLeft,
-  Crosshair,
-  LoaderCircle,
-  MapPin,
   Plus,
-  Search,
   Trash2,
-  X,
 } from "lucide-react";
 import { AccountSidebar } from "@/components/account-sidebar";
 import { AddressKindIcon } from "@/components/address-icon";
-import { LeafletMap, type MapMarker } from "@/components/leaflet-map";
 import { LocationPicker } from "@/components/location-picker";
 import { useApp } from "@/components/providers";
-import { useMapPlaces } from "@/hooks/use-map-places";
 import { Breadcrumbs, DisplayPageHeader } from "@/components/ui";
-import { areaName, type LatLng } from "@/lib/geo";
-import type { Place } from "@/lib/place-search";
-
-const ALEXANDRIA: [number, number] = [31.1861, 29.9336];
 
 export function AddressesView() {
   const router = useRouter();
   const { addresses, removeAddress, selectedAddressId, selectAddress, toast, t, lang } = useApp();
-  const [center, setCenter] = useState<[number, number]>(ALEXANDRIA);
-  const [query, setQuery] = useState("");
-  const [locating, setLocating] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
-
-  const selected = addresses.find((item) => item.id === selectedAddressId) ?? null;
-
-  const markers = useMemo<MapMarker[]>(
-    () =>
-      addresses.map((item) => ({
-        id: item.id,
-        lat: item.lat,
-        lng: item.lng,
-        variant: "drop",
-        glyph: item.kind === "home" || item.kind === "family" ? "home" : item.kind === "work" ? "store" : "fork",
-        active: item.id === selectedAddressId,
-      })),
-    [addresses, selectedAddressId],
-  );
-
-  const focus = (point: LatLng) => setCenter([point.lat, point.lng]);
-
-  const { places: suggestions, searchNow, searching } = useMapPlaces(query, addresses, lang, t);
-
-  /** Saved addresses become the active delivery address; districts only move the map. */
-  const goToPlace = (place: Place) => {
-    focus({ lat: place.lat, lng: place.lng });
-    setQuery("");
-    if (place.saved && place.addressId) {
-      selectAddress(place.addressId);
-      toast(t("تم تحديد الموقع على الخريطة"), "info");
-      return;
-    }
-    toast(t("تم تحريك الخريطة للمنطقة"), "info");
-  };
-
-  const runSearch = async () => {
-    const first = suggestions[0] ?? (await searchNow(query))[0];
-    if (first) {
-      goToPlace(first);
-      return;
-    }
-    if (query.trim()) toast(t("مفيش نتيجة مطابقة، جرّب اسم منطقة تاني"), "info");
-  };
-
-  const useMyLocation = () => {
-    if (!navigator.geolocation) {
-      toast(t("متصفحك مش بيدعم تحديد الموقع"), "info");
-      return;
-    }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocating(false);
-        focus({ lat: position.coords.latitude, lng: position.coords.longitude });
-        toast(t("تم تحديد موقعك الحالي على الخريطة"), "info");
-      },
-      () => {
-        setLocating(false);
-        toast(t("مقدرناش نحدد موقعك، حرك الخريطة بنفسك"), "info");
-      },
-      { timeout: 8000 },
-    );
-  };
 
   const saveChanges = () => {
     toast(t("تم حفظ التغييرات"), "info");
-    router.push("/checkout/delivery");
+    router.push("/profile");
   };
 
   return (
@@ -153,10 +78,7 @@ export function AddressesView() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          selectAddress(item.id);
-                          focus(item);
-                        }}
+                        onClick={() => selectAddress(item.id)}
                         className="min-w-0 flex-1 text-start"
                       >
                         <span className="block text-sm font-extrabold">{t(item.title)}</span>
@@ -258,101 +180,6 @@ export function AddressesView() {
               </button>
             </div>
 
-            <div className="card hidden overflow-hidden p-3 lg:block">
-              <div className="relative h-[420px] overflow-hidden rounded-[22px]">
-                <LeafletMap
-                  ariaLabel={t("خريطة العناوين المحفوظة")}
-                  center={center}
-                  zoom={13}
-                  theme="light"
-                  markers={markers}
-                  className="absolute inset-0"
-                  onPick={(point) => setCenter([point.lat, point.lng])}
-                  onMarkerClick={(id) => {
-                    const item = addresses.find((address) => address.id === id);
-                    if (item) {
-                      selectAddress(item.id);
-                      focus(item);
-                    }
-                  }}
-                />
-
-                <div className="pointer-events-none absolute inset-x-0 top-0 z-[600] p-3">
-                  <div className="pointer-events-auto relative">
-                    <Search className="pointer-events-none absolute end-4 top-1/2 size-4 -translate-y-1/2 text-muted" />
-                    <input
-                      value={query}
-                      onChange={(event) => setQuery(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") {
-                          event.preventDefault();
-                          runSearch();
-                        }
-                      }}
-                      placeholder={t("ابحث عن عنوان أو موقع")}
-                      aria-label={t("ابحث عن عنوان أو موقع")}
-                      className="h-12 w-full rounded-2xl border-0 bg-white pe-11 ps-4 text-xs font-semibold shadow-pop outline-none placeholder:text-muted focus:ring-2 focus:ring-brand/20"
-                    />
-                    {query ? (
-                      <button
-                        type="button"
-                        onClick={() => setQuery("")}
-                        aria-label={t("إلغاء")}
-                        className="absolute start-3 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-full text-muted transition hover:bg-cream hover:text-brand"
-                      >
-                        <X className="size-4" strokeWidth={2.4} />
-                      </button>
-                    ) : null}
-
-                    {query.trim() ? (
-                      <ul className="mt-2 max-h-56 overflow-y-auto rounded-2xl bg-white p-1 shadow-pop">
-                        {suggestions.map((item) => {
-                          const Icon = item.saved ? Building2 : MapPin;
-                          return (
-                            <li key={item.key}>
-                              <button
-                                type="button"
-                                onClick={() => goToPlace(item)}
-                                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-start transition hover:bg-cream-50"
-                              >
-                                <Icon className="size-4 shrink-0 text-brand" strokeWidth={1.9} />
-                                <span className="min-w-0">
-                                  <span className="block truncate text-xs font-bold">{t(item.title)}</span>
-                                  <span className="block truncate text-[10px] text-muted">{t(item.subtitle)}</span>
-                                </span>
-                              </button>
-                            </li>
-                          );
-                        })}
-                        {suggestions.length === 0 ? (
-                          <li className="px-3 py-2.5 text-[11px] font-semibold text-muted">
-                            {searching ? <LoaderCircle className="mx-auto size-4 animate-spin" aria-label={t("البحث")} /> : t("مفيش نتيجة مطابقة")}
-                          </li>
-                        ) : null}
-                      </ul>
-                    ) : null}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={useMyLocation}
-                  className="absolute bottom-[74px] start-3 z-[600] flex h-11 items-center gap-2 rounded-full bg-brand px-4 text-[11px] font-bold text-white shadow-[0_14px_26px_-14px_rgba(232,69,44,1)] transition hover:bg-brand-dark"
-                >
-                  <Crosshair className={`size-4 ${locating ? "animate-pulse-soft" : ""}`} />
-                  {t("استخدم موقعي الحالي")}
-                </button>
-
-                <div className="absolute inset-x-3 bottom-3 z-[600] flex items-center gap-2 rounded-2xl bg-white px-3.5 py-3 text-[11px] font-bold shadow-pop">
-                  <MapPin className="size-4 shrink-0 text-brand" />
-                  <span className="line-1 flex-1">
-                    {selected
-                      ? `${t(selected.area)}${lang === "ar" ? "، " : ", "}${t(selected.detail)}`
-                      : areaName({ lat: center[0], lng: center[1] }, lang)}
-                  </span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
