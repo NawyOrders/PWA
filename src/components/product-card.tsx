@@ -47,10 +47,10 @@ export function ProductCard({
           ) : null}
         </div>
 
-        <h3 className="mt-1.5 text-center text-base font-bold leading-6 lg:text-lg">
+        <h3 className="mt-1.5 text-start text-base font-bold leading-6 lg:text-lg">
           {t(product.name)}
         </h3>
-        <p className="mx-auto mt-auto line-2 min-h-7 max-w-[94%] pt-0.5 text-center text-[11px] leading-4 text-muted">
+        <p className="mt-auto line-2 min-h-7 pt-0.5 text-start text-[11px] leading-4 text-muted">
           {t(product.description)}
         </p>
 

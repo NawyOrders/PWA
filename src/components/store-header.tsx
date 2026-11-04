@@ -20,23 +20,26 @@ export function StoreHeader({
   const { t, loggedIn, profile, addresses, selectedAddressId } = useApp();
   const [pickerOpen, setPickerOpen] = useState(false);
   const firstName = profile.name.trim().split(/\s+/)[0] || user.name;
-  const selectedAddress = addresses.find((address) => address.id === selectedAddressId) ?? null;
+  const selectedAddress =
+    addresses.find((address) => address.id === selectedAddressId) ?? null;
   const location = selectedAddress ? t(selectedAddress.area) : t(user.address);
 
   const locationControl: ReactNode = (
     <>
+      <span className="grid size-11 place-items-center rounded-full bg-[#f6a723] text-white shadow-[0_12px_24px_-14px_rgba(246,167,35,0.9)] transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105 lg:size-[52px]">
+        <MapPin className="size-5 fill-white/30 lg:size-6" />
+      </span>
       <div className="text-start">
         <p className="text-[11px] text-muted">
-          {loggedIn ? t("مرحبا {name}", { name: firstName }) : t("تسجيل الدخول")}
+          {loggedIn
+            ? t("مرحبا {name}", { name: firstName })
+            : t("تسجيل الدخول")}
         </p>
         <p className="mt-0.5 flex items-center gap-1 text-[13px] font-bold text-ink lg:text-sm">
           {loggedIn ? location : t("سجل الدخول الآن")}
           <ChevronDown className="size-3.5 text-muted transition group-hover:text-brand" />
         </p>
       </div>
-      <span className="grid size-11 place-items-center rounded-full bg-[#f6a723] text-white shadow-[0_12px_24px_-14px_rgba(246,167,35,0.9)] transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105 lg:size-[52px]">
-        <MapPin className="size-5 fill-white/30 lg:size-6" />
-      </span>
     </>
   );
 
@@ -55,7 +58,10 @@ export function StoreHeader({
               {locationControl}
             </button>
           ) : (
-            <Link href={loginHref("/")} className="group flex items-center gap-2.5">
+            <Link
+              href={loginHref("/")}
+              className="group flex items-center gap-2.5"
+            >
               {locationControl}
             </Link>
           )}
