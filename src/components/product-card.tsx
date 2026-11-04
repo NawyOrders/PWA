@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Product } from "@/lib/data";
 import { useApp } from "@/components/providers";
-import { AddButton, FavoriteButton, HotBadge, Price } from "@/components/ui";
+import { AddButton, FavoriteButton, HotBadge, Price, QtyStepper } from "@/components/ui";
 
 export function ProductCard({
   product,
@@ -17,7 +17,16 @@ export function ProductCard({
   showType?: boolean;
   mediaClassName?: string;
 }) {
-  const { quickAdd, t } = useApp();
+  const { changeQty, lines, quickAdd, t } = useApp();
+  const defaultSize = product.category === "burger" ? "ساندوتش فقط" : undefined;
+  const cartLine = lines.find(
+    (line) =>
+      line.productId === product.id &&
+      line.size === defaultSize &&
+      !line.extras?.length &&
+      !line.note,
+  );
+  const hasSelectedItems = lines.length > 0;
 
   return (
     <article
@@ -50,18 +59,27 @@ export function ProductCard({
         <h3 className="mt-1.5 text-start text-base font-bold leading-6 lg:text-lg">
           {t(product.name)}
         </h3>
-        <p className="mt-auto line-2 min-h-7 pt-0.5 text-start text-[11px] leading-4 text-muted">
+        <p className="mt-1 line-2 min-h-7 pt-0.5 text-start text-[11px] leading-4 text-muted">
           {t(product.description)}
         </p>
-
-        <div className="mt-1.5 flex min-h-9 items-center justify-start ps-1">
-          <Price value={product.price} oldValue={product.oldPrice} compact />
-        </div>
       </Link>
 
-      <div className="absolute bottom-3 end-3 z-20">
-        <AddButton onClick={() => quickAdd(product.id)} />
+      <div className="mt-1.5 flex min-h-11 items-center justify-between gap-2 ps-1">
+        <Price value={product.price} oldValue={product.oldPrice} compact />
+        {!cartLine ? <AddButton onClick={() => quickAdd(product.id)} /> : null}
       </div>
+      {cartLine ? (
+        <div className="mt-1 flex min-h-11 justify-center">
+          <QtyStepper
+            value={cartLine.qty}
+            min={0}
+            onChange={(quantity) => changeQty(cartLine.key, quantity - cartLine.qty)}
+            className="gap-1 p-0.5 [&_button]:size-8 [&_span]:min-w-5 [&_span]:text-sm"
+          />
+        </div>
+      ) : hasSelectedItems ? (
+        <div className="mt-1 min-h-11" aria-hidden="true" />
+      ) : null}
     </article>
   );
 }

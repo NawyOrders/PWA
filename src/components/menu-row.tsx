@@ -4,10 +4,18 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Product } from "@/lib/data";
 import { useApp } from "@/components/providers";
-import { AddButton, FavoriteButton, Price } from "@/components/ui";
+import { AddButton, FavoriteButton, Price, QtyStepper } from "@/components/ui";
 
 export function MenuRow({ product, className = "" }: { product: Product; className?: string }) {
-  const { quickAdd, t } = useApp();
+  const { changeQty, lines, quickAdd, t } = useApp();
+  const defaultSize = product.category === "burger" ? "ساندوتش فقط" : undefined;
+  const cartLine = lines.find(
+    (line) =>
+      line.productId === product.id &&
+      line.size === defaultSize &&
+      !line.extras?.length &&
+      !line.note,
+  );
 
   return (
     <article
@@ -44,7 +52,16 @@ export function MenuRow({ product, className = "" }: { product: Product; classNa
 
       <FavoriteButton productId={product.id} className="absolute end-3 top-3 z-20 size-9 lg:size-10" />
       <div className="absolute bottom-3 end-3 z-20">
-        <AddButton onClick={() => quickAdd(product.id)} className="size-10 lg:size-11" />
+        {!cartLine ? (
+          <AddButton onClick={() => quickAdd(product.id)} className="size-10 lg:size-11" />
+        ) : (
+          <QtyStepper
+            value={cartLine.qty}
+            min={0}
+            onChange={(quantity) => changeQty(cartLine.key, quantity - cartLine.qty)}
+            className="gap-1 p-1 [&_button]:size-8 [&_span]:min-w-5 [&_span]:text-sm lg:[&_button]:size-9"
+          />
+        )}
       </div>
     </article>
   );
