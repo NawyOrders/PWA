@@ -21,6 +21,7 @@ import {
   homeCategoryOrder,
   menuFilters,
   products,
+  type CategoryId,
 } from "@/lib/data";
 import { PromoCarousel } from "@/components/promo-carousel";
 import { ProductCard } from "@/components/product-card";
@@ -110,9 +111,22 @@ function PhoneMockup() {
 export function HomeView() {
   const { t, loggedIn, orders, toast } = useApp();
   const [filter, setFilter] = useState("الكل");
+  const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>("burger");
   const [showActiveOrder, setShowActiveOrder] = useState(true);
-  const menu = filterMenu(filter);
+  const menu = selectedCategory
+    ? products.filter((product) => product.category === selectedCategory)
+    : filterMenu(filter);
   const activeOrder = orders.find((order) => order.status === "preparing");
+
+  const selectCategory = (categoryId: CategoryId) => {
+    setSelectedCategory(categoryId);
+    setFilter("الكل");
+  };
+
+  const selectMenuFilter = (value: string) => {
+    setSelectedCategory(null);
+    setFilter(value);
+  };
 
   return (
     <div className="pb-6 lg:pb-0">
@@ -134,11 +148,13 @@ export function HomeView() {
         <div className="motion-stagger hide-scrollbar -mx-4 mt-3 flex gap-2.5 overflow-x-auto px-4 pb-1 lg:hidden">
           {homeCategoryOrder.map((id) => {
             const category = categoriesById[id];
-            const active = id === "burger";
+            const active = id === selectedCategory;
             return (
-              <Link
+              <button
                 key={id}
-                href={`/categories/${id}`}
+                type="button"
+                aria-pressed={active}
+                onClick={() => selectCategory(id)}
                 className="group flex w-[60px] shrink-0 flex-col items-center gap-2 text-center"
               >
                 <span
@@ -157,7 +173,7 @@ export function HomeView() {
                   </span>
                 </span>
                 <span className={`whitespace-nowrap text-[10px] font-bold ${active ? "text-brand" : "text-ink"}`}>{t(category.name)}</span>
-              </Link>
+              </button>
             );
           })}
         </div>
@@ -165,11 +181,13 @@ export function HomeView() {
         <div className="motion-stagger mt-4 hidden grid-cols-7 gap-3 lg:grid">
           {desktopCategoryOrder.map((id) => {
             const category = categoriesById[id];
-            const active = id === "burger";
+            const active = id === selectedCategory;
             return (
-              <Link
+              <button
                 key={id}
-                href={`/categories/${id}`}
+                type="button"
+                aria-pressed={active}
+                onClick={() => selectCategory(id)}
                 className={`group flex flex-col items-center rounded-[18px] bg-white px-3 py-4 text-center shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.98] ${
                   active ? "ring-2 ring-inset ring-brand/60" : ""
                 }`}
@@ -187,7 +205,7 @@ export function HomeView() {
                 </span>
                 <span className={`mt-2.5 text-sm font-extrabold ${active ? "text-brand" : "text-ink"}`}>{t(category.name)}</span>
                 <span className="mt-1 text-[10px] font-semibold text-muted">{categoryCounts[id] ?? 0} {t("صنف")}</span>
-              </Link>
+              </button>
             );
           })}
         </div>
@@ -197,12 +215,11 @@ export function HomeView() {
         <SectionTitle
           title="الأكثر طلباً"
           icon={<Flame className="size-5 fill-brand/20 text-brand lg:size-6" />}
-          action={{ label: "عرض الكل", href: "/categories", icon: <LayoutGrid className="size-4" /> }}
           className="translate-x-1.5"
         />
         <div className="motion-stagger mt-3 grid grid-cols-2 gap-3 lg:mt-5 lg:grid-cols-5 lg:gap-4">
           {products
-            .filter((product) => product.category === "burger")
+            .filter((product) => product.category === (selectedCategory ?? "burger"))
             .sort((a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)))
             .slice(0, 4)
             .map((product) => (
@@ -245,14 +262,17 @@ export function HomeView() {
       </section>
 
       <section className="shell mt-8 lg:mt-11">
-        <SectionTitle
-          title="قائمة الطعام"
-          icon={<ListFilter className="size-5 text-brand lg:size-6" />}
-          action={{ label: "عرض الكل", href: "/categories" }}
-        />
-
-        <div className="mt-4 hidden lg:block">
-          <MenuFilters filters={menuFilters} value={filter} onChange={setFilter} />
+        <div className="motion-header flex items-center justify-between gap-3">
+          <h2 className="flex shrink-0 items-center gap-2 text-lg font-extrabold lg:text-xl">
+            <ListFilter className="size-5 text-brand lg:size-6" />
+            {t("قائمة الطعام")}
+          </h2>
+          <MenuFilters
+            filters={menuFilters}
+            value={filter}
+            onChange={selectMenuFilter}
+            className="hidden lg:flex"
+          />
         </div>
 
         <div className="motion-stagger mt-3 grid gap-3 lg:mt-5 lg:grid-cols-2 lg:gap-4">
