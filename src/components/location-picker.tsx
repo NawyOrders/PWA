@@ -69,7 +69,7 @@ function DetailsField({
   const filled = value.trim().length > 0;
   return (
     <label className={`block ${className}`.trim()}>
-      <span className="mb-1.5 block text-[11px] font-semibold text-muted">{label}</span>
+      <span className="mb-1.5 block text-[11px] font-semibold text-muted lg:text-ink/70">{label}</span>
       <span className="relative block">
         <input
           value={value}
@@ -413,14 +413,14 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
 
       {/* Form stage */}
       {stage === "form" ? (
-        <div className="absolute inset-0 overflow-y-auto overscroll-contain bg-cream-50 lg:flex lg:items-center lg:justify-center lg:bg-ink/55 lg:backdrop-blur-sm">
+        <div className="absolute inset-0 overflow-y-auto overscroll-contain bg-cream-50 lg:flex lg:items-center lg:justify-center lg:overflow-hidden lg:bg-ink/55 lg:backdrop-blur-sm">
           <section
             role="dialog"
             aria-modal="true"
             aria-labelledby="address-details-title"
-            className="min-h-full w-full pb-8 lg:max-h-[90dvh] lg:min-h-0 lg:max-w-xl lg:overflow-y-auto lg:rounded-[28px] lg:shadow-pop"
+            className="min-h-full w-full pb-8 lg:flex lg:max-h-[90dvh] lg:min-h-0 lg:max-w-xl lg:flex-col lg:overflow-hidden lg:rounded-[28px] lg:border lg:border-line lg:bg-cream-50 lg:shadow-pop"
           >
-            <header className="sticky top-0 z-10 flex items-center justify-between bg-cream-50/95 px-4 pb-3 pt-5 backdrop-blur lg:px-6">
+            <header className="sticky top-0 z-10 flex items-center justify-between bg-cream-50/95 px-4 pb-3 pt-5 backdrop-blur lg:static lg:shrink-0 lg:border-b lg:border-line lg:bg-white lg:px-6 lg:py-4 lg:backdrop-blur-none">
               <button
                 type="button"
                 onClick={() => setStage("map")}
@@ -441,7 +441,7 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
               </button>
             </header>
 
-            <div className="px-4 lg:px-6">
+            <div className="px-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-6 lg:pb-8 location-picker-scrollbar">
               <div className="relative h-44 overflow-hidden rounded-2xl border border-line shadow-soft">
                 <LeafletMap
                   ariaLabel={t("معاينة موقع العنوان")}

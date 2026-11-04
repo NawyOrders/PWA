@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { AddressesView } from "@/components/addresses-view";
@@ -40,7 +40,7 @@ function SelectionProbe() {
 const searchBox = async () => screen.findByLabelText("ابحث عن عنوان أو موقع");
 
 describe("AddressesView", () => {
-  it("shows the saved addresses and the map search together", async () => {
+  it("shows saved addresses without rendering the map", async () => {
     renderApp(
       <>
         <SelectionProbe />
@@ -50,37 +50,11 @@ describe("AddressesView", () => {
 
     expect(await screen.findByRole("heading", { name: "عناوينك المحفوظة" })).toBeInTheDocument();
     expect(screen.getByTestId("probe").textContent).toBe("home");
-    expect(await searchBox()).toBeInTheDocument();
-    expect(screen.getByTestId("map")).toBeInTheDocument();
+    expect(screen.queryByTestId("map")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("ابحث عن عنوان أو موقع")).not.toBeInTheDocument();
   });
 
-  it("searches districts on the desktop map and moves the view to the match", async () => {
-    const user = userEvent.setup();
-    renderApp(<AddressesView />);
-
-    const search = await searchBox();
-    await user.type(search, "سيدي بشر");
-
-    const option = await screen.findByRole("button", { name: /سيدي بشر/ });
-    await user.click(option);
-
-    expect(screen.getByTestId("map")).toHaveAttribute("data-center", "31.2139,29.9611");
-    expect(search).toHaveValue("");
-  });
-
-  it("accepts an English district name even though the data is Arabic", async () => {
-    const user = userEvent.setup();
-    renderApp(<AddressesView />);
-
-    const search = await searchBox();
-    await user.type(search, "karmous");
-    await user.keyboard("{Enter}");
-
-    await waitFor(() => expect(screen.getByTestId("map")).toHaveAttribute("data-center", "31.1906,29.9131"));
-    expect(search).toHaveValue("");
-  });
-
-  it("selects a saved address from the search results", async () => {
+  it("selects a saved address from the list", async () => {
     const user = userEvent.setup();
     renderApp(
       <>
@@ -89,55 +63,12 @@ describe("AddressesView", () => {
       </>,
     );
 
-    const search = await searchBox();
-    await user.type(search, "القهوة");
-
-    const list = search.parentElement?.parentElement as HTMLElement;
-    const option = await within(list).findByRole("button", { name: /القهوة/ });
-    await user.click(option);
-
+    const savedAddress = screen
+      .getAllByRole("button")
+      .find((button) => button.textContent?.includes("القهوة"));
+    expect(savedAddress).toBeDefined();
+    await user.click(savedAddress!);
     expect(screen.getByTestId("probe").textContent).toBe("cafe");
-    expect(search).toHaveValue("");
-  });
-
-  it("keeps the query and the map still when nothing matches", async () => {
-    const user = userEvent.setup();
-    renderApp(<AddressesView />);
-
-    const search = await searchBox();
-    const before = screen.getByTestId("map").getAttribute("data-center");
-
-    await user.type(search, "زفتة");
-    expect(await screen.findByText("مفيش نتيجة مطابقة")).toBeInTheDocument();
-
-    await user.keyboard("{Enter}");
-    expect(search).toHaveValue("زفتة");
-    expect(screen.getByTestId("map")).toHaveAttribute("data-center", String(before));
-  });
-
-  it("never offers a district outside the delivery range", async () => {
-    const user = userEvent.setup();
-    renderApp(<AddressesView />);
-
-    const search = await searchBox();
-    await user.type(search, "المعادي");
-    await new Promise((r) => setTimeout(r, 50));
-
-    expect(screen.queryByRole("button", { name: /المعادي/ })).not.toBeInTheDocument();
-    expect(screen.getByText("مفيش نتيجة مطابقة")).toBeInTheDocument();
-  });
-
-  it("clears the search from the inline cancel control", async () => {
-    const user = userEvent.setup();
-    renderApp(<AddressesView />);
-
-    const search = await searchBox();
-    await user.type(search, "سموحة");
-    expect(search).toHaveValue("سموحة");
-
-    await user.click(screen.getByRole("button", { name: "إلغاء" }));
-    expect(search).toHaveValue("");
-    expect(screen.queryByText("مفيش نتيجة مطابقة")).not.toBeInTheDocument();
   });
 
   it("opens the delivery picker when adding a new address", async () => {
@@ -163,42 +94,12 @@ describe("AddressesView", () => {
     });
   });
 
-  it("moves the map to the browser location when it is available", async () => {
-    Object.defineProperty(window.navigator, "geolocation", {
-      configurable: true,
-      value: {
-        getCurrentPosition: (ok: (position: { coords: { latitude: number; longitude: number } }) => void) =>
-          ok({ coords: { latitude: 31.2096, longitude: 29.9401 } }),
-      },
-    });
-
-    try {
-      const user = userEvent.setup();
-      renderApp(<AddressesView />);
-
-      await user.click(await screen.findByRole("button", { name: /استخدم موقعي الحالي/ }));
-
-      await waitFor(() => expect(screen.getByTestId("map")).toHaveAttribute("data-center", "31.2096,29.9401"));
-    } finally {
-      Reflect.deleteProperty(window.navigator, "geolocation");
-    }
-  });
-
-  it("says so when the browser cannot locate the device", async () => {
-    const user = userEvent.setup();
-    renderApp(<AddressesView />);
-
-    await user.click(await screen.findByRole("button", { name: /استخدم موقعي الحالي/ }));
-
-    expect(await screen.findByText("متصفحك مش بيدعم تحديد الموقع")).toBeInTheDocument();
-  });
-
-  it("carries the chosen address into checkout", async () => {
+  it("returns to the profile after saving address changes", async () => {
     const user = userEvent.setup();
     renderApp(<AddressesView />);
 
     await user.click(await screen.findByRole("button", { name: "حفظ التغييرات" }));
 
-    expect(push).toHaveBeenCalledWith("/checkout/delivery");
+    expect(push).toHaveBeenCalledWith("/profile");
   });
 });
