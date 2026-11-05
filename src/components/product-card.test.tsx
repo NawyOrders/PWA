@@ -66,4 +66,13 @@ describe("ProductCard cart quantity controls", () => {
       expect(getSpacer()).not.toBeInTheDocument(),
     );
   });
+
+  it("shows only the item price, with no crossed-out campaign price", () => {
+    renderApp(<ProductCard product={productsById["beef-burger"]} />);
+
+    const card = document.querySelector("article");
+    expect(card).toHaveTextContent("120");
+    expect(card?.textContent).not.toContain("150");
+    expect(screen.queryByLabelText("السعر قبل الخصم 150")).not.toBeInTheDocument();
+  });
 });

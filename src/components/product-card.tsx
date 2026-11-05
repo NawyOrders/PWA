@@ -65,7 +65,9 @@ export function ProductCard({
       </Link>
 
       <div className="mt-1.5 flex min-h-11 items-center justify-between gap-2 ps-1">
-        <Price value={product.price} oldValue={product.oldPrice} compact />
+        {/* Most Popular cards lead with the count control, so the crossed-out
+            campaign price is dropped here rather than the item price. */}
+        <Price value={product.price} compact />
         {!cartLine ? <AddButton onClick={() => quickAdd(product.id)} /> : null}
       </div>
       {cartLine ? (
