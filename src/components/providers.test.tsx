@@ -1,10 +1,49 @@
 import { act, waitFor } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useApp } from "@/components/providers";
 import { renderAppHook } from "@/test/render";
 import { seedCart, productsById, orders as seedOrders, branches, type Order } from "@/lib/data";
 import { savedAddresses } from "@/lib/account-data";
 import { storageKeys } from "@/lib/storage";
+import type { CustomerSession } from "@/lib/session";
+
+/**
+ * The provider talks to the tenant API only when a base URL is configured, so
+ * the client is mocked here and one flag switches the whole app between the
+ * offline demo and the real backend.
+ */
+const apiMode = vi.hoisted(() => ({ configured: false }));
+const api = vi.hoisted(() => ({
+  requestOtp: vi.fn(),
+  verifyOtp: vi.fn(),
+  fetchBranding: vi.fn(),
+  refreshTokens: vi.fn(),
+  revokeRefreshToken: vi.fn(),
+}));
+
+vi.mock("@/lib/api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/api")>();
+  return {
+    ...actual,
+    apiConfigured: () => apiMode.configured,
+    apiBaseUrl: () => (apiMode.configured ? "https://api.test" : ""),
+    requestOtp: api.requestOtp,
+    verifyOtp: api.verifyOtp,
+    fetchBranding: api.fetchBranding,
+    refreshTokens: api.refreshTokens,
+    revokeRefreshToken: api.revokeRefreshToken,
+  };
+});
+
+const session: CustomerSession = {
+  customerId: "customer-1",
+  phoneNumber: "+201012345678",
+  fullName: "Nawy Guest",
+  email: null,
+  accessToken: "access-token",
+  refreshToken: "refresh-token",
+  accessExpiresAt: Date.now() + 900_000,
+};
 
 async function app() {
   const hook = renderAppHook(() => useApp());
@@ -423,5 +462,180 @@ describe("AppProvider — auth and addresses", () => {
       const stored = JSON.parse(localStorage.getItem(storageKeys.addresses)!);
       expect(stored.some((address: { id: string }) => address.id === "gym")).toBe(false);
     });
+  });
+});
+
+const brandingNames = [
+  "--color-brand",
+  "--color-brand-dark",
+  "--color-brand-soft",
+  "--color-brand-contrast",
+  "--color-gold",
+  "--color-cream",
+  "--color-cream-50",
+];
+
+describe("AppProvider — tenant API session and branding", () => {
+  beforeEach(() => {
+    apiMode.configured = true;
+    api.revokeRefreshToken.mockResolvedValue(undefined);
+  });
+
+  afterEach(clearBranding);
+
+  function clearBranding() {
+    for (const name of brandingNames) document.documentElement.style.removeProperty(name);
+  }
+
+  it("keeps a real session instead of the demo flag once the API is wired", async () => {
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    const { result } = await app();
+
+    act(() => result.current.login(session));
+    expect(result.current.loggedIn).toBe(true);
+
+    await waitFor(() =>
+      expect(JSON.parse(localStorage.getItem(storageKeys.session)!)).toMatchObject({
+        accessToken: "access-token",
+      }),
+    );
+    expect(JSON.parse(localStorage.getItem(storageKeys.auth)!)).toBe(false);
+  });
+
+  it("restores a stored session and reads as signed in", async () => {
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    localStorage.setItem(storageKeys.session, JSON.stringify(session));
+
+    const { result } = await app();
+    expect(result.current.loggedIn).toBe(true);
+  });
+
+  it("drops a tampered session instead of trusting it", async () => {
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    localStorage.setItem(storageKeys.session, JSON.stringify({ accessToken: "a" }));
+
+    const { result } = await app();
+    expect(result.current.loggedIn).toBe(false);
+  });
+
+  it("revokes the refresh token when the customer signs out", async () => {
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    localStorage.setItem(storageKeys.session, JSON.stringify(session));
+
+    const { result } = await app();
+    act(() => result.current.logout());
+
+    expect(result.current.loggedIn).toBe(false);
+    await waitFor(() => expect(api.revokeRefreshToken).toHaveBeenCalledWith("refresh-token"));
+    await waitFor(() => expect(localStorage.getItem(storageKeys.session)).toBe("null"));
+  });
+
+  it("never calls revoke for a demo login", async () => {
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    localStorage.setItem(storageKeys.auth, "true");
+
+    const { result } = await app();
+    act(() => result.current.logout());
+
+    expect(api.revokeRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it("rotates a session that is about to expire", async () => {
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    api.refreshTokens.mockResolvedValue({
+      accessToken: "rotated-access",
+      tokenType: "Bearer",
+      expiresIn: 900,
+      expiresAtUtc: new Date(Date.now() + 900_000).toISOString(),
+      refreshToken: "rotated-refresh",
+      refreshTokenExpiresAtUtc: null,
+    });
+    localStorage.setItem(
+      storageKeys.session,
+      JSON.stringify({ ...session, accessExpiresAt: Date.now() + 20_000 }),
+    );
+
+    const { result } = await app();
+    await waitFor(() => expect(api.refreshTokens).toHaveBeenCalledWith("refresh-token"));
+    await waitFor(() =>
+      expect(JSON.parse(localStorage.getItem(storageKeys.session)!)).toMatchObject({
+        accessToken: "rotated-access",
+        refreshToken: "rotated-refresh",
+      }),
+    );
+    expect(result.current.loggedIn).toBe(true);
+  });
+
+  it("signs the customer out when the refresh is refused", async () => {
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    api.refreshTokens.mockRejectedValue(new Error("revoked"));
+    localStorage.setItem(
+      storageKeys.session,
+      JSON.stringify({ ...session, accessExpiresAt: Date.now() + 20_000 }),
+    );
+
+    const { result } = await app();
+    await waitFor(() => expect(api.refreshTokens).toHaveBeenCalled());
+    await waitFor(() => expect(localStorage.getItem(storageKeys.session)).toBe("null"));
+    expect(result.current.loggedIn).toBe(false);
+  });
+
+  it("leaves a healthy session alone", async () => {
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    localStorage.setItem(storageKeys.session, JSON.stringify(session));
+
+    await app();
+    expect(api.refreshTokens).not.toHaveBeenCalled();
+  });
+
+  it("applies tenant branding and caches it with its etag", async () => {
+    api.fetchBranding.mockResolvedValue({
+      notModified: false,
+      branding: { tenantId: "t-1", nameAr: "ناوي", primaryColor: "#123456" },
+      etag: '"b1"',
+    });
+
+    const { result } = await app();
+    await waitFor(() => expect(result.current.branding?.nameAr).toBe("ناوي"));
+
+    expect(api.fetchBranding).toHaveBeenCalled();
+    expect(document.documentElement.style.getPropertyValue("--color-brand")).toBe("#123456");
+    await waitFor(() =>
+      expect(JSON.parse(localStorage.getItem(storageKeys.branding)!)).toMatchObject({ etag: '"b1"' }),
+    );
+  });
+
+  it("sends the cached etag and keeps the cache on a 304", async () => {
+    localStorage.setItem(
+      storageKeys.branding,
+      JSON.stringify({ etag: '"b1"', branding: { primaryColor: "#654321", nameAr: "ناوي" } }),
+    );
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: '"b1"' });
+
+    const { result } = await app();
+    await waitFor(() => expect(api.fetchBranding).toHaveBeenCalled());
+
+    expect(api.fetchBranding.mock.calls[0]?.[0]).toEqual({ etag: '"b1"' });
+    expect(result.current.branding).toMatchObject({ primaryColor: "#654321" });
+    expect(document.documentElement.style.getPropertyValue("--color-brand")).toBe("#654321");
+  });
+
+  it("keeps working when branding cannot be loaded", async () => {
+    api.fetchBranding.mockRejectedValue(new Error("offline"));
+
+    const { result } = await app();
+    await waitFor(() => expect(api.fetchBranding).toHaveBeenCalled());
+
+    expect(result.current.ready).toBe(true);
+    expect(result.current.branding).toBeNull();
+    expect(document.documentElement.style.getPropertyValue("--color-brand")).toBe("");
+  });
+
+  it("does not call the API for branding while no base URL is set", async () => {
+    apiMode.configured = false;
+
+    const { result } = await app();
+    expect(api.fetchBranding).not.toHaveBeenCalled();
+    expect(result.current.branding).toBeNull();
   });
 });

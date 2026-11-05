@@ -310,6 +310,35 @@ const en: Record<string, string> = {
   "اكتب كود التحقق كامل": "Enter the full verification code",
   "الكود غير صحيح، جرب تاني": "Incorrect code, please try again",
 
+  // login — copyable code popup
+  "جارٍ إرسال الكود": "Sending the code...",
+  "إظهار الكود": "Show the code",
+  "كود التحقق جاهز": "Your verification code is ready",
+  "اتُبعت عن طريق {channel}": "Sent by {channel}",
+  "رسالة SMS": "an SMS message",
+  "واتساب": "WhatsApp",
+  "انسخ الكود": "Copy the code",
+  "تم نسخ كود التحقق": "Verification code copied",
+  "نسخ الكود مش متاح، اكتبه بإيدك": "Copying isn't available, type the code yourself",
+  "الكود صالح {seconds} ثانية": "The code is valid for {seconds} seconds",
+  "لصقه في خانات الكود عشان تكمل تسجيل الدخول": "Paste it into the code boxes to finish signing in",
+  "انتهت صلاحية الكود، اطلب كود جديد": "The code expired, request a new one",
+  "الاسم بالكامل": "Full name",
+  "اتركه فاضي لو مسجل قبلي": "Leave it empty if you already have an account",
+  "اكتب اسمك بالكامل": "Enter your full name",
+
+  // tenant API errors — the API's own English messages are never shown
+  "مفيش اتصال بالإنترنت، جرب تاني": "No internet connection, please try again",
+  "السيرفر بياخد وقت طويل، جرب تاني": "The server is taking too long, please try again",
+  "بيانات الطلب غير صحيحة": "The request details are invalid",
+  "طلب غير صحيح، جرب تاني": "Invalid request, please try again",
+  "انتهت الجلسة، سجّل الدخول تاني": "Your session ended, please sign in again",
+  "الكود ده اتستخدم خلاص، اطلب كود جديد": "This code was already used, request a new one",
+  "عدد محاولات زايد، استنى شوية وجرب تاني": "Too many attempts, wait a bit and try again",
+  "حصل مشكلة في السيرفر، جرب تاني": "Something went wrong on our side, please try again",
+  "رد السيرفر مش مفهوم، جرب تاني": "We couldn't read the server response, please try again",
+  "رقم الموبايل غير صحيح": "Incorrect mobile number",
+
   // account
   "تعديل الملف الشخصي": "Edit profile",
   "سجل الطلبات": "Order history",

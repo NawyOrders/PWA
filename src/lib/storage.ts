@@ -9,6 +9,8 @@ export const storageKeys = {
   cart: "nawy-cart-v1",
   favorites: "nawy-favorites-v1",
   auth: "nawy-auth-v1",
+  session: "nawy-session-v1",
+  branding: "nawy-branding-v1",
   lang: "nawy-lang-v1",
   addresses: "nawy-addresses-v1",
   selectedAddress: "nawy-selected-address-v1",

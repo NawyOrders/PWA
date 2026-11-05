@@ -27,6 +27,20 @@ import {
 import { savedAddresses, type AddressKind, type SavedAddress } from "@/lib/account-data";
 import { translate, type Lang, type Vars } from "@/lib/i18n";
 import { storageKeys } from "@/lib/storage";
+import {
+  apiConfigured,
+  fetchBranding,
+  refreshTokens,
+  revokeRefreshToken,
+  type RestaurantBranding,
+} from "@/lib/api";
+import {
+  decodeSession,
+  sessionFromTokens,
+  sessionNeedsRefresh,
+  type CustomerSession,
+} from "@/lib/session";
+import { applyBranding, decodeBrandingCache, type BrandingCache } from "@/lib/branding";
 import { usePersistentState } from "@/hooks/use-persistent-state";
 import { LoadingIndicator } from "@/components/loading-indicator";
 
@@ -88,8 +102,14 @@ type AppContextValue = {
   loginPromptNext: string | null;
   openLoginPrompt: (next?: string) => void;
   closeLoginPrompt: () => void;
-  login: () => void;
+  /**
+   * Called with a session from the tenant API, or with nothing at all to take
+   * the local demo path (no API base URL configured).
+   */
+  login: (session?: CustomerSession | null) => void;
   logout: () => void;
+  /** Tenant identity and palette, or `null` while running on built-in defaults. */
+  branding: RestaurantBranding | null;
   addresses: SavedAddress[];
   addAddress: (address: SavedAddress) => void;
   removeAddress: (id: string) => void;
@@ -366,7 +386,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     seedFavorites,
     decodeFavorites,
   );
-  const [loggedIn, setLoggedIn, authReady] = usePersistentState<boolean>(storageKeys.auth, false, decodeAuth);
+  const [authFlag, setAuthFlag, authReady] = usePersistentState<boolean>(storageKeys.auth, false, decodeAuth);
+  const [session, setSession, sessionReady] = usePersistentState<CustomerSession | null>(
+    storageKeys.session,
+    null,
+    decodeSession,
+  );
+  const [brandingCache, setBrandingCache, brandingReady] = usePersistentState<BrandingCache | null>(
+    storageKeys.branding,
+    null,
+    decodeBrandingCache,
+  );
   const [addresses, setAddresses, addressesReady] = usePersistentState<SavedAddress[]>(
     storageKeys.addresses,
     savedAddresses,
@@ -411,11 +441,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [loginPromptNext, setLoginPromptNext] = useState<string | null>(null);
   const [toastState, setToastState] = useState<ToastState>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const brandingFetched = useRef(false);
+  const refreshingSession = useRef(false);
 
   const ready =
     cartReady &&
     favoritesReady &&
     authReady &&
+    sessionReady &&
+    brandingReady &&
     addressesReady &&
     selectedAddressReady &&
     branchReady &&
@@ -436,6 +470,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     : branches[0].id;
 
   const loginPromptOpen = loginPromptNext !== null;
+  // Two ways in: the local demo flag, or a session issued by the tenant API.
+  // An expired access token still counts as signed in — it is refreshed, and
+  // only a failed refresh signs the customer out.
+  const loggedIn = authFlag || session !== null;
+  const branding = brandingCache?.branding ?? null;
   const dir = lang === "ar" ? "rtl" : "ltr";
   const t = useCallback((text: string, vars?: Vars) => translate(lang, text, vars), [lang]);
 
@@ -443,6 +482,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = lang;
     document.documentElement.dir = dir;
   }, [lang, dir]);
+
+  /* Tenant palette: whatever is cached paints first, so a returning customer
+     never sees the built-in colours flash. Clearing branding removes every
+     override again. */
+  useEffect(() => {
+    applyBranding(branding);
+  }, [branding]);
 
   useEffect(() => {
     return () => {
@@ -455,6 +501,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setToastState({ id: Date.now(), message, kind });
     toastTimer.current = setTimeout(() => setToastState(null), 2800);
   }, []);
+
+  /* One conditional GET per load: the stored ETag turns a fresh branding into
+     a 304, and any failure simply leaves the palette that is already applied. */
+  useEffect(() => {
+    if (!apiConfigured() || !brandingReady || brandingFetched.current) return;
+    brandingFetched.current = true;
+    fetchBranding({ etag: brandingCache?.etag ?? null })
+      .then((result) => {
+        if (!result.notModified) setBrandingCache({ etag: result.etag, branding: result.branding });
+      })
+      .catch(() => {
+        // Branding is cosmetic and the backend may be unreachable offline: the
+        // built-in palette (or the cached one) stays and the next load retries.
+      });
+  }, [brandingReady, brandingCache?.etag, setBrandingCache]);
+
+  /* Access tokens refresh a minute before they expire, once per expiry window.
+     A failed refresh is a hard sign-out rather than a silent retry loop. */
+  useEffect(() => {
+    if (!apiConfigured() || !session || refreshingSession.current) return;
+    if (!sessionNeedsRefresh(session)) return;
+    refreshingSession.current = true;
+    let cancelled = false;
+    refreshTokens(session.refreshToken)
+      .then((pair) => {
+        if (!cancelled) setSession(sessionFromTokens(session, pair));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSession(null);
+        setAuthFlag(false);
+        toast(t("انتهت الجلسة، سجّل الدخول تاني"), "info");
+      })
+      .finally(() => {
+        refreshingSession.current = false;
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session, toast, t, setSession, setAuthFlag]);
 
   const addItem = useCallback(
     (productId: string, options: AddOptions) => {
@@ -563,16 +649,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const openLoginPrompt = useCallback((next: string = "/cart") => setLoginPromptNext(next), []);
   const closeLoginPrompt = useCallback(() => setLoginPromptNext(null), []);
 
-  const login = useCallback(() => {
-    setLoggedIn(true);
-    setLoginPromptNext(null);
-    toast(t("تم تسجيل الدخول بنجاح"), "info");
-  }, [toast, t, setLoggedIn]);
+  const login = useCallback(
+    (next?: CustomerSession | null) => {
+      if (next) {
+        // A session from the API is the source of truth, so the demo flag is
+        // cleared rather than left disagreeing with it.
+        setSession(next);
+        setAuthFlag(false);
+      } else {
+        setAuthFlag(true);
+      }
+      setLoginPromptNext(null);
+      toast(t("تم تسجيل الدخول بنجاح"), "info");
+    },
+    [toast, t, setSession, setAuthFlag],
+  );
 
   const logout = useCallback(() => {
-    setLoggedIn(false);
+    const refreshToken = session?.refreshToken;
+    if (refreshToken && apiConfigured()) {
+      // Best effort: the server revokes the token family, the client always
+      // clears its copy even if that call fails.
+      void revokeRefreshToken(refreshToken).catch(() => undefined);
+    }
+    setSession(null);
+    setAuthFlag(false);
     toast(t("تم تسجيل الخروج"), "info");
-  }, [toast, t, setLoggedIn]);
+  }, [toast, t, session, setSession, setAuthFlag]);
 
   const addAddress = useCallback(
     (address: SavedAddress) => {
@@ -716,6 +819,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleFavorite,
       loggedIn,
       ready,
+      branding,
       loginPromptOpen,
       loginPromptNext,
       openLoginPrompt,
@@ -761,6 +865,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleFavorite,
       loggedIn,
       ready,
+      branding,
       loginPromptOpen,
       loginPromptNext,
       openLoginPrompt,

@@ -9,6 +9,8 @@
   --color-brand: #e8452c;
   --color-brand-dark: #cf3720;
   --color-brand-soft: #fbe7df;
+  /* Text drawn on brand surfaces; tenant branding may override it. */
+  --color-brand-contrast: #ffffff;
   --color-pink-soft: #fdecef;
   --color-ink: #201a16;
   --color-muted: #9b8d82;
