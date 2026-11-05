@@ -1,5 +1,5 @@
 import { waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   applyBranding,
   brandingName,
@@ -9,14 +9,19 @@ import {
   darken,
   lighten,
   safeColor,
+  tenantColorsEnabled,
   type BrandingCache,
 } from "@/lib/branding";
 
-afterEach(() => {
-  applyBranding(null);
+/** `applyBranding` is a no-op while opt-in is off, so cleanup wipes the DOM. */
+function wipeBrandingDom(): void {
+  for (const name of brandingVarNames) document.documentElement.style.removeProperty(name);
   document.head.innerHTML = "";
+  vi.unstubAllEnvs();
   vi.unstubAllGlobals();
-});
+}
+
+afterEach(wipeBrandingDom);
 
 describe("safeColor", () => {
   it("accepts only real hex literals", () => {
@@ -108,7 +113,41 @@ describe("brandingVars", () => {
   });
 });
 
-describe("applyBranding", () => {
+describe("tenantColorsEnabled", () => {
+  it("is off unless the deploy explicitly asks for the tenant palette", () => {
+    expect(tenantColorsEnabled()).toBe(false);
+    vi.stubEnv("NEXT_PUBLIC_APPLY_TENANT_COLORS", "true");
+    expect(tenantColorsEnabled()).toBe(true);
+    vi.stubEnv("NEXT_PUBLIC_APPLY_TENANT_COLORS", "yes");
+    expect(tenantColorsEnabled()).toBe(false);
+  });
+});
+
+describe("applyBranding — the app keeps its own colours by default", () => {
+  it("paints no variable and does not touch the theme colour meta", () => {
+    document.head.innerHTML = '<meta name="theme-color" content="#E8452C">';
+    applyBranding({ primaryColor: "#123456", accentColor: "#ABCDEF", backgroundColor: "#000000" });
+
+    for (const name of brandingVarNames) {
+      expect(document.documentElement.style.getPropertyValue(name)).toBe("");
+    }
+    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#E8452C");
+  });
+
+  it("is a no-op outside the browser", () => {
+    const original = globalThis.document;
+    vi.stubGlobal("document", undefined);
+    expect(() => applyBranding({ primaryColor: "#123456" })).not.toThrow();
+    vi.unstubAllGlobals();
+    expect(globalThis.document).toBe(original);
+  });
+});
+
+describe("applyBranding with NEXT_PUBLIC_APPLY_TENANT_COLORS=true", () => {
+  beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_APPLY_TENANT_COLORS", "true");
+  });
+
   it("writes the palette inline on <html> and the theme colour meta", () => {
     document.head.innerHTML = '<meta name="theme-color" content="#E8452C">';
     applyBranding({ primaryColor: "#123456", accentColor: "#ABCDEF" });
