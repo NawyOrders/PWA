@@ -67,6 +67,12 @@ export type Profile = {
   phone: string;
   email: string;
   avatar: string;
+  /**
+   * The `customerId` whose session last seeded this identity. It is what lets a
+   * signed-in customer edit their own details without the next load overwriting
+   * them, and what makes a different customer replace them.
+   */
+  customerId?: string;
 };
 
 export type DeliveryDetails = {
@@ -371,7 +377,8 @@ function isProfile(value: unknown): value is Profile {
     typeof profile.name === "string" &&
     typeof profile.phone === "string" &&
     typeof profile.email === "string" &&
-    typeof profile.avatar === "string"
+    typeof profile.avatar === "string" &&
+    (profile.customerId === undefined || typeof profile.customerId === "string")
   );
 }
 
@@ -483,12 +490,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     document.documentElement.dir = dir;
   }, [lang, dir]);
 
-  /* Tenant palette: whatever is cached paints first, so a returning customer
-     never sees the built-in colours flash. Clearing branding removes every
-     override again. */
+  /* Tenant palette: opt-in only. Unless the deploy sets the flag, the app keeps
+     the colours from globals.css and a tenant payload repaints nothing. */
   useEffect(() => {
     applyBranding(branding);
   }, [branding]);
+
+  /* A session is the source of truth for who the customer is, so the account
+     screens stop showing the seeded demo identity as soon as somebody signs in
+     through the API. Details the customer edited are kept — they are replaced
+     only when a different customer signs in on this device. */
+  useEffect(() => {
+    if (!session || !sessionReady || !profileReady) return;
+    setProfile((current) =>
+      current.customerId === session.customerId
+        ? current
+        : {
+            ...current,
+            customerId: session.customerId,
+            name: session.fullName || current.name,
+            phone: session.phoneNumber || current.phone,
+            email: session.email ?? current.email,
+          },
+    );
+  }, [session, sessionReady, profileReady, setProfile]);
 
   useEffect(() => {
     return () => {
@@ -674,8 +699,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     setSession(null);
     setAuthFlag(false);
+    // The account belonged to that customer, so a shared device is left with
+    // the neutral seeded profile rather than someone else's name and phone.
+    setProfile(seedProfile);
     toast(t("تم تسجيل الخروج"), "info");
-  }, [toast, t, session, setSession, setAuthFlag]);
+  }, [toast, t, session, setSession, setAuthFlag, setProfile]);
 
   const addAddress = useCallback(
     (address: SavedAddress) => {

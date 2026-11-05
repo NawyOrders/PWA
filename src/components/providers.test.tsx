@@ -2,7 +2,7 @@ import { act, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useApp } from "@/components/providers";
 import { renderAppHook } from "@/test/render";
-import { seedCart, productsById, orders as seedOrders, branches, type Order } from "@/lib/data";
+import { seedCart, productsById, orders as seedOrders, branches, user, type Order } from "@/lib/data";
 import { savedAddresses } from "@/lib/account-data";
 import { storageKeys } from "@/lib/storage";
 import type { CustomerSession } from "@/lib/session";
@@ -481,7 +481,10 @@ describe("AppProvider — tenant API session and branding", () => {
     api.revokeRefreshToken.mockResolvedValue(undefined);
   });
 
-  afterEach(clearBranding);
+  afterEach(() => {
+    clearBranding();
+    vi.unstubAllEnvs();
+  });
 
   function clearBranding() {
     for (const name of brandingNames) document.documentElement.style.removeProperty(name);
@@ -588,7 +591,7 @@ describe("AppProvider — tenant API session and branding", () => {
     expect(api.refreshTokens).not.toHaveBeenCalled();
   });
 
-  it("applies tenant branding and caches it with its etag", async () => {
+  it("caches tenant branding without repainting the app palette", async () => {
     api.fetchBranding.mockResolvedValue({
       notModified: false,
       branding: { tenantId: "t-1", nameAr: "ناوي", primaryColor: "#123456" },
@@ -599,10 +602,22 @@ describe("AppProvider — tenant API session and branding", () => {
     await waitFor(() => expect(result.current.branding?.nameAr).toBe("ناوي"));
 
     expect(api.fetchBranding).toHaveBeenCalled();
-    expect(document.documentElement.style.getPropertyValue("--color-brand")).toBe("#123456");
+    expect(document.documentElement.style.getPropertyValue("--color-brand")).toBe("");
     await waitFor(() =>
       expect(JSON.parse(localStorage.getItem(storageKeys.branding)!)).toMatchObject({ etag: '"b1"' }),
     );
+  });
+
+  it("paints the tenant palette only when the deploy opts in", async () => {
+    vi.stubEnv("NEXT_PUBLIC_APPLY_TENANT_COLORS", "true");
+    api.fetchBranding.mockResolvedValue({
+      notModified: false,
+      branding: { tenantId: "t-1", primaryColor: "#123456" },
+      etag: '"b1"',
+    });
+
+    await app();
+    await waitFor(() => expect(document.documentElement.style.getPropertyValue("--color-brand")).toBe("#123456"));
   });
 
   it("sends the cached etag and keeps the cache on a 304", async () => {
@@ -617,7 +632,7 @@ describe("AppProvider — tenant API session and branding", () => {
 
     expect(api.fetchBranding.mock.calls[0]?.[0]).toEqual({ etag: '"b1"' });
     expect(result.current.branding).toMatchObject({ primaryColor: "#654321" });
-    expect(document.documentElement.style.getPropertyValue("--color-brand")).toBe("#654321");
+    expect(document.documentElement.style.getPropertyValue("--color-brand")).toBe("");
   });
 
   it("keeps working when branding cannot be loaded", async () => {
@@ -637,5 +652,91 @@ describe("AppProvider — tenant API session and branding", () => {
     const { result } = await app();
     expect(api.fetchBranding).not.toHaveBeenCalled();
     expect(result.current.branding).toBeNull();
+  });
+
+  it("seeds the account with the customer who just signed in", async () => {
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    const { result } = await app();
+    expect(result.current.profile.name).toBe(user.name);
+
+    act(() => result.current.login(session));
+    await waitFor(() => expect(result.current.profile.name).toBe("Nawy Guest"));
+    expect(result.current.profile.phone).toBe("+201012345678");
+    expect(result.current.profile.customerId).toBe("customer-1");
+  });
+
+  it("keeps the customer's own edits while the same account stays signed in", async () => {
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    localStorage.setItem(storageKeys.session, JSON.stringify(session));
+    localStorage.setItem(
+      storageKeys.profile,
+      JSON.stringify({ ...user, email: "me@example.com", customerId: "customer-1", name: "اسمي الجديد" }),
+    );
+
+    const { result } = await app();
+    expect(result.current.profile.name).toBe("اسمي الجديد");
+    expect(result.current.profile.email).toBe("me@example.com");
+  });
+
+  it("replaces the account when a different customer signs in on this device", async () => {
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    localStorage.setItem(storageKeys.session, JSON.stringify(session));
+    localStorage.setItem(
+      storageKeys.profile,
+      JSON.stringify({ ...user, name: "زبون تاني", customerId: "customer-9" }),
+    );
+
+    const { result } = await app();
+    await waitFor(() => expect(result.current.profile.name).toBe("Nawy Guest"));
+    expect(result.current.profile.customerId).toBe("customer-1");
+  });
+
+  it("does not blank a saved email when the session carries none", async () => {
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    localStorage.setItem(storageKeys.profile, JSON.stringify({ ...user, email: "keep@example.com" }));
+
+    const { result } = await app();
+    act(() => result.current.login(session));
+    await waitFor(() => expect(result.current.profile.name).toBe("Nawy Guest"));
+    expect(result.current.profile.email).toBe("keep@example.com");
+  });
+
+  it("does not blank the account when the session carries no identity text", async () => {
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    localStorage.setItem(
+      storageKeys.session,
+      JSON.stringify({ ...session, fullName: "", phoneNumber: "", email: null }),
+    );
+    localStorage.setItem(storageKeys.profile, JSON.stringify({ ...user, email: "keep@example.com" }));
+
+    const { result } = await app();
+    await waitFor(() => expect(result.current.profile.customerId).toBe("customer-1"));
+    expect(result.current.profile.name).toBe(user.name);
+    expect(result.current.profile.phone).toBe(user.phone);
+    expect(result.current.profile.email).toBe("keep@example.com");
+  });
+
+  it("returns the account to the seeded identity on sign out", async () => {
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    const { result } = await app();
+
+    act(() => result.current.login(session));
+    await waitFor(() => expect(result.current.profile.name).toBe("Nawy Guest"));
+
+    act(() => result.current.logout());
+    expect(result.current.profile.name).toBe(user.name);
+    expect(result.current.profile.customerId).toBeUndefined();
+    await waitFor(() => expect(JSON.parse(localStorage.getItem(storageKeys.profile)!)).toMatchObject({ name: user.name }));
+  });
+
+  it("leaves the demo profile alone for a flag-only login", async () => {
+    apiMode.configured = false;
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+
+    const { result } = await app();
+    act(() => result.current.login());
+    expect(result.current.loggedIn).toBe(true);
+    expect(result.current.profile.name).toBe(user.name);
+    expect(result.current.profile.customerId).toBeUndefined();
   });
 });

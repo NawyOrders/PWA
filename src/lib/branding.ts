@@ -7,6 +7,11 @@
  * block) and being able to remove every one of them again, so a tenant with no
  * branding — or an API that is down — keeps the built-in Nawy palette.
  *
+ * The palette is opt-in. The app ships its own visual identity, so a tenant
+ * payload never repaints it unless the deploy sets
+ * `NEXT_PUBLIC_APPLY_TENANT_COLORS=true`; branding data (names, contact
+ * channels) is still fetched, cached and exposed either way.
+ *
  * Colours are validated before they touch the DOM: a server string that is not
  * a `#rgb`/`#rrggbb` literal is dropped rather than injected into a style.
  */
@@ -14,6 +19,14 @@
 import type { RestaurantBranding } from "@/lib/api";
 
 const COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+
+/**
+ * Read on every call rather than once at import so a test can flip it, and so
+ * an unset variable stays falsy instead of throwing during the build.
+ */
+export function tenantColorsEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_APPLY_TENANT_COLORS === "true";
+}
 
 export const brandingVarNames = [
   "--color-brand",
@@ -120,10 +133,12 @@ function setThemeColor(color: string | null): void {
 
 /**
  * Writes the palette onto `<html>`; passing `null` clears every branding
- * override so the theme block in `globals.css` shows through again.
+ * override so the theme block in `globals.css` shows through again. With the
+ * opt-in off nothing is ever written, so the built-in colours simply stand.
  */
 export function applyBranding(branding: RestaurantBranding | null): void {
   if (typeof document === "undefined") return;
+  if (!tenantColorsEnabled()) return;
   const root = document.documentElement;
   const vars = branding ? brandingVars(branding) : {};
   for (const name of brandingVarNames) {
