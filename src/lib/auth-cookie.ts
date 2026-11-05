@@ -15,13 +15,16 @@
  * refusing every cross-site POST.
  */
 
+import { MAX_TOKEN_LENGTH, REFRESH_TOKEN_LIFETIME_DAYS } from "@/lib/api";
+
 export const REFRESH_COOKIE_NAME = "nawy_refresh";
 
-/** Matches the API's own ceiling for a refresh token, with room to spare. */
-const MAX_TOKEN_LENGTH = 8192;
-
-/** The API's rotating refresh tokens are documented to outlive the JWT by days. */
-export const REFRESH_COOKIE_DAYS = 14;
+/**
+ * How long the cookie lives, in days — the same number the token behind it is
+ * documented to live for, imported rather than repeated so the jar and the
+ * credential cannot drift into disagreeing about which one outlives the other.
+ */
+export const REFRESH_COOKIE_DAYS = REFRESH_TOKEN_LIFETIME_DAYS;
 
 export type CookieValue = {
   name: string;

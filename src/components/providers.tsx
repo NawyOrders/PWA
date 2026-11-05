@@ -175,6 +175,21 @@ type ToastState = { id: number; message: string; kind: ToastKind } | null;
 
 const AppContext = createContext<AppContextValue | null>(null);
 
+/**
+ * How long to wait before trying again after a refresh that failed for a reason
+ * that says nothing about the session — no network, a 500, a request that timed
+ * out. Thirty seconds is long enough that a stall is not a burst of traffic and
+ * short enough that a token about to expire is usually rescued.
+ */
+const TRANSIENT_REFRESH_RETRY_MS = 30_000;
+
+/**
+ * How many of those retries to spend before admitting the session cannot be
+ * kept. Without a ceiling a customer whose network never comes back stays
+ * nominally signed in on a token that has already expired.
+ */
+const MAX_TRANSIENT_REFRESH_RETRIES = 3;
+
 const seedProfile: Profile = {
   name: user.name,
   phone: user.phone,
@@ -476,6 +491,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
   const [grant, setGrant] = useState<AccessGrant | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  /** When a transient refresh failure should be retried, or `null` if none is pending. */
+  const [refreshRetryAt, setRefreshRetryAt] = useState<number | null>(null);
   const [brandingCache, setBrandingCache, brandingReady] = usePersistentState<BrandingCache | null>(
     storageKeys.branding,
     null,
@@ -532,6 +549,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const recoveringSession = useRef(false);
   /** Collapses a double-tapped logout into one revoke; re-armed by the next login. */
   const loggingOut = useRef(false);
+  /** Failures spent on retries that said nothing about the session itself. */
+  const refreshRetries = useRef(0);
+  /**
+   * The one-time legacy-token handover, so the reload refresh can wait for it.
+   * Refreshing before the cookie lands is a refresh with no cookie, and the
+   * honest answer to that is a 401 — which would sign out a customer whose
+   * session was still good.
+   */
+  const adoptionPending = useRef<Promise<void> | null>(null);
 
   const ready =
     cartReady &&
@@ -663,7 +689,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!coordinator) throw new Error("session-unavailable");
     setRefreshing(true);
     try {
-      return await coordinator.refresh();
+      const next = await coordinator.refresh();
+      // A rotation that worked is proof the session is alive: the budget below
+      // counts a streak of failures, not failures for the whole page load.
+      refreshRetries.current = 0;
+      return next;
     } finally {
       setRefreshing(false);
     }
@@ -678,8 +708,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
     applyGrant(null);
     setCustomer(null);
     setAuthFlag(false);
+    // The session is over, so a retry that was waiting on it is cancelled
+    // rather than left to spend a refresh on an empty cookie jar.
+    refreshRetries.current = 0;
+    setRefreshRetryAt(null);
     toast(t("انتهت الجلسة، سجّل الدخول تاني"), "info");
   }, [applyGrant, setCustomer, setAuthFlag, toast, t]);
+
+  /*
+   * Which refresh failures end the session, and which only cost a retry.
+   *
+   * The guide is explicit about the first group: any 401 from `/refresh`, and
+   * the 409s the refresh-token family answers with, mean the token is expired,
+   * revoked or spent twice, so the customer signs in again. Everything else —
+   * the network is down, the tenant answered 500, the request timed out — says
+   * nothing about whether the session is valid, and signing somebody out for a
+   * stall throws away a full cart. Those get a bounded backoff instead, and a
+   * session that still cannot be refreshed after it is admitted as over.
+   */
+  const handleRefreshFailure = useCallback(
+    (error: unknown) => {
+      if (isFatalRefreshError(error)) {
+        expireSession();
+        return;
+      }
+      if (refreshRetries.current >= MAX_TRANSIENT_REFRESH_RETRIES) {
+        expireSession();
+        return;
+      }
+      refreshRetries.current += 1;
+      setRefreshRetryAt(Date.now() + TRANSIENT_REFRESH_RETRY_MS);
+    },
+    [expireSession],
+  );
 
   const authFetch = useMemo<AuthFetch>(
     () =>
@@ -703,41 +764,67 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!sessionReady || !customer) return;
     const legacy = storedRefreshToken.current;
     if (!legacy || authTransport() === "demo") return;
+    // One-shot by design: the stored session has already been rewritten with
+    // the identity alone, so this ref holds the last copy in the browser.
     storedRefreshToken.current = null;
-    void attachStoredRefresh(legacy).catch(() => {
-      // A failed adoption costs a sign-in, not a security promise: the storage
-      // copy is already gone, and the next refresh finds no cookie.
-    });
+    adoptionPending.current = attachStoredRefresh(legacy)
+      .then(() => undefined)
+      .catch(() => {
+        // A failed adoption costs a sign-in, not a security promise: the cookie
+        // jar stays empty and the refresh below answers 401.
+      });
   }, [customer, sessionReady]);
 
   /*
    * A reload keeps the identity but not the access token, which now lives only
    * in memory. Minting a fresh one here is what turns "still signed in" from a
    * claim into a fact — and it runs once per load, not once per render.
+   *
+   * It waits for the adoption above because a refresh that beats the cookie to
+   * the server is a refresh with nothing to spend, and the honest answer to
+   * that is a 401 that signs out a session which was still good.
    */
   useEffect(() => {
     if (!sessionReady || !customer || recoveringSession.current) return;
     if (authTransport() === "demo") return;
     if (grant) return;
     recoveringSession.current = true;
-    refreshNow().catch(() => {
-      expireSession();
-    });
-  }, [customer, grant, sessionReady, refreshNow, expireSession]);
+    void (adoptionPending.current ?? Promise.resolve())
+      .then(() => refreshNow())
+      .catch(handleRefreshFailure);
+  }, [customer, grant, sessionReady, refreshNow, handleRefreshFailure]);
 
-  /* Access tokens refresh a minute before they expire, once per expiry window.
-     A failed refresh is a hard sign-out rather than a silent retry loop. */
+  /*
+   * Access tokens refresh a minute before they expire, once per expiry window.
+   * `handleRefreshFailure` decides whether a failure ends the session or only
+   * postpones the attempt, so a network that is briefly down cannot sign the
+   * customer out — and a session that is genuinely gone is not retried.
+   */
   useEffect(() => {
     if (!customer || authTransport() === "demo") return;
+    if (refreshRetryAt !== null) return;
     if (!sessionNeedsRefresh(grant)) return;
     let cancelled = false;
-    refreshNow().catch(() => {
-      if (!cancelled) expireSession();
+    refreshNow().catch((error) => {
+      if (!cancelled) handleRefreshFailure(error);
     });
     return () => {
       cancelled = true;
     };
-  }, [customer, grant, refreshNow, expireSession]);
+  }, [customer, grant, refreshNow, handleRefreshFailure, refreshRetryAt]);
+
+  /*
+   * The backoff itself: clearing the deadline re-runs the effects above, which
+   * is the retry. One set of rules rather than a second path to keep in step.
+   */
+  useEffect(() => {
+    if (refreshRetryAt === null) return;
+    const timer = setTimeout(
+      () => setRefreshRetryAt(null),
+      Math.max(0, refreshRetryAt - Date.now()),
+    );
+    return () => clearTimeout(timer);
+  }, [refreshRetryAt]);
 
   const addItem = useCallback(
     (productId: string, options: AddOptions) => {
@@ -860,6 +947,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // A sign-in always starts a new recovery window; the reload effect must
         // not fire for the token this response just handed us.
         recoveringSession.current = true;
+        // A fresh session gets a fresh retry budget rather than inheriting the
+        // one the previous account burned through.
+        refreshRetries.current = 0;
+        setRefreshRetryAt(null);
       } else {
         setAuthFlag(true);
       }
@@ -886,6 +977,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setProfile(seedProfile);
     // The next sign-in on this page load earns its own recovery refresh.
     recoveringSession.current = false;
+    // And no refresh from the account that just left may fire afterwards.
+    refreshRetries.current = 0;
+    adoptionPending.current = null;
+    setRefreshRetryAt(null);
     toast(t("تم تسجيل الخروج"), "info");
   }, [toast, t, applyGrant, setCustomer, setAuthFlag, setProfile]);
 

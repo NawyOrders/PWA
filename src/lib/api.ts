@@ -493,6 +493,17 @@ export const OTP_LIFETIME_SECONDS = 300;
  */
 export const MAX_TOKEN_LENGTH = 8192;
 
+/**
+ * How long a refresh token — and the httpOnly cookie that carries it — is
+ * expected to live.
+ *
+ * One number for both sides of the boundary: the BFF writes the cookie for
+ * this many days, and the simulator hands out tokens that expire after it. A
+ * cookie that outlives its token stores a credential the server already
+ * refuses, and a token that outlives its cookie signs customers out early.
+ */
+export const REFRESH_TOKEN_LIFETIME_DAYS = 14;
+
 type RequestOptions = {
   method?: "GET" | "POST";
   body?: unknown;

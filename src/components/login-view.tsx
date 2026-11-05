@@ -270,6 +270,10 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
 
   const sendCode = useCallback(async () => {
     if (requestingRef.current) return;
+    // A refused account is not something a second code can fix. The guard comes
+    // before anything is cleared so the support message cannot be erased by the
+    // very button that would have sent another request.
+    if (accountRefused) return;
     const normalized = normalizeEgyptianPhone(phone);
     if (!isUsablePhone(normalized)) {
       setFieldErrors((current) => ({ ...current, phone: t("اكتب رقم موبايل صحيح الأول") }));
@@ -342,6 +346,7 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
       setRequesting(false);
     }
   }, [
+    accountRefused,
     channel,
     channelLabel,
     clearError,
@@ -628,6 +633,9 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
               onChange={(event) => {
                 setPhone(event.target.value);
                 setFieldErrors((current) => ({ ...current, phone: undefined }));
+                // A different number is a different account, so a refusal that
+                // ended the previous one does not speak for this one.
+                setAccountRefused(false);
               }}
               placeholder={t("ادخل رقم موبايلك")}
               className="min-w-0 flex-1 bg-transparent px-3 text-sm font-semibold outline-none"
@@ -641,7 +649,7 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
             <button
               type="button"
               onClick={sendCode}
-              disabled={requesting || backoffSeconds > 0}
+              disabled={requesting || backoffSeconds > 0 || accountRefused}
               aria-busy={requesting}
               className={buttonStyles({ variant: "brand", size: "xs", className: "ms-1.5" })}
             >
@@ -818,7 +826,7 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
             <button
               type="button"
               onClick={sendCode}
-              disabled={requesting}
+              disabled={requesting || accountRefused}
               className="font-bold text-brand hover:text-brand-dark disabled:text-muted"
             >
               {t("إعادة إرسال الكود")}

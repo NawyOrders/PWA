@@ -11,7 +11,10 @@
  * It is unreachable from a production build by construction. `authTransport()`
  * in `src/lib/api.ts` only selects it while `process.env.NODE_ENV` is not
  * `production`, and that test is inlined at build time, so the bundler drops
- * this module from the production graph entirely.
+ * this module from the production graph entirely. `assertMockAllowed()` below
+ * repeats the same test inside every call that mints a credential, so a build
+ * that somehow still reaches this code answers with a server error rather than
+ * with a token nobody issued.
  *
  * What it mirrors, and what it deliberately does not
  * --------------------------------------------------
@@ -27,13 +30,25 @@
  * service does.
  */
 
-import { AppError, normalizeEgyptianPhone } from "@/lib/api";
+import {
+  AppError,
+  OTP_LIFETIME_SECONDS,
+  REFRESH_TOKEN_LIFETIME_DAYS,
+  normalizeEgyptianPhone,
+  type AppErrorKind,
+  type AuthErrorCode,
+} from "@/lib/api";
 import { OTP_LENGTH, generateOtpCode } from "@/lib/otp";
 import type { CustomerSessionPayload, OtpPurpose, RequestOtpData, TokenPair } from "@/lib/api";
 
 const ACCESS_TOKEN_SECONDS = 3600;
-const REFRESH_TOKEN_DAYS = 14;
-const OTP_LIFETIME_SECONDS = 300;
+/**
+ * Both lifetimes come from the contract module rather than being written out
+ * again here: a simulator whose refresh token outlives the cookie that stores
+ * it — or whose code lifetime differs from the countdown the screen shows — is
+ * testing a system the real deployment is not.
+ */
+const REFRESH_TOKEN_DAYS = REFRESH_TOKEN_LIFETIME_DAYS;
 const OTP_MAX_ATTEMPTS = 5;
 /** Per phone: 5 requests in a rolling 3 minutes, then a 3-minute cooldown. */
 const PHONE_REQUEST_LIMIT = 5;
@@ -145,9 +160,32 @@ function reset(): void {
   seedReservedCustomers();
 }
 
+/**
+ * The second lock on the door.
+ *
+ * `authTransport()` refuses to select the simulator in a production build, and
+ * the bundler drops this module out of the production graph. That is a build
+ * property, so it is worth restating as code: a call that does arrive here from
+ * a production bundle — a stray import, a hand-written fetch, an env var set in
+ * the wrong place — answers the way an unreachable endpoint answers rather than
+ * minting a token nobody issued.
+ */
+function assertMockAllowed(): void {
+  if (process.env.NODE_ENV === "production") throw new AppError({ kind: "server", status: 500 });
+}
+
+function kindForStatus(status: number): AppErrorKind {
+  if (status === 401) return "unauthorized";
+  if (status === 404) return "notFound";
+  if (status === 409) return "conflict";
+  if (status === 429) return "rateLimited";
+  if (status >= 500) return "server";
+  return "validation";
+}
+
 function fail(
   status: number,
-  code: string,
+  code: AuthErrorCode,
   message: string,
   extra: { retryAfterSeconds?: number | null } = {},
 ): never {
@@ -156,9 +194,9 @@ function fail(
   // find, and it is never rendered: the screens map the code through the
   // catalog in src/lib/api.ts.
   throw new AppError({
-    kind: status === 401 ? "unauthorized" : status === 404 ? "notFound" : status === 409 ? "conflict" : status === 429 ? "rateLimited" : "validation",
+    kind: kindForStatus(status),
     status,
-    code: code as never,
+    code,
     fieldErrors: { [code]: message },
     retryAfterSeconds: extra.retryAfterSeconds ?? null,
   });
@@ -257,6 +295,7 @@ async function requestOtp(options: {
   channel?: string;
   purpose?: string;
 }): Promise<RequestOtpData> {
+  assertMockAllowed();
   const now = Date.now();
   const phone = normalizeEgyptianPhone(options.phoneNumber ?? "");
   const digits = phone.replace(/[^\d]/g, "");
@@ -276,11 +315,19 @@ async function requestOtp(options: {
 
   enforceRateLimits(phone, now);
 
+  // A missing CSPRNG is not a reason to mint a guessable code. A fixed stand-in
+  // would be a master key — every account in the simulator opens to one number
+  // anybody can read in the source — so the honest answer is the one a real
+  // gateway with a broken generator gives, and the screen falls back to its
+  // generic failure message.
+  const code = generateOtpCode(OTP_LENGTH);
+  if (!code) throw new AppError({ kind: "server", status: 500 });
+
   const challenge: MockChallenge = {
     id: nextId("chal"),
     phone,
     purpose: purpose === "login" ? "Login" : "Registration",
-    code: generateOtpCode(OTP_LENGTH) || "000000",
+    code,
     expiresAt: now + OTP_LIFETIME_SECONDS * 1000,
     attempts: 0,
     used: false,
@@ -304,6 +351,7 @@ async function verifyOtp(options: {
   fullName?: string;
   purpose?: string;
 }): Promise<CustomerSessionPayload> {
+  assertMockAllowed();
   const now = Date.now();
   const challenge = state.challenges.get(options.challengeId ?? "");
   if (!challenge) fail(404, "Customer.ChallengeNotFound", "The verification challenge does not exist.");
@@ -353,6 +401,7 @@ async function verifyOtp(options: {
 }
 
 async function refreshSession(): Promise<TokenPair> {
+  assertMockAllowed();
   const now = Date.now();
   const current = state.cookie;
   if (!current) fail(401, "RefreshToken.Invalid", "No refresh token is stored for this browser.");
@@ -388,6 +437,7 @@ async function refreshSession(): Promise<TokenPair> {
 }
 
 async function revokeSession(): Promise<void> {
+  assertMockAllowed();
   const current = state.cookie;
   if (!current) return;
   const token = state.tokens.get(current);
