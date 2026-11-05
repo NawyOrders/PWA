@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardList, Home, ShoppingCart, UserRound } from "lucide-react";
+import { Bell, ClipboardList, Home, ShoppingCart, UserRound } from "lucide-react";
 import { LogoMark } from "@/components/logo";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useApp } from "@/components/providers";
@@ -55,8 +55,16 @@ export function Navbar() {
           })}
         </nav>
 
-        <div className="flex w-60 items-center justify-end gap-2.5">
+        <div className="flex shrink-0 items-center justify-end gap-2">
           <LanguageToggle />
+          <Link
+            href="/notifications"
+            aria-label={t("الإشعارات")}
+            className="motion-press relative grid size-12 place-items-center rounded-full bg-brand-soft text-brand transition-colors hover:bg-brand/15"
+          >
+            <Bell className="size-5" />
+            <span className="animate-pulse-soft absolute end-2.5 top-2.5 size-1.5 rounded-full bg-brand" />
+          </Link>
           <Link
             href="/cart"
             onClick={(event) => {
@@ -65,7 +73,7 @@ export function Navbar() {
                 openLoginPrompt();
               }
             }}
-            className={`motion-press flex h-12 items-center gap-2.5 rounded-full px-5 text-sm font-bold transition-all duration-300 hover:-translate-y-0.5 ${
+            className={`motion-press flex h-12 items-center gap-2 rounded-full px-4 text-sm font-bold transition-all duration-300 hover:-translate-y-0.5 ${
               cartActive ? "bg-brand text-white" : "bg-brand-soft text-brand hover:bg-brand/15"
             }`}
           >

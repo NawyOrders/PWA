@@ -29,10 +29,9 @@ const noFooter = ["/login", "/checkout", "/addresses", "/offline", "/help"];
 const noCartBar = ["/cart", "/checkout", "/product", "/login", "/offline"];
 
 /**
- * Keeps the pinned cart bar from covering the last row of content. Mobile has
- * to clear the bar itself and, when it is present, the tab bar underneath it.
- * On desktop the footer already sits below the content and gets its own
- * clearance, so only footer-less screens need padding under the main flow.
+ * Keeps the pinned cart bar from covering the last row of desktop content.
+ * On mobile, only the bottom navigation needs clearance. The desktop footer
+ * already sits below the content and gets its own clearance.
  */
 function cartBarSpacing(options: {
   hasBottomNav: boolean;
@@ -41,8 +40,8 @@ function cartBarSpacing(options: {
 }): string {
   const { hasBottomNav, hasCartBar, hasFooter } = options;
   if (!hasCartBar) return hasBottomNav ? "pb-24 lg:pb-0" : "";
-  const mobile = hasBottomNav ? "pb-[calc(9.75rem+env(safe-area-inset-bottom))]" : "pb-32";
-  return `${mobile} ${hasFooter ? "lg:pb-0" : "lg:pb-32"}`;
+  const mobile = hasBottomNav ? "pb-24" : "";
+  return `${mobile} ${hasFooter ? "lg:pb-0" : "lg:pb-32"}`.trim();
 }
 
 export function SiteChrome({ children }: { children: React.ReactNode }) {

@@ -44,23 +44,24 @@ describe("CartBar", () => {
     expect(barText()).toContain("375");
   });
 
-  it("pins the bar to the viewport, above the tab bar on mobile and the page edge on desktop", async () => {
+  it("shows the pinned bar only on desktop", async () => {
     localStorage.setItem(storageKeys.auth, "true");
     renderApp(<CartBar />);
 
     const anchor = pinnedBar();
     await within(anchor).findByRole("link", { name: "عرض السلة" });
+    expect(anchor.className).toContain("hidden lg:block");
     expect(anchor.className).toContain("fixed");
-    expect(anchor.className).toContain("bottom-[calc(76px+env(safe-area-inset-bottom))]");
     expect(anchor.className).toContain("lg:bottom-5");
   });
 
-  it("drops the bar out of the tab-bar slot when a screen has no tab bar", async () => {
+  it("keeps the desktop bar at the page edge when a screen has no tab bar", async () => {
     localStorage.setItem(storageKeys.auth, "true");
     renderApp(<CartBar aboveBottomNav={false} />);
 
     const anchor = pinnedBar();
     await within(anchor).findByRole("link", { name: "عرض السلة" });
+    expect(anchor.className).toContain("hidden lg:block");
     expect(anchor.className).toContain("bottom-4");
     expect(anchor.className).not.toContain("calc(76px");
   });
