@@ -5,8 +5,11 @@ import {
   AddButton,
   BackButton,
   BackLink,
+  Breadcrumbs,
   Button,
   Chip,
+  DisplayPageHeader,
+  EmptyState,
   FavoriteButton,
   HotBadge,
   MobilePageHeader,
@@ -160,6 +163,50 @@ describe("Price", () => {
     expect(old.tagName).toBe("DEL");
     expect(old).toHaveTextContent("1,500");
   });
+
+  it("scales the amount with the size recipe", () => {
+    renderApp(
+      <>
+        <Price value={90} size="sm" />
+        <Price value={90} size="lg" />
+        <Price value={90} />
+      </>,
+    );
+
+    const amounts = screen.getAllByText("90");
+    expect(amounts[0]).toHaveClass("text-base");
+    expect(amounts[1]).toHaveClass("text-2xl");
+    expect(amounts[2]).toHaveClass("text-xl");
+  });
+
+  it("keeps the compact recipe readable, struck price included", () => {
+    renderApp(<Price value={120} oldValue={150} compact />);
+
+    const old = screen.getByLabelText("السعر قبل الخصم 150");
+    expect(old).toHaveClass("text-[10px]");
+    expect(old.querySelector("span")).toHaveClass("text-[9px]");
+  });
+});
+
+describe("Breadcrumbs", () => {
+  it("links the reachable steps and marks the current one", () => {
+    renderApp(
+      <Breadcrumbs
+        items={[
+          { label: "الرئيسية", href: "/" },
+          { label: "الأقسام" },
+          { label: "برجر", href: "/categories" },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "الرئيسية" })).toHaveAttribute("href", "/");
+    expect(screen.queryByRole("link", { name: "الأقسام" })).not.toBeInTheDocument();
+    expect(screen.getByText("الأقسام")).not.toHaveClass("text-brand");
+    // The last step stays plain text even when it carries a route.
+    expect(screen.queryByRole("link", { name: "برجر" })).not.toBeInTheDocument();
+    expect(screen.getByText("برجر")).toHaveClass("text-brand");
+  });
 });
 
 describe("FavoriteButton", () => {
@@ -255,5 +302,42 @@ describe("BackLink", () => {
 
     const link = screen.getByRole("link", { name: "رجوع" });
     expect(link).toHaveAttribute("href", "/");
+  });
+});
+
+describe("DisplayPageHeader", () => {
+  it("falls back to the overlay back button and offers the subtitle", () => {
+    renderApp(<DisplayPageHeader title="ناوي أوردرز" subtitle="جوعك بيوصل بسرعة" backHref="/cart" />);
+
+    expect(screen.getByRole("heading", { name: "ناوي أوردرز" })).toBeInTheDocument();
+    expect(screen.getByText("جوعك بيوصل بسرعة")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "رجوع" })).toBeInTheDocument();
+  });
+
+  it("replaces the back control when the screen supplies its own action", () => {
+    renderApp(
+      <DisplayPageHeader title="الطلبات" action={<Button>مسح</Button>} />,
+    );
+
+    expect(screen.getByRole("button", { name: "مسح" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "رجوع" })).not.toBeInTheDocument();
+  });
+});
+
+describe("EmptyState", () => {
+  it("points at the categories fallback when the caller gives no call to action", () => {
+    renderApp(<EmptyState title="السلة فاضية" description="اختار أطباقك الأول." />);
+
+    expect(screen.getByRole("heading", { name: "السلة فاضية" })).toBeInTheDocument();
+    expect(screen.getByText("اختار أطباقك الأول.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "تصفح الأقسام" })).toHaveAttribute("href", "/categories");
+  });
+
+  it("uses the supplied label and route", () => {
+    renderApp(
+      <EmptyState title="مفيش نتائج" description="جرّب كلمة تانية." ctaLabel="ارجع للرئيسية" ctaHref="/" />,
+    );
+
+    expect(screen.getByRole("link", { name: "ارجع للرئيسية" })).toHaveAttribute("href", "/");
   });
 });

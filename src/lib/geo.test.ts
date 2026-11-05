@@ -6,6 +6,7 @@ import {
   distanceKm,
   formatCoords,
   nearestArea,
+  OFFLINE_LABEL_RADIUS_KM,
   type LatLng,
 } from "@/lib/geo";
 
@@ -33,6 +34,14 @@ describe("geo domain", () => {
   it("localizes district names", () => {
     expect(areaName(smouha, "ar")).toBe("سموحة");
     expect(areaName(smouha, "en")).toBe("Smouha");
+  });
+
+  it("falls back to raw coordinates when the pin is away from every district", () => {
+    const far: LatLng = { lat: smouha.lat + 4, lng: smouha.lng };
+
+    expect(distanceKm(far, nearestArea(far))).toBeGreaterThan(OFFLINE_LABEL_RADIUS_KM);
+    expect(areaName(far, "ar")).toBe(formatCoords(far));
+    expect(areaName(far, "en")).toBe(formatCoords(far));
   });
 
   it("formats coordinates to four decimals", () => {
