@@ -84,14 +84,49 @@ export class ApiError extends Error {
   readonly kind: ApiErrorKind;
   readonly status: number;
   readonly fields: Record<string, string>;
+  /**
+   * `Retry-After` from a 429, in whole seconds — the contract says a rate
+   * limited response carries it, and it is the only honest number for "how long
+   * do I wait". `null` when the server did not say.
+   */
+  readonly retryAfterSeconds: number | null;
 
-  constructor(kind: ApiErrorKind, status: number, fields: Record<string, string> = {}) {
+  constructor(
+    kind: ApiErrorKind,
+    status: number,
+    fields: Record<string, string> = {},
+    retryAfterSeconds: number | null = null,
+  ) {
     super(kind);
     this.name = "ApiError";
     this.kind = kind;
     this.status = status;
     this.fields = fields;
+    this.retryAfterSeconds = retryAfterSeconds;
   }
+}
+
+/**
+ * `Retry-After` is either a delay in seconds or an HTTP date. Both are accepted
+ * here and both come back as whole seconds from now, because that is what a
+ * countdown needs. Anything unreadable stays `null` rather than becoming a
+ * made-up wait.
+ */
+export function parseRetryAfter(value: string | null, now: number = Date.now()): number | null {
+  const raw = (value ?? "").trim();
+  if (!raw) return null;
+
+  if (/^\d+$/.test(raw)) {
+    const seconds = Number(raw);
+    return Number.isSafeInteger(seconds) ? seconds : null;
+  }
+
+  // The alternative is an HTTP date. Requiring letters first matters: V8 will
+  // happily read "-5" as a year, and a negative delay must not reach a timer.
+  if (!/[a-z]{3}/i.test(raw)) return null;
+  const at = Date.parse(raw);
+  if (Number.isNaN(at)) return null;
+  return Math.max(0, Math.ceil((at - now) / 1000));
 }
 
 /**
@@ -139,10 +174,16 @@ export function apiConfigured(): boolean {
 /**
  * The backend takes a single phone string; the UI collects a local Egyptian
  * number and shows the +20 prefix separately, so normalise to E.164 here.
+ *
+ * A number the customer already typed in international form keeps its own
+ * country code — guessing "20" over `+966500000000` would silently turn a valid
+ * Saudi number into an invalid Egyptian one.
  */
 export function normalizeEgyptianPhone(value: string): string {
-  const digits = value.replace(/[^\d]/g, "");
+  const trimmed = value.trim();
+  const digits = trimmed.replace(/[^\d]/g, "");
   if (!digits) return "";
+  if (trimmed.startsWith("+")) return `+${digits}`;
   if (digits.startsWith("00")) return `+${digits.slice(2)}`;
   if (digits.startsWith("20")) return `+${digits}`;
   if (digits.startsWith("0")) return `+20${digits.slice(1)}`;
@@ -181,6 +222,8 @@ type RawResponse = {
   /** `undefined` when the server answered 304 with an empty body. */
   body: unknown;
   etag: string | null;
+  /** `Retry-After` on the response, in seconds, when the server sent one. */
+  retryAfterSeconds: number | null;
 };
 
 async function rawRequest(path: string, options: RequestOptions = {}): Promise<RawResponse> {
@@ -215,7 +258,10 @@ async function rawRequest(path: string, options: RequestOptions = {}): Promise<R
   clearTimeout(timeout);
 
   const etag = response.headers.get("ETag");
-  if (response.status === 304) return { status: 304, body: undefined, etag };
+  const retryAfterSeconds = parseRetryAfter(response.headers.get("Retry-After"));
+  if (response.status === 304) {
+    return { status: 304, body: undefined, etag, retryAfterSeconds };
+  }
 
   let parsed: unknown = null;
   try {
@@ -229,10 +275,11 @@ async function rawRequest(path: string, options: RequestOptions = {}): Promise<R
       kindByStatus[response.status] ?? (response.status >= 500 ? "server" : "validation"),
       response.status,
       envelopeErrors(parsed),
+      retryAfterSeconds,
     );
   }
 
-  return { status: response.status, body: parsed, etag };
+  return { status: response.status, body: parsed, etag, retryAfterSeconds };
 }
 
 function envelopeErrors(value: unknown): Record<string, string> {
@@ -247,9 +294,9 @@ function envelopeErrors(value: unknown): Record<string, string> {
 }
 
 /** Unwraps the envelope and throws when the call did not succeed. */
-function unwrap<T>(body: unknown, status: number): T {
+function unwrap<T>(body: unknown, status: number, retryAfterSeconds: number | null = null): T {
   const envelope = body as Envelope<T> | null;
-  if (!envelope || typeof envelope !== "object") throw new ApiError("envelope", status);
+  if (!envelope || typeof envelope !== "object") throw new ApiError("envelope", status, {}, retryAfterSeconds);
   if (envelope.isSuccess === false || envelope.data === null || envelope.data === undefined) {
     // The envelope repeats the transport status, so trust it when it is there.
     const code = typeof envelope.statusCode === "number" ? envelope.statusCode : status;
@@ -257,6 +304,7 @@ function unwrap<T>(body: unknown, status: number): T {
       kindByStatus[code] ?? (code >= 500 ? "server" : "validation"),
       code,
       envelopeErrors(body),
+      retryAfterSeconds,
     );
   }
   return envelope.data;
@@ -275,7 +323,7 @@ export async function fetchBranding(options: { etag?: string | null } = {}): Pro
   if (response.status === 304) return { notModified: true, branding: null, etag: response.etag };
   return {
     notModified: false,
-    branding: unwrap<RestaurantBranding>(response.body, response.status),
+    branding: unwrap<RestaurantBranding>(response.body, response.status, response.retryAfterSeconds),
     etag: response.etag,
   };
 }
@@ -293,12 +341,17 @@ export async function requestOtp(options: {
       channel: options.channel ?? "sms",
     },
   });
-  const data = unwrap<Partial<OtpChallenge>>(response.body, response.status);
-  if (typeof data.challengeId !== "string" || !data.challengeId) throw new ApiError("envelope", response.status);
+  const data = unwrap<Partial<OtpChallenge>>(response.body, response.status, response.retryAfterSeconds);
+  if (typeof data.challengeId !== "string" || !data.challengeId) {
+    throw new ApiError("envelope", response.status, {}, response.retryAfterSeconds);
+  }
   return {
     challengeId: data.challengeId,
     expiresAtUtc: typeof data.expiresAtUtc === "string" ? data.expiresAtUtc : "",
-    expiresInSeconds: Number.isFinite(data.expiresInSeconds) ? Number(data.expiresInSeconds) : 0,
+    // A negative or fractional lifetime would break every countdown built on it.
+    expiresInSeconds: Number.isFinite(data.expiresInSeconds)
+      ? Math.max(0, Math.floor(Number(data.expiresInSeconds)))
+      : 0,
     devOtpCode: typeof data.devOtpCode === "string" ? data.devOtpCode : null,
   };
 }
@@ -308,17 +361,21 @@ export async function verifyOtp(options: {
   code: string;
   fullName?: string;
 }): Promise<CustomerSessionPayload> {
+  const fullName = (options.fullName ?? "").trim();
   const response = await rawRequest("/api/v1/auth/otp/verify", {
     method: "POST",
     body: {
       challengeId: options.challengeId,
       code: options.code,
-      fullName: options.fullName ?? "",
+      // `fullName` is what registers a first-time customer. A returning one
+      // simply leaves it out rather than posting an empty string the backend
+      // could read as "rename me to nothing".
+      ...(fullName ? { fullName } : {}),
     },
   });
-  const data = unwrap<Partial<CustomerSessionPayload>>(response.body, response.status);
+  const data = unwrap<Partial<CustomerSessionPayload>>(response.body, response.status, response.retryAfterSeconds);
   if (typeof data.accessToken !== "string" || typeof data.refreshToken !== "string") {
-    throw new ApiError("envelope", response.status);
+    throw new ApiError("envelope", response.status, {}, response.retryAfterSeconds);
   }
   return {
     customerId: typeof data.customerId === "string" ? data.customerId : "",
@@ -338,9 +395,9 @@ export async function refreshTokens(refreshToken: string): Promise<TokenPair> {
     method: "POST",
     body: { refreshToken },
   });
-  const data = unwrap<Partial<TokenPair>>(response.body, response.status);
+  const data = unwrap<Partial<TokenPair>>(response.body, response.status, response.retryAfterSeconds);
   if (typeof data.accessToken !== "string" || typeof data.refreshToken !== "string") {
-    throw new ApiError("envelope", response.status);
+    throw new ApiError("envelope", response.status, {}, response.retryAfterSeconds);
   }
   return {
     accessToken: data.accessToken,
