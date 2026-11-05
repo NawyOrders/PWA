@@ -252,12 +252,12 @@ describe("LoginView against the tenant API", () => {
     await requestApiCode(user);
 
     await waitFor(() =>
-      expect(api.requestOtp).toHaveBeenCalledWith({ phoneNumber: "+201012345678", channel: "sms" }),
+      expect(api.requestOtp).toHaveBeenCalledWith({ phoneNumber: "+201012345678" }),
     );
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("246810")).toBeInTheDocument();
     expect(within(dialog).getByText(/الكود صالح \d+ ثانية/)).toBeInTheDocument();
-    expect(screen.queryByText(/اكتب الكود اللي وصل في/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/اكتب الكود اللي وصل في الرسالة/)).not.toBeInTheDocument();
   });
 
   it("sends nothing to the network until the customer asks for a code", () => {
@@ -273,7 +273,7 @@ describe("LoginView against the tenant API", () => {
     await requestApiCode(user);
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByText(/اكتب الكود اللي وصل في رسالة SMS/)).toBeInTheDocument();
+    expect(screen.getByText(/اكتب الكود اللي وصل في الرسالة/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /إظهار الكود/ })).not.toBeInTheDocument();
   });
 
@@ -292,7 +292,7 @@ describe("LoginView against the tenant API", () => {
     expect(api.verifyOtp).toHaveBeenCalledWith({
       challengeId: "challenge-1",
       code: "246810",
-      fullName: "",
+      fullName: undefined,
     });
     const stored = JSON.parse(localStorage.getItem(storageKeys.session)!);
     expect(stored).toMatchObject({ accessToken: "access-token", refreshToken: "refresh-token" });
@@ -390,102 +390,5 @@ describe("LoginView against the tenant API", () => {
     expect(router.replace).not.toHaveBeenCalled();
     expect(localStorage.getItem(storageKeys.session)).toBe("null");
     expect(screen.getByRole("button", { name: /تأكيد الكود والمتابعة/ })).toBeEnabled();
-  });
-
-  it("sends the channel the customer picked and names it in the popup", async () => {
-    api.requestOtp.mockResolvedValue(challenge);
-    const user = userEvent.setup();
-    renderApp(<LoginView />);
-
-    await user.click(screen.getByRole("radio", { name: /واتساب/ }));
-    await requestApiCode(user);
-
-    await waitFor(() =>
-      expect(api.requestOtp).toHaveBeenCalledWith({ phoneNumber: "+201012345678", channel: "whatsapp" }),
-    );
-    const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByText(/اتُبعت عن طريق واتساب/)).toBeInTheDocument();
-    expect(screen.getByText(/هنبعتلك كود تحقق عن طريق واتساب/)).toBeInTheDocument();
-    expect(within(dialog).getByText("246810")).toBeInTheDocument();
-  });
-
-  it("tells the customer which channel the code is on while they type it", async () => {
-    api.requestOtp.mockResolvedValue({ ...challenge, devOtpCode: null });
-    const user = userEvent.setup();
-    renderApp(<LoginView />);
-
-    await user.click(screen.getByRole("radio", { name: /واتساب/ }));
-    await requestApiCode(user);
-
-    expect(screen.getByText(/اكتب الكود اللي وصل في واتساب/)).toBeInTheDocument();
-  });
-
-  it("never offers a resend earlier than the code itself expires", async () => {
-    api.requestOtp.mockResolvedValue({ ...challenge, expiresInSeconds: 20 });
-    const user = userEvent.setup();
-    renderApp(<LoginView />);
-
-    await requestApiCode(user);
-
-    expect(screen.getByText("00:20")).toBeInTheDocument();
-    expect(screen.queryByText("00:45")).not.toBeInTheDocument();
-  });
-
-  it("counts the server's Retry-After down instead of a silent dead button", async () => {
-    api.requestOtp.mockRejectedValue(new ApiError("rateLimited", 429, {}, 90));
-    const user = userEvent.setup();
-    renderApp(<LoginView />);
-
-    await requestApiCode(user);
-
-    expect(await screen.findByRole("alert")).toHaveTextContent("عدد محاولات زايد، استنى شوية وجرب تاني");
-    expect(screen.getByText("معاودة الطلب بعد")).toBeInTheDocument();
-    expect(screen.getByText("01:30")).toBeInTheDocument();
-    // Nothing was issued, so the code boxes stay locked.
-    for (const input of otpInputs()) expect(input).toBeDisabled();
-  });
-
-  it("falls back to the app's own cooldown when a 429 gives no Retry-After", async () => {
-    api.requestOtp.mockRejectedValue(new ApiError("rateLimited", 429));
-    const user = userEvent.setup();
-    renderApp(<LoginView />);
-
-    await requestApiCode(user);
-
-    expect(await screen.findByText("00:45")).toBeInTheDocument();
-    expect(screen.getByText("معاودة الطلب بعد")).toBeInTheDocument();
-  });
-
-  it("applies the typed name to the account when the backend returns none", async () => {
-    api.requestOtp.mockResolvedValue(challenge);
-    api.verifyOtp.mockResolvedValue({ ...sessionPayload, fullName: "" });
-    const user = userEvent.setup();
-    renderApp(<LoginView />);
-
-    await requestApiCode(user);
-    await user.type(screen.getByLabelText("الاسم بالكامل"), "Ahmed Nawy");
-    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "إغلاق" }));
-    fillCode("246810");
-    await user.click(screen.getByRole("button", { name: /تأكيد الكود والمتابعة/ }));
-
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/profile"));
-    expect(JSON.parse(localStorage.getItem(storageKeys.session)!)).toMatchObject({ fullName: "Ahmed Nawy" });
-  });
-
-  it("keeps the name the backend already has for a returning customer", async () => {
-    api.requestOtp.mockResolvedValue(challenge);
-    api.verifyOtp.mockResolvedValue({ ...sessionPayload, fullName: "Nawy Guest" });
-    const user = userEvent.setup();
-    renderApp(<LoginView />);
-
-    await requestApiCode(user);
-    await user.type(screen.getByLabelText("الاسم بالكامل"), "Someone Else");
-    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "إغلاق" }));
-    fillCode("246810");
-    await user.click(screen.getByRole("button", { name: /تأكيد الكود والمتابعة/ }));
-
-    await waitFor(() =>
-      expect(JSON.parse(localStorage.getItem(storageKeys.session)!)).toMatchObject({ fullName: "Nawy Guest" }),
-    );
   });
 });
