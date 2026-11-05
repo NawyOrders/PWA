@@ -77,8 +77,23 @@ export function clearRefreshCookie(options: { secure: boolean }): CookieValue {
  * Localhost is a trustworthy origin in every current browser, so the flag is
  * still safe there — it is plain `http://192.168.x.x` LAN testing that has to
  * go without it.
+ *
+ * `x-forwarded-proto` decides before the URL does, and that order matters.
+ * Behind any proxy or container — the usual way this app is deployed — the
+ * framework sees the internal hop, `http://127.0.0.1:3000`, while the browser
+ * is on HTTPS. Reading only the local URL would write a session cookie the
+ * browser sends over plaintext, on a deployment where plaintext was never
+ * offered. One wrong header on the proxy should not be able to force that, so
+ * an `https` anywhere in the forwarded list is treated as HTTPS, and no header
+ * at all falls back to the URL the app was actually asked to serve.
  */
-export function shouldMarkSecure(url: string): boolean {
+export function shouldMarkSecure(url: string, forwardedProto: string | null = null): boolean {
+  const forwarded = (forwardedProto ?? "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+  if (forwarded === "https") return true;
+
   try {
     const parsed = new URL(url);
     if (parsed.protocol === "https:") return true;
