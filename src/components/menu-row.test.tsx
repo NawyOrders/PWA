@@ -54,6 +54,6 @@ describe("MenuRow cart quantity controls", () => {
 
     await user.click(await screen.findByRole("button", { name: "أضف إلى السلة" }));
     const quantity = await screen.findByRole("group", { name: "الكمية" });
-    expect(quantity.className).toContain("max-[375px]:[&_button]:size-6");
+    expect(quantity.className).toContain("max-[375px]:[&_button]:size-7");
   });
 });
