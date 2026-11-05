@@ -45,7 +45,13 @@ describe("SiteChrome route guard", () => {
       renderChrome(pathname);
 
       await waitFor(() => expect(nav.replace).toHaveBeenCalledWith(loginHref(pathname)));
-      await waitFor(() => expect(screen.queryByText("protected content")).not.toBeInTheDocument());
+      // The guarded page stays mounted for the redirect frame, but it is hidden
+      // from sight and from assistive tech, so no private UI is ever painted.
+      await waitFor(() => {
+        const page = document.querySelector(".motion-page");
+        expect(page).toHaveClass("invisible");
+        expect(page).toHaveAttribute("aria-hidden", "true");
+      });
       expect(loginHref(pathname)).toContain(encodeURIComponent(pathname));
     },
   );
@@ -123,5 +129,51 @@ describe("SiteChrome route guard", () => {
     expect(screen.getByRole("contentinfo")).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "التنقل السفلي" })).toBeInTheDocument();
     expect(nav.replace).not.toHaveBeenCalled();
+  });
+});
+
+describe("SiteChrome pinned cart bar", () => {
+  function cartBar() {
+    return document.querySelector<HTMLElement>("[data-cart-bar]");
+  }
+
+  function mainPadding() {
+    return document.querySelector("main")?.className ?? "";
+  }
+
+  it("pins the cart bar above the tab bar and clears the main flow for it", async () => {
+    renderChrome("/");
+
+    await waitFor(() => expect(cartBar()).not.toBeNull());
+    expect(cartBar()?.className).toContain("fixed");
+    expect(cartBar()?.className).toContain("bottom-[calc(76px+env(safe-area-inset-bottom))]");
+    expect(mainPadding()).toContain("pb-[calc(9.75rem+env(safe-area-inset-bottom))]");
+  });
+
+  it("drops the bar to the page edge on screens with no tab bar", async () => {
+    renderChrome("/categories");
+
+    await waitFor(() => expect(cartBar()).not.toBeNull());
+    expect(cartBar()?.className).toContain("bottom-4");
+    expect(mainPadding()).toContain("pb-32");
+  });
+
+  it.each(["/cart", "/checkout/payment", "/product/beef-burger", "/login", "/offline"])(
+    "leaves %s to its own cart call to action",
+    async (pathname) => {
+      renderChrome(pathname, { loggedIn: true });
+
+      expect(await screen.findByText("protected content")).toBeInTheDocument();
+      expect(cartBar()).toBeNull();
+    },
+  );
+
+  it("hides the bar and restores the plain padding once the basket is empty", async () => {
+    localStorage.setItem(storageKeys.cart, "[]");
+    renderChrome("/");
+
+    expect(await screen.findByText("protected content")).toBeInTheDocument();
+    expect(cartBar()).toBeNull();
+    expect(mainPadding()).toContain("pb-24 lg:pb-0");
   });
 });
