@@ -24,7 +24,6 @@ import {
 import { PromoCarousel } from "@/components/promo-carousel";
 import { ProductCard } from "@/components/product-card";
 import { MenuRow } from "@/components/menu-row";
-import { CartBar } from "@/components/cart-bar";
 import { InstallButton } from "@/components/install-button";
 import { MenuFilters } from "@/components/menu-filters";
 import { SectionTitle } from "@/components/ui";
@@ -44,17 +43,17 @@ function PhoneMockup() {
     : { width: 740, height: 1360 };
 
   return (
-    <div className="relative h-[480px] w-[258px] shrink-0 rounded-t-[52px] bg-gradient-to-br from-[#f58b78] via-[#ed604a] to-[#ffd2c3] p-[6px] shadow-[0_32px_70px_-30px_rgba(115,43,27,0.6)]">
-      <div className="relative h-full w-full overflow-hidden rounded-t-[46px] bg-cream">
+    <div className="relative h-[288px] w-[155px] shrink-0 rounded-t-[32px] bg-gradient-to-br from-[#f58b78] via-[#ed604a] to-[#ffd2c3] p-[5px] shadow-[0_32px_70px_-30px_rgba(115,43,27,0.6)] sm:h-[360px] sm:w-[194px] sm:rounded-t-[42px] sm:p-[6px] lg:h-[480px] lg:w-[258px] lg:rounded-t-[52px]">
+      <div className="relative h-full w-full overflow-hidden rounded-t-[27px] bg-cream sm:rounded-t-[37px] lg:rounded-t-[46px]">
         <Image
           src={mockup}
           alt={t("Nawy Orders mobile app")}
           {...mockupDimensions}
-          sizes="246px"
+          sizes="(max-width: 639px) 145px, (max-width: 1023px) 182px, 246px"
           unoptimized
-          className="absolute inset-x-0 top-6 h-auto w-full"
+          className="absolute inset-x-0 top-4 h-auto w-full sm:top-5 lg:top-6"
         />
-        <span className="absolute left-1/2 top-3 z-10 h-3 w-9 -translate-x-1/2 rounded-full bg-black" />
+        <span className="absolute left-1/2 top-2 z-10 h-2.5 w-7 -translate-x-1/2 rounded-full bg-black sm:top-2.5 sm:h-3 sm:w-8 lg:top-3 lg:w-9" />
       </div>
     </div>
   );
@@ -270,27 +269,23 @@ export function HomeView() {
         </div>
       </section>
 
-      <div className="shell mt-6 lg:mt-10">
-        <CartBar />
-      </div>
-
-      <section className="shell mt-12 hidden lg:block">
-        <div className="relative h-[448px] overflow-hidden rounded-[36px] bg-[linear-gradient(110deg,#f9d6ce_0%,#f8c1b2_48%,#f25b43_100%)] px-10 py-8 lg:px-11">
+      <section className="shell mt-10 lg:mt-12">
+        <div className="relative overflow-hidden rounded-[28px] bg-[linear-gradient(110deg,#f9d6ce_0%,#f8c1b2_48%,#f25b43_100%)] px-5 py-7 sm:px-8 lg:h-[448px] lg:px-11 lg:py-8">
           <div className="absolute -right-16 -top-40 size-[410px] rounded-full bg-[#ff9b73]/35" />
           <div className="absolute -bottom-48 left-[8%] size-[390px] rounded-full bg-[#f47b55]/45" />
           <div className="absolute -bottom-64 right-[28%] size-[360px] rounded-full bg-[#ffad8b]/35" />
-          <div className="relative grid h-full grid-cols-1 items-center">
+          <div className="relative grid grid-cols-1 items-center lg:h-full">
             <div className="max-w-xl">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/60 px-3.5 py-1.5 text-[11px] font-bold text-ink/70">
                 <Smartphone className="size-3.5 text-brand" />
                 {t("ناوي أوردرز")}
               </span>
-              <h2 className="mt-4 text-[36px] font-extrabold leading-[1.3]">
+              <h2 className="mt-3 text-[26px] font-extrabold leading-[1.3] sm:text-[30px] lg:mt-4 lg:text-[36px]">
                 {t("احصل على طعامك")}
                 <br />
                 {t("المفضل بلمسة واحدة")}
               </h2>
-              <p className="mt-4 max-w-md text-sm font-bold leading-7 text-ink/70">
+              <p className="mt-3 max-w-md text-xs font-bold leading-6 text-ink/70 sm:text-sm sm:leading-7 lg:mt-4">
                 {t(
                   "حمّل التطبيق عشان تحصل على عروض حصرية، وتتبع طلبك لحظة بلحظة، وتوصيل أسرع على مزاجك.",
                 )}
@@ -357,7 +352,9 @@ export function HomeView() {
               </div>
             </div>
           </div>
-          <div className="absolute left-[7%] right-auto top-10 ltr:left-auto ltr:right-[7%]">
+          {/* Centred under the copy on phones and tablets, pinned to the far
+              edge of the card from lg up, where the card has a fixed height. */}
+          <div className="mx-auto mt-7 sm:mt-8 lg:absolute lg:top-10 lg:left-[7%] lg:right-auto lg:mt-0 ltr:lg:left-auto ltr:lg:right-[7%]">
             <PhoneMockup />
           </div>
         </div>
