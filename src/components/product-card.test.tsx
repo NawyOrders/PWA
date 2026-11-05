@@ -61,6 +61,7 @@ describe("ProductCard cart quantity controls", () => {
     const card = quantity.closest("article");
     const actionRow = quantity.parentElement;
     expect(actionRow).toHaveTextContent("90");
+    expect(quantity.className).toContain("max-[375px]:[&_button]:size-6");
     expect(actionRow?.className).toContain("min-h-11");
     expect(card?.querySelector("div.mt-1.min-h-11")).not.toBeInTheDocument();
   });
