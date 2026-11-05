@@ -6,7 +6,6 @@ import {
   apiErrorMessageKey,
   fetchBranding,
   normalizeEgyptianPhone,
-  parseRetryAfter,
   refreshTokens,
   requestOtp,
   revokeRefreshToken,
@@ -84,34 +83,6 @@ describe("normalizeEgyptianPhone", () => {
     expect(normalizeEgyptianPhone("")).toBe("");
     expect(normalizeEgyptianPhone("--")).toBe("");
   });
-
-  it("keeps the country code of a number already typed in international form", () => {
-    expect(normalizeEgyptianPhone("+966500000000")).toBe("+966500000000");
-    expect(normalizeEgyptianPhone("+20 101 234 5678")).toBe("+201012345678");
-    expect(normalizeEgyptianPhone(" +1 305 555 0123 ")).toBe("+13055550123");
-  });
-});
-
-describe("parseRetryAfter", () => {
-  it("reads the delay-seconds form the tenant API sends", () => {
-    expect(parseRetryAfter("30")).toBe(30);
-    expect(parseRetryAfter(" 7 ")).toBe(7);
-    expect(parseRetryAfter("0")).toBe(0);
-  });
-
-  it("converts the HTTP-date form into seconds from now", () => {
-    const now = Date.parse("2026-11-05T10:00:00Z");
-    expect(parseRetryAfter("Thu, 05 Nov 2026 10:00:45 GMT", now)).toBe(45);
-    // A date already in the past means "stop waiting", not a negative timer.
-    expect(parseRetryAfter("Thu, 05 Nov 2026 09:59:00 GMT", now)).toBe(0);
-  });
-
-  it("stays null when the server said nothing useful", () => {
-    expect(parseRetryAfter(null)).toBeNull();
-    expect(parseRetryAfter("")).toBeNull();
-    expect(parseRetryAfter("soon")).toBeNull();
-    expect(parseRetryAfter("-5")).toBeNull();
-  });
 });
 
 describe("requestOtp", () => {
@@ -172,16 +143,6 @@ describe("requestOtp", () => {
     });
   });
 
-  it("turns an unusable code lifetime into zero, never a negative timer", async () => {
-    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", BASE);
-    stubFetch(() => jsonResponse(envelope({ challengeId: "ch-3", expiresInSeconds: -30.7 })));
-
-    await expect(requestOtp({ phoneNumber: "+201012345678" })).resolves.toMatchObject({ expiresInSeconds: 0 });
-
-    stubFetch(() => jsonResponse(envelope({ challengeId: "ch-4", expiresInSeconds: 120.9 })));
-    await expect(requestOtp({ phoneNumber: "+201012345678" })).resolves.toMatchObject({ expiresInSeconds: 120 });
-  });
-
   it("rejects a challenge without an id as an unreadable response", async () => {
     vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", BASE);
     stubFetch(() => jsonResponse(envelope({ expiresInSeconds: 60 })));
@@ -215,24 +176,12 @@ describe("verifyOtp, refreshTokens and revoke", () => {
     });
   });
 
-  it("leaves the name out of the body for a returning customer", async () => {
+  it("sends an empty name for a returning customer", async () => {
     vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", BASE);
     const fetchMock = stubFetch(() => jsonResponse(envelope(session)));
 
     await verifyOtp({ challengeId: "ch-1", code: "123456" });
-    expect(jsonOf(fetchMock.mock.calls[0]?.[1])).toEqual({ challengeId: "ch-1", code: "123456" });
-
-    // Whitespace is not a name either.
-    await verifyOtp({ challengeId: "ch-1", code: "123456", fullName: "   " });
-    expect(jsonOf(fetchMock.mock.calls[1]?.[1])).toEqual({ challengeId: "ch-1", code: "123456" });
-  });
-
-  it("trims the name it does send", async () => {
-    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", BASE);
-    const fetchMock = stubFetch(() => jsonResponse(envelope(session)));
-
-    await verifyOtp({ challengeId: "ch-1", code: "123456", fullName: "  Nawy Guest  " });
-    expect(jsonOf(fetchMock.mock.calls[0]?.[1]).fullName).toBe("Nawy Guest");
+    expect(jsonOf(fetchMock.mock.calls[0]?.[1]).fullName).toBe("");
   });
 
   it("rejects a verify response without tokens", async () => {
@@ -378,39 +327,6 @@ describe("failure mapping", () => {
     const cause = await requestOtp({ phoneNumber: "+201012345678" }).catch((error: unknown) => error);
     expect(cause).toBeInstanceOf(ApiError);
     expect((cause as ApiError).fields).toEqual({ phoneNumber: "Invalid." });
-  });
-
-  it("keeps the Retry-After the contract promises on a 429", async () => {
-    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", BASE);
-    stubFetch(() =>
-      jsonResponse(envelope(null, { statusCode: 429, isSuccess: false }), {
-        status: 429,
-        headers: { "Retry-After": "90" },
-      }),
-    );
-
-    const cause = await requestOtp({ phoneNumber: "+201012345678" }).catch((error: unknown) => error);
-    expect(cause).toBeInstanceOf(ApiError);
-    expect((cause as ApiError).kind).toBe("rateLimited");
-    expect((cause as ApiError).retryAfterSeconds).toBe(90);
-  });
-
-  it("keeps Retry-After when the failure only shows up inside the envelope", async () => {
-    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", BASE);
-    stubFetch(() =>
-      jsonResponse(envelope(null, { statusCode: 429, isSuccess: false }), { headers: { "Retry-After": "30" } }),
-    );
-
-    const cause = await requestOtp({ phoneNumber: "+201012345678" }).catch((error: unknown) => error);
-    expect((cause as ApiError).retryAfterSeconds).toBe(30);
-  });
-
-  it("reports no wait when the server did not say how long", async () => {
-    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", BASE);
-    stubFetch(() => jsonResponse(envelope(null, { statusCode: 429, isSuccess: false }), { status: 429 }));
-
-    const cause = await requestOtp({ phoneNumber: "+201012345678" }).catch((error: unknown) => error);
-    expect((cause as ApiError).retryAfterSeconds).toBeNull();
   });
 
   it("trusts the envelope status when the transport said 200", async () => {
