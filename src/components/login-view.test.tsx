@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LoginView } from "@/components/login-view";
@@ -22,6 +23,19 @@ const api = vi.hoisted(() => ({
   refreshTokens: vi.fn(),
   revokeRefreshToken: vi.fn(),
 }));
+
+/**
+ * The demo code is random, so the suite drives the generator from here: a fixed
+ * value keeps the long-standing "123456" assertions readable, changing it
+ * between requests proves the screen really re-reads it, and an empty one
+ * simulates a browser with no cryptographic source.
+ */
+const fakeOtp = vi.hoisted(() => ({ code: "123456" }));
+
+vi.mock("@/lib/otp", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/otp")>();
+  return { ...actual, generateOtpCode: () => fakeOtp.code };
+});
 
 vi.mock("@/lib/api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api")>();
@@ -74,6 +88,7 @@ function fillCode(value: string) {
 
 beforeEach(() => {
   apiMode.configured = false;
+  fakeOtp.code = "123456";
 });
 
 describe("LoginView", () => {
@@ -604,5 +619,111 @@ describe("LoginView in a production bundle against the tenant API", () => {
 
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("246810")).toBeInTheDocument();
+  });
+});
+
+/**
+ * The demo code used to be the constant "123456", which is not a verification
+ * code but a master key: it works for every phone number, forever, and anyone
+ * who read the source once knows it. These cases hold the replacement to the
+ * three things that make a code worth calling one — it is fresh, it is short
+ * lived, and guessing it runs out of road.
+ */
+describe("LoginView mints a fresh demo code", () => {
+  it("shows the newest code and refuses the previous one", async () => {
+    const user = userEvent.setup();
+    renderApp(<LoginView />);
+    await user.type(screen.getByLabelText("رقم الموبايل"), "01012345678");
+
+    await user.click(screen.getByRole("button", { name: /^إرسال$/ }));
+    expect(within(screen.getByRole("dialog")).getByText("123456")).toBeInTheDocument();
+
+    fakeOtp.code = "904117";
+    await user.click(screen.getByRole("button", { name: /^إرسال$/ }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("904117")).toBeInTheDocument();
+    expect(within(dialog).queryByText("123456")).not.toBeInTheDocument();
+    expect(screen.getByText(/استخدم كود التجربة 904117/)).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole("button", { name: "إغلاق" }));
+    fillCode("123456");
+    await user.click(screen.getByRole("button", { name: /تأكيد الكود والمتابعة/ }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "الكود غير صحيح، جرب تاني — فاضل 4 محاولات",
+    );
+    expect(router.replace).not.toHaveBeenCalled();
+    expect(JSON.parse(localStorage.getItem(storageKeys.auth)!)).not.toBe(true);
+  });
+
+  it("burns the code after five wrong tries and puts a cooldown on sending", async () => {
+    const user = userEvent.setup();
+    renderApp(<LoginView />);
+    await requestCode(user);
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "إغلاق" }));
+
+    for (let attempt = 1; attempt < 5; attempt += 1) {
+      fillCode("000000");
+      await user.click(screen.getByRole("button", { name: /تأكيد الكود والمتابعة/ }));
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        `فاضل ${5 - attempt} محاولات`,
+      );
+    }
+
+    fillCode("000000");
+    await user.click(screen.getByRole("button", { name: /تأكيد الكود والمتابعة/ }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("عدد محاولات زايد، استنى شوية وجرب تاني");
+    // No code left to answer with, and sending again has to wait.
+    for (const input of otpInputs()) expect(input).toBeDisabled();
+    expect(screen.getByText("معاودة الطلب بعد")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /إظهار الكود/ })).not.toBeInTheDocument();
+    expect(router.replace).not.toHaveBeenCalled();
+    expect(JSON.parse(localStorage.getItem(storageKeys.auth)!)).not.toBe(true);
+  });
+
+  it("says so instead of inventing a guessable code when the browser has no CSPRNG", async () => {
+    fakeOtp.code = "";
+    const user = userEvent.setup();
+    renderApp(<LoginView />);
+    await user.type(screen.getByLabelText("رقم الموبايل"), "01012345678");
+    await user.click(screen.getByRole("button", { name: /^إرسال$/ }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("متصفحك مش بيقدر يولّد كود آمن");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    for (const input of otpInputs()) expect(input).toBeDisabled();
+  });
+
+  it("retires the code the moment its countdown ends", async () => {
+    vi.useFakeTimers();
+    renderApp(<LoginView />);
+    fireEvent.change(screen.getByLabelText("رقم الموبايل"), { target: { value: "01012345678" } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /^إرسال$/ }));
+    });
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    // The countdown reschedules itself from the render its own tick caused, so
+    // one bulk advance only moves one second. Walk it a second at a time.
+    for (let tick = 0; tick < 46; tick += 1) {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1_000);
+      });
+    }
+
+    // The popup closes rather than keep handing out a code that no longer works.
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByText(/استخدم كود التجربة/)).not.toBeInTheDocument();
+    expect(screen.getByText(/اكتب الكود اللي وصل في رسالة SMS/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /إعادة إرسال الكود/ })).toBeEnabled();
+
+    fillCode("123456");
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /تأكيد الكود والمتابعة/ }));
+    });
+    expect(screen.getByRole("alert")).toHaveTextContent("انتهت صلاحية الكود، اطلب كود جديد");
+    expect(router.replace).not.toHaveBeenCalled();
+    expect(JSON.parse(localStorage.getItem(storageKeys.auth)!)).not.toBe(true);
   });
 });
