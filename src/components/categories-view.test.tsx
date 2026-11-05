@@ -33,5 +33,6 @@ describe("CategoriesView", () => {
     expect(screen.getByRole("heading", { name: "الاقسام" })).toBeInTheDocument();
     expect(container.querySelectorAll('a[href^="/categories/"]')).toHaveLength(7);
     expect(screen.getAllByText(/صنف/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/عرض كل الأصناف/)).not.toBeInTheDocument();
   });
 });

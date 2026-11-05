@@ -68,9 +68,6 @@ export function CategoriesView() {
             </span>
             {t("الأقسام")}
           </h1>
-          <Link href="/categories" className="hidden text-sm font-bold text-brand hover:text-brand-dark lg:block">
-            {t("عرض كل الأصناف ({count})", { count: products.length })}
-          </Link>
         </div>
 
         <div className="motion-stagger mt-4 grid grid-cols-2 gap-3 lg:hidden">
