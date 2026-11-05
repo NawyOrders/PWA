@@ -141,21 +141,24 @@ describe("SiteChrome pinned cart bar", () => {
     return document.querySelector("main")?.className ?? "";
   }
 
-  it("pins the cart bar above the tab bar and clears the main flow for it", async () => {
+  it("shows the cart bar only on desktop and clears the main flow without mobile cart spacing", async () => {
     renderChrome("/");
 
     await waitFor(() => expect(cartBar()).not.toBeNull());
     expect(cartBar()?.className).toContain("fixed");
-    expect(cartBar()?.className).toContain("bottom-[calc(76px+env(safe-area-inset-bottom))]");
-    expect(mainPadding()).toContain("pb-[calc(9.75rem+env(safe-area-inset-bottom))]");
+    expect(cartBar()?.className).toContain("hidden lg:block");
+    expect(mainPadding()).toContain("pb-24");
+    expect(mainPadding()).not.toContain("9.75rem");
   });
 
-  it("drops the bar to the page edge on screens with no tab bar", async () => {
+  it("keeps the desktop bar at the page edge on screens with no tab bar", async () => {
     renderChrome("/categories");
 
     await waitFor(() => expect(cartBar()).not.toBeNull());
+    expect(cartBar()?.className).toContain("hidden lg:block");
     expect(cartBar()?.className).toContain("bottom-4");
-    expect(mainPadding()).toContain("pb-32");
+    expect(mainPadding()).toContain("lg:pb-0");
+    expect(mainPadding()).not.toContain("pb-32");
   });
 
   it.each(["/cart", "/checkout/payment", "/product/beef-burger", "/login", "/offline"])(

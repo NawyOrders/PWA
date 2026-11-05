@@ -42,8 +42,8 @@ function PhoneMockup() {
     : { width: 740, height: 1360 };
 
   return (
-    <div className="relative h-[288px] w-[155px] shrink-0 rounded-t-[32px] bg-gradient-to-br from-[#f58b78] via-[#ed604a] to-[#ffd2c3] p-[5px] shadow-[0_32px_70px_-30px_rgba(115,43,27,0.6)] sm:h-[360px] sm:w-[194px] sm:rounded-t-[42px] sm:p-[6px] lg:h-[480px] lg:w-[258px] lg:rounded-t-[52px]">
-      <div className="relative h-full w-full overflow-hidden rounded-t-[27px] bg-cream sm:rounded-t-[37px] lg:rounded-t-[46px]">
+    <div className="relative h-[288px] w-[155px] shrink-0 rounded-t-[32px] bg-gradient-to-br from-[#f58b78] via-[#ed604a] to-[#ffd2c3] p-[5px] shadow-[0_32px_70px_-30px_rgba(115,43,27,0.6)] max-[750px]:rounded-b-[32px] sm:h-[360px] sm:w-[194px] sm:rounded-t-[42px] sm:p-[6px] sm:max-[750px]:rounded-b-[42px] lg:h-[480px] lg:w-[258px] lg:rounded-t-[52px]">
+      <div className="relative h-full w-full overflow-hidden rounded-t-[27px] bg-cream max-[750px]:rounded-b-[27px] sm:rounded-t-[37px] sm:max-[750px]:rounded-b-[37px] lg:rounded-t-[46px]">
         <Image
           src={mockup}
           alt={t("Nawy Orders mobile app")}
@@ -273,12 +273,12 @@ export function HomeView() {
       </section>
 
       <section className="shell mt-10 lg:mt-12">
-        <div className="relative overflow-hidden rounded-[28px] bg-[linear-gradient(110deg,#f9d6ce_0%,#f8c1b2_48%,#f25b43_100%)] px-5 py-7 sm:px-8 lg:h-[448px] lg:px-11 lg:py-8">
+        <div className="relative overflow-hidden rounded-[28px] bg-[linear-gradient(110deg,#f9d6ce_0%,#f8c1b2_48%,#f25b43_100%)] px-5 py-7 sm:px-8 min-[750px]:h-[448px] min-[750px]:px-11 min-[750px]:py-8 lg:h-[448px] lg:px-11 lg:py-8">
           <div className="absolute -right-16 -top-40 size-[410px] rounded-full bg-[#ff9b73]/35" />
           <div className="absolute -bottom-48 left-[8%] size-[390px] rounded-full bg-[#f47b55]/45" />
           <div className="absolute -bottom-64 right-[28%] size-[360px] rounded-full bg-[#ffad8b]/35" />
-          <div className="relative grid grid-cols-1 items-center lg:h-full">
-            <div className="max-w-xl">
+          <div className="relative grid grid-cols-1 items-center min-[750px]:h-full lg:h-full">
+            <div className="max-w-xl min-[750px]:max-w-[calc(100%-300px)]">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/60 px-3.5 py-1.5 text-[11px] font-bold text-ink/70">
                 <Smartphone className="size-3.5 text-brand" />
                 {t("ناوي أوردرز")}
@@ -355,9 +355,8 @@ export function HomeView() {
               </div>
             </div>
           </div>
-          {/* Centred under the copy on phones and tablets, pinned to the far
-              edge of the card from lg up, where the card has a fixed height. */}
-          <div className="mx-auto mt-7 sm:mt-8 lg:absolute lg:top-10 lg:left-[7%] lg:right-auto lg:mt-0 ltr:lg:left-auto ltr:lg:right-[7%]">
+          {/* Centred below 750px; pinned to the far edge from 750px up. */}
+          <div className="mx-auto mt-7 flex justify-center sm:mt-8 min-[750px]:absolute min-[750px]:top-10 min-[750px]:left-[7%] min-[750px]:right-auto min-[750px]:mt-0 lg:absolute lg:top-10 lg:left-[7%] lg:right-auto lg:mt-0 ltr:min-[750px]:left-auto ltr:min-[750px]:right-[7%] ltr:lg:left-auto ltr:lg:right-[7%]">
             <PhoneMockup />
           </div>
         </div>

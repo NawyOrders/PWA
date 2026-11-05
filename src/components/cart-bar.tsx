@@ -7,9 +7,7 @@ import { deliveryFee, formatPrice, productsById } from "@/lib/data";
 
 /**
  * Persistent cart summary. The site chrome mounts it instead of a single
- * screen so it stays pinned to the viewport for the whole scroll, on every
- * breakpoint: above the tab bar on mobile and tablet, floating just above
- * the page edge on desktop.
+ * screen so it stays pinned to the viewport for the whole scroll on desktop.
  */
 export function CartBar({ aboveBottomNav = true }: { aboveBottomNav?: boolean }) {
   const { count, subtotal, lines, t, lang, loggedIn, openLoginPrompt, fulfilment, coupon } = useApp();
@@ -31,11 +29,11 @@ export function CartBar({ aboveBottomNav = true }: { aboveBottomNav?: boolean })
   return (
     <div
       data-cart-bar
-      className={
+      className={`hidden lg:block ${
         aboveBottomNav
           ? "fixed inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 lg:bottom-5"
           : "fixed inset-x-0 bottom-4 z-40 lg:bottom-5"
-      }
+      }`}
     >
       <div className="shell">
         <div className="motion-rise flex items-center gap-2.5 rounded-[18px] border border-line bg-white px-2.5 py-2.5 shadow-pop sm:gap-3 md:rounded-[20px] lg:gap-4 lg:rounded-[22px] lg:px-5 lg:py-4">

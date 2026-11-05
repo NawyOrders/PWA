@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Check, ChevronLeft, Info, Minus, Plus, ShoppingCart } from "lucide-react";
 import { categoriesById, formatPrice, type Product } from "@/lib/data";
 import { useApp } from "@/components/providers";
 import { StoreHeader } from "@/components/store-header";
-import { Button, FavoriteButton, HotBadge, MobilePageHeader, Price } from "@/components/ui";
+import { buttonStyles, FavoriteButton, HotBadge, MobilePageHeader, Price } from "@/components/ui";
 
 const sizes = [
   { id: "sandwich", label: "ساندوتش فقط", extra: 0, hint: "ساندوتش برجر طازة" },
@@ -21,11 +22,11 @@ const extrasList = [
 ];
 
 export function ProductDetail({ product }: { product: Product }) {
-  const { addItem, t } = useApp();
+  const { addItem, changeQty, lines, t } = useApp();
+  const router = useRouter();
   const [sizeId, setSizeId] = useState("sandwich");
   const [extras, setExtras] = useState<string[]>([]);
   const [note, setNote] = useState("");
-  const [qty, setQty] = useState(1);
 
   const customizable = product.category === "burger";
   const size = customizable ? (sizes.find((item) => item.id === sizeId) ?? sizes[0]) : null;
@@ -33,7 +34,6 @@ export function ProductDetail({ product }: { product: Product }) {
     ? extras.reduce((total, id) => total + (extrasList.find((item) => item.id === id)?.price ?? 0), 0)
     : 0;
   const unitPrice = product.price + (size?.extra ?? 0) + extrasPrice;
-  const total = unitPrice * qty;
   const category = categoriesById[product.category];
 
   const selectedExtras = useMemo(
@@ -44,9 +44,27 @@ export function ProductDetail({ product }: { product: Product }) {
     [customizable, extras],
   );
 
-  const addToCart = () => {
+  const cartKey = [product.id, size?.label ?? "", [...selectedExtras].sort().join("+"), note.trim()]
+    .filter(Boolean)
+    .join("|");
+  const cartLine = lines.find((line) => line.key === cartKey);
+  const qty = cartLine?.qty ?? 0;
+  const total = unitPrice * qty;
+
+  const updateQuantity = (delta: number) => {
+    if (delta < 0) {
+      if (cartLine) changeQty(cartLine.key, delta);
+      return;
+    }
+
+    if (qty >= 20) return;
+    if (cartLine) {
+      changeQty(cartLine.key, delta);
+      return;
+    }
+
     addItem(product.id, {
-      qty,
+      qty: delta,
       price: unitPrice,
       size: size?.label,
       extras: customizable ? selectedExtras : undefined,
@@ -102,7 +120,7 @@ export function ProductDetail({ product }: { product: Product }) {
               <h1 className="mt-3 text-[30px] font-extrabold leading-tight">{t(product.name)}</h1>
               <p className="mt-2 text-sm leading-7 text-muted">{t(product.description)}</p>
               <div className="mt-3 flex justify-start">
-                <Price value={total} size="lg" oldValue={product.oldPrice} />
+                <Price value={product.price} size="lg" oldValue={product.oldPrice} />
               </div>
             </div>
 
@@ -249,7 +267,8 @@ export function ProductDetail({ product }: { product: Product }) {
                     <button
                       type="button"
                       aria-label={t("زيادة الكمية")}
-                      onClick={() => setQty((value) => Math.min(20, value + 1))}
+                      disabled={qty >= 20}
+                      onClick={() => updateQuantity(1)}
                       className="grid size-8 place-items-center rounded-full border border-brand/30 bg-brand-soft text-brand"
                     >
                       <Plus className="size-4" />
@@ -258,7 +277,8 @@ export function ProductDetail({ product }: { product: Product }) {
                     <button
                       type="button"
                       aria-label={t("إنقاص الكمية")}
-                      onClick={() => setQty((value) => Math.max(1, value - 1))}
+                      disabled={qty === 0}
+                      onClick={() => updateQuantity(-1)}
                       className="grid size-8 place-items-center rounded-full transition hover:bg-cream"
                     >
                       <Minus className="size-4" />
@@ -272,10 +292,15 @@ export function ProductDetail({ product }: { product: Product }) {
               </div>
 
               <div className="mt-4 hidden lg:block">
-                <Button block onClick={addToCart}>
+                <button
+                  type="button"
+                  disabled={qty === 0}
+                  onClick={() => router.push("/cart")}
+                  className={buttonStyles({ block: true })}
+                >
                   <ShoppingCart className="size-4" />
-                  {t("أضف إلى السلة")}
-                </Button>
+                  {t("عرض السلة")}
+                </button>
               </div>
             </div>
 
@@ -299,7 +324,8 @@ export function ProductDetail({ product }: { product: Product }) {
               <button
                 type="button"
                 aria-label={t("زيادة الكمية")}
-                onClick={() => setQty((value) => Math.min(20, value + 1))}
+                disabled={qty >= 20}
+                onClick={() => updateQuantity(1)}
                 className="grid size-8 place-items-center rounded-full bg-brand text-white"
               >
                 <Plus className="size-4" />
@@ -308,7 +334,8 @@ export function ProductDetail({ product }: { product: Product }) {
               <button
                 type="button"
                 aria-label={t("إنقاص الكمية")}
-                onClick={() => setQty((value) => Math.max(1, value - 1))}
+                disabled={qty === 0}
+                onClick={() => updateQuantity(-1)}
                 className="grid size-8 place-items-center rounded-full bg-cream-50"
               >
                 <Minus className="size-4" />
@@ -317,12 +344,13 @@ export function ProductDetail({ product }: { product: Product }) {
           </div>
           <button
             type="button"
-            onClick={addToCart}
-            className="btn-brand motion-press mt-2.5 flex h-12 w-full items-center justify-between px-5 text-sm"
+            disabled={qty === 0}
+            onClick={() => router.push("/cart")}
+            className="btn-brand motion-press mt-2.5 flex h-12 w-full items-center justify-between px-5 text-sm disabled:pointer-events-none disabled:opacity-50"
           >
             <span className="flex items-center gap-2">
               <ShoppingCart className="size-4" />
-              {t("أضف إلى السلة")}
+              {t("عرض السلة")}
             </span>
             <span className="text-sm font-extrabold">{formatPrice(total)} {t("جنيه")}</span>
           </button>

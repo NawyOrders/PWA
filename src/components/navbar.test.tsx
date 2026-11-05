@@ -60,5 +60,9 @@ describe("Navbar", () => {
     const toggle = await screen.findByRole("button", { name: "تغيير اللغة إلى الإنجليزية" });
     expect(toggle).toHaveTextContent("EN");
     expect(toggle.closest("div")?.className).toContain("justify-end");
+    expect(screen.getByRole("link", { name: "الإشعارات" })).toHaveAttribute(
+      "href",
+      "/notifications",
+    );
   });
 });
