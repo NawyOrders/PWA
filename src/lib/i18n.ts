@@ -352,6 +352,9 @@ const en: Record<string, string> = {
   "اضغط على القلب في أي طبق عشان تلاقيه هنا بسرعة في طلبك الجاي.": "Tap the heart on any dish to find it here quickly next time.",
   "تصفح الأطباق": "Browse dishes",
   "تغيير الصورة الشخصية": "Change profile photo",
+  "أضف صورة شخصية": "Add a profile photo",
+  "لسه مضافتش صورتك — اضغط «تعديل الملف الشخصي» لرفعها":
+    "No photo yet — tap \"Edit profile\" to add one.",
   "الاسم الكامل": "Full name",
   "اكتب اسمك الكامل": "Enter your full name",
   "رقم الهاتف": "Phone number",

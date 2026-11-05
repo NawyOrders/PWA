@@ -1,9 +1,10 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LoginView } from "@/components/login-view";
 import { renderApp } from "@/test/render";
 import { ApiError } from "@/lib/api";
+import { user as seedUser } from "@/lib/data";
 import { storageKeys } from "@/lib/storage";
 
 const router = vi.hoisted(() => ({ replace: vi.fn() }));
@@ -487,5 +488,121 @@ describe("LoginView against the tenant API", () => {
     await waitFor(() =>
       expect(JSON.parse(localStorage.getItem(storageKeys.session)!)).toMatchObject({ fullName: "Nawy Guest" }),
     );
+  });
+});
+
+/**
+ * The deployed site builds with `NODE_ENV=production` and, until the tenant
+ * backend is reachable, with no base URL — so the offline demo path is what a
+ * real customer sees in production. A single dev-code gate used to hide the
+ * local code there too, which left the app asking for a code nobody could see or
+ * copy. These cases pin both halves of that bug.
+ */
+describe("LoginView in a production bundle (no backend configured)", () => {
+  beforeEach(() => {
+    vi.stubEnv("NODE_ENV", "production");
+    apiMode.configured = false;
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("still shows the demo code in the copyable popup", async () => {
+    const user = userEvent.setup();
+    renderApp(<LoginView />);
+    await requestCode(user);
+
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("123456")).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: /انسخ الكود/ })).toBeEnabled();
+  });
+
+  it("asks for the name a first-time customer registers with", () => {
+    renderApp(<LoginView />);
+
+    expect(screen.getByLabelText("الاسم بالكامل")).toBeInTheDocument();
+    expect(screen.getByText("اختياري")).toBeInTheDocument();
+  });
+
+  it("builds the account from the name and mobile the customer typed", async () => {
+    const user = userEvent.setup();
+    renderApp(<LoginView />);
+
+    await user.type(screen.getByLabelText("رقم الموبايل"), "01099887766");
+    await user.type(screen.getByLabelText("الاسم بالكامل"), "Ahmed Samir");
+    await user.click(screen.getByRole("button", { name: /^إرسال$/ }));
+    fillCode("123456");
+    await user.click(screen.getByRole("button", { name: /تأكيد الكود والمتابعة/ }));
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/profile"));
+    // A new account has no picture: the customer adds one from the edit screen.
+    await waitFor(() =>
+      expect(JSON.parse(localStorage.getItem(storageKeys.profile)!)).toMatchObject({
+        name: "Ahmed Samir",
+        phone: "+201099887766",
+        avatar: "",
+      }),
+    );
+  });
+
+  it("keeps the seeded name when a returning customer signs in without one", async () => {
+    const user = userEvent.setup();
+    renderApp(<LoginView />);
+
+    await user.type(screen.getByLabelText("رقم الموبايل"), "01099887766");
+    await user.click(screen.getByRole("button", { name: /^إرسال$/ }));
+    fillCode("123456");
+    await user.click(screen.getByRole("button", { name: /تأكيد الكود والمتابعة/ }));
+
+    await waitFor(() => expect(JSON.parse(localStorage.getItem(storageKeys.profile)!)).toBeTruthy());
+    const stored = JSON.parse(localStorage.getItem(storageKeys.profile)!);
+    expect(stored.phone).toBe("+201099887766");
+    expect(stored.name).toBe(seedUser.name);
+  });
+});
+
+describe("LoginView in a production bundle against the tenant API", () => {
+  const challenge = {
+    challengeId: "challenge-1",
+    expiresAtUtc: "2026-11-05T10:02:00Z",
+    expiresInSeconds: 120,
+    devOtpCode: "246810",
+  };
+
+  beforeEach(() => {
+    vi.stubEnv("NODE_ENV", "production");
+    apiMode.configured = true;
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    api.requestOtp.mockResolvedValue(challenge);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("keeps the backend's test code out of the popup", async () => {
+    const user = userEvent.setup();
+    renderApp(<LoginView />);
+
+    await user.type(screen.getByLabelText("رقم الموبايل"), "01012345678");
+    await user.click(screen.getByRole("button", { name: /^إرسال$/ }));
+    await waitFor(() => expect(api.requestOtp).toHaveBeenCalled());
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByText(/اكتب الكود اللي وصل في رسالة SMS/)).toBeInTheDocument();
+    await waitFor(() => expect(otpInputs()[0]).toHaveFocus());
+  });
+
+  it("shows it again when the deploy opts in with NEXT_PUBLIC_SHOW_DEV_OTP", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SHOW_DEV_OTP", "true");
+    const user = userEvent.setup();
+    renderApp(<LoginView />);
+
+    await user.type(screen.getByLabelText("رقم الموبايل"), "01012345678");
+    await user.click(screen.getByRole("button", { name: /^إرسال$/ }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("246810")).toBeInTheDocument();
   });
 });

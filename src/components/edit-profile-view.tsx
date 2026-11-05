@@ -1,12 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Camera, ChevronLeft } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs, MobilePageHeader } from "@/components/ui";
+import { Breadcrumbs, CustomerAvatar, MobilePageHeader } from "@/components/ui";
 
 export function EditProfileView() {
   const router = useRouter();
@@ -64,6 +63,9 @@ export function EditProfileView() {
     reader.readAsDataURL(file);
   };
 
+  /** A customer with no photo yet is adding one; a customer with one is replacing it. */
+  const avatarLabel = preview || profile.avatar ? t("تغيير الصورة الشخصية") : t("أضف صورة شخصية");
+
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     if (name.trim().length < 3) {
@@ -116,24 +118,20 @@ export function EditProfileView() {
           className="card mx-auto mt-5 max-w-[640px] px-5 py-7 lg:mt-7 lg:px-10 lg:py-9"
         >
           <div className="flex flex-col items-center">
-            <div className="relative">
-              <Image
-                src={preview ?? profile.avatar}
-                alt={t(profile.name)}
-                width={144}
-                height={144}
-                unoptimized={preview !== null}
-                className="size-[112px] rounded-full object-cover ring-[5px] ring-brand/85 ring-offset-4 ring-offset-white lg:size-[128px]"
-              />
+            <CustomerAvatar
+              name={t(profile.name)}
+              src={preview ?? profile.avatar}
+              className="size-[112px] rounded-full object-cover ring-[5px] ring-brand/85 ring-offset-4 ring-offset-white lg:size-[128px]"
+            >
               <button
                 type="button"
-                aria-label={t("تغيير الصورة الشخصية")}
+                aria-label={avatarLabel}
                 onClick={() => fileInput.current?.click()}
                 className="absolute -bottom-0.5 start-0 grid size-10 place-items-center rounded-full bg-[#f0683f] text-white ring-4 ring-white transition hover:bg-brand-dark active:scale-95"
               >
                 <Camera className="size-[18px]" strokeWidth={2} />
               </button>
-            </div>
+            </CustomerAvatar>
 
             <input
               ref={fileInput}
@@ -151,7 +149,7 @@ export function EditProfileView() {
               onClick={() => fileInput.current?.click()}
               className="mt-5 text-sm font-bold text-brand transition hover:text-brand-dark"
             >
-              {t("تغيير الصورة الشخصية")}
+              {avatarLabel}
             </button>
           </div>
 

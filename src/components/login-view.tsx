@@ -53,14 +53,29 @@ const OTP_CHANNELS: { value: OtpChannel; label: string; icon: typeof MessageCirc
 const DEMO_CODE = "123456";
 /**
  * `devOtpCode` from the API is a testing aid, so it is never surfaced from a
- * production bundle unless the deploy explicitly opts in.
+ * production bundle unless the deploy explicitly opts in. Read at call time so
+ * a test can put the app in either mode.
  */
-const devOtpVisible =
-  process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_SHOW_DEV_OTP === "true";
+function apiDevCodeVisible(): boolean {
+  return process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_SHOW_DEV_OTP === "true";
+}
+
+/**
+ * Where a code came from decides whether the popup may show it.
+ *
+ * `demo` is the local code the app invents when no backend is configured. It
+ * already ships inside the client bundle, so putting it on screen leaks nothing
+ * — and the old single gate hid it in a production build, which left the
+ * deployed app asking a customer for a code they could never see or copy.
+ *
+ * `api` is the backend's `devOtpCode`. That one is a real test-environment
+ * shortcut, so it stays gated exactly as before.
+ */
+type CodeOrigin = "demo" | "api";
 
 export function LoginView({ next = "/profile" }: { next?: string }) {
   const router = useRouter();
-  const { login, toast, t, loggedIn, ready } = useApp();
+  const { login, updateProfile, toast, t, loggedIn, ready } = useApp();
   const [phone, setPhone] = useState("");
   const [fullName, setFullName] = useState("");
   const [channel, setChannel] = useState<OtpChannel>("sms");
@@ -95,11 +110,14 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
   const channelLabel = channel === "whatsapp" ? t("واتساب") : t("رسالة SMS");
 
   /**
-   * A code is only ever shown back to the customer when it is the local demo
-   * code, or the API's `devOtpCode` outside a production bundle. A live SMS
-   * code never reaches this screen.
+   * The local demo code is always shown; the backend's `devOtpCode` only outside
+   * a production bundle. A real SMS code never reaches this screen — the API
+   * simply does not return one.
    */
-  const visibleCodeFor = (code: string | null): string | null => (devOtpVisible && code ? code : null);
+  const visibleCodeFor = (code: string | null, origin: CodeOrigin): string | null => {
+    if (!code) return null;
+    return origin === "demo" || apiDevCodeVisible() ? code : null;
+  };
 
   /**
    * Opens the six boxes for typing, and focuses them unless the copyable popup
@@ -114,8 +132,8 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
     if (focusOtp) setTimeout(() => inputs.current[0]?.focus(), 120);
   };
 
-  const showCode = (code: string | null, waitSeconds: number) => {
-    const visible = visibleCodeFor(code);
+  const showCode = (code: string | null, waitSeconds: number, origin: CodeOrigin) => {
+    const visible = visibleCodeFor(code, origin);
     setShownCode(visible);
     setCodeOpen(Boolean(visible));
     startChallenge(!visible, waitSeconds);
@@ -131,7 +149,7 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
 
     if (!apiConfigured()) {
       setChallenge(null);
-      const code = showCode(DEMO_CODE, RESEND_SECONDS);
+      const code = showCode(DEMO_CODE, RESEND_SECONDS, "demo");
       toast(
         code
           ? t("تم إرسال كود التحقق على موبايلك — كود التجربة {code}", { code })
@@ -148,7 +166,7 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
       // The code's own lifetime is the only honest cooldown: the resend button
       // must not offer a code that has already expired.
       const wait = result.expiresInSeconds > 0 ? Math.min(RESEND_SECONDS, result.expiresInSeconds) : RESEND_SECONDS;
-      showCode(result.devOtpCode, wait);
+      showCode(result.devOtpCode, wait, "api");
       toast(t("تم إرسال كود التحقق عن طريق {channel}", { channel: channelLabel }), "info");
     } catch (cause) {
       const message = t(apiErrorMessageKey(cause));
@@ -216,6 +234,13 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
       }
       setError("");
       setSubmitting(true);
+      // There is no backend to register against, but the customer is still the
+      // person they just typed: the name and the mobile they signed in with land
+      // on the account, so a new customer never inherits the seeded demo
+      // identity on every screen.
+      const typedName = fullName.trim();
+      const signedInPhone = normalizeEgyptianPhone(phone);
+      updateProfile(typedName ? { name: typedName, phone: signedInPhone } : { phone: signedInPhone });
       login();
       return;
     }
@@ -353,23 +378,26 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
           </div>
         </div>
 
-        {/* Only the API needs a name: it is what registers a first-time customer. */}
-        {apiConfigured() ? (
-          <div className="mt-5">
+        {/* The name is what registers a first-time customer — with the API it goes
+            in the verify body, without it the account is built from it locally,
+            so the field is offered in both modes. */}
+        <div className="mt-5">
+          <div className="flex items-baseline gap-1.5">
             <label htmlFor="full-name" className="text-xs font-extrabold">
               {t("الاسم بالكامل")}
             </label>
-            <input
-              id="full-name"
-              type="text"
-              autoComplete="name"
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value.slice(0, 60))}
-              placeholder={t("اتركه فاضي لو مسجل قبلي")}
-              className="mt-2 h-14 w-full rounded-xl border border-line bg-white px-4 text-sm font-semibold outline-none transition placeholder:text-muted focus:border-brand/45"
-            />
+            <span className="text-[10px] font-bold text-muted">{t("اختياري")}</span>
           </div>
-        ) : null}
+          <input
+            id="full-name"
+            type="text"
+            autoComplete="name"
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value.slice(0, 60))}
+            placeholder={t("اتركه فاضي لو مسجل قبلي")}
+            className="mt-2 h-14 w-full rounded-xl border border-line bg-white px-4 text-sm font-semibold outline-none transition placeholder:text-muted focus:border-brand/45"
+          />
+        </div>
 
         <div className="mt-5">
           <label className="text-xs font-extrabold">{t("كود التحقق")}</label>
