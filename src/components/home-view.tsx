@@ -16,7 +16,6 @@ import {
   categoryCounts,
   desktopCategoryOrder,
   filterMenu,
-  homeCategoryOrder,
   menuFilters,
   products,
   type CategoryId,
@@ -98,8 +97,10 @@ export function HomeView() {
           action={{ label: "عرض كل الأصناف (12)", href: "/categories" }}
         />
 
-        <div className="motion-stagger hide-scrollbar -mx-4 mt-3 flex gap-2.5 overflow-x-auto px-4 pb-1 lg:hidden">
-          {homeCategoryOrder.map((id) => {
+        {/* Phones scroll the rail edge to edge; from the tablet breakpoint up
+            the same seven categories become a card grid that fills the shell. */}
+        <div className="motion-stagger hide-scrollbar -mx-4 mt-3 flex gap-2.5 overflow-x-auto px-4 pb-1 sm:hidden">
+          {desktopCategoryOrder.map((id) => {
             const category = categoriesById[id];
             const active = id === selectedCategory;
             return (
@@ -108,7 +109,7 @@ export function HomeView() {
                 type="button"
                 aria-pressed={active}
                 onClick={() => selectCategory(id)}
-                className="group flex w-[60px] shrink-0 flex-col items-center gap-2 text-center"
+                className="group flex w-[68px] shrink-0 flex-col items-center gap-2 text-center"
               >
                 <span
                   className={`grid size-[60px] place-items-center rounded-full border-2 bg-white transition duration-300 group-hover:-translate-y-1 group-hover:border-brand/60 ${
@@ -137,7 +138,7 @@ export function HomeView() {
           })}
         </div>
 
-        <div className="motion-stagger mt-4 hidden grid-cols-7 gap-3 lg:grid">
+        <div className="motion-stagger mt-4 hidden grid-cols-4 gap-3 sm:grid lg:mt-5 lg:grid-cols-7 lg:gap-4">
           {desktopCategoryOrder.map((id) => {
             const category = categoriesById[id];
             const active = id === selectedCategory;
@@ -147,23 +148,25 @@ export function HomeView() {
                 type="button"
                 aria-pressed={active}
                 onClick={() => selectCategory(id)}
-                className={`group flex flex-col items-center rounded-[18px] bg-white px-3 py-4 text-center shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.98] ${
+                className={`group flex flex-col items-center rounded-[18px] bg-white px-2.5 py-3.5 text-center shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.98] sm:px-3 sm:py-4 ${
                   active ? "ring-2 ring-inset ring-brand/60" : ""
                 }`}
               >
-                <span className="grid size-[68px] place-items-center rounded-full bg-peach/80 transition-colors duration-300 group-hover:bg-brand-soft">
-                  <span className="relative size-12 overflow-hidden rounded-full">
+                <span className="grid size-[56px] place-items-center rounded-full bg-peach/80 transition-colors duration-300 group-hover:bg-brand-soft md:size-[62px] lg:size-[68px]">
+                  <span className="relative size-10 overflow-hidden rounded-full md:size-11 lg:size-12">
                     <Image
                       src={category.image}
                       alt={t(category.name)}
                       fill
-                      sizes="48px"
+                      sizes="(max-width: 767px) 40px, (max-width: 1023px) 44px, 48px"
                       className="object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   </span>
                 </span>
                 <span
-                  className={`mt-2.5 text-sm font-extrabold ${active ? "text-brand" : "text-ink"}`}
+                  className={`mt-2 text-xs font-extrabold sm:mt-2.5 sm:text-[13px] lg:text-sm ${
+                    active ? "text-brand" : "text-ink"
+                  }`}
                 >
                   {t(category.name)}
                 </span>
