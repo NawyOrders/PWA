@@ -26,7 +26,6 @@ export function ProductCard({
       !line.extras?.length &&
       !line.note,
   );
-  const hasSelectedItems = lines.length > 0;
 
   return (
     <article
@@ -65,21 +64,20 @@ export function ProductCard({
       </Link>
 
       <div className="mt-1.5 flex min-h-11 items-center justify-between gap-2 ps-1">
-        <Price value={product.price} oldValue={product.oldPrice} compact />
-        {!cartLine ? <AddButton onClick={() => quickAdd(product.id)} /> : null}
-      </div>
-      {cartLine ? (
-        <div className="mt-1 flex min-h-11 justify-center">
+        {/* Most Popular cards lead with the count control, so the crossed-out
+            campaign price is dropped here rather than the item price. */}
+        <Price value={product.price} compact />
+        {cartLine ? (
           <QtyStepper
             value={cartLine.qty}
             min={0}
             onChange={(quantity) => changeQty(cartLine.key, quantity - cartLine.qty)}
-            className="gap-1 p-0.5 [&_button]:size-8 [&_span]:min-w-5 [&_span]:text-sm"
+            className="gap-0.5 p-0.5 [&_button]:size-6 [&_span]:min-w-4 [&_span]:text-xs [&_svg]:size-3 max-[375px]:gap-0 max-[375px]:p-0 max-[375px]:[&_button]:size-5 max-[375px]:[&_span]:min-w-3 max-[375px]:[&_span]:text-[11px] max-[375px]:[&_svg]:size-2.5"
           />
-        </div>
-      ) : hasSelectedItems ? (
-        <div className="mt-1 min-h-11" aria-hidden="true" />
-      ) : null}
+        ) : (
+          <AddButton onClick={() => quickAdd(product.id)} />
+        )}
+      </div>
     </article>
   );
 }

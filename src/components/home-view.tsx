@@ -16,7 +16,6 @@ import {
   categoryCounts,
   desktopCategoryOrder,
   filterMenu,
-  homeCategoryOrder,
   menuFilters,
   products,
   type CategoryId,
@@ -24,7 +23,6 @@ import {
 import { PromoCarousel } from "@/components/promo-carousel";
 import { ProductCard } from "@/components/product-card";
 import { MenuRow } from "@/components/menu-row";
-import { CartBar } from "@/components/cart-bar";
 import { InstallButton } from "@/components/install-button";
 import { MenuFilters } from "@/components/menu-filters";
 import { SectionTitle } from "@/components/ui";
@@ -44,17 +42,17 @@ function PhoneMockup() {
     : { width: 740, height: 1360 };
 
   return (
-    <div className="relative h-[480px] w-[258px] shrink-0 rounded-t-[52px] bg-gradient-to-br from-[#f58b78] via-[#ed604a] to-[#ffd2c3] p-[6px] shadow-[0_32px_70px_-30px_rgba(115,43,27,0.6)]">
-      <div className="relative h-full w-full overflow-hidden rounded-t-[46px] bg-cream">
+    <div className="relative h-[288px] w-[155px] shrink-0 rounded-t-[32px] bg-gradient-to-br from-[#f58b78] via-[#ed604a] to-[#ffd2c3] p-[5px] shadow-[0_32px_70px_-30px_rgba(115,43,27,0.6)] max-[750px]:rounded-b-[32px] sm:h-[360px] sm:w-[194px] sm:rounded-t-[42px] sm:p-[6px] sm:max-[750px]:rounded-b-[42px] lg:h-[480px] lg:w-[258px] lg:rounded-t-[52px]">
+      <div className="relative h-full w-full overflow-hidden rounded-t-[27px] bg-cream max-[750px]:rounded-b-[27px] sm:rounded-t-[37px] sm:max-[750px]:rounded-b-[37px] lg:rounded-t-[46px]">
         <Image
           src={mockup}
           alt={t("Nawy Orders mobile app")}
           {...mockupDimensions}
-          sizes="246px"
+          sizes="(max-width: 639px) 145px, (max-width: 1023px) 182px, 246px"
           unoptimized
-          className="absolute inset-x-0 top-6 h-auto w-full"
+          className="absolute inset-x-0 top-4 h-auto w-full sm:top-5 lg:top-6"
         />
-        <span className="absolute left-1/2 top-3 z-10 h-3 w-9 -translate-x-1/2 rounded-full bg-black" />
+        <span className="absolute left-1/2 top-2 z-10 h-2.5 w-7 -translate-x-1/2 rounded-full bg-black sm:top-2.5 sm:h-3 sm:w-8 lg:top-3 lg:w-9" />
       </div>
     </div>
   );
@@ -99,8 +97,10 @@ export function HomeView() {
           action={{ label: "عرض كل الأصناف (12)", href: "/categories" }}
         />
 
-        <div className="motion-stagger hide-scrollbar -mx-4 mt-3 flex gap-2.5 overflow-x-auto px-4 pb-1 lg:hidden">
-          {homeCategoryOrder.map((id) => {
+        {/* Phones scroll the rail edge to edge; from the tablet breakpoint up
+            the same seven categories become a card grid that fills the shell. */}
+        <div className="motion-stagger hide-scrollbar -mx-4 mt-3 flex gap-2.5 overflow-x-auto px-4 pb-1 sm:hidden">
+          {desktopCategoryOrder.map((id) => {
             const category = categoriesById[id];
             const active = id === selectedCategory;
             return (
@@ -109,7 +109,7 @@ export function HomeView() {
                 type="button"
                 aria-pressed={active}
                 onClick={() => selectCategory(id)}
-                className="group flex w-[60px] shrink-0 flex-col items-center gap-2 text-center"
+                className="group flex w-[68px] shrink-0 flex-col items-center gap-2 text-center"
               >
                 <span
                   className={`grid size-[60px] place-items-center rounded-full border-2 bg-white transition duration-300 group-hover:-translate-y-1 group-hover:border-brand/60 ${
@@ -138,7 +138,7 @@ export function HomeView() {
           })}
         </div>
 
-        <div className="motion-stagger mt-4 hidden grid-cols-7 gap-3 lg:grid">
+        <div className="motion-stagger mt-4 hidden grid-cols-4 gap-3 sm:grid lg:mt-5 lg:grid-cols-7 lg:gap-4">
           {desktopCategoryOrder.map((id) => {
             const category = categoriesById[id];
             const active = id === selectedCategory;
@@ -148,23 +148,25 @@ export function HomeView() {
                 type="button"
                 aria-pressed={active}
                 onClick={() => selectCategory(id)}
-                className={`group flex flex-col items-center rounded-[18px] bg-white px-3 py-4 text-center shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.98] ${
+                className={`group flex flex-col items-center rounded-[18px] bg-white px-2.5 py-3.5 text-center shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.98] sm:px-3 sm:py-4 ${
                   active ? "ring-2 ring-inset ring-brand/60" : ""
                 }`}
               >
-                <span className="grid size-[68px] place-items-center rounded-full bg-peach/80 transition-colors duration-300 group-hover:bg-brand-soft">
-                  <span className="relative size-12 overflow-hidden rounded-full">
+                <span className="grid size-[56px] place-items-center rounded-full bg-peach/80 transition-colors duration-300 group-hover:bg-brand-soft md:size-[62px] lg:size-[68px]">
+                  <span className="relative size-10 overflow-hidden rounded-full md:size-11 lg:size-12">
                     <Image
                       src={category.image}
                       alt={t(category.name)}
                       fill
-                      sizes="48px"
+                      sizes="(max-width: 767px) 40px, (max-width: 1023px) 44px, 48px"
                       className="object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   </span>
                 </span>
                 <span
-                  className={`mt-2.5 text-sm font-extrabold ${active ? "text-brand" : "text-ink"}`}
+                  className={`mt-2 text-xs font-extrabold sm:mt-2.5 sm:text-[13px] lg:text-sm ${
+                    active ? "text-brand" : "text-ink"
+                  }`}
                 >
                   {t(category.name)}
                 </span>
@@ -270,27 +272,23 @@ export function HomeView() {
         </div>
       </section>
 
-      <div className="shell mt-6 lg:mt-10">
-        <CartBar />
-      </div>
-
-      <section className="shell mt-12 hidden lg:block">
-        <div className="relative h-[448px] overflow-hidden rounded-[36px] bg-[linear-gradient(110deg,#f9d6ce_0%,#f8c1b2_48%,#f25b43_100%)] px-10 py-8 lg:px-11">
+      <section className="shell mt-10 lg:mt-12">
+        <div className="relative overflow-hidden rounded-[28px] bg-[linear-gradient(110deg,#f9d6ce_0%,#f8c1b2_48%,#f25b43_100%)] px-5 py-7 sm:px-8 min-[750px]:h-[448px] min-[750px]:px-11 min-[750px]:py-8 lg:h-[448px] lg:px-11 lg:py-8">
           <div className="absolute -right-16 -top-40 size-[410px] rounded-full bg-[#ff9b73]/35" />
           <div className="absolute -bottom-48 left-[8%] size-[390px] rounded-full bg-[#f47b55]/45" />
           <div className="absolute -bottom-64 right-[28%] size-[360px] rounded-full bg-[#ffad8b]/35" />
-          <div className="relative grid h-full grid-cols-1 items-center">
-            <div className="max-w-xl">
+          <div className="relative grid grid-cols-1 items-center min-[750px]:h-full lg:h-full">
+            <div className="max-w-xl min-[750px]:max-w-[calc(100%-300px)]">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/60 px-3.5 py-1.5 text-[11px] font-bold text-ink/70">
                 <Smartphone className="size-3.5 text-brand" />
                 {t("ناوي أوردرز")}
               </span>
-              <h2 className="mt-4 text-[36px] font-extrabold leading-[1.3]">
+              <h2 className="mt-3 text-[26px] font-extrabold leading-[1.3] sm:text-[30px] lg:mt-4 lg:text-[36px]">
                 {t("احصل على طعامك")}
                 <br />
                 {t("المفضل بلمسة واحدة")}
               </h2>
-              <p className="mt-4 max-w-md text-sm font-bold leading-7 text-ink/70">
+              <p className="mt-3 max-w-md text-xs font-bold leading-6 text-ink/70 sm:text-sm sm:leading-7 lg:mt-4">
                 {t(
                   "حمّل التطبيق عشان تحصل على عروض حصرية، وتتبع طلبك لحظة بلحظة، وتوصيل أسرع على مزاجك.",
                 )}
@@ -357,7 +355,8 @@ export function HomeView() {
               </div>
             </div>
           </div>
-          <div className="absolute left-[7%] right-auto top-10 ltr:left-auto ltr:right-[7%]">
+          {/* Centred below 750px; pinned to the far edge from 750px up. */}
+          <div className="mx-auto mt-7 flex justify-center sm:mt-8 min-[750px]:absolute min-[750px]:top-10 min-[750px]:left-[7%] min-[750px]:right-auto min-[750px]:mt-0 lg:absolute lg:top-10 lg:left-[7%] lg:right-auto lg:mt-0 ltr:min-[750px]:left-auto ltr:min-[750px]:right-[7%] ltr:lg:left-auto ltr:lg:right-[7%]">
             <PhoneMockup />
           </div>
         </div>

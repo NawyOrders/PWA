@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { heroImage, heroIsMirrored } from "@/lib/media";
@@ -49,15 +49,40 @@ const slides = [
 export function PromoCarousel() {
   const { t, lang } = useApp();
   const [index, setIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setIndex((current) => (current + 1) % slides.length), 6000);
     return () => clearInterval(timer);
   }, []);
 
+  const finishSwipe = (endX: number) => {
+    if (touchStartX.current === null) return;
+
+    const distance = endX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(distance) < 40) return;
+
+    setIndex((current) =>
+      (current + (distance < 0 ? 1 : -1) + slides.length) % slides.length,
+    );
+  };
+
   return (
     <div>
-      <div className="relative aspect-[2.5/1] overflow-hidden rounded-[22px] bg-peach shadow-soft sm:aspect-[3.4/1] lg:aspect-[4.75/1] lg:rounded-[26px]">
+      <div
+        className="relative aspect-[2.5/1] overflow-hidden rounded-[22px] bg-peach shadow-soft [touch-action:pan-y] sm:aspect-[3.4/1] lg:aspect-[4.75/1] lg:rounded-[26px]"
+        onTouchStart={(event) => {
+          touchStartX.current = event.touches[0]?.clientX ?? null;
+        }}
+        onTouchEnd={(event) => {
+          const endX = event.changedTouches[0]?.clientX;
+          if (endX !== undefined) finishSwipe(endX);
+        }}
+        onTouchCancel={() => {
+          touchStartX.current = null;
+        }}
+      >
         {slides.map((item, slideIndex) => {
           const isHero = item.id === "combo";
           return (

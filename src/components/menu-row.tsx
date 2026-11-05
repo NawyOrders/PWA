@@ -46,7 +46,7 @@ export function MenuRow({ product, className = "" }: { product: Product; classNa
           {t(product.description)}
         </p>
         <div className="mt-3">
-          <Price value={product.price} oldValue={product.oldPrice} />
+          <Price value={product.price} />
         </div>
       </Link>
 
@@ -59,7 +59,7 @@ export function MenuRow({ product, className = "" }: { product: Product; classNa
             value={cartLine.qty}
             min={0}
             onChange={(quantity) => changeQty(cartLine.key, quantity - cartLine.qty)}
-            className="gap-1 p-1 [&_button]:size-8 [&_span]:min-w-5 [&_span]:text-sm lg:[&_button]:size-9"
+            className="gap-1 p-1 [&_button]:size-8 [&_span]:min-w-5 [&_span]:text-sm lg:[&_button]:size-9 max-[375px]:gap-0 max-[375px]:p-0 max-[375px]:[&_button]:size-6 max-[375px]:[&_span]:min-w-4 max-[375px]:[&_span]:text-xs max-[375px]:[&_svg]:size-3"
           />
         )}
       </div>

@@ -798,7 +798,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         </div>
       ) : null}
       {toastState ? (
-        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[90] flex justify-center px-4 lg:bottom-8">
+        <div
+          className={`pointer-events-none fixed inset-x-0 z-[90] flex justify-center px-4 ${
+            // Keep the toast above the pinned cart bar instead of behind it.
+            count > 0
+              ? "bottom-[calc(9.5rem+env(safe-area-inset-bottom))] lg:bottom-28"
+              : "bottom-24 lg:bottom-8"
+          }`}
+        >
           <div
             key={toastState.id}
             className="animate-toast-in pointer-events-auto flex items-center gap-3 rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white shadow-[0_20px_50px_-20px_rgba(0,0,0,0.6)]"
