@@ -29,16 +29,28 @@ import { translate, type Lang, type Vars } from "@/lib/i18n";
 import { storageKeys } from "@/lib/storage";
 import {
   apiConfigured,
+  apiUrl,
+  attachStoredRefresh,
+  authTransport,
   fetchBranding,
-  refreshTokens,
-  revokeRefreshToken,
+  isFatalRefreshError,
+  refreshSession,
+  revokeSession,
+  type CustomerSessionPayload,
   type RestaurantBranding,
 } from "@/lib/api";
 import {
+  createAuthFetch,
+  createRefreshCoordinator,
+  createStorageRefreshLock,
   decodeSession,
-  sessionFromTokens,
+  grantFromPayload,
+  identityFromPayload,
   sessionNeedsRefresh,
+  type AccessGrant,
+  type AuthFetch,
   type CustomerSession,
+  type RefreshCoordinator,
 } from "@/lib/session";
 import { applyBranding, decodeBrandingCache, type BrandingCache } from "@/lib/branding";
 import { usePersistentState } from "@/hooks/use-persistent-state";
@@ -104,16 +116,37 @@ type AppContextValue = {
   toggleFavorite: (id: string) => void;
   loggedIn: boolean;
   ready: boolean;
+  /**
+   * Who is signed in, from the tenant API. `null` on the demo path, where
+   * there is no issued identity behind the flag — the account screens keep
+   * their stored profile in that case.
+   */
+  customer: CustomerSession | null;
+  /**
+   * Whether the access grant is live. Screens do not need it — the fetch
+   * wrapper below refreshes on its own — but it is what `useCustomerSession`
+   * reports as `status`, and what keeps a guard from guessing.
+   */
+  sessionStatus: "signed-out" | "active" | "refreshing";
   loginPromptOpen: boolean;
   loginPromptNext: string | null;
   openLoginPrompt: (next?: string) => void;
   closeLoginPrompt: () => void;
   /**
-   * Called with a session from the tenant API, or with nothing at all to take
-   * the local demo path (no API base URL configured).
+   * Called with the payload `/otp/verify` answered, or with nothing at all to
+   * take the offline demo path.
+   *
+   * Only the identity and the access token cross this boundary. The refresh
+   * token was taken out of that response by `/api/auth/otp/verify` and lives in
+   * an httpOnly cookie, so no component, hook or storage entry can hold it.
    */
-  login: (session?: CustomerSession | null) => void;
+  login: (payload?: CustomerSessionPayload | null) => void;
   logout: () => void;
+  /**
+   * `fetch` for tenant endpoints: attaches the bearer token, refreshes once on
+   * a 401, retries once, and never loops.
+   */
+  authFetch: AuthFetch;
   /** Tenant identity and palette, or `null` while running on built-in defaults. */
   branding: RestaurantBranding | null;
   addresses: SavedAddress[];
@@ -421,11 +454,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     decodeFavorites,
   );
   const [authFlag, setAuthFlag, authReady] = usePersistentState<boolean>(storageKeys.auth, false, decodeAuth);
-  const [session, setSession, sessionReady] = usePersistentState<CustomerSession | null>(
+  /*
+   * Only the identity is persisted. The access token lives in `grant` below —
+   * memory, for this page load — and the refresh token lives in an httpOnly
+   * cookie the browser sends to `/api/auth/*` and JavaScript cannot read.
+   *
+   * The decoder also catches the refresh token a pre-cookie build left behind,
+   * because the very next thing `usePersistentState` does is write the clean
+   * identity back, which would otherwise erase it before anyone could adopt it.
+   */
+  const storedRefreshToken = useRef<string | null>(null);
+  const decodeStoredSession = useCallback((stored: unknown): CustomerSession | null => {
+    const parsed = decodeSession(stored);
+    storedRefreshToken.current = parsed?.legacyRefreshToken ?? null;
+    return parsed?.identity ?? null;
+  }, []);
+  const [customer, setCustomer, sessionReady] = usePersistentState<CustomerSession | null>(
     storageKeys.session,
     null,
-    decodeSession,
+    decodeStoredSession,
   );
+  const [grant, setGrant] = useState<AccessGrant | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [brandingCache, setBrandingCache, brandingReady] = usePersistentState<BrandingCache | null>(
     storageKeys.branding,
     null,
@@ -476,7 +526,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [toastState, setToastState] = useState<ToastState>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const brandingFetched = useRef(false);
-  const refreshingSession = useRef(false);
+  /** Mirror of `grant` for callbacks that must read the token without re-subscribing. */
+  const grantRef = useRef<AccessGrant | null>(null);
+  /** The recovery refresh runs once per load, not once per render. */
+  const recoveringSession = useRef(false);
+  /** Collapses a double-tapped logout into one revoke; re-armed by the next login. */
+  const loggingOut = useRef(false);
 
   const ready =
     cartReady &&
@@ -507,7 +562,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Two ways in: the local demo flag, or a session issued by the tenant API.
   // An expired access token still counts as signed in — it is refreshed, and
   // only a failed refresh signs the customer out.
-  const loggedIn = authFlag || session !== null;
+  const loggedIn = authFlag || customer !== null;
+  const sessionStatus: AppContextValue["sessionStatus"] = refreshing
+    ? "refreshing"
+    : grant
+      ? "active"
+      : "signed-out";
   const branding = brandingCache?.branding ?? null;
   const dir = lang === "ar" ? "rtl" : "ltr";
   const t = useCallback((text: string, vars?: Vars) => translate(lang, text, vars), [lang]);
@@ -528,19 +588,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
      through the API. Details the customer edited are kept — they are replaced
      only when a different customer signs in on this device. */
   useEffect(() => {
-    if (!session || !sessionReady || !profileReady) return;
+    if (!customer || !sessionReady || !profileReady) return;
     setProfile((current) =>
-      current.customerId === session.customerId
+      current.customerId === customer.customerId
         ? current
         : {
             ...current,
-            customerId: session.customerId,
-            name: session.fullName || current.name,
-            phone: session.phoneNumber || current.phone,
-            email: session.email ?? current.email,
+            customerId: customer.customerId,
+            name: customer.fullName || current.name,
+            phone: customer.phoneNumber || current.phone,
+            email: customer.email ?? current.email,
           },
     );
-  }, [session, sessionReady, profileReady, setProfile]);
+  }, [customer, sessionReady, profileReady, setProfile]);
 
   useEffect(() => {
     return () => {
@@ -569,30 +629,115 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
   }, [brandingReady, brandingCache?.etag, setBrandingCache]);
 
+  /* ------------------------------------------------------------------------ */
+  /* Session: one refresh at a time, one token in memory, none in storage.     */
+  /* ------------------------------------------------------------------------ */
+
+  /*
+   * `/refresh` rotates the token on every success and treats a replayed token
+   * as theft — the whole family is revoked — so two tabs refreshing at the same
+   * moment would sign the customer out through nothing but eagerness. The
+   * coordinator keeps one refresh per tab and the storage lock keeps one per
+   * browser; the lock is lazy-initialised because it names this tab, and a tab
+   * that cloned the name would wait on itself.
+   */
+  const coordinatorRef = useRef<RefreshCoordinator | null>(null);
+  if (!coordinatorRef.current) {
+    coordinatorRef.current = createRefreshCoordinator({
+      request: () => refreshSession(),
+      lock: typeof window === "undefined" ? null : createStorageRefreshLock(),
+      onRotated: (next) => {
+        grantRef.current = next;
+        setGrant(next);
+      },
+    });
+  }
+
+  const applyGrant = useCallback((next: AccessGrant | null) => {
+    grantRef.current = next;
+    setGrant(next);
+  }, []);
+
+  const refreshNow = useCallback(async () => {
+    const coordinator = coordinatorRef.current;
+    if (!coordinator) throw new Error("session-unavailable");
+    setRefreshing(true);
+    try {
+      return await coordinator.refresh();
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
+  /*
+   * A refused refresh is the end of the session, not a retry candidate. It
+   * clears everything and says so once: an expired session that quietly
+   * re-prompted on every screen would look like a broken app.
+   */
+  const expireSession = useCallback(() => {
+    applyGrant(null);
+    setCustomer(null);
+    setAuthFlag(false);
+    toast(t("انتهت الجلسة، سجّل الدخول تاني"), "info");
+  }, [applyGrant, setCustomer, setAuthFlag, toast, t]);
+
+  const authFetch = useMemo<AuthFetch>(
+    () =>
+      createAuthFetch({
+        // The grant is read through a ref so a request already in flight never
+        // retries with the token it was built with.
+        getGrant: () => grantRef.current,
+        refresh: refreshNow,
+        onSignedOut: expireSession,
+        join: (path) => apiUrl(path),
+      }),
+    [refreshNow, expireSession],
+  );
+
+  /*
+   * An older build kept the refresh token in `localStorage`. Hand it to the app
+   * server once — it goes into the httpOnly jar and is never sent back — and
+   * the identity the hook already rewrote is all that remains on the device.
+   */
+  useEffect(() => {
+    if (!sessionReady || !customer) return;
+    const legacy = storedRefreshToken.current;
+    if (!legacy || authTransport() === "demo") return;
+    storedRefreshToken.current = null;
+    void attachStoredRefresh(legacy).catch(() => {
+      // A failed adoption costs a sign-in, not a security promise: the storage
+      // copy is already gone, and the next refresh finds no cookie.
+    });
+  }, [customer, sessionReady]);
+
+  /*
+   * A reload keeps the identity but not the access token, which now lives only
+   * in memory. Minting a fresh one here is what turns "still signed in" from a
+   * claim into a fact — and it runs once per load, not once per render.
+   */
+  useEffect(() => {
+    if (!sessionReady || !customer || recoveringSession.current) return;
+    if (authTransport() === "demo") return;
+    if (grant) return;
+    recoveringSession.current = true;
+    refreshNow().catch(() => {
+      expireSession();
+    });
+  }, [customer, grant, sessionReady, refreshNow, expireSession]);
+
   /* Access tokens refresh a minute before they expire, once per expiry window.
      A failed refresh is a hard sign-out rather than a silent retry loop. */
   useEffect(() => {
-    if (!apiConfigured() || !session || refreshingSession.current) return;
-    if (!sessionNeedsRefresh(session)) return;
-    refreshingSession.current = true;
+    if (!customer || authTransport() === "demo") return;
+    if (!sessionNeedsRefresh(grant)) return;
     let cancelled = false;
-    refreshTokens(session.refreshToken)
-      .then((pair) => {
-        if (!cancelled) setSession(sessionFromTokens(session, pair));
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setSession(null);
-        setAuthFlag(false);
-        toast(t("انتهت الجلسة، سجّل الدخول تاني"), "info");
-      })
-      .finally(() => {
-        refreshingSession.current = false;
-      });
+    refreshNow().catch(() => {
+      if (!cancelled) expireSession();
+    });
     return () => {
       cancelled = true;
     };
-  }, [session, toast, t, setSession, setAuthFlag]);
+  }, [customer, grant, refreshNow, expireSession]);
 
   const addItem = useCallback(
     (productId: string, options: AddOptions) => {
@@ -702,35 +847,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const closeLoginPrompt = useCallback(() => setLoginPromptNext(null), []);
 
   const login = useCallback(
-    (next?: CustomerSession | null) => {
-      if (next) {
+    (payload?: CustomerSessionPayload | null) => {
+      // Re-arm logout: it is deliberately once-per-session so a double tap
+      // cannot fire two revokes.
+      loggingOut.current = false;
+      if (payload) {
         // A session from the API is the source of truth, so the demo flag is
         // cleared rather than left disagreeing with it.
-        setSession(next);
+        applyGrant(grantFromPayload(payload));
+        setCustomer(identityFromPayload(payload));
         setAuthFlag(false);
+        // A sign-in always starts a new recovery window; the reload effect must
+        // not fire for the token this response just handed us.
+        recoveringSession.current = true;
       } else {
         setAuthFlag(true);
       }
       setLoginPromptNext(null);
       toast(t("تم تسجيل الدخول بنجاح"), "info");
     },
-    [toast, t, setSession, setAuthFlag],
+    [toast, t, applyGrant, setCustomer, setAuthFlag],
   );
 
   const logout = useCallback(() => {
-    const refreshToken = session?.refreshToken;
-    if (refreshToken && apiConfigured()) {
-      // Best effort: the server revokes the token family, the client always
-      // clears its copy even if that call fails.
-      void revokeRefreshToken(refreshToken).catch(() => undefined);
+    // The local clear is unconditional and synchronous; the revoke is the
+    // courtesy that follows. A dead network must never leave a customer
+    // appearing signed in on a shared device.
+    if (loggingOut.current) return;
+    loggingOut.current = true;
+    if (authTransport() !== "demo") {
+      void revokeSession().catch(() => undefined);
     }
-    setSession(null);
+    applyGrant(null);
+    setCustomer(null);
     setAuthFlag(false);
     // The account belonged to that customer, so a shared device is left with
     // the neutral seeded profile rather than someone else's name and phone.
     setProfile(seedProfile);
+    // The next sign-in on this page load earns its own recovery refresh.
+    recoveringSession.current = false;
     toast(t("تم تسجيل الخروج"), "info");
-  }, [toast, t, session, setSession, setAuthFlag, setProfile]);
+  }, [toast, t, applyGrant, setCustomer, setAuthFlag, setProfile]);
 
   const addAddress = useCallback(
     (address: SavedAddress) => {
@@ -874,6 +1031,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleFavorite,
       loggedIn,
       ready,
+      customer,
+      sessionStatus,
+      authFetch,
       branding,
       loginPromptOpen,
       loginPromptNext,
@@ -920,6 +1080,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleFavorite,
       loggedIn,
       ready,
+      customer,
+      sessionStatus,
+      authFetch,
       branding,
       loginPromptOpen,
       loginPromptNext,

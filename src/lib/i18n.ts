@@ -333,6 +333,18 @@ const en: Record<string, string> = {
   "اتركه فاضي لو مسجل قبلي": "Leave it empty if you already have an account",
   "اكتب اسمك بالكامل": "Enter your full name",
 
+  // login — sign in or register over the same OTP flow
+  "عندك حساب عندنا؟": "Do you already have an account?",
+  "حساب جديد": "New account",
+  "أنشئ حساب جديد": "Create a new account",
+  "اعمل حساب جديد وكمل طلبك": "Create an account and complete your order",
+  "ادخل رقم موبايلك واسمك، وهنبعتلك كود تحقق عن طريق {channel} عشان تعمل حساب وتكمل طلبك.":
+    "Enter your mobile number and name, and we will send a verification code by {channel} so you can create your account and complete your order.",
+  "مطلوب لتسجيل حساب جديد": "Required to create an account",
+  "تأكيد الكود وإنشاء الحساب": "Verify the code and create the account",
+  "الكود صالح لمدة": "The code is valid for",
+  "تواصل مع خدمة العملاء": "Contact customer support",
+
   // tenant API errors — the API's own English messages are never shown
   "مفيش اتصال بالإنترنت، جرب تاني": "No internet connection, please try again",
   "السيرفر بياخد وقت طويل، جرب تاني": "The server is taking too long, please try again",
@@ -344,6 +356,15 @@ const en: Record<string, string> = {
   "حصل مشكلة في السيرفر، جرب تاني": "Something went wrong on our side, please try again",
   "رد السيرفر مش مفهوم، جرب تاني": "We couldn't read the server response, please try again",
   "رقم الموبايل غير صحيح": "Incorrect mobile number",
+  "المتجر مش متاح على السيرفر، جرب تاني بعد شوية": "This store isn't available on the server, please try again shortly",
+  "إعداد المتجر غير صحيح على السيرفر، جرب تاني بعد شوية":
+    "This store isn't configured correctly on the server, please try again shortly",
+  "المتجر مش موجود على السيرفر، جرب تاني بعد شوية": "This store isn't set up on the server, please try again shortly",
+  "مفيش حساب بالموبيل ده، سجّل حساب جديد": "There's no account with this number, create a new one",
+  "عدد محاولات زايد، اطلب كود جديد": "Too many attempts, request a new code",
+  "الحساب ده موقوف، كلم خدمة العملاء": "This account is suspended, please contact customer support",
+  "الحساب ده متقفل حاليًا، كلم خدمة العملاء": "This account is currently closed, please contact customer support",
+  "الخدمة مشغولة دلوقتي، استنى شوية وجرب تاني": "The service is busy right now, wait a moment and try again",
 
   // account
   "تعديل الملف الشخصي": "Edit profile",
