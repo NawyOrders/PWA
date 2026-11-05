@@ -3,7 +3,17 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, ChevronLeft, Eye, Phone, Send, ShieldCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  ChevronLeft,
+  Eye,
+  MessageCircle,
+  MessageSquareText,
+  Phone,
+  Send,
+  ShieldCheck,
+} from "lucide-react";
 import { useApp } from "@/components/providers";
 import { BackLink, Breadcrumbs, buttonStyles } from "@/components/ui";
 import { LogoMark } from "@/components/logo";
@@ -17,11 +27,23 @@ import {
   requestOtp,
   verifyOtp,
   type OtpChallenge,
+  type OtpChannel,
 } from "@/lib/api";
 import { sessionFromPayload } from "@/lib/session";
 
 const OTP_LENGTH = 6;
+/** Cooldown for the rare case where the backend gives no timing at all. */
 const RESEND_SECONDS = 45;
+/**
+ * `channel` is one of the documented inputs on `/auth/otp/request`, so the
+ * customer picks it instead of the app always asking for SMS. The values are
+ * the strings the contract shows; the API's own error messages name the same
+ * two channels.
+ */
+const OTP_CHANNELS: { value: OtpChannel; label: string; icon: typeof MessageCircle }[] = [
+  { value: "sms", label: "رسالة SMS", icon: MessageSquareText },
+  { value: "whatsapp", label: "واتساب", icon: MessageCircle },
+];
 /**
  * Demo builds have no SMS gateway yet, so the code is shown to the customer and
  * the journey stays testable end to end. Once `NEXT_PUBLIC_API_BASE_URL` is set
@@ -31,16 +53,32 @@ const RESEND_SECONDS = 45;
 const DEMO_CODE = "123456";
 /**
  * `devOtpCode` from the API is a testing aid, so it is never surfaced from a
- * production bundle unless the deploy explicitly opts in.
+ * production bundle unless the deploy explicitly opts in. Read at call time so
+ * a test can put the app in either mode.
  */
-const devOtpVisible =
-  process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_SHOW_DEV_OTP === "true";
+function apiDevCodeVisible(): boolean {
+  return process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_SHOW_DEV_OTP === "true";
+}
+
+/**
+ * Where a code came from decides whether the popup may show it.
+ *
+ * `demo` is the local code the app invents when no backend is configured. It
+ * already ships inside the client bundle, so putting it on screen leaks nothing
+ * — and the old single gate hid it in a production build, which left the
+ * deployed app asking a customer for a code they could never see or copy.
+ *
+ * `api` is the backend's `devOtpCode`. That one is a real test-environment
+ * shortcut, so it stays gated exactly as before.
+ */
+type CodeOrigin = "demo" | "api";
 
 export function LoginView({ next = "/profile" }: { next?: string }) {
   const router = useRouter();
-  const { login, toast, t, loggedIn, ready } = useApp();
+  const { login, updateProfile, toast, t, loggedIn, ready } = useApp();
   const [phone, setPhone] = useState("");
   const [fullName, setFullName] = useState("");
+  const [channel, setChannel] = useState<OtpChannel>("sms");
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [seconds, setSeconds] = useState(0);
   const [sent, setSent] = useState(false);
@@ -58,41 +96,47 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
     if (ready && loggedIn) router.replace(next);
   }, [loggedIn, next, ready, router]);
 
+  /* The wait timer runs whether or not a challenge is live: a rate-limited
+     request has no code to unlock, only a "come back in N seconds" to show. */
   useEffect(() => {
-    if (!sent || seconds <= 0) return;
+    if (seconds <= 0) return;
     const timer = setTimeout(() => setSeconds((value) => Math.max(0, value - 1)), 1000);
     return () => clearTimeout(timer);
-  }, [seconds, sent]);
+  }, [seconds]);
 
   const code = otp.join("");
   const canSubmit = sent && code.length === OTP_LENGTH;
   const timer = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+  const channelLabel = channel === "whatsapp" ? t("واتساب") : t("رسالة SMS");
 
   /**
-   * A code is only ever shown back to the customer when it is the local demo
-   * code, or the API's `devOtpCode` outside a production bundle. A live SMS
-   * code never reaches this screen.
+   * The local demo code is always shown; the backend's `devOtpCode` only outside
+   * a production bundle. A real SMS code never reaches this screen — the API
+   * simply does not return one.
    */
-  const visibleCodeFor = (code: string | null): string | null => (devOtpVisible && code ? code : null);
+  const visibleCodeFor = (code: string | null, origin: CodeOrigin): string | null => {
+    if (!code) return null;
+    return origin === "demo" || apiDevCodeVisible() ? code : null;
+  };
 
   /**
    * Opens the six boxes for typing, and focuses them unless the copyable popup
    * is about to cover the card — focus stays inside the dialog instead of being
    * pulled to an input sitting behind the overlay.
    */
-  const startChallenge = (focusOtp: boolean) => {
+  const startChallenge = (focusOtp: boolean, waitSeconds: number) => {
     setSent(true);
-    setSeconds(RESEND_SECONDS);
+    setSeconds(waitSeconds);
     setOtp(Array(OTP_LENGTH).fill(""));
     setError("");
     if (focusOtp) setTimeout(() => inputs.current[0]?.focus(), 120);
   };
 
-  const showCode = (code: string | null) => {
-    const visible = visibleCodeFor(code);
+  const showCode = (code: string | null, waitSeconds: number, origin: CodeOrigin) => {
+    const visible = visibleCodeFor(code, origin);
     setShownCode(visible);
     setCodeOpen(Boolean(visible));
-    startChallenge(!visible);
+    startChallenge(!visible, waitSeconds);
     return visible;
   };
 
@@ -105,7 +149,7 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
 
     if (!apiConfigured()) {
       setChallenge(null);
-      const code = showCode(DEMO_CODE);
+      const code = showCode(DEMO_CODE, RESEND_SECONDS, "demo");
       toast(
         code
           ? t("تم إرسال كود التحقق على موبايلك — كود التجربة {code}", { code })
@@ -117,14 +161,24 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
 
     setRequesting(true);
     try {
-      const result = await requestOtp({ phoneNumber: normalizeEgyptianPhone(phone) });
+      const result = await requestOtp({ phoneNumber: normalizeEgyptianPhone(phone), channel });
       setChallenge(result);
-      showCode(result.devOtpCode);
-      toast(t("تم إرسال كود التحقق على موبايلك"), "info");
+      // The code's own lifetime is the only honest cooldown: the resend button
+      // must not offer a code that has already expired.
+      const wait = result.expiresInSeconds > 0 ? Math.min(RESEND_SECONDS, result.expiresInSeconds) : RESEND_SECONDS;
+      showCode(result.devOtpCode, wait, "api");
+      toast(t("تم إرسال كود التحقق عن طريق {channel}", { channel: channelLabel }), "info");
     } catch (cause) {
       const message = t(apiErrorMessageKey(cause));
       setError(message);
       toast(message, "info");
+      if (cause instanceof ApiError && cause.kind === "rateLimited") {
+        // The contract says a 429 carries `Retry-After`. Show that number as a
+        // live countdown instead of leaving the customer with a send button
+        // that silently refuses to do anything.
+        setChallenge(null);
+        setSeconds(Math.max(1, cause.retryAfterSeconds ?? RESEND_SECONDS));
+      }
     } finally {
       setRequesting(false);
     }
@@ -180,6 +234,13 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
       }
       setError("");
       setSubmitting(true);
+      // There is no backend to register against, but the customer is still the
+      // person they just typed: the name and the mobile they signed in with land
+      // on the account, so a new customer never inherits the seeded demo
+      // identity on every screen.
+      const typedName = fullName.trim();
+      const signedInPhone = normalizeEgyptianPhone(phone);
+      updateProfile(typedName ? { name: typedName, phone: signedInPhone } : { phone: signedInPhone });
       login();
       return;
     }
@@ -192,12 +253,14 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
     setError("");
     setSubmitting(true);
     try {
-      const payload = await verifyOtp({
-        challengeId: challenge.challengeId,
-        code,
-        fullName: fullName.trim() || undefined,
-      });
-      const session = sessionFromPayload(payload);
+      const payload = await verifyOtp({ challengeId: challenge.challengeId, code, fullName });
+      const issued = sessionFromPayload(payload);
+      const typedName = fullName.trim();
+      // A first-time customer is named by what they just typed. If the backend
+      // answered without a name — because it kept an existing account's empty
+      // one — the typed name is still the truth about this customer, so the
+      // account screen must not fall back to the demo identity.
+      const session = issued && !issued.fullName && typedName ? { ...issued, fullName: typedName } : issued;
       if (!session) {
         setError(t("رد السيرفر مش مفهوم، جرب تاني"));
         setSubmitting(false);
@@ -232,7 +295,9 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
 
       <h2 className="mt-3 text-[20px] font-extrabold lg:text-[28px]">{t("تسجيل الدخول")}</h2>
       <p className="mt-2 max-w-md text-[11px] leading-6 text-muted lg:text-sm lg:leading-7">
-        {t("ادخل رقم موبايلك، وهنبعتلك كود تحقق برسالة SMS عشان تسجل دخولك وتكمل طلبك.")}
+        {t("ادخل رقم موبايلك، وهنبعتلك كود تحقق عن طريق {channel} عشان تسجل دخولك وتكمل طلبك.", {
+          channel: channelLabel,
+        })}
       </p>
 
       <form onSubmit={submit} noValidate>
@@ -278,23 +343,61 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
           <p className="mt-2 text-end text-[10px] text-muted">{t("استخدم رقم موبايل مصري لاستلام كود التحقق")}</p>
         </div>
 
-        {/* Only the API needs a name: it is what registers a first-time customer. */}
-        {apiConfigured() ? (
-          <div className="mt-5">
+        {/* `channel` is a documented input on the OTP request, so the customer
+           chooses where the code goes instead of the app always asking for SMS. */}
+        <div className="mt-5">
+          <span className="text-xs font-extrabold" id="otp-channel-label">
+            {t("طريقة استلام الكود")}
+          </span>
+          <div role="radiogroup" aria-labelledby="otp-channel-label" className="mt-2 grid grid-cols-2 gap-2">
+            {OTP_CHANNELS.map((option) => {
+              const Icon = option.icon;
+              const active = channel === option.value;
+              return (
+                <label
+                  key={option.value}
+                  className={`flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 text-xs font-extrabold transition ${
+                    active
+                      ? "border-brand bg-brand-soft/35 text-brand"
+                      : "border-line bg-white text-muted hover:border-brand/40"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="otp-channel"
+                    value={option.value}
+                    checked={active}
+                    onChange={() => setChannel(option.value)}
+                    className="sr-only"
+                  />
+                  <Icon className="size-4 shrink-0" aria-hidden />
+                  {t(option.label)}
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* The name is what registers a first-time customer — with the API it goes
+            in the verify body, without it the account is built from it locally,
+            so the field is offered in both modes. */}
+        <div className="mt-5">
+          <div className="flex items-baseline gap-1.5">
             <label htmlFor="full-name" className="text-xs font-extrabold">
               {t("الاسم بالكامل")}
             </label>
-            <input
-              id="full-name"
-              type="text"
-              autoComplete="name"
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value.slice(0, 60))}
-              placeholder={t("اتركه فاضي لو مسجل قبلي")}
-              className="mt-2 h-14 w-full rounded-xl border border-line bg-white px-4 text-sm font-semibold outline-none transition placeholder:text-muted focus:border-brand/45"
-            />
+            <span className="text-[10px] font-bold text-muted">{t("اختياري")}</span>
           </div>
-        ) : null}
+          <input
+            id="full-name"
+            type="text"
+            autoComplete="name"
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value.slice(0, 60))}
+            placeholder={t("اتركه فاضي لو مسجل قبلي")}
+            className="mt-2 h-14 w-full rounded-xl border border-line bg-white px-4 text-sm font-semibold outline-none transition placeholder:text-muted focus:border-brand/45"
+          />
+        </div>
 
         <div className="mt-5">
           <label className="text-xs font-extrabold">{t("كود التحقق")}</label>
@@ -332,7 +435,7 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
                 {t("استخدم كود التجربة {code} لإكمال تسجيل الدخول.", { code: shownCode })}
               </span>
             ) : (
-              t("اكتب الكود اللي وصل في الرسالة")
+              t("اكتب الكود اللي وصل في {channel}", { channel: channelLabel })
             )}
             {sent && shownCode && !codeOpen ? (
               <button
@@ -354,15 +457,15 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
 
         <div className="mt-4 flex items-center justify-between gap-3 text-[11px] text-muted">
           <span>{t("موصلش الكود؟")}</span>
-          {!sent ? (
-            <span className="font-bold text-ink">{t("اطلب الكود من زر إرسال")}</span>
-          ) : seconds > 0 ? (
+          {seconds > 0 ? (
             <span>
-              {t("إعادة الإرسال بعد")}{" "}
+              {sent ? t("إعادة الإرسال بعد") : t("معاودة الطلب بعد")}{" "}
               <span className="font-bold text-ink" dir="ltr">
                 {timer}
               </span>
             </span>
+          ) : !sent ? (
+            <span className="font-bold text-ink">{t("اطلب الكود من زر إرسال")}</span>
           ) : (
             <button type="button" onClick={sendCode} className="font-bold text-brand hover:text-brand-dark">
               {t("إعادة إرسال الكود")}
@@ -454,7 +557,7 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
       {codeOpen && shownCode ? (
         <OtpCodeDialog
           code={shownCode}
-          channel="sms"
+          channel={channel}
           expiresInSeconds={challenge?.expiresInSeconds ?? RESEND_SECONDS}
           onClose={() => setCodeOpen(false)}
         />

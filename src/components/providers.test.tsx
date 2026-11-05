@@ -740,3 +740,50 @@ describe("AppProvider — tenant API session and branding", () => {
     expect(result.current.profile.customerId).toBeUndefined();
   });
 });
+
+describe("AppProvider — the account picture", () => {
+  it("starts a new account with no picture", async () => {
+    const { result } = await app();
+
+    expect(result.current.profile.avatar).toBe("");
+  });
+
+  it("drops the demo picture an account saved before uploading became the only way in", async () => {
+    localStorage.setItem(storageKeys.profile, JSON.stringify({ ...user, avatar: "/images/avatar.webp" }));
+
+    const { result } = await app();
+
+    expect(result.current.profile.name).toBe(user.name);
+    expect(result.current.profile.avatar).toBe("");
+  });
+
+  it("keeps a picture the customer uploaded", async () => {
+    const uploaded = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/";
+    localStorage.setItem(storageKeys.profile, JSON.stringify({ ...user, avatar: uploaded }));
+
+    const { result } = await app();
+
+    expect(result.current.profile.avatar).toBe(uploaded);
+  });
+
+  it("refuses a picture from a host the image loader is not configured for", async () => {
+    localStorage.setItem(storageKeys.profile, JSON.stringify({ ...user, avatar: "https://cdn.example.com/a.png" }));
+
+    const { result } = await app();
+
+    expect(result.current.profile.name).toBe(user.name);
+    expect(result.current.profile.avatar).toBe("");
+  });
+
+  it("drops a picture large enough to make every later write fail", async () => {
+    localStorage.setItem(
+      storageKeys.profile,
+      JSON.stringify({ ...user, avatar: `data:image/jpeg;base64,${"A".repeat(400_000)}` }),
+    );
+
+    const { result } = await app();
+
+    expect(result.current.profile.name).toBe(user.name);
+    expect(result.current.profile.avatar).toBe("");
+  });
+});

@@ -1,9 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { ChevronLeft, ChevronRight, Flame, Heart, Minus, Plus, ShoppingBag } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, Heart, Minus, Plus, ShoppingBag, UserRound } from "lucide-react";
 import { formatPrice } from "@/lib/data";
 import { useApp } from "@/components/providers";
 
@@ -524,6 +525,56 @@ export function EmptyState({
       <Link href={ctaHref} className={buttonStyles({ size: "sm", className: "mt-6" })}>
         {t(ctaLabel)}
       </Link>
+    </div>
+  );
+}
+
+/**
+ * The account picture.
+ *
+ * A new customer has no photo, and the app must not hand them one: an empty
+ * `src` would throw inside next/image, so the no-photo case renders a neutral
+ * disc instead. `children` sits inside the same positioning box so a screen can
+ * float a camera control over the disc without repeating the layout.
+ */
+export function CustomerAvatar({
+  name,
+  src,
+  className = "",
+  priority = false,
+  children,
+}: {
+  /** Accessible name for the photo, already localised by the caller. */
+  name: string;
+  /** Data URL or public path; empty means the customer has not added a photo. */
+  src: string;
+  /** Tailwind size, radius and ring classes shared by both branches. */
+  className?: string;
+  priority?: boolean;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="relative w-fit">
+      {src ? (
+        <Image
+          src={src}
+          alt={name}
+          width={144}
+          height={144}
+          priority={priority}
+          unoptimized={src.startsWith("data:")}
+          className={className}
+        />
+      ) : (
+        <span
+          role="img"
+          aria-label={name}
+          className={`grid place-items-center overflow-hidden bg-cream-100 text-muted ${className}`}
+        >
+          <UserRound className="h-1/2 w-1/2" strokeWidth={1.5} />
+        </span>
+      )}
+      {children}
     </div>
   );
 }

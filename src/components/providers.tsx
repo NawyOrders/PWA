@@ -146,7 +146,12 @@ const seedProfile: Profile = {
   name: user.name,
   phone: user.phone,
   email: user.email,
-  avatar: user.avatar,
+  /**
+   * No photo ships with an account. A stock face made a brand-new customer look
+   * like they already had a picture they never uploaded, so the disc starts
+   * empty and the screens offer "add your own" instead.
+   */
+  avatar: "",
 };
 
 /* -------------------------------------------------------------------------- */
@@ -370,6 +375,27 @@ function decodeOrderNote(stored: unknown, fallback: string): string {
   return typeof stored === "string" ? stored.slice(0, 200) : fallback;
 }
 
+/**
+ * A 320px JPEG data URL — what the upload control produces — is around 40 KB, so
+ * anything far above that is a mistake or hostile storage. localStorage gives the
+ * whole app ~5 MB, and one oversized picture makes every later write fail
+ * silently (storage.ts swallows QuotaExceededError).
+ */
+const maxStoredAvatarChars = 300_000;
+
+/**
+ * Only two kinds of picture are safe to hand to next/image: a data URL the
+ * customer uploaded in this browser, and a file this app ships. Anything else is
+ * treated as no picture, because a remote host is not in `images.remotePatterns`
+ * and would throw at render time. The seeded demo face is dropped on purpose —
+ * accounts saved before the photo became opt-in still hold its path.
+ */
+function usableAvatar(value: unknown): string {
+  if (typeof value !== "string" || !value || value === user.avatar) return "";
+  if (value.startsWith("data:image/")) return value.length <= maxStoredAvatarChars ? value : "";
+  return /^\/[\w./-]+$/.test(value) ? value : "";
+}
+
 function isProfile(value: unknown): value is Profile {
   if (!value || typeof value !== "object") return false;
   const profile = value as Record<string, unknown>;
@@ -383,7 +409,8 @@ function isProfile(value: unknown): value is Profile {
 }
 
 function decodeProfile(stored: unknown, fallback: Profile): Profile {
-  return isProfile(stored) ? stored : fallback;
+  if (!isProfile(stored)) return fallback;
+  return { ...stored, avatar: usableAvatar(stored.avatar) };
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {

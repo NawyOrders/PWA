@@ -8,6 +8,7 @@ import {
   Breadcrumbs,
   Button,
   Chip,
+  CustomerAvatar,
   DisplayPageHeader,
   EmptyState,
   FavoriteButton,
@@ -39,6 +40,10 @@ vi.mock("next/link", () => ({
       {children}
     </a>
   ),
+}));
+
+vi.mock("next/image", () => ({
+  default: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />,
 }));
 
 /** jsdom always reports a single entry; override it to model an in-app history. */
@@ -339,5 +344,29 @@ describe("EmptyState", () => {
     );
 
     expect(screen.getByRole("link", { name: "ارجع للرئيسية" })).toHaveAttribute("href", "/");
+  });
+});
+
+describe("CustomerAvatar", () => {
+  it("shows the picture the customer added", () => {
+    renderApp(<CustomerAvatar name="أحمد" src="data:image/jpeg;base64,AAAA" className="size-[112px] rounded-full" />);
+
+    expect(screen.getByRole("img", { name: "أحمد" })).toHaveAttribute("src", "data:image/jpeg;base64,AAAA");
+  });
+
+  it("shows a neutral disc instead of a stock face while the account has no picture", () => {
+    renderApp(
+      <CustomerAvatar name="أحمد" src="" className="size-[112px] rounded-full">
+        <button type="button" aria-label="أضف صورة شخصية">
+          camera
+        </button>
+      </CustomerAvatar>,
+    );
+
+    expect(screen.getByRole("img", { name: "أحمد" })).toBeInTheDocument();
+    // The control a customer uses to add their own picture shares the disc's box.
+    expect(screen.getByRole("img").parentElement).toContainElement(
+      screen.getByRole("button", { name: "أضف صورة شخصية" }),
+    );
   });
 });

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import {
   ChevronLeft,
@@ -16,6 +15,7 @@ import {
   type LucideProps,
 } from "lucide-react";
 import { useApp } from "@/components/providers";
+import { CustomerAvatar } from "@/components/ui";
 import { user } from "@/lib/data";
 
 const accountLinks: { label: string; href: string; icon: React.ComponentType<LucideProps> }[] = [
@@ -49,16 +49,19 @@ export function ProfileView() {
                 <span className="absolute end-2 top-0 block h-9 w-5 rotate-[18deg] rounded-full bg-brand" />
                 <span className="absolute end-0 top-6 block h-8 w-4 rotate-[40deg] rounded-full bg-[#f6a723]" />
               </div>
-              <Image
+              <CustomerAvatar
+                name={t(profile.name)}
                 src={profile.avatar}
-                alt={t(profile.name)}
-                width={144}
-                height={144}
                 priority
-                unoptimized={profile.avatar.startsWith("data:")}
                 className="relative size-[124px] rounded-full object-cover ring-[5px] ring-brand/80 ring-offset-4 ring-offset-white lg:size-[144px]"
               />
             </div>
+
+            {profile.avatar ? null : (
+              <p className="mt-3 text-xs font-bold text-muted">
+                {t("لسه مضافتش صورتك — اضغط «تعديل الملف الشخصي» لرفعها")}
+              </p>
+            )}
 
             <h2 className="mt-6 text-2xl font-extrabold">{t(profile.name)}</h2>
             <p className="mt-1.5 text-sm text-muted" dir="ltr">
