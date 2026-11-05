@@ -30,8 +30,8 @@ import {
   type OtpChannel,
 } from "@/lib/api";
 import { sessionFromPayload } from "@/lib/session";
+import { DEMO_MAX_ATTEMPTS, OTP_LENGTH, generateOtpCode } from "@/lib/otp";
 
-const OTP_LENGTH = 6;
 /** Cooldown for the rare case where the backend gives no timing at all. */
 const RESEND_SECONDS = 45;
 /**
@@ -44,13 +44,6 @@ const OTP_CHANNELS: { value: OtpChannel; label: string; icon: typeof MessageCirc
   { value: "sms", label: "رسالة SMS", icon: MessageSquareText },
   { value: "whatsapp", label: "واتساب", icon: MessageCircle },
 ];
-/**
- * Demo builds have no SMS gateway yet, so the code is shown to the customer and
- * the journey stays testable end to end. Once `NEXT_PUBLIC_API_BASE_URL` is set
- * the code comes from the API instead, and this value is only used while the
- * app is running without a backend.
- */
-const DEMO_CODE = "123456";
 /**
  * `devOtpCode` from the API is a testing aid, so it is never surfaced from a
  * production bundle unless the deploy explicitly opts in. Read at call time so
@@ -88,6 +81,13 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
   const [challenge, setChallenge] = useState<OtpChallenge | null>(null);
   const [shownCode, setShownCode] = useState<string | null>(null);
   const [codeOpen, setCodeOpen] = useState(false);
+  /**
+   * The demo code and how many wrong tries it has left. Both stay in memory:
+   * writing them to storage would leave a usable credential behind after the
+   * tab closes, and would let a second tab answer the first one's challenge.
+   */
+  const [demoCode, setDemoCode] = useState<string | null>(null);
+  const [attemptsLeft, setAttemptsLeft] = useState(0);
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Navigation happens only after auth has committed, so the route guard
@@ -102,6 +102,19 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
     if (seconds <= 0) return;
     const timer = setTimeout(() => setSeconds((value) => Math.max(0, value - 1)), 1000);
     return () => clearTimeout(timer);
+  }, [seconds]);
+
+  /*
+   * A code retires with the countdown the popup already shows. Keeping the
+   * number readable after it expired would let someone reopen the dialog and
+   * copy a dead code, so the screen drops it exactly when the timer said it
+   * would. The backend's own challenge expires on its side regardless.
+   */
+  useEffect(() => {
+    if (seconds > 0) return;
+    setDemoCode(null);
+    setShownCode(null);
+    setCodeOpen(false);
   }, [seconds]);
 
   const code = otp.join("");
@@ -148,14 +161,23 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
     }
 
     if (!apiConfigured()) {
+      // The app is the SMS gateway here, so it mints the code — randomly, the
+      // way a real one arrives, and never a number one customer can reuse
+      // against another.
+      const issued = generateOtpCode();
+      if (!issued) {
+        // No cryptographic source is not a reason to fall back to a guessable
+        // code. It is a reason to stop and say so.
+        const message = t("متصفحك مش بيقدر يولّد كود آمن، جرب متصفح تاني");
+        setError(message);
+        toast(message, "info");
+        return;
+      }
       setChallenge(null);
-      const code = showCode(DEMO_CODE, RESEND_SECONDS, "demo");
-      toast(
-        code
-          ? t("تم إرسال كود التحقق على موبايلك — كود التجربة {code}", { code })
-          : t("تم إرسال كود التحقق على موبايلك"),
-        "info",
-      );
+      setDemoCode(issued);
+      setAttemptsLeft(DEMO_MAX_ATTEMPTS);
+      showCode(issued, RESEND_SECONDS, "demo");
+      toast(t("تم إرسال كود التحقق على موبايلك — كود التجربة {code}", { code: issued }), "info");
       return;
     }
 
@@ -225,15 +247,40 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
     }
 
     if (!apiConfigured()) {
-      if (code !== DEMO_CODE) {
-        setError(t("الكود غير صحيح، جرب تاني"));
-        toast(t("الكود غير صحيح، جرب تاني"), "info");
+      if (!demoCode) {
+        // Nothing to compare against: the countdown ran out, or this screen has
+        // not issued a code at all.
+        setError(t("انتهت صلاحية الكود، اطلب كود جديد"));
+        return;
+      }
+      if (code !== demoCode) {
+        const left = attemptsLeft - 1;
         setOtp(Array(OTP_LENGTH).fill(""));
         inputs.current[0]?.focus();
+        if (left > 0) {
+          setAttemptsLeft(left);
+          setError(t("الكود غير صحيح، جرب تاني — فاضل {n} محاولات", { n: left }));
+          toast(t("الكود غير صحيح، جرب تاني"), "info");
+          return;
+        }
+        // Six digits are a million guesses and a script makes those guesses
+        // cheap, so the last wrong try burns the code and puts the same waiting
+        // window on the send button a rate-limited backend would.
+        setDemoCode(null);
+        setAttemptsLeft(0);
+        setShownCode(null);
+        setCodeOpen(false);
+        setSent(false);
+        setSeconds(RESEND_SECONDS);
+        setError(t("عدد محاولات زايد، استنى شوية وجرب تاني"));
+        toast(t("عدد محاولات زايد، استنى شوية وجرب تاني"), "info");
         return;
       }
       setError("");
       setSubmitting(true);
+      // The credential has done its job; keep no copy of it around.
+      setDemoCode(null);
+      setAttemptsLeft(0);
       // There is no backend to register against, but the customer is still the
       // person they just typed: the name and the mobile they signed in with land
       // on the account, so a new customer never inherits the seeded demo

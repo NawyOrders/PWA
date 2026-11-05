@@ -312,6 +312,9 @@ const en: Record<string, string> = {
   "اطلب الكود من زر إرسال": "Request the code with the send button",
   "اكتب كود التحقق كامل": "Enter the full verification code",
   "الكود غير صحيح، جرب تاني": "Incorrect code, please try again",
+  "الكود غير صحيح، جرب تاني — فاضل {n} محاولات": "Incorrect code, please try again — {n} attempts left",
+  "متصفحك مش بيقدر يولّد كود آمن، جرب متصفح تاني":
+    "Your browser cannot generate a secure code, please try another browser",
 
   // login — copyable code popup
   "جارٍ إرسال الكود": "Sending the code...",
