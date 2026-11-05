@@ -3,30 +3,53 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, ChevronLeft, Phone, Send, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check, ChevronLeft, Eye, Phone, Send, ShieldCheck } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { BackLink, Breadcrumbs, buttonStyles } from "@/components/ui";
 import { LogoMark } from "@/components/logo";
 import { LoadingIndicator } from "@/components/loading-indicator";
+import { OtpCodeDialog } from "@/components/otp-code-dialog";
+import {
+  ApiError,
+  apiConfigured,
+  apiErrorMessageKey,
+  normalizeEgyptianPhone,
+  requestOtp,
+  verifyOtp,
+  type OtpChallenge,
+} from "@/lib/api";
+import { sessionFromPayload } from "@/lib/session";
 
 const OTP_LENGTH = 6;
 const RESEND_SECONDS = 45;
 /**
- * Demo builds have no SMS gateway yet. The code is shown to the customer so
- * the journey stays testable end to end; swap this for the server challenge
- * when the OTP API is wired up.
+ * Demo builds have no SMS gateway yet, so the code is shown to the customer and
+ * the journey stays testable end to end. Once `NEXT_PUBLIC_API_BASE_URL` is set
+ * the code comes from the API instead, and this value is only used while the
+ * app is running without a backend.
  */
 const DEMO_CODE = "123456";
+/**
+ * `devOtpCode` from the API is a testing aid, so it is never surfaced from a
+ * production bundle unless the deploy explicitly opts in.
+ */
+const devOtpVisible =
+  process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_SHOW_DEV_OTP === "true";
 
 export function LoginView({ next = "/profile" }: { next?: string }) {
   const router = useRouter();
   const { login, toast, t, loggedIn, ready } = useApp();
   const [phone, setPhone] = useState("");
+  const [fullName, setFullName] = useState("");
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [seconds, setSeconds] = useState(0);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [requesting, setRequesting] = useState(false);
+  const [challenge, setChallenge] = useState<OtpChallenge | null>(null);
+  const [shownCode, setShownCode] = useState<string | null>(null);
+  const [codeOpen, setCodeOpen] = useState(false);
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Navigation happens only after auth has committed, so the route guard
@@ -45,18 +68,66 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
   const canSubmit = sent && code.length === OTP_LENGTH;
   const timer = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 
-  const sendCode = () => {
+  /**
+   * A code is only ever shown back to the customer when it is the local demo
+   * code, or the API's `devOtpCode` outside a production bundle. A live SMS
+   * code never reaches this screen.
+   */
+  const visibleCodeFor = (code: string | null): string | null => (devOtpVisible && code ? code : null);
+
+  /**
+   * Opens the six boxes for typing, and focuses them unless the copyable popup
+   * is about to cover the card — focus stays inside the dialog instead of being
+   * pulled to an input sitting behind the overlay.
+   */
+  const startChallenge = (focusOtp: boolean) => {
+    setSent(true);
+    setSeconds(RESEND_SECONDS);
+    setOtp(Array(OTP_LENGTH).fill(""));
+    setError("");
+    if (focusOtp) setTimeout(() => inputs.current[0]?.focus(), 120);
+  };
+
+  const showCode = (code: string | null) => {
+    const visible = visibleCodeFor(code);
+    setShownCode(visible);
+    setCodeOpen(Boolean(visible));
+    startChallenge(!visible);
+    return visible;
+  };
+
+  const sendCode = async () => {
     if (phone.replace(/\D/g, "").length < 10) {
       setError(t("اكتب رقم موبايل صحيح الأول"));
       toast(t("اكتب رقم موبايل صحيح الأول"), "info");
       return;
     }
-    setSent(true);
-    setSeconds(RESEND_SECONDS);
-    setOtp(Array(OTP_LENGTH).fill(""));
-    setError("");
-    toast(t("تم إرسال كود التحقق على موبايلك — كود التجربة {code}", { code: DEMO_CODE }), "info");
-    setTimeout(() => inputs.current[0]?.focus(), 120);
+
+    if (!apiConfigured()) {
+      setChallenge(null);
+      const code = showCode(DEMO_CODE);
+      toast(
+        code
+          ? t("تم إرسال كود التحقق على موبايلك — كود التجربة {code}", { code })
+          : t("تم إرسال كود التحقق على موبايلك"),
+        "info",
+      );
+      return;
+    }
+
+    setRequesting(true);
+    try {
+      const result = await requestOtp({ phoneNumber: normalizeEgyptianPhone(phone) });
+      setChallenge(result);
+      showCode(result.devOtpCode);
+      toast(t("تم إرسال كود التحقق على موبايلك"), "info");
+    } catch (cause) {
+      const message = t(apiErrorMessageKey(cause));
+      setError(message);
+      toast(message, "info");
+    } finally {
+      setRequesting(false);
+    }
   };
 
   const setDigit = (index: number, value: string) => {
@@ -88,7 +159,7 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
     inputs.current[Math.min(text.length, OTP_LENGTH - 1)]?.focus();
   };
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!sent) {
       setError(t("اطلب كود التحقق الأول"));
@@ -98,16 +169,57 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
       setError(t("اكتب كود التحقق كامل"));
       return;
     }
-    if (code !== DEMO_CODE) {
-      setError(t("الكود غير صحيح، جرب تاني"));
-      toast(t("الكود غير صحيح، جرب تاني"), "info");
-      setOtp(Array(OTP_LENGTH).fill(""));
-      inputs.current[0]?.focus();
+
+    if (!apiConfigured()) {
+      if (code !== DEMO_CODE) {
+        setError(t("الكود غير صحيح، جرب تاني"));
+        toast(t("الكود غير صحيح، جرب تاني"), "info");
+        setOtp(Array(OTP_LENGTH).fill(""));
+        inputs.current[0]?.focus();
+        return;
+      }
+      setError("");
+      setSubmitting(true);
+      login();
       return;
     }
+
+    if (!challenge) {
+      setError(t("انتهت صلاحية الكود، اطلب كود جديد"));
+      return;
+    }
+
     setError("");
     setSubmitting(true);
-    login();
+    try {
+      const payload = await verifyOtp({
+        challengeId: challenge.challengeId,
+        code,
+        fullName: fullName.trim() || undefined,
+      });
+      const session = sessionFromPayload(payload);
+      if (!session) {
+        setError(t("رد السيرفر مش مفهوم، جرب تاني"));
+        setSubmitting(false);
+        return;
+      }
+      // The provider owns the navigation effect: once auth commits and
+      // `loggedIn` flips, the guard lets this screen redirect to `next`.
+      login(session);
+    } catch (cause) {
+      const message = t(apiErrorMessageKey(cause));
+      setError(message);
+      toast(message, "info");
+      setOtp(Array(OTP_LENGTH).fill(""));
+      setSubmitting(false);
+      if (cause instanceof ApiError && (cause.kind === "notFound" || cause.kind === "conflict")) {
+        // The challenge is spent, so the customer has to request a new code.
+        setChallenge(null);
+        setSent(false);
+        setSeconds(0);
+      }
+      inputs.current[0]?.focus();
+    }
   };
 
   const card = (
@@ -149,14 +261,40 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
             <button
               type="button"
               onClick={sendCode}
+              disabled={requesting}
+              aria-busy={requesting}
               className={buttonStyles({ variant: "brand", size: "xs", className: "ms-1.5" })}
             >
-              <Send className="size-3.5" />
-              {t("إرسال")}
+              {requesting ? (
+                <LoadingIndicator className="size-4" label={t("جارٍ إرسال الكود")} />
+              ) : (
+                <>
+                  <Send className="size-3.5" />
+                  {t("إرسال")}
+                </>
+              )}
             </button>
           </div>
           <p className="mt-2 text-end text-[10px] text-muted">{t("استخدم رقم موبايل مصري لاستلام كود التحقق")}</p>
         </div>
+
+        {/* Only the API needs a name: it is what registers a first-time customer. */}
+        {apiConfigured() ? (
+          <div className="mt-5">
+            <label htmlFor="full-name" className="text-xs font-extrabold">
+              {t("الاسم بالكامل")}
+            </label>
+            <input
+              id="full-name"
+              type="text"
+              autoComplete="name"
+              value={fullName}
+              onChange={(event) => setFullName(event.target.value.slice(0, 60))}
+              placeholder={t("اتركه فاضي لو مسجل قبلي")}
+              className="mt-2 h-14 w-full rounded-xl border border-line bg-white px-4 text-sm font-semibold outline-none transition placeholder:text-muted focus:border-brand/45"
+            />
+          </div>
+        ) : null}
 
         <div className="mt-5">
           <label className="text-xs font-extrabold">{t("كود التحقق")}</label>
@@ -188,10 +326,24 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
               </div>
             ))}
           </div>
-          <p className="mt-2 text-end text-[10px] text-muted">
-            {sent
-              ? t("استخدم كود التجربة {code} لإكمال تسجيل الدخول.", { code: DEMO_CODE })
-              : t("اكتب الكود اللي وصل في الرسالة")}
+          <p className="mt-2 flex flex-wrap items-center justify-end gap-x-2 gap-y-1 text-end text-[10px] text-muted">
+            {sent && shownCode ? (
+              <span className="select-all" dir="ltr">
+                {t("استخدم كود التجربة {code} لإكمال تسجيل الدخول.", { code: shownCode })}
+              </span>
+            ) : (
+              t("اكتب الكود اللي وصل في الرسالة")
+            )}
+            {sent && shownCode && !codeOpen ? (
+              <button
+                type="button"
+                onClick={() => setCodeOpen(true)}
+                className="inline-flex items-center gap-1 font-bold text-brand hover:text-brand-dark"
+              >
+                <Eye className="size-3" />
+                {t("إظهار الكود")}
+              </button>
+            ) : null}
           </p>
           {error ? (
             <p role="alert" className="motion-fade mt-1.5 text-end text-[11px] font-semibold text-brand">
@@ -297,6 +449,16 @@ export function LoginView({ next = "/profile" }: { next?: string }) {
           <div>{card}</div>
         </div>
       </div>
+
+      {/* The code is shown as selectable text the moment it is issued. */}
+      {codeOpen && shownCode ? (
+        <OtpCodeDialog
+          code={shownCode}
+          channel="sms"
+          expiresInSeconds={challenge?.expiresInSeconds ?? RESEND_SECONDS}
+          onClose={() => setCodeOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }
