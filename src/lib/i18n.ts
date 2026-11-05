@@ -848,6 +848,11 @@ const en: Record<string, string> = {
   "ناوي أوردرز | Nawy Orders": "Nawy Orders",
   "اطلب أكلك المفضل من ناوي أوردرز — توصيل سريع وعروض على البرجر والبيتزا.": "Order your favorites from Nawy Orders — fast delivery and deals on burgers and pizza.",
   "اطلب برجر وبيتزا وفرايد تشيكن على مزاجك مع توصيل سريع وعروض حصرية من ناوي أوردرز.": "Order burgers, pizza and fried chicken your way, with fast delivery and exclusive offers from Nawy Orders.",
+
+  // loading & progress labels
+  "جارٍ تحديد الموقع": "Detecting your location...",
+  "جارٍ تسجيل الدخول": "Signing in...",
+  "جارٍ البحث": "Searching...",
 };
 
 export function translate(lang: Lang, text: string, vars?: Vars) {

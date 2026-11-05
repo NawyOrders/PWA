@@ -46,12 +46,17 @@ function TrackingBannerContent({
 }
 
 export function MobileOrderTrackingBanner({ order, onClose }: { order: Order; onClose: () => void }) {
-  const { t } = useApp();
+  const { t, count } = useApp();
 
   return (
     <aside
       aria-label={t("تتبع الطلب")}
-      className="motion-nav-in fixed inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-30 flex min-h-[88px] items-center justify-between gap-2 rounded-t-[28px] bg-gradient-to-r from-[#f04b27] via-[#fa5c27] to-[#e9361d] px-4 py-3 shadow-[0_-12px_38px_-18px_rgba(232,69,44,0.65)] lg:hidden"
+      className={`motion-nav-in fixed inset-x-0 z-30 flex min-h-[88px] items-center justify-between gap-2 rounded-t-[28px] bg-gradient-to-r from-[#f04b27] via-[#fa5c27] to-[#e9361d] px-4 py-3 shadow-[0_-12px_38px_-18px_rgba(232,69,44,0.65)] lg:hidden ${
+        // The pinned cart bar owns the same edge, so stack above it when it is up.
+        count > 0
+          ? "bottom-[calc(148px+env(safe-area-inset-bottom))]"
+          : "bottom-[calc(76px+env(safe-area-inset-bottom))]"
+      }`}
     >
       <TrackingBannerContent order={order} onClose={onClose} showMobileClose />
     </aside>
