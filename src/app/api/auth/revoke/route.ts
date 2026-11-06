@@ -8,11 +8,12 @@
  */
 
 import { REFRESH_COOKIE_NAME, readCookie } from "@/lib/auth-cookie";
-import { bffResponse, bffRevoke } from "@/lib/auth-bff";
+import { bffRevoke, bffRequest, bffResponse } from "@/lib/auth-bff";
 
-export const dynamic = "force-dynamic";
+/* No `dynamic` export: `cacheComponents` rejects the route segment config, and
+ * reading the cookie already makes this handler per-request. */
 
 export async function POST(request: Request): Promise<Response> {
   const token = readCookie(request.headers.get("cookie"), REFRESH_COOKIE_NAME);
-  return bffResponse(await bffRevoke({ token, origin: request.url }));
+  return bffResponse(await bffRevoke({ ...bffRequest(request), token }));
 }

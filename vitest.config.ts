@@ -31,6 +31,9 @@ export default defineConfig({
       include: [
         "src/lib/**/*.ts",
         "src/hooks/**/*.ts",
+        // The BFF routes hold the refresh cookie, so they are gated like the
+        // library code they delegate to.
+        "src/app/api/auth/**/route.ts",
         "src/components/providers.tsx",
         "src/components/addresses-view.tsx",
         "src/components/language-toggle.tsx",

@@ -29,10 +29,10 @@ export const REFRESH_COOKIE_DAYS = REFRESH_TOKEN_LIFETIME_DAYS;
 export type CookieValue = {
   name: string;
   value: string;
-  httpOnly: true;
+  httpOnly: boolean;
   secure: boolean;
-  sameSite: "lax";
-  path: "/api/auth";
+  sameSite: "lax" | "strict" | "none";
+  path: string;
   maxAge: number;
 };
 
@@ -77,8 +77,23 @@ export function clearRefreshCookie(options: { secure: boolean }): CookieValue {
  * Localhost is a trustworthy origin in every current browser, so the flag is
  * still safe there — it is plain `http://192.168.x.x` LAN testing that has to
  * go without it.
+ *
+ * `x-forwarded-proto` decides before the URL does, and that order matters.
+ * Behind any proxy or container — the usual way this app is deployed — the
+ * framework sees the internal hop, `http://127.0.0.1:3000`, while the browser
+ * is on HTTPS. Reading only the local URL would write a session cookie the
+ * browser sends over plaintext, on a deployment where plaintext was never
+ * offered. One wrong header on the proxy should not be able to force that, so
+ * an `https` anywhere in the forwarded list is treated as HTTPS, and no header
+ * at all falls back to the URL the app was actually asked to serve.
  */
-export function shouldMarkSecure(url: string): boolean {
+export function shouldMarkSecure(url: string, forwardedProto: string | null = null): boolean {
+  const forwarded = (forwardedProto ?? "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+  if (forwarded === "https") return true;
+
   try {
     const parsed = new URL(url);
     if (parsed.protocol === "https:") return true;
@@ -117,15 +132,41 @@ export function readCookie(header: string | null | undefined, name: string): str
 export function serializeCookie(cookie: CookieValue): string {
   const parts = [
     `${cookie.name}=${encodeURIComponent(cookie.value)}`,
-    "Path=/api/auth",
-    "HttpOnly",
-    "SameSite=Lax",
+    `Path=${cookie.path}`,
     `Max-Age=${cookie.maxAge}`,
+    `SameSite=${cookie.sameSite === "lax" ? "Lax" : cookie.sameSite === "strict" ? "Strict" : "None"}`,
   ];
+  if (cookie.httpOnly) parts.push("HttpOnly");
   if (cookie.secure) parts.push("Secure");
   // A cookie this app sets is never read by the app itself, so no expiry date
   // is needed: `Max-Age` covers both the 14-day session and the 0-second wipe.
+  // Every attribute above comes off `cookie` rather than being written out
+  // again here, because a serializer that hardcodes them keeps saying
+  // `HttpOnly; SameSite=Lax` after the value it was handed says otherwise.
   return parts.join("; ");
+}
+
+/**
+ * The `Set-Cookie` lines for one cookie decision.
+ *
+ * Only a wipe is doubled. A cookie stored with `Secure` cannot be replaced by
+ * a plain-HTTP response that carries the same name, and the reverse is true
+ * for a browser that has never seen the HTTPS form — so a logout or an expired
+ * session that answers with a single attribute set can leave the old token in
+ * the jar while every part of the app believes it is gone. Both variants cost
+ * one extra header on the calls that already clear everything.
+ *
+ * A stored token is never doubled: it is written by the response that actually
+ * created it, so the protocol that carried that response is the one the jar
+ * knows, and writing a non-`Secure` copy of a session cookie would be the
+ * downgrade this whole module exists to avoid.
+ */
+export function cookieSetHeaders(cookie: CookieValue): string[] {
+  if (cookie.maxAge !== 0) return [serializeCookie(cookie)];
+  return [
+    serializeCookie({ ...cookie, secure: true }),
+    serializeCookie({ ...cookie, secure: false }),
+  ];
 }
 
 /**

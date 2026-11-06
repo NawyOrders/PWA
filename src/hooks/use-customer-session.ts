@@ -7,13 +7,17 @@ export type CustomerSessionView = {
   /** Who is signed in, or `null` when nobody is. */
   customer: CustomerSession | null;
   /**
-   * `"signed-out" | "active" | "refreshing"`.
+   * `"signed-out" | "active" | "refreshing" | "recovering"`.
+   *
+   * `recovering` means the session is intact and a retry is scheduled; there is
+   * just no token in memory this second. A guard should wait rather than
+   * redirect.
    *
    * The demo path reports `"active"` from `loggedIn` rather than `status`: it
    * has an intent to be signed in but no issued token behind it, and pretending
    * otherwise would send screens looking for a grant that will never arrive.
    */
-  status: "signed-out" | "active" | "refreshing";
+  status: "signed-out" | "active" | "refreshing" | "recovering";
   loggedIn: boolean;
   logout: () => void;
   /** Fetch that carries the bearer token and refreshes once on a 401. */

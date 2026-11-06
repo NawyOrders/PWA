@@ -139,6 +139,7 @@ function apiError(options: {
   code?: AuthErrorCode | null;
   fieldErrors?: Record<string, string>;
   retryAfterSeconds?: number | null;
+  problemDetail?: string | null;
 }): ApiError {
   return new ApiError(options);
 }
@@ -325,8 +326,11 @@ describe("LoginView", () => {
       expect(input).toHaveAttribute("inputmode", "numeric");
       expect(input).toHaveAttribute("maxlength", "1");
     }
-    // The digits are Latin numerals inside an RTL page, so the row is LTR.
-    expect(otpInputs()[0].parentElement?.parentElement).toHaveAttribute("dir", "ltr");
+    // The digits are Latin numerals inside an RTL page, so the row is LTR — and
+    // the row is a named group, not six unlabelled boxes.
+    const codeGroup = screen.getByRole("group", { name: "كود التحقق" });
+    expect(codeGroup).toHaveAttribute("dir", "ltr");
+    expect(within(codeGroup).getAllByRole("textbox")).toHaveLength(6);
   });
 
   it("refuses to ask for a code before there is a usable phone number", async () => {
@@ -453,6 +457,11 @@ describe("LoginView typing the code", () => {
     renderApp(<LoginView />);
 
     await requestApiCode(user);
+
+    // The screen hands the first box focus ~120ms after the challenge lands.
+    // Typing before that timer fires lets it steal the caret back out of box 2,
+    // so the test waits for the step it is about to exercise.
+    await waitFor(() => expect(otpInputs()[0]).toHaveFocus());
 
     await user.type(otpInputs()[0], "2");
     expect(otpInputs()[0]).toHaveValue("2");
@@ -1210,10 +1219,10 @@ describe("LoginView against the tenant API", () => {
 
     await expectAlert("رقم الموبايل غير صحيح");
     for (const input of otpInputs()) expect(input).toBeDisabled();
-    // The message belongs under the number it is about, not under the boxes.
-    expect(screen.getByLabelText("رقم الموبايل").parentElement?.parentElement).toContainElement(
-      screen.getByRole("alert"),
-    );
+    // The message belongs under the number it is about, not under the boxes —
+    // and the input itself carries it, so a screen reader hears it with the
+    // field rather than as a floating sentence.
+    expect(screen.getByLabelText("رقم الموبايل")).toHaveAccessibleDescription("رقم الموبايل غير صحيح");
   });
 
   it("puts a rejected name back on the name field", async () => {
@@ -1232,6 +1241,109 @@ describe("LoginView against the tenant API", () => {
 
     await expectAlert("اكتب اسمك بالكامل");
     expect(screen.getByLabelText("الاسم بالكامل")).toHaveValue("Ahmed");
+    // It is the name field that was refused, and the field says so to a screen
+    // reader as well as in the line of text under it.
+    expect(screen.getByLabelText("الاسم بالكامل")).toHaveAccessibleDescription("اكتب اسمك بالكامل");
+  });
+
+  /**
+   * `Channel` and `Purpose` are both documented inputs of the OTP request, and
+   * both belong to the same pair of choices on the form. A message about either
+   * one landing on the phone box would send the customer editing the number they
+   * just proved they hold.
+   */
+  async function expectChannelFieldError(key: "Channel" | "Purpose") {
+    api.requestOtp.mockRejectedValue(
+      apiError({ kind: "validation", status: 422, fieldErrors: { [key]: `${key} is invalid.` } }),
+    );
+    const user = userEvent.setup();
+    renderApp(<LoginView />);
+
+    await requestApiCode(user);
+
+    await expectAlert("طلب غير صحيح، جرب تاني");
+    expect(screen.getByRole("radiogroup", { name: "طريقة استلام الكود" })).toHaveAccessibleDescription(
+      "طلب غير صحيح، جرب تاني",
+    );
+    // The number itself was never the problem, so it keeps its hint.
+    expect(screen.getByLabelText("رقم الموبايل")).toHaveAccessibleDescription(
+      "استخدم رقم موبايل مصري لاستلام كود التحقق",
+    );
+  }
+
+  it("puts a rejected channel on the channel choice, not on the number", async () => {
+    await expectChannelFieldError("Channel");
+  });
+
+  it("puts a rejected purpose on the same choice, because it is the same mistake", async () => {
+    await expectChannelFieldError("Purpose");
+  });
+
+  it("clears the channel message as soon as the customer picks the other one", async () => {
+    api.requestOtp.mockRejectedValue(
+      apiError({ kind: "validation", status: 422, fieldErrors: { Channel: "Channel is invalid." } }),
+    );
+    const user = userEvent.setup();
+    renderApp(<LoginView />);
+
+    await requestApiCode(user);
+    await waitFor(() =>
+      expect(screen.getByRole("radiogroup", { name: "طريقة استلام الكود" })).toHaveAccessibleDescription(
+        "طلب غير صحيح، جرب تاني",
+      ),
+    );
+
+    await user.click(screen.getByRole("radio", { name: /واتساب/ }));
+
+    expect(screen.getByRole("radiogroup", { name: "طريقة استلام الكود" })).not.toHaveAccessibleDescription();
+    expect(screen.getByRole("radio", { name: /واتساب/ })).toBeChecked();
+  });
+
+  /**
+   * The guide's rule for a blocked or deactivated account is a support message,
+   * not another attempt — and an attempt the screen cannot make has to be a
+   * button it cannot press. The guard runs before `clearError()` for the same
+   * reason: a "retry" that silently wipes the only useful sentence on the page
+   * is worse than the retry itself.
+   */
+  it("will not ask for a second code for an account it already refused", async () => {
+    api.requestOtp.mockResolvedValue(challenge({ devOtpCode: null }));
+    api.verifyOtp.mockRejectedValue(apiError({ kind: "conflict", status: 409, code: "Customer.Blocked" }));
+    const user = userEvent.setup();
+    renderApp(<LoginView />);
+
+    await requestApiCode(user);
+    fillCode("246810");
+    await expectAlert("الحساب ده موقوف، كلم خدمة العملاء");
+    expect(api.requestOtp).toHaveBeenCalledTimes(1);
+
+    expect(sendButton()).toBeDisabled();
+    await user.click(sendButton());
+    await user.keyboard("{Enter}");
+
+    expect(api.requestOtp).toHaveBeenCalledTimes(1);
+    expect(api.verifyOtp).toHaveBeenCalledTimes(1);
+    // The refusal is still on the screen: pressing the dead button did not hide it.
+    await expectAlert("الحساب ده موقوف، كلم خدمة العملاء");
+  });
+
+  it("lifts the refusal the moment a different number is typed", async () => {
+    api.requestOtp.mockResolvedValue(challenge({ devOtpCode: null }));
+    api.verifyOtp.mockRejectedValue(apiError({ kind: "conflict", status: 409, code: "Customer.Blocked" }));
+    const user = userEvent.setup();
+    renderApp(<LoginView />);
+
+    await requestApiCode(user);
+    fillCode("246810");
+    await expectAlert("الحساب ده موقوف، كلم خدمة العملاء");
+
+    await user.clear(screen.getByLabelText("رقم الموبايل"));
+    await user.type(screen.getByLabelText("رقم الموبايل"), "01099998877");
+
+    expect(sendButton()).toBeEnabled();
+    await user.click(sendButton());
+    await waitFor(() => expect(api.requestOtp).toHaveBeenCalledTimes(2));
+    expect(api.requestOtp.mock.calls[1]?.[0]).toMatchObject({ phoneNumber: "+201099998877" });
   });
 
   it("keeps a server outage wording instead of leaking the raw error", async () => {
@@ -1243,6 +1355,33 @@ describe("LoginView against the tenant API", () => {
 
     await expectAlert("حصل مشكلة في السيرفر، جرب تاني");
     expect(screen.queryByText(/500/)).not.toBeInTheDocument();
+  });
+
+  it("never puts a server's internals on the screen", async () => {
+    // What the deployed tenant answers right now: a plain-text .NET activation
+    // failure with a stack in it. The catalog is the only wording this screen
+    // knows, so nothing that came off the wire may reach the document — not
+    // even through `error.message`, which is what a careless `catch` would
+    // print first.
+    api.requestOtp.mockRejectedValue(
+      apiError({
+        kind: "server",
+        status: 500,
+        problemDetail:
+          "System.InvalidOperationException: Unable to resolve service for type " +
+          "'NawyOrders.Application.Common.Interfaces.Persistence.IPlatformUnitOfWork' " +
+          "while attempting to activate 'NawyOrders.Application.Behaviors.TransactionBehavior'.",
+      }),
+    );
+    const user = userEvent.setup();
+    renderApp(<LoginView />);
+
+    await requestApiCode(user);
+
+    await expectAlert("حصل مشكلة في السيرفر، جرب تاني");
+    expect(document.body.textContent).not.toMatch(
+      /InvalidOperationException|UnitOfWork|NawyOrders|Application\.Behaviors/,
+    );
   });
 
   it("keeps the offline wording when the network never answered", async () => {

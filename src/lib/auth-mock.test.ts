@@ -69,6 +69,8 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllGlobals();
+  vi.stubEnv("NODE_ENV", "test");
   vi.stubEnv("AUTH_MOCK", "");
   vi.stubEnv("NEXT_PUBLIC_AUTH_MOCK", "");
 });
@@ -476,5 +478,87 @@ describe("authMock.reset — the reason every test starts clean", () => {
       globalPerMinute: 100,
       accessTokenSeconds: 3600,
     });
+  });
+});
+
+describe("authMock cannot be reached from a production build", () => {
+  /*
+   * `authTransport()` will not pick the simulator when NODE_ENV is production,
+   * and the bundler drops this module from that graph. Both of those are build
+   * properties. This is the code that says it out loud, so a stray import or a
+   * hand-written fetch answers like an unreachable endpoint instead of minting
+   * a session nobody issued.
+   */
+  beforeEach(() => {
+    vi.stubEnv("NODE_ENV", "production");
+  });
+
+  it("refuses every one of the four calls with a server error, before it reads a phone number", async () => {
+    const calls: Array<Promise<unknown>> = [
+      authMock.requestOtp({ phoneNumber: NEW_PHONE }),
+      authMock.verifyOtp({ challengeId: "chal-1", code: "123456" }),
+      authMock.refreshSession(),
+      authMock.revokeSession(),
+    ];
+
+    for (const call of calls) {
+      const error = await failureOf(call);
+      expect(error).toMatchObject({ status: 500, kind: "server" });
+      expect(error.code, "a refusal invented by the app has no tenant error code").toBeNull();
+    }
+  });
+
+  it("issues no challenge under production, so the code cannot be replayed after the guard lifts", async () => {
+    const challengeId = await authMock
+      .requestOtp({ phoneNumber: NEW_PHONE })
+      .then((data) => data.challengeId)
+      .catch(() => "never-issued");
+    expect(challengeId).toBe("never-issued");
+
+    vi.stubEnv("NODE_ENV", "test");
+    const error = await failureOf(authMock.verifyOtp({ challengeId: "chal-1", code: "123456" }));
+    expect(error.code).toBe("Customer.ChallengeNotFound");
+  });
+
+  it("mints no session and leaves the jar empty, so nothing survives the guard lifting", async () => {
+    await failureOf(signIn({ phone: NEW_PHONE }));
+    expect(authMock.peekCookie()).toBeNull();
+
+    // The refused registration created no customer either — the same number
+    // arriving as a login after the guard lifts is still an unknown account.
+    vi.stubEnv("NODE_ENV", "test");
+    const challenge = await authMock.requestOtp({ phoneNumber: NEW_PHONE, purpose: "Login" });
+    const error = await failureOf(authMock.verifyOtp({ challengeId: challenge.challengeId, code: codeOf(challenge) }));
+    expect(error.code).toBe("Customer.NotFoundByPhone");
+  });
+});
+
+describe("authMock without a cryptographic source", () => {
+  it("refuses to issue a code rather than falling back to a guessable one", async () => {
+    vi.stubGlobal("crypto", undefined);
+
+    const error = await failureOf(authMock.requestOtp({ phoneNumber: NEW_PHONE }));
+    expect(error).toMatchObject({ status: 500, kind: "server" });
+  });
+
+  it("leaves no challenge behind that a later request could reuse", async () => {
+    vi.stubGlobal("crypto", undefined);
+    await failureOf(authMock.requestOtp({ phoneNumber: NEW_PHONE }));
+    vi.unstubAllGlobals();
+
+    // Nothing was stored, so the identifier a successful call would have
+    // returned is unknown to the simulator — which is the only safe answer.
+    const error = await failureOf(authMock.verifyOtp({ challengeId: "chal-1", code: "123456" }));
+    expect(error.code).toBe("Customer.ChallengeNotFound");
+  });
+
+  it("draws a different code for every challenge it does issue", async () => {
+    const codes = new Set<string>();
+    for (let i = 0; i < 25; i += 1) {
+      codes.add((await ask(NEW_PHONE)).devOtpCode ?? "");
+      authMock.reset();
+    }
+    expect(codes.size).toBe(25);
+    expect(codes.has("000000")).toBe(false);
   });
 });

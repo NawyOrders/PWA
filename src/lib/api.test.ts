@@ -546,7 +546,7 @@ describe("verifyOtp", () => {
 
   it("fills in the identity fields the answer left out instead of storing undefined", async () => {
     vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
-    stubFetch(() => jsonResponse(envelope({ accessToken: "access-1", expiresIn: "nope" })));
+    stubFetch(() => jsonResponse(envelope({ accessToken: "access-1", expiresIn: 900 })));
 
     await expect(verifyOtp({ challengeId: "ch-1", code: "123456" })).resolves.toEqual({
       customerId: "",
@@ -555,8 +555,22 @@ describe("verifyOtp", () => {
       email: null,
       accessToken: "access-1",
       tokenType: "Bearer",
-      expiresIn: 0,
+      expiresIn: 900,
       expiresAtUtc: "",
+    });
+  });
+
+  it("refuses a session it cannot put an expiry on", async () => {
+    // A success with no usable `expiresIn` or `expiresAtUtc` reads as stale the
+    // instant it lands, so the proactive refresh would call `/refresh` again
+    // immediately, and again after that — against the tenant-wide limiter every
+    // customer shares. One honest failure beats that loop.
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    stubFetch(() => jsonResponse(envelope({ accessToken: "access-1", expiresIn: "nope" })));
+
+    await expect(verifyOtp({ challengeId: "ch-1", code: "123456" })).rejects.toMatchObject({
+      kind: "envelope",
+      status: 200,
     });
   });
 
@@ -611,15 +625,32 @@ describe("refreshSession, revokeSession and attachStoredRefresh", () => {
 
   it("defaults a thin refresh answer", async () => {
     vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
-    stubFetch(() => jsonResponse(envelope({ accessToken: "a", refreshTokenExpiresAtUtc: 12345 })));
+    stubFetch(() =>
+      jsonResponse(
+        envelope({
+          accessToken: "a",
+          expiresAtUtc: "2026-11-05T11:00:00Z",
+          refreshTokenExpiresAtUtc: 12345,
+        }),
+      ),
+    );
 
     await expect(refreshSession()).resolves.toEqual({
       accessToken: "a",
       tokenType: "Bearer",
+      // No `expiresIn` of its own, so the timestamp is the whole answer — and a
+      // refresh lifetime that is not a string is not one the app will believe.
       expiresIn: 0,
-      expiresAtUtc: "",
+      expiresAtUtc: "2026-11-05T11:00:00Z",
       refreshTokenExpiresAtUtc: null,
     });
+  });
+
+  it("refuses a rotation that cannot say how long the new token lives", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    stubFetch(() => jsonResponse(envelope({ accessToken: "a", refreshTokenExpiresAtUtc: 12345 })));
+
+    await expect(refreshSession()).rejects.toMatchObject({ kind: "envelope", status: 200 });
   });
 
   it("refuses a refresh answer with no access token", async () => {

@@ -21,10 +21,10 @@
 
 import {
   clearRefreshCookie,
+  cookieSetHeaders,
   envelopeError,
   envelopeVoid,
   refreshCookie,
-  serializeCookie,
   shouldMarkSecure,
   type CookieValue,
 } from "@/lib/auth-cookie";
@@ -37,6 +37,19 @@ export type BffResult = {
   retryAfterSeconds: number | null;
   /** Cookie to write: a rotated token, or an expired one to clear. */
   cookie: CookieValue | null;
+};
+
+/**
+ * What every handler knows about the call it is answering.
+ *
+ * `origin` is the URL this app was asked to serve, and `forwardedProto` is the
+ * protocol the proxy in front of it reports. Both feed one decision — whether
+ * the cookie may demand `Secure` — and only the second of them is right on any
+ * deployment where the app itself listens on plaintext HTTP.
+ */
+type BffRequest = {
+  origin: string;
+  forwardedProto?: string | null;
 };
 
 type Upstream = Awaited<ReturnType<typeof forwardToTenant>>;
@@ -110,9 +123,9 @@ function badRequest(): BffResult {
  * A failed verify changes nothing about the cookie: the previous session, if
  * there was one, is still the previous session.
  */
-export async function bffVerify(input: { body: unknown; origin: string }): Promise<BffResult> {
+export async function bffVerify(input: BffRequest & { body: unknown }): Promise<BffResult> {
   if (!isRecord(input.body)) return badRequest();
-  const secure = shouldMarkSecure(input.origin);
+  const secure = shouldMarkSecure(input.origin, input.forwardedProto ?? null);
   const { refreshToken: _dropped, ...rest } = input.body;
 
   const upstream = await forwardToTenant(VERIFY_PATH, { body: rest });
@@ -135,8 +148,10 @@ export async function bffVerify(input: { body: unknown; origin: string }): Promi
  * value is never returned anywhere: rotation makes the presented token dead, so
  * keeping a second copy in JavaScript would be an invitation to reuse it.
  */
-export async function bffRefresh(input: { token: string | null; origin: string }): Promise<BffResult> {
-  const secure = shouldMarkSecure(input.origin);
+export async function bffRefresh(
+  input: BffRequest & { token: string | null },
+): Promise<BffResult> {
+  const secure = shouldMarkSecure(input.origin, input.forwardedProto ?? null);
   if (!input.token) {
     return {
       status: 401,
@@ -168,8 +183,10 @@ export async function bffRefresh(input: { token: string | null; origin: string }
  * copy goes regardless, because a failed revoke must never leave a browser that
  * still believes it is signed in.
  */
-export async function bffRevoke(input: { token: string | null; origin: string }): Promise<BffResult> {
-  const secure = shouldMarkSecure(input.origin);
+export async function bffRevoke(
+  input: BffRequest & { token: string | null },
+): Promise<BffResult> {
+  const secure = shouldMarkSecure(input.origin, input.forwardedProto ?? null);
   if (!input.token) {
     // Nothing to revoke is already logged out, which is what the caller wanted.
     return {
@@ -194,8 +211,8 @@ export async function bffRevoke(input: { token: string | null; origin: string })
  * customers keep their session while the storage copy is overwritten with
  * identity only.
  */
-export async function bffAttach(input: { body: unknown; origin: string }): Promise<BffResult> {
-  const secure = shouldMarkSecure(input.origin);
+export async function bffAttach(input: BffRequest & { body: unknown }): Promise<BffResult> {
+  const secure = shouldMarkSecure(input.origin, input.forwardedProto ?? null);
   const token = isRecord(input.body) ? input.body.refreshToken : null;
   const cookie = refreshCookie(token, { secure });
   if (!cookie) return badRequest();
@@ -203,6 +220,18 @@ export async function bffAttach(input: { body: unknown; origin: string }): Promi
 }
 
 export type { CookieValue };
+
+/**
+ * The two facts about an incoming call that the cookie rules need.
+ *
+ * Read once, here, rather than in each route handler: the protocol the proxy
+ * reports is easy to forget, and a handler that forgets it does not fail — it
+ * quietly writes a session cookie that the browser is willing to send over
+ * plaintext.
+ */
+export function bffRequest(input: { url: string; headers: Headers }): BffRequest {
+  return { origin: input.url, forwardedProto: input.headers.get("x-forwarded-proto") };
+}
 
 /**
  * Turns a `BffResult` into the response the browser gets.
@@ -215,7 +244,9 @@ export function bffResponse(result: BffResult): Response {
   headers.set("Content-Type", "application/json");
   headers.set("Cache-Control", "no-store");
   if (result.retryAfterSeconds !== null) headers.set("Retry-After", String(result.retryAfterSeconds));
-  if (result.cookie) headers.append("Set-Cookie", serializeCookie(result.cookie));
+  if (result.cookie) {
+    for (const line of cookieSetHeaders(result.cookie)) headers.append("Set-Cookie", line);
+  }
 
   if (result.status === 204 || result.body === null) {
     return new Response(null, { status: result.status, headers });

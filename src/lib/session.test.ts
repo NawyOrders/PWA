@@ -8,12 +8,15 @@ import {
   grantFromPayload,
   grantFromTokens,
   identityFromPayload,
+  RefreshLockedError,
   sessionIsExpired,
   sessionNeedsRefresh,
   type AccessGrant,
+  type RefreshCoordinator,
   type RefreshLock,
 } from "@/lib/session";
-import type { CustomerSessionPayload, TokenPair } from "@/lib/api";
+import type { AuthErrorCode, CustomerSessionPayload, TokenPair } from "@/lib/api";
+import { AppError, REQUEST_TIMEOUT_MS } from "@/lib/api";
 
 const NOW = Date.parse("2026-11-05T10:00:00Z");
 const LATER = new Date(NOW + 900_000).toISOString();
@@ -284,6 +287,143 @@ describe("createStorageRefreshLock", () => {
     expect(lock.acquire()).toBe(true);
     expect(() => lock.release()).not.toThrow();
   });
+
+  it("keeps a refused delete from trapping the next tab", () => {
+    const storage = fakeStorage();
+    const stubborn = {
+      ...storage,
+      removeItem: () => {
+        throw new Error("denied");
+      },
+    };
+    const lock = createStorageRefreshLock({ storage: stubborn, now: () => NOW, id: "tab-a" });
+    expect(lock.acquire()).toBe(true);
+    // The record stays where it was: making it stale is the TTL's job, not a
+    // delete this browser just refused.
+    expect(() => lock.release()).not.toThrow();
+    expect(stubborn.map.size).toBe(1);
+
+    const next = createStorageRefreshLock({ storage, now: () => NOW, id: "tab-b" });
+    expect(next.acquire()).toBe(false);
+    // ...until the default TTL — two request timeouts — makes it fair game.
+    expect(
+      createStorageRefreshLock({ storage, now: () => NOW + REQUEST_TIMEOUT_MS * 2, id: "tab-c" }).acquire(),
+    ).toBe(true);
+  });
+
+  it("names a tab without crypto.randomUUID, and names the next one differently", () => {
+    // Some webviews expose a `crypto` with no UUID helper. The fallback still
+    // has to differ per tab, or two tabs would hold the same name and wait on
+    // each other forever.
+    vi.stubGlobal("crypto", { randomUUID: undefined });
+    try {
+      const first = createStorageRefreshLock();
+      expect(first.acquire()).toBe(true);
+      const firstName = JSON.parse(localStorage.getItem("nawy-refresh-lock-v1")!).id as string;
+      expect(firstName).toMatch(/^tab-/);
+      first.release();
+
+      const second = createStorageRefreshLock();
+      expect(second.acquire()).toBe(true);
+      expect(JSON.parse(localStorage.getItem("nawy-refresh-lock-v1")!).id).not.toBe(firstName);
+      second.release();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("treats a page with no storage at all as uncontended", () => {
+    // The default wiring, not an injected `storage: null`: a non-browser host
+    // has no `localStorage` to look at, and one tab cannot be racing itself.
+    vi.stubGlobal("localStorage", undefined);
+    try {
+      const lock = createStorageRefreshLock();
+      expect(lock.acquire()).toBe(true);
+      expect(lock.held()).toBe(false);
+      expect(() => lock.release()).not.toThrow();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* The wiring the provider actually uses: no injected storage, no fake clock  */
+/* -------------------------------------------------------------------------- */
+
+describe("createStorageRefreshLock with its defaults", () => {
+  const KEY = "nawy-refresh-lock-v1";
+
+  function record(): { id: string; takenAt: number } {
+    const raw = localStorage.getItem(KEY);
+    expect(raw, "the lock has to be written where another tab can read it").toBeTypeOf("string");
+    return JSON.parse(raw!) as { id: string; takenAt: number };
+  }
+
+  it("writes to the real localStorage under the documented key", () => {
+    const lock = createStorageRefreshLock({ id: "tab-real" });
+    expect(lock.acquire()).toBe(true);
+
+    expect(record()).toMatchObject({ id: "tab-real" });
+    expect(record().takenAt).toBeLessThanOrEqual(Date.now());
+    expect(record().takenAt).toBeGreaterThan(Date.now() - 60_000);
+
+    lock.release();
+    expect(localStorage.getItem(KEY)).toBeNull();
+  });
+
+  it("refuses a second tab through the same real storage", () => {
+    const first = createStorageRefreshLock();
+    const second = createStorageRefreshLock();
+
+    expect(first.acquire()).toBe(true);
+    expect(second.acquire()).toBe(false);
+    expect(second.held()).toBe(true);
+
+    first.release();
+    expect(second.acquire()).toBe(true);
+    second.release();
+  });
+
+  it("gives every tab its own owner id, so a reload cannot inherit a lock", () => {
+    const ids = new Set<string>();
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const lock = createStorageRefreshLock();
+      expect(lock.acquire()).toBe(true);
+      ids.add(record().id);
+      lock.release();
+    }
+    // Three separately constructed defaults, three different owners: nothing
+    // here may be a constant another tab can guess.
+    expect(ids.size).toBe(3);
+    expect([...ids].every((id) => id.length > 0)).toBe(true);
+  });
+
+  it("steals a stale record on the default ttl, which is two request timeouts", () => {
+    const ttl = REQUEST_TIMEOUT_MS * 2;
+    localStorage.setItem(
+      KEY,
+      JSON.stringify({ id: "tab-closed-mid-refresh", takenAt: Date.now() - ttl - 1 }),
+    );
+
+    const lock = createStorageRefreshLock();
+    // Past the TTL the record is a corpse, not a holder: `held()` is what a
+    // waiter loops on, so reading a dead tab as "still held" would stall every
+    // other tab for the length of a timeout that has already expired.
+    expect(lock.held()).toBe(false);
+    expect(lock.acquire()).toBe(true);
+    expect(record().id).not.toBe("tab-closed-mid-refresh");
+    lock.release();
+  });
+
+  it("leaves a record that is only a moment old alone", () => {
+    localStorage.setItem(KEY, JSON.stringify({ id: "tab-alive", takenAt: Date.now() - 1_000 }));
+
+    const lock = createStorageRefreshLock();
+    expect(lock.held()).toBe(true);
+    expect(lock.acquire()).toBe(false);
+    expect(record().id).toBe("tab-alive");
+  });
 });
 
 describe("createRefreshCoordinator", () => {
@@ -297,6 +437,17 @@ describe("createRefreshCoordinator", () => {
     expect(request).toHaveBeenCalledTimes(1);
     expect(first).toEqual(second);
     expect(coordinator.pending()).toBe(false);
+  });
+
+  it("runs without any lock at all", async () => {
+    // The server render and any host without `window` land here: nothing to
+    // serialise against, so the single-flight rule inside the tab still holds.
+    const request = vi.fn(async () => pair);
+    const coordinator = createRefreshCoordinator({ request, now: () => NOW });
+    const [first, second] = await Promise.all([coordinator.refresh(), coordinator.refresh()]);
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(first.accessToken).toBe("rotated-access");
+    expect(second).toEqual(first);
   });
 
   it("asks again once the previous refresh has settled", async () => {
@@ -370,7 +521,7 @@ describe("createRefreshCoordinator", () => {
     expect(storage.map.has("nawy-refresh-lock-v1")).toBe(false);
   });
 
-  it("gives up waiting when the other tab never finishes", async () => {
+  it("refuses to rotate behind a tab that never finishes", async () => {
     const storage = fakeStorage();
     const other = createStorageRefreshLock({ storage, now: () => NOW, id: "tab-other" });
     other.acquire();
@@ -388,10 +539,18 @@ describe("createRefreshCoordinator", () => {
       // only the poll bound can end the wait. Without it this test hangs.
       now: () => NOW,
     });
-    await expect(coordinator.refresh()).resolves.toMatchObject({ accessToken: "rotated-access" });
-    expect(request).toHaveBeenCalledTimes(1);
-    expect(polls).toBeGreaterThan(0);
-    expect(polls).toBeLessThanOrEqual(10);
+
+    // Wedged, not slow. Rotating anyway is the failure the lock exists to
+    // prevent — two presentations of one family reads as theft and the tenant
+    // revokes every session the customer holds — so this call fails out loud.
+    await expect(coordinator.refresh()).rejects.toBeInstanceOf(RefreshLockedError);
+    expect(request).not.toHaveBeenCalled();
+    // Two bounded passes, five polls each: the wait before claiming the lock
+    // and the wait after losing the claim. Nothing here is allowed to spin.
+    expect(polls).toBe(10);
+    // Nothing was spent: the other tab's record is exactly as it was.
+    expect(JSON.parse(storage.map.get("nawy-refresh-lock-v1")!).id).toBe("tab-other");
+    expect(coordinator.pending()).toBe(false);
   });
 
   it("releases the lock even when the request fails", async () => {
@@ -407,6 +566,40 @@ describe("createRefreshCoordinator", () => {
     });
     await expect(coordinator.refresh()).rejects.toThrow("offline");
     expect(storage.map.has("nawy-refresh-lock-v1")).toBe(false);
+  });
+
+  /*
+   * The two tests above inject both the storage and the clock, which is the
+   * only way to make a wedged tab reproducible. This one deliberately uses
+   * neither: the guarantee that matters in a real browser — that two open tabs
+   * never present the same refresh token family at the same time — is a
+   * statement about real `localStorage` and real time, and it would survive a
+   * rewrite that broke exactly that.
+   */
+  it("keeps two real tabs out of one rotation window", async () => {
+    const timeline: string[] = [];
+
+    function tab(id: string, holdMs: number): RefreshCoordinator {
+      return createRefreshCoordinator({
+        request: async () => {
+          timeline.push(`${id}:start`);
+          await new Promise((resolve) => setTimeout(resolve, holdMs));
+          timeline.push(`${id}:end`);
+          return pair;
+        },
+        lock: createStorageRefreshLock({ id }),
+        pollMs: 5,
+        maxWaitMs: REQUEST_TIMEOUT_MS * 2,
+      });
+    }
+
+    const [first, second] = await Promise.all([tab("a", 40).refresh(), tab("b", 5).refresh()]);
+
+    expect(first.accessToken).toBe("rotated-access");
+    expect(second.accessToken).toBe("rotated-access");
+    // Strictly one after the other — `b` waited for `a` rather than racing it.
+    expect(timeline).toEqual(["a:start", "a:end", "b:start", "b:end"]);
+    expect(localStorage.getItem("nawy-refresh-lock-v1")).toBeNull();
   });
 });
 
@@ -430,6 +623,17 @@ describe("createAuthFetch", () => {
   }
 
   const fresh: AccessGrant = { accessToken: "a-1", accessExpiresAt: NOW + 900_000 };
+
+  /**
+   * A refusal the way the API client actually throws one.
+   *
+   * Whether a failed refresh ends the session is decided by the status and the
+   * domain code, not by the message, so a plain `new Error("RefreshToken...")`
+   * would test a different contract than the one the app runs on.
+   */
+  function refusal(status: 401 | 409, code: AuthErrorCode): AppError {
+    return new AppError({ kind: status === 401 ? "unauthorized" : "conflict", status, code });
+  }
 
   function harness(
     transport: ReturnType<typeof responder>,
@@ -502,7 +706,7 @@ describe("createAuthFetch", () => {
     const { authFetch, calls, signedOut } = harness(responder(401), {
       grant: fresh,
       refresh: async () => {
-        throw new Error("RefreshToken.Expired");
+        throw refusal(401, "RefreshToken.Expired");
       },
     });
     const response = await authFetch("/api/v1/orders");
@@ -512,16 +716,63 @@ describe("createAuthFetch", () => {
     expect(signedOut).toHaveBeenCalledTimes(1);
   });
 
-  it("does not send a request at all when the pre-flight refresh fails", async () => {
+  it("keeps the session when the retry fails for anything that is not the token", async () => {
+    // The deployed API answers every mediated call with a 500 right now.
+    // Treating that as a dead token would sign every customer out on one bad
+    // minute and then make them sign in again into the same bad minute.
+    const outage = new AppError({ kind: "server", status: 500, code: null });
+    const { authFetch, calls, signedOut } = harness(responder(401), {
+      grant: fresh,
+      refresh: async () => {
+        throw outage;
+      },
+    });
+    const response = await authFetch("/api/v1/orders");
+    expect(response.status).toBe(401);
+    expect(calls).toHaveLength(1);
+    expect(signedOut).not.toHaveBeenCalled();
+  });
+
+  it("does not send a request at all when the pre-flight refresh is refused", async () => {
+    const denied = refusal(409, "RefreshToken.Invalid");
     const { authFetch, calls, signedOut } = harness(responder(200), {
       grant: null,
       refresh: async () => {
-        throw new Error("RefreshToken.Invalid");
+        throw denied;
       },
     });
-    await expect(authFetch("/api/v1/orders")).rejects.toThrow("session-expired");
+    // The real refusal propagates, so the screen can name the case instead of
+    // flattening every failure into one generic message.
+    await expect(authFetch("/api/v1/orders")).rejects.toBe(denied);
     expect(calls).toHaveLength(0);
     expect(signedOut).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not sign out over a pre-flight refresh it could not reach", async () => {
+    const offline = new AppError({ kind: "offline", status: 0, code: null });
+    const { authFetch, calls, signedOut } = harness(responder(200), {
+      grant: null,
+      refresh: async () => {
+        throw offline;
+      },
+    });
+    await expect(authFetch("/api/v1/orders")).rejects.toBe(offline);
+    expect(calls).toHaveLength(0);
+    expect(signedOut).not.toHaveBeenCalled();
+  });
+
+  it("does not sign out when another tab holds the refresh lock", async () => {
+    const { authFetch, calls, signedOut } = harness(responder(200), {
+      grant: null,
+      refresh: async () => {
+        throw new RefreshLockedError();
+      },
+    });
+    await expect(authFetch("/api/v1/orders")).rejects.toBeInstanceOf(RefreshLockedError);
+    expect(calls).toHaveLength(0);
+    // A wedged sibling tab is a bad moment too: the customer's own cookie is
+    // untouched, so the next attempt is a retry rather than a new sign-in.
+    expect(signedOut).not.toHaveBeenCalled();
   });
 
   it("passes the body and method through untouched", async () => {
