@@ -1,6 +1,15 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
+
+/*
+ * `findBy*` and `waitFor` default to a one-second ceiling. This suite runs 46
+ * jsdom environments in parallel, and the assertions that wait on a *focus* or
+ * a paint — not on a promise — are the first to lose that race: the behaviour
+ * is right and the machine is busy. Two seconds keeps the headroom without
+ * turning a genuine failure into a long wait.
+ */
+configure({ asyncUtilTimeout: 2_000 });
 
 class MockObserver {
   observe() {}

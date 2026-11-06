@@ -7,12 +7,12 @@
  * part under test.
  */
 
-import { bffResponse, bffVerify } from "@/lib/auth-bff";
+import { bffRequest, bffResponse, bffVerify } from "@/lib/auth-bff";
 
-/** Auth answers are per-user and per-moment; nothing here may be cached. */
-export const dynamic = "force-dynamic";
+/* No `dynamic` export and no caching: `cacheComponents` rejects the route
+ * segment config, and reading the body already makes this handler per-request. */
 
 export async function POST(request: Request): Promise<Response> {
   const body = await request.json().catch(() => null);
-  return bffResponse(await bffVerify({ body, origin: request.url }));
+  return bffResponse(await bffVerify({ ...bffRequest(request), body }));
 }

@@ -9,11 +9,12 @@
  * leaves browser storage in the same breath.
  */
 
-import { bffAttach, bffResponse } from "@/lib/auth-bff";
+import { bffAttach, bffRequest, bffResponse } from "@/lib/auth-bff";
 
-export const dynamic = "force-dynamic";
+/* No `dynamic` export: `cacheComponents` rejects the route segment config, and
+ * reading the body already makes this handler per-request. */
 
 export async function POST(request: Request): Promise<Response> {
   const body = await request.json().catch(() => null);
-  return bffResponse(await bffAttach({ body, origin: request.url }));
+  return bffResponse(await bffAttach({ ...bffRequest(request), body }));
 }

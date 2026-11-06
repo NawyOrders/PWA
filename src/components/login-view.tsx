@@ -206,6 +206,10 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
   const nameError = fieldErrors.name ?? "";
   const phoneError = fieldErrors.phone ?? "";
   const channelError = fieldErrors.channel ?? "";
+  // A rejected code belongs to the six boxes; anything else the server said
+  // about this step falls back to the same line, because there is nowhere else
+  // to put it. One value, so the paragraph and the boxes cannot disagree.
+  const codeError = fieldErrors.code ?? error;
 
   const showFieldError = useCallback((target: AuthFieldTarget | null, message: string) => {
     if (target && target !== "none") {
@@ -638,6 +642,7 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
                 setAccountRefused(false);
               }}
               placeholder={t("ادخل رقم موبايلك")}
+              aria-describedby={phoneError ? "phone-error" : "phone-hint"}
               className="min-w-0 flex-1 bg-transparent px-3 text-sm font-semibold outline-none"
             />
             <span className="mx-1 flex shrink-0 items-center gap-1.5 border-e border-line pe-3 text-xs font-bold">
@@ -664,11 +669,11 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
             </button>
           </div>
           {phoneError ? (
-            <p role="alert" className="motion-fade mt-1.5 text-end text-[11px] font-semibold text-brand">
+            <p id="phone-error" role="alert" className="motion-fade mt-1.5 text-end text-[11px] font-semibold text-brand">
               {phoneError}
             </p>
           ) : (
-            <p className="mt-2 text-end text-[10px] text-muted">
+            <p id="phone-hint" className="mt-2 text-end text-[10px] text-muted">
               {t("استخدم رقم موبايل مصري لاستلام كود التحقق")}
             </p>
           )}
@@ -680,7 +685,12 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
           <span className="text-xs font-extrabold" id="otp-channel-label">
             {t("طريقة استلام الكود")}
           </span>
-          <div role="radiogroup" aria-labelledby="otp-channel-label" className="mt-2 grid grid-cols-2 gap-2">
+          <div
+            role="radiogroup"
+            aria-labelledby="otp-channel-label"
+            aria-describedby={channelError ? "otp-channel-error" : undefined}
+            className="mt-2 grid grid-cols-2 gap-2"
+          >
             {OTP_CHANNELS.map((option) => {
               const Icon = option.icon;
               const active = channel === option.value;
@@ -711,7 +721,7 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
             })}
           </div>
           {channelError ? (
-            <p role="alert" className="motion-fade mt-1.5 text-end text-[11px] font-semibold text-brand">
+            <p id="otp-channel-error" role="alert" className="motion-fade mt-1.5 text-end text-[11px] font-semibold text-brand">
               {channelError}
             </p>
           ) : null}
@@ -739,18 +749,26 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
               setFieldErrors((current) => ({ ...current, name: undefined }));
             }}
             placeholder={isRegistration ? t("اكتب اسمك بالكامل") : t("اتركه فاضي لو مسجل قبلي")}
+            aria-describedby={nameError ? "full-name-error" : undefined}
             className="mt-2 h-14 w-full rounded-xl border border-line bg-white px-4 text-sm font-semibold outline-none transition placeholder:text-muted focus:border-brand/45"
           />
           {nameError ? (
-            <p role="alert" className="motion-fade mt-1.5 text-end text-[11px] font-semibold text-brand">
+            <p id="full-name-error" role="alert" className="motion-fade mt-1.5 text-end text-[11px] font-semibold text-brand">
               {nameError}
             </p>
           ) : null}
         </div>
 
         <div className="mt-5">
-          <label className="text-xs font-extrabold">{t("كود التحقق")}</label>
-          <div className="mt-2.5 flex items-center justify-center gap-1 lg:gap-2" dir="ltr">
+          <span className="text-xs font-extrabold" id="otp-code-label">
+            {t("كود التحقق")}
+          </span>
+          <div
+            role="group"
+            aria-labelledby="otp-code-label"
+            className="mt-2.5 flex items-center justify-center gap-1 lg:gap-2"
+            dir="ltr"
+          >
             {otp.map((digit, index) => (
               <div key={index} className="flex items-center gap-1.5 lg:gap-2">
                 <input
@@ -766,6 +784,7 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
                   autoComplete="one-time-code"
                   maxLength={1}
                   aria-label={t("خانة الكود {n}", { n: index + 1 })}
+                  aria-describedby={codeError ? "otp-code-error" : undefined}
                   className={`h-[42px] w-[42px] rounded-xl border-2 text-center text-lg font-extrabold outline-none transition disabled:cursor-not-allowed disabled:bg-cream-100 disabled:text-muted lg:h-14 lg:w-12 lg:text-xl ${
                     digit
                       ? "border-brand/60 bg-brand-soft/25 text-brand"
@@ -797,9 +816,9 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
               </button>
             ) : null}
           </p>
-          {fieldErrors.code || error ? (
-            <p role="alert" className="motion-fade mt-1.5 text-end text-[11px] font-semibold text-brand">
-              {fieldErrors.code ?? error}
+          {codeError ? (
+            <p id="otp-code-error" role="alert" className="motion-fade mt-1.5 text-end text-[11px] font-semibold text-brand">
+              {codeError}
             </p>
           ) : null}
           {accountRefused ? (

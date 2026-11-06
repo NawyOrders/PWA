@@ -18,13 +18,28 @@ function requestedMode(value: string | string[] | undefined): OtpPurpose {
   return (Array.isArray(value) ? value[0] : value) === "register" ? "Registration" : "Login";
 }
 
+/**
+ * The whole of the query string's influence on the screen, in one pure call.
+ *
+ * A hostile `?next` is the part worth proving: the login page is the only place
+ * it is read, and the sanitising that happens here is what keeps the form from
+ * handing the customer to another site after a successful code. Exported so the
+ * policy is testable without a server-component render.
+ */
+export function loginViewParams(params: { next?: string; mode?: string | string[] }): {
+  next: string;
+  mode: OtpPurpose;
+} {
+  return { next: sanitizeNextPath(params.next), mode: requestedMode(params.mode) };
+}
+
 async function LoginContent({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string; mode?: string | string[] }>;
 }) {
   const params = await searchParams;
-  return <LoginView next={sanitizeNextPath(params.next)} mode={requestedMode(params.mode)} />;
+  return <LoginView {...loginViewParams(params)} />;
 }
 
 export default function LoginPage({

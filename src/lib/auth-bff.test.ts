@@ -1,14 +1,27 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-/**
+/*
  * The upstream is the only thing here that is not ours to decide, so it is the
  * only thing stubbed: every branch below is driven by the exact shape
- * `forwardToTenant` documents.
+ * `forwardToTenant` documents. The real module still supplies the two ceilings
+ * `auth-cookie` imports, because a mock that hid them would let the cookie jar
+ * and the client disagree about token length without a single test noticing.
  */
-vi.mock("@/lib/api", () => ({ forwardToTenant: vi.fn() }));
+vi.mock(import("@/lib/api"), async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, forwardToTenant: vi.fn() };
+});
 
 import { forwardToTenant } from "@/lib/api";
-import { bffAttach, bffRefresh, bffRevoke, bffResponse, bffVerify, type BffResult } from "@/lib/auth-bff";
+import {
+  bffAttach,
+  bffRefresh,
+  bffRequest,
+  bffResponse,
+  bffRevoke,
+  bffVerify,
+  type BffResult,
+} from "@/lib/auth-bff";
 
 const forward = vi.mocked(forwardToTenant);
 
@@ -516,11 +529,90 @@ describe("bffResponse — the only place a rotated token is ever written", () =>
     });
   });
 
-  it("writes the wipe, not just a value, when the result asks for a cleared cookie", async () => {
+  it("writes the wipe in both variants, so the old token really leaves the jar", async () => {
     const response = bffResponse(await bffRevoke({ token: null, origin: LAN_ORIGIN }));
-    const setCookie = response.headers.get("Set-Cookie") ?? "";
-    expect(setCookie).toContain("Max-Age=0");
-    expect(setCookie).toContain("nawy_refresh=;");
-    expect(setCookie).not.toContain("Secure");
+    const lines = (response.headers.get("Set-Cookie") ?? "").split(", ");
+
+    expect(lines).toHaveLength(2);
+    for (const line of lines) {
+      expect(line).toContain("nawy_refresh=;");
+      expect(line).toContain("Max-Age=0");
+    }
+    // A jar that holds the https form cannot be emptied by a plaintext answer,
+    // or the other way round; both have to be sent or the logout is a lie.
+    expect(lines.some((line) => line.includes("Secure"))).toBe(true);
+    expect(lines.some((line) => !line.includes("Secure"))).toBe(true);
+  });
+
+  it("never doubles a stored token, which would put a plaintext twin in the jar", async () => {
+    forward.mockResolvedValue(upstream({ body: envelope({ ...SESSION_DATA }) }));
+
+    const response = bffResponse(await bffVerify({ body: { challengeId: "ch-1" }, origin: HTTPS_ORIGIN }));
+
+    expect((response.headers.get("Set-Cookie") ?? "").split(", ")).toHaveLength(1);
+  });
+});
+
+describe("bffRequest — the two facts a handler must not forget", () => {
+  it("reads the proxy's protocol off the headers alongside the url it was asked to serve", () => {
+    const request = new Request("http://127.0.0.1:3000/api/auth/refresh", {
+      headers: { "x-forwarded-proto": "https", "x-forwarded-for": "203.0.113.9" },
+    });
+
+    expect(bffRequest(request)).toEqual({ origin: request.url, forwardedProto: "https" });
+  });
+
+  it("reports a missing forwarded header as null, not as an empty string that reads as http", () => {
+    const request = new Request("https://shop.example/api/auth/revoke");
+
+    expect(bffRequest(request)).toEqual({ origin: request.url, forwardedProto: null });
+  });
+
+  it("carries the decision through to the cookie, so a proxied deployment writes Secure", async () => {
+    forward.mockResolvedValue(upstream({ body: envelope({ ...SESSION_DATA }) }));
+
+    const proxied = await bffVerify({
+      body: { challengeId: "ch-1" },
+      origin: "http://127.0.0.1:3000/api/auth/otp/verify",
+      forwardedProto: "https",
+    });
+    expect(proxied.cookie).toMatchObject({ secure: true });
+
+    const direct = await bffVerify({
+      body: { challengeId: "ch-1" },
+      origin: "http://127.0.0.1:3000/api/auth/otp/verify",
+      forwardedProto: "http",
+    });
+    expect(direct.cookie).toMatchObject({ secure: true });
+
+    const lan = await bffVerify({
+      body: { challengeId: "ch-1" },
+      origin: "http://192.168.1.20:3000/api/auth/otp/verify",
+      forwardedProto: "http",
+    });
+    expect(lan.cookie).toMatchObject({ secure: false });
+  });
+
+  it("applies the same rule to every call that writes or wipes the jar", async () => {
+    forward.mockResolvedValue(upstream({ body: envelope({ ...ROTATED_DATA }) }));
+    await expect(
+      bffRefresh({ token: "refresh-1", origin: "http://192.168.1.20:3000/api/auth/refresh", forwardedProto: "https" }),
+    ).resolves.toMatchObject({ cookie: { secure: true } });
+
+    await expect(
+      bffRevoke({ token: "refresh-1", origin: "http://192.168.1.20:3000/api/auth/revoke", forwardedProto: "https" }),
+    ).resolves.toMatchObject({ cookie: { secure: true, maxAge: 0 } });
+
+    await expect(
+      bffAttach({ body: { refreshToken: "legacy" }, origin: "http://192.168.1.20:3000/api/auth/session", forwardedProto: "https" }),
+    ).resolves.toMatchObject({ cookie: { secure: true } });
+  });
+
+  it("defaults to the url alone when a caller passes no forwarded protocol at all", async () => {
+    forward.mockResolvedValue(upstream({ body: envelope({ ...SESSION_DATA }) }));
+
+    await expect(
+      bffVerify({ body: { challengeId: "ch-1" }, origin: "https://shop.example/api/auth/otp/verify" }),
+    ).resolves.toMatchObject({ cookie: { secure: true } });
   });
 });

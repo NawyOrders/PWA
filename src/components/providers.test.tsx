@@ -1,6 +1,12 @@
 import { act, renderHook, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useApp, useOptionalApp } from "@/components/providers";
+import {
+  MAX_TRANSIENT_REFRESH_RETRIES,
+  TRANSIENT_REFRESH_RETRY_MS,
+  useApp,
+  useOptionalApp,
+} from "@/components/providers";
+import { AppError, type AuthErrorCode } from "@/lib/api";
 import { useCustomerSession } from "@/hooks/use-customer-session";
 import { renderAppHook } from "@/test/render";
 import { seedCart, productsById, orders as seedOrders, branches, user, type Order } from "@/lib/data";
@@ -95,6 +101,21 @@ function tokenPair(accessToken = "rotated-access", lifetimeMs = 900_000): TokenP
 
 const expiredSessionMessage = "انتهت الجلسة، سجّل الدخول تاني";
 
+/**
+ * A refresh failure as the client actually reports one: an `AppError` carrying
+ * the status the tenant sent and, when it sent one, the domain code. The
+ * distinction the provider makes — the backend refusing a dead credential
+ * versus the backend not answering at all — is only visible in those two
+ * fields, so a bare `Error` here would test the wrong thing.
+ */
+function refusal(status: number, code: AuthErrorCode | null): AppError {
+  return new AppError({
+    kind: status === 401 ? "unauthorized" : status >= 500 ? "server" : "offline",
+    status,
+    code,
+  });
+}
+
 type FetchCall = { url: string; init: RequestInit };
 
 /** Records every tenant call the auth fetch wrapper makes and answers with a status. */
@@ -146,14 +167,18 @@ describe("AppProvider — cart flow", () => {
       storageKeys.cart,
       JSON.stringify([
         { key: "beef-burger|", productId: "beef-burger", qty: 2, price: 120 },
+        // A stored line can carry anything a previous version wrote: extras
+        // that are not text are dropped rather than rendered.
+        { key: "veggie-burger|", productId: "veggie-burger", qty: 1, price: 90, extras: ["جبن", 42, null] },
         { key: 12, productId: null, qty: "many" },
         null,
       ]),
     );
     const { result } = await app();
-    expect(result.current.lines).toHaveLength(1);
-    expect(result.current.count).toBe(2);
-    expect(result.current.subtotal).toBe(240);
+    expect(result.current.lines).toHaveLength(2);
+    expect(result.current.count).toBe(3);
+    expect(result.current.subtotal).toBe(330);
+    expect(result.current.lines[1]?.extras).toEqual(["جبن"]);
   });
 
   it("merges identical configurations and keeps notes separate", async () => {
@@ -363,6 +388,24 @@ describe("AppProvider — order lifecycle", () => {
       expect(stored[0].id).toBe("10249");
       expect(stored[0].items).toHaveLength(seedCart.length);
     });
+  });
+
+  it("records a delivery order against the account address when the stored selection is gone", async () => {
+    // Storage is untrusted input: an id naming an address that no longer exists
+    // must not put `undefined` — or a deleted address — into a placed order.
+    localStorage.setItem(storageKeys.selectedAddress, JSON.stringify("deleted-address"));
+
+    const { result } = await app();
+    expect(result.current.selectedAddressId).toBeNull();
+
+    let placed: Order | null = null;
+    act(() => {
+      placed = result.current.placeOrder("cash");
+    });
+
+    expect(placed).not.toBeNull();
+    expect(placed!.fulfilment).toBe("delivery");
+    expect(placed!.address).toBe(user.address);
   });
 
   it("applies coupon and pickup branch to the recorded order", async () => {
@@ -645,6 +688,33 @@ describe("AppProvider — tenant API session and branding", () => {
     expect(localStorage.getItem(storageKeys.session)).not.toContain("legacy-refresh");
   });
 
+  it("waits for the adoption to land before it mints the first token", async () => {
+    let release: (value: void) => void = () => {};
+    api.attachStoredRefresh.mockReturnValue(
+      new Promise<void>((resolve) => {
+        release = resolve;
+      }),
+    );
+    localStorage.setItem(storageKeys.session, JSON.stringify(legacyRecord()));
+
+    const hook = renderAppHook(() => useApp());
+    await waitFor(() => expect(api.attachStoredRefresh).toHaveBeenCalledTimes(1));
+
+    // The recovery refresh reads the very cookie jar the adoption is still
+    // writing. Minting a token first would spend a request on a jar the browser
+    // has not been given yet, and answer a perfectly good session with a 401.
+    expect(api.refreshSession).not.toHaveBeenCalled();
+
+    await act(async () => {
+      release();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => expect(api.refreshSession).toHaveBeenCalledTimes(1));
+    expect(hook.result.current.loggedIn).toBe(true);
+    expect(hook.result.current.sessionStatus).toBe("active");
+  });
+
   it("leaves a legacy token unadopted while no backend is wired", async () => {
     apiMode.transport = "demo";
     localStorage.setItem(storageKeys.session, JSON.stringify(legacyRecord()));
@@ -755,20 +825,115 @@ describe("AppProvider — tenant API session and branding", () => {
   });
 
   it("signs the customer out when the refresh is refused", async () => {
-    api.refreshSession.mockRejectedValue(new Error("RefreshToken.Revoked"));
+    api.refreshSession.mockRejectedValue(refusal(401, "RefreshToken.Revoked"));
     localStorage.setItem(storageKeys.session, JSON.stringify(identity));
 
     const { result } = await app();
     await waitFor(() => expect(result.current.loggedIn).toBe(false));
 
     // One refused refresh, not a retry loop: the boot effect and the proactive
-    // effect join the same single-flight call.
+    // effect join the same single-flight call, and a backend that has said "the
+    // token is dead" is never asked twice.
     expect(api.refreshSession).toHaveBeenCalledTimes(1);
     expect(result.current.customer).toBeNull();
     expect(result.current.sessionStatus).toBe("signed-out");
     expect(localStorage.getItem(storageKeys.session)).toBe("null");
     expect(localStorage.getItem(storageKeys.auth)).toBe("false");
     expect(await screen.findByText(expiredSessionMessage)).toBeInTheDocument();
+  });
+
+  it("signs the customer out on a reuse alarm the same way", async () => {
+    api.refreshSession.mockRejectedValue(refusal(401, "RefreshToken.CompromisedReuse"));
+    localStorage.setItem(storageKeys.session, JSON.stringify(identity));
+
+    const { result } = await app();
+    await waitFor(() => expect(result.current.sessionStatus).toBe("signed-out"));
+    expect(api.refreshSession).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText(expiredSessionMessage)).toBeInTheDocument();
+  });
+
+  /**
+   * The backoff is a real 30-second timer, so these two tests own the clock.
+   * Under fake timers `waitFor` cannot help — testing-library only recognises
+   * jest's — so the clock is walked explicitly and every assertion is made
+   * after the walk, which is also the more honest statement of what is being
+   * proved: nothing happened *until* the window expired.
+   */
+  async function settle() {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+  }
+
+  async function waitBackoff() {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(TRANSIENT_REFRESH_RETRY_MS + 1);
+    });
+  }
+
+  it("treats a refresh the server could not answer as a bad moment, not a sign-out", async () => {
+    vi.useFakeTimers();
+    api.refreshSession
+      .mockRejectedValueOnce(refusal(500, null))
+      .mockResolvedValueOnce(tokenPair("recovered-access"));
+    localStorage.setItem(storageKeys.session, JSON.stringify(identity));
+
+    const hook = renderAppHook(() => useApp());
+    await settle();
+
+    // A 500 is not the backend refusing the credential, so the customer stays
+    // signed in — and the retry is a scheduled one rather than a loop.
+    expect(api.refreshSession).toHaveBeenCalledTimes(1);
+    expect(hook.result.current.loggedIn).toBe(true);
+    expect(hook.result.current.sessionStatus).toBe("recovering");
+    expect(screen.queryByText(expiredSessionMessage)).not.toBeInTheDocument();
+    expect(localStorage.getItem(storageKeys.session)).toBe(JSON.stringify(identity));
+
+    await settle();
+    expect(api.refreshSession).toHaveBeenCalledTimes(1);
+
+    await waitBackoff();
+
+    expect(api.refreshSession).toHaveBeenCalledTimes(2);
+    expect(hook.result.current.sessionStatus).toBe("active");
+    expect(hook.result.current.loggedIn).toBe(true);
+  });
+
+  it("gives up on a refresh that keeps failing, rather than refreshing forever", async () => {
+    vi.useFakeTimers();
+    api.refreshSession.mockRejectedValue(refusal(500, null));
+    localStorage.setItem(storageKeys.session, JSON.stringify(identity));
+
+    const hook = renderAppHook(() => useApp());
+    await settle();
+    expect(hook.result.current.loggedIn).toBe(true);
+
+    // The first attempt plus exactly the bounded number of scheduled ones, each
+    // one window apart. Every retry in the budget leaves the customer signed
+    // in and recovering; a session stuck behind a dead backend with a
+    // nominally valid token is the worst of both, so the last one ends it.
+    for (let attempt = 1; attempt < MAX_TRANSIENT_REFRESH_RETRIES; attempt += 1) {
+      await waitBackoff();
+      expect(api.refreshSession).toHaveBeenCalledTimes(attempt + 1);
+      expect(hook.result.current.sessionStatus).toBe("recovering");
+      expect(hook.result.current.loggedIn).toBe(true);
+    }
+
+    await waitBackoff();
+    expect(api.refreshSession).toHaveBeenCalledTimes(MAX_TRANSIENT_REFRESH_RETRIES + 1);
+    expect(hook.result.current.sessionStatus).toBe("signed-out");
+    expect(hook.result.current.customer).toBeNull();
+    expect(localStorage.getItem(storageKeys.session)).toBe("null");
+    expect(screen.getByText(expiredSessionMessage)).toBeInTheDocument();
+
+    // And it stays over: no further attempt is queued behind the sign-out.
+    await waitBackoff();
+    expect(api.refreshSession).toHaveBeenCalledTimes(MAX_TRANSIENT_REFRESH_RETRIES + 1);
+  });
+
+  it("publishes the backoff it waits, so the window is a decision not a detail", () => {
+    expect(TRANSIENT_REFRESH_RETRY_MS).toBe(30_000);
+    expect(MAX_TRANSIENT_REFRESH_RETRIES).toBe(3);
   });
 
   it("leaves a healthy session alone", async () => {
