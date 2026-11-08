@@ -991,7 +991,8 @@ export async function requestOtp(options: {
       // The guide's casing, which the API's own 422 names ("Sms or WhatsApp").
       // The deployed build folds case, so `sms` is accepted too — being literal
       // keeps this file readable against the contract either way.
-      purpose: options.purpose ?? "Login",
+      // The live contract is closed to extra fields and carries no `purpose`;
+      // that value only drives the local simulator.
       channel: options.channel === "whatsapp" ? "WhatsApp" : "Sms",
     },
   });
@@ -1046,7 +1047,6 @@ export async function verifyOtp(options: {
     return mock.verifyOtp(options);
   }
 
-  const fullName = (options.fullName ?? "").trim().slice(0, 200);
   const response = await rawRequest("/api/auth/otp/verify", {
     method: "POST",
     target: "local",
@@ -1054,10 +1054,9 @@ export async function verifyOtp(options: {
     body: {
       challengeId: options.challengeId,
       code: options.code.trim(),
-      // `fullName` is what registers a first-time customer. A returning one
-      // simply leaves it out rather than posting an empty string the backend
-      // could read as "rename me to nothing".
-      ...(fullName ? { fullName } : {}),
+      // The live contract is closed to extra fields and names the account
+      // through `/account/profile`, so the typed name is not sent here. The
+      // simulator still reads `options.fullName`.
     },
   });
   const data = unwrap<Partial<CustomerLoginData> & DeployedCustomerName>(

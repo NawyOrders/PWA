@@ -142,13 +142,13 @@ function badRequest(): BffResult {
  * This call carries no credential, so there is nothing to hide and no cookie to
  * write: the whole job is to move a request the browser cannot make (the
  * tenant's CORS allow-list is deployment-specific) onto the app server, which
- * reaches the tenant over its configured base URL. Only the three documented
- * fields are forwarded, so a page cannot turn this into a relay for anything
- * else.
+ * reaches the tenant over its configured base URL. Only the two fields the
+ * current contract declares are forwarded, so a page cannot turn this into a
+ * relay for anything else.
  */
 export async function bffRequestOtp(input: BffRequest & { body: unknown }): Promise<BffResult> {
   if (!isRecord(input.body)) return badRequest();
-  const { phoneNumber, channel, purpose } = input.body;
+  const { phoneNumber, channel } = input.body;
   if (typeof phoneNumber !== "string" || !phoneNumber.trim()) {
     return {
       status: 400,
@@ -160,7 +160,6 @@ export async function bffRequestOtp(input: BffRequest & { body: unknown }): Prom
 
   const forwarded: Record<string, unknown> = { phoneNumber: phoneNumber.trim().slice(0, 32) };
   if (typeof channel === "string" && channel.trim()) forwarded.channel = channel.trim().slice(0, 16);
-  if (typeof purpose === "string" && purpose.trim()) forwarded.purpose = purpose.trim().slice(0, 32);
 
   const upstream = await forwardToTenant(OTP_REQUEST_PATH, { body: forwarded });
   return relay(upstream, null);
@@ -175,9 +174,12 @@ export async function bffRequestOtp(input: BffRequest & { body: unknown }): Prom
 export async function bffVerify(input: BffRequest & { body: unknown }): Promise<BffResult> {
   if (!isRecord(input.body)) return badRequest();
   const secure = shouldMarkSecure(input.origin, input.forwardedProto ?? null);
-  const { refreshToken: _dropped, ...rest } = input.body;
+  // The live contract is closed to extra fields and carries only these two, so
+  // an older build's stored token, or anything else the page posts, never
+  // reaches the tenant.
+  const { challengeId, code } = input.body;
 
-  const upstream = await forwardToTenant(VERIFY_PATH, { body: rest });
+  const upstream = await forwardToTenant(VERIFY_PATH, { body: { challengeId, code } });
   const data = upstream.status === 200 ? envelopeData(upstream) : null;
   const stored = data ? refreshCookie(data.refreshToken, { secure }) : null;
   if (!data) return relay(upstream, null);

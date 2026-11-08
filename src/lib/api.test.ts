@@ -427,18 +427,17 @@ describe("requestOtp", () => {
     expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/auth/otp/request");
     expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ method: "POST", credentials: "same-origin" });
     expect(sentHeaders(fetchMock.mock.calls[0]?.[1])).toMatchObject({ Accept: "application/json" });
-    expect(jsonOf(fetchMock.mock.calls[0]?.[1])).toEqual({ phoneNumber: PHONE, purpose: "Login", channel: "Sms" });
+    expect(jsonOf(fetchMock.mock.calls[0]?.[1])).toEqual({ phoneNumber: PHONE, channel: "Sms" });
     expect(tenantHeaderViolations(fetchMock)).toEqual([]);
   });
 
-  it("sends the contract's own casing for the channel and the purpose", async () => {
+  it("sends the contract's own casing for the channel and never the purpose", async () => {
     vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
     const fetchMock = stubFetch(() => jsonResponse(envelope(challenge)));
 
     await requestOtp({ phoneNumber: PHONE, channel: "whatsapp", purpose: "Registration" });
     expect(jsonOf(fetchMock.mock.calls[0]?.[1])).toEqual({
       phoneNumber: PHONE,
-      purpose: "Registration",
       channel: "WhatsApp",
     });
     expect(tenantHeaderViolations(fetchMock)).toEqual([]);
@@ -568,27 +567,17 @@ describe("verifyOtp", () => {
     });
   });
 
-  it("trims the name, leaves out a blank one and caps what it sends at 200 characters", async () => {
+  it("keeps the typed name out of the live verify body, because the contract names the account through /account/profile", async () => {
     vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
     const fetchMock = stubFetch(() => jsonResponse(envelope(sessionData)));
 
-    await verifyOtp({ challengeId: "ch-1", code: "123456", fullName: "  Nawy Guest  " });
-    expect(jsonOf(fetchMock.mock.calls[0]?.[1])).toEqual({
-      challengeId: "ch-1",
-      code: "123456",
-      fullName: "Nawy Guest",
-    });
+    await verifyOtp({ challengeId: "ch-1", code: " 123456 ", fullName: "  Nawy Guest  " });
+    expect(jsonOf(fetchMock.mock.calls[0]?.[1])).toEqual({ challengeId: "ch-1", code: "123456" });
 
-    // A returning customer must not post an empty string the backend could read
-    // as "rename me to nothing".
-    await verifyOtp({ challengeId: "ch-1", code: "123456" });
-    expect(jsonOf(fetchMock.mock.calls[1]?.[1])).toEqual({ challengeId: "ch-1", code: "123456" });
-
-    await verifyOtp({ challengeId: "ch-1", code: "123456", fullName: "   " });
-    expect(jsonOf(fetchMock.mock.calls[2]?.[1])).not.toHaveProperty("fullName");
-
+    // A blank or oversized name must not leak into a request the contract has
+    // no field for.
     await verifyOtp({ challengeId: "ch-1", code: "123456", fullName: "م".repeat(250) });
-    expect(String(jsonOf(fetchMock.mock.calls[3]?.[1]).fullName)).toHaveLength(200);
+    expect(jsonOf(fetchMock.mock.calls[1]?.[1])).toEqual({ challengeId: "ch-1", code: "123456" });
     expect(tenantHeaderViolations(fetchMock)).toEqual([]);
   });
 

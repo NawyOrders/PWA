@@ -132,7 +132,7 @@ describe("bffRequestOtp — relay the anonymous challenge request", () => {
     expect(forward).toHaveBeenCalledTimes(1);
     expect(forward.mock.calls[0]?.[0]).toBe(OTP_REQUEST_PATH);
     expect(forward.mock.calls[0]?.[1]).toEqual({
-      body: { phoneNumber: "+201012345678", channel: "Sms", purpose: "Login" },
+      body: { phoneNumber: "+201012345678", channel: "Sms" },
     });
     expect(result).toMatchObject({ status: 200, cookie: null });
     expect(result.body).toBe(answer);
@@ -208,9 +208,9 @@ describe("bffVerify — take the token off the response and hide it", () => {
     forward.mockResolvedValue(upstream({ body: envelope({ ...SESSION_DATA }) }));
 
     await bffVerify({
-      // An older build could post its stored token back; it must not reach the
-      // tenant as part of a verify body.
-      body: { challengeId: "ch-1", code: "123456", refreshToken: "refresh-stale" },
+      // An older build could post its stored token or the name it used to send
+      // with verify; neither may reach the tenant as part of a verify body.
+      body: { challengeId: "ch-1", code: "123456", fullName: "Nawy Guest", refreshToken: "refresh-stale" },
       origin: HTTPS_ORIGIN,
     });
 
