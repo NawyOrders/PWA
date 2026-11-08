@@ -385,6 +385,7 @@ const en: Record<string, string> = {
   "البريد الإلكتروني (اختياري)": "Email (optional)",
   "أضف بريدك الإلكتروني": "Add your email",
   "حفظ التغييرات": "Save changes",
+  "جاري الحفظ...": "Saving...",
   "العودة للملف الشخصي": "Back to profile",
   "حدّث بياناتك وصورتك الشخصية عشان تجربتك تبقى أسهل.": "Update your details and photo to make your experience easier.",
   "الملف لازم يكون صورة": "The file must be an image",

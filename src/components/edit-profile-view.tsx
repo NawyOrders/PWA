@@ -4,17 +4,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Camera, ChevronLeft } from "lucide-react";
+import { apiErrorMessageKey, authTransport } from "@/lib/api";
 import { useApp } from "@/components/providers";
 import { Breadcrumbs, CustomerAvatar, MobilePageHeader } from "@/components/ui";
 
 export function EditProfileView() {
   const router = useRouter();
-  const { toast, t, profile, ready, updateProfile } = useApp();
+  const { toast, t, profile, ready, completeProfile, updateProfile } = useApp();
+  const transport = authTransport();
   const fileInput = useRef<HTMLInputElement | null>(null);
   const [name, setName] = useState(profile.name);
   const [phone, setPhone] = useState(profile.phone);
   const [email, setEmail] = useState(profile.email);
   const [preview, setPreview] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!ready) return;
@@ -66,8 +69,9 @@ export function EditProfileView() {
   /** A customer with no photo yet is adding one; a customer with one is replacing it. */
   const avatarLabel = preview || profile.avatar ? t("تغيير الصورة الشخصية") : t("أضف صورة شخصية");
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (saving) return;
     if (name.trim().length < 3) {
       toast(t("اكتب الاسم الكامل من فضلك"), "info");
       return;
@@ -76,14 +80,23 @@ export function EditProfileView() {
       toast(t("رقم الهاتف غير صحيح"), "info");
       return;
     }
-    updateProfile({
-      name: name.trim(),
-      phone: phone.trim(),
-      email: email.trim(),
-      avatar: preview ?? profile.avatar,
-    });
-    toast(t("تم حفظ التغييرات بنجاح"), "info");
-    router.push("/profile");
+    setSaving(true);
+    try {
+      await completeProfile({ name: name.trim(), email: email.trim() });
+      // The avatar has no API field, so it stays a local presentation choice.
+      // The phone number is server-owned in live mode — `/account/profile` does
+      // not accept it — so only the demo path stores what was typed.
+      updateProfile({
+        avatar: preview ?? profile.avatar,
+        ...(transport === "live" ? {} : { phone: phone.trim() }),
+      });
+      toast(t("تم حفظ التغييرات بنجاح"), "info");
+      router.push("/profile");
+    } catch (cause) {
+      toast(t(apiErrorMessageKey(cause)), "info");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -201,9 +214,10 @@ export function EditProfileView() {
 
           <button
             type="submit"
-            className="btn-gradient mt-6 flex h-14 w-full items-center justify-center rounded-full text-sm font-extrabold text-white shadow-[0_20px_36px_-20px_rgba(232,69,44,0.95)] transition hover:brightness-105"
+            disabled={saving}
+            className="btn-gradient mt-6 flex h-14 w-full items-center justify-center rounded-full text-sm font-extrabold text-white shadow-[0_20px_36px_-20px_rgba(232,69,44,0.95)] transition hover:brightness-105 disabled:opacity-70"
           >
-            {t("حفظ التغييرات")}
+            {saving ? t("جاري الحفظ...") : t("حفظ التغييرات")}
           </button>
 
           <button

@@ -26,12 +26,15 @@ import {
   apiErrorFieldTarget,
   apiErrorMessageKey,
   authTransport,
+  completeProfile as completeProfileRequest,
   isUsablePhone,
   normalizeEgyptianPhone,
   requestOtp,
   retryBackoffSeconds,
+  splitFullName,
   verifyOtp,
   type AuthFieldTarget,
+  type CustomerSessionPayload,
   type OtpChallenge,
   type OtpChannel,
   type OtpPurpose,
@@ -516,7 +519,44 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
       // answered without a name — because it kept an existing account's empty
       // one — the typed name is still the truth about this customer, so the
       // account screen must not fall back to the demo identity.
-      login(payload.fullName || !typedName ? payload : { ...payload, fullName: typedName });
+      let session: CustomerSessionPayload =
+        payload.fullName || !typedName ? payload : { ...payload, fullName: typedName };
+
+      // The API's own status says this account still needs a first and last
+      // name, and its order endpoints refuse an incomplete profile. The sign-in
+      // screen already collected a name, so finish the profile now instead of
+      // leaving the account half-created. A failure here must not cost the
+      // session: the account screen can complete it later.
+      if (payload.nextStep === "CompleteProfile" && typedName) {
+        try {
+          const { firstName, lastName } = splitFullName(typedName);
+          const completed = await completeProfileRequest({
+            accessToken: payload.accessToken,
+            firstName,
+            lastName,
+            email: payload.email,
+          });
+          session = {
+            ...session,
+            customerId: completed.profile.customerId || session.customerId,
+            phoneNumber: completed.profile.phoneNumber ?? session.phoneNumber,
+            fullName: completed.profile.fullName ?? session.fullName,
+            email: completed.profile.email ?? session.email,
+            accessToken: completed.session.accessToken,
+            tokenType: completed.session.tokenType,
+            expiresIn: completed.session.expiresIn,
+            expiresAtUtc: completed.session.expiresAtUtc,
+            isPhoneVerified: completed.profile.isPhoneVerified,
+            isEmailVerified: completed.profile.isEmailVerified,
+            profileCompleted: completed.profile.profileCompleted,
+            nextStep: completed.profile.nextStep,
+          };
+        } catch {
+          // Keep the session the verify already granted.
+        }
+      }
+
+      login(session);
     } catch (cause) {
       if (challengeRef.current?.challengeId !== active.challengeId) return;
       const message = t(apiErrorMessageKey(cause));
