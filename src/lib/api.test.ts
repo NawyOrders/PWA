@@ -164,6 +164,7 @@ const brandingData = { tenantId: "t-1", nameAr: "ناوي", primaryColor: "#E845
 
 /** Serves every endpoint successfully, so one stub can answer a whole flow. */
 function responseFor(url: string): Response {
+  if (url.endsWith("/api/auth/otp/request")) return jsonResponse(envelope(challenge));
   if (url.endsWith("/api/v1/auth/otp/request")) return jsonResponse(envelope(challenge));
   if (url.endsWith("/api/auth/otp/verify")) return jsonResponse(envelope(sessionData));
   if (url.endsWith("/api/auth/refresh")) return jsonResponse(envelope(refreshedData));
@@ -226,8 +227,8 @@ describe("API configuration", () => {
   it("keeps a request that reaches the tenant host on the configured host", async () => {
     vi.stubEnv(TENANT_API_BASE_URL_ENV, `${BASE}///`);
     const fetchMock = stubFetch((url) => responseFor(url));
-    await requestOtp({ phoneNumber: PHONE });
-    expect(urlsCalled(fetchMock)).toEqual([`${BASE}/api/v1/auth/otp/request`]);
+    await fetchBranding();
+    expect(urlsCalled(fetchMock)).toEqual([`${BASE}/api/v1/Branding`]);
     expect(tenantHeaderViolations(fetchMock)).toEqual([]);
   });
 
@@ -418,13 +419,13 @@ describe("AppError", () => {
 });
 
 describe("requestOtp", () => {
-  it("posts the documented login challenge body straight to the tenant host, anonymously", async () => {
+  it("posts the documented login challenge body through the app's BFF, never to the tenant host", async () => {
     vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
     const fetchMock = stubFetch(() => jsonResponse(envelope(challenge)));
 
     await expect(requestOtp({ phoneNumber: PHONE })).resolves.toEqual(challenge);
-    expect(fetchMock.mock.calls[0]?.[0]).toBe(`${BASE}/api/v1/auth/otp/request`);
-    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ method: "POST", credentials: "omit" });
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/auth/otp/request");
+    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ method: "POST", credentials: "same-origin" });
     expect(sentHeaders(fetchMock.mock.calls[0]?.[1])).toMatchObject({ Accept: "application/json" });
     expect(jsonOf(fetchMock.mock.calls[0]?.[1])).toEqual({ phoneNumber: PHONE, purpose: "Login", channel: "Sms" });
     expect(tenantHeaderViolations(fetchMock)).toEqual([]);
@@ -887,7 +888,7 @@ describe("fetchBranding", () => {
 });
 
 describe("routing over the whole flow", () => {
-  it("keeps anonymous calls on the tenant host and credential-carrying calls on the app server", async () => {
+  it("keeps every auth call on the app server and only branding on the tenant host", async () => {
     vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
     // The retired tenant env names must change nothing: the tenant comes from
     // the request host, so even a deploy that still sets them sends no header
@@ -904,7 +905,7 @@ describe("routing over the whole flow", () => {
     await fetchBranding();
 
     expect(urlsCalled(fetchMock)).toEqual([
-      `${BASE}/api/v1/auth/otp/request`,
+      "/api/auth/otp/request",
       "/api/auth/otp/verify",
       "/api/auth/refresh",
       "/api/auth/revoke",
@@ -1246,20 +1247,22 @@ describe("the cold-start tenant retry", () => {
     let calls = 0;
     const fetchMock = stubFetch(() => {
       calls += 1;
-      return calls === 1 ? tenantProblem(404, "Tenant Not Found") : jsonResponse(envelope(challenge));
+      return calls === 1 ? tenantProblem(404, "Tenant Not Found") : jsonResponse(envelope(brandingData));
     });
 
-    await expect(requestOtp({ phoneNumber: PHONE })).resolves.toMatchObject({ challengeId: "ch-1" });
+    await expect(fetchBranding()).resolves.toMatchObject({ notModified: false, branding: brandingData });
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(urlsCalled(fetchMock)).toEqual([
-      `${BASE}/api/v1/auth/otp/request`,
-      `${BASE}/api/v1/auth/otp/request`,
+      `${BASE}/api/v1/Branding`,
+      `${BASE}/api/v1/Branding`,
     ]);
     // The second ask is the same anonymous request: no tenant header, no
     // tenant field in the body, and nothing the first attempt changed.
     expect(tenantHeaderViolations(fetchMock)).toEqual([]);
     expect(tenantBodyViolations(fetchMock)).toEqual([]);
-    expect(jsonOf(fetchMock.mock.calls[1]?.[1])).toEqual(jsonOf(fetchMock.mock.calls[0]?.[1]));
+    expect(fetchMock.mock.calls[1]?.[1]?.method).toBe(fetchMock.mock.calls[0]?.[1]?.method);
+    expect(sentHeaders(fetchMock.mock.calls[1]?.[1])).toEqual(sentHeaders(fetchMock.mock.calls[0]?.[1]));
+    expect(fetchMock.mock.calls[1]?.[1]?.body).toBeUndefined();
   });
 
   it("gives an unresolved host the same single second chance", async () => {
@@ -1278,7 +1281,7 @@ describe("the cold-start tenant retry", () => {
     vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
     const fetchMock = stubFetch(() => tenantProblem(404, "Tenant Not Found"));
 
-    const error = await failureFor(requestOtp({ phoneNumber: PHONE }));
+    const error = await failureFor(fetchBranding());
     expect(error).toMatchObject({ code: "Tenant.NotFound", status: 404, kind: "notFound" });
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(apiErrorMessageKey(error)).toBe(AUTH_ERROR_MESSAGES["Tenant.NotFound"]);
@@ -1299,7 +1302,7 @@ describe("the cold-start tenant retry", () => {
 
     // A 404 about a phone is the registration offer, not a cold cache. Retrying
     // it would only ask the same question twice and still end at the same place.
-    expect(await failureFor(requestOtp({ phoneNumber: PHONE }))).toMatchObject({
+    expect(await failureFor(fetchBranding())).toMatchObject({
       code: "Customer.NotFoundByPhone",
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -1328,7 +1331,7 @@ describe("the cold-start tenant retry", () => {
 
     for (const answer of answers) {
       const fetchMock = stubFetch(answer);
-      const error = await failureFor(requestOtp({ phoneNumber: PHONE }));
+      const error = await failureFor(fetchBranding());
       expect(error).toBeInstanceOf(AppError);
       expect(fetchMock).toHaveBeenCalledTimes(1);
       if (error.status === 429) expect(error.retryAfterSeconds).toBe(180);
@@ -1356,7 +1359,7 @@ describe("the cold-start tenant retry", () => {
       return tenantProblem(404, "Tenant Not Found");
     });
 
-    expect(await failureFor(requestOtp({ phoneNumber: PHONE }))).toMatchObject({ code: "Tenant.NotFound" });
+    expect(await failureFor(fetchBranding())).toMatchObject({ code: "Tenant.NotFound" });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 

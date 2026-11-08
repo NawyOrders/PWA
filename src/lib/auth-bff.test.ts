@@ -18,6 +18,7 @@ import {
   bffCompleteProfile,
   bffRefresh,
   bffRequest,
+  bffRequestOtp,
   bffResponse,
   bffRevoke,
   bffVerify,
@@ -30,6 +31,7 @@ const HTTPS_ORIGIN = "https://shop.example/api/auth/otp/verify";
 const DEV_ORIGIN = "http://localhost:3000/api/auth/otp/verify";
 const LAN_ORIGIN = "http://192.168.1.20:3000/api/auth/otp/verify";
 
+const OTP_REQUEST_PATH = "/api/v1/auth/otp/request";
 const VERIFY_PATH = "/api/v1/auth/otp/verify";
 const REFRESH_PATH = "/api/v1/auth/refresh";
 const REVOKE_PATH = "/api/v1/auth/revoke";
@@ -115,6 +117,65 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.stubEnv("AUTH_MOCK", "");
   vi.stubEnv("NEXT_PUBLIC_AUTH_MOCK", "");
+});
+
+describe("bffRequestOtp — relay the anonymous challenge request", () => {
+  it("forwards only the documented fields and relays the envelope with no cookie", async () => {
+    const answer = envelope({ challengeId: "ch-1", expiresInSeconds: 300 });
+    forward.mockResolvedValue(upstream({ body: answer }));
+
+    const result = await bffRequestOtp({
+      body: { phoneNumber: "+201012345678", purpose: "Login", channel: "Sms", tenantId: "nawy" },
+      origin: HTTPS_ORIGIN,
+    });
+
+    expect(forward).toHaveBeenCalledTimes(1);
+    expect(forward.mock.calls[0]?.[0]).toBe(OTP_REQUEST_PATH);
+    expect(forward.mock.calls[0]?.[1]).toEqual({
+      body: { phoneNumber: "+201012345678", channel: "Sms", purpose: "Login" },
+    });
+    expect(result).toMatchObject({ status: 200, cookie: null });
+    expect(result.body).toBe(answer);
+  });
+
+  it("refuses a body that is not an object without asking the tenant", async () => {
+    const result = await bffRequestOtp({ body: null, origin: HTTPS_ORIGIN });
+
+    expect(result).toMatchObject({ status: 400, cookie: null });
+    expect(forward).not.toHaveBeenCalled();
+  });
+
+  it("refuses a missing phone number without asking the tenant", async () => {
+    const result = await bffRequestOtp({ body: { channel: "Sms" }, origin: HTTPS_ORIGIN });
+
+    expect(result).toMatchObject({ status: 400, cookie: null });
+    expect(forward).not.toHaveBeenCalled();
+  });
+
+  it("passes a 429 through with its Retry-After and writes no cookie", async () => {
+    const failure = envelope(null, {
+      statusCode: 429,
+      isSuccess: false,
+      errors: { "Auth.OtpRateLimitExceeded": "Slow down." },
+    });
+    forward.mockResolvedValue(upstream({ status: 429, body: failure, retryAfterSeconds: 180 }));
+
+    const result = await bffRequestOtp({ body: { phoneNumber: "+201012345678" }, origin: HTTPS_ORIGIN });
+
+    expect(result).toMatchObject({ status: 429, retryAfterSeconds: 180, cookie: null });
+    expect(result.body).toBe(failure);
+  });
+
+  it("strips a refresh token even though this endpoint should never carry one", async () => {
+    forward.mockResolvedValue(
+      upstream({ body: envelope({ challengeId: "ch-1", refreshToken: "refresh-leak" }) }),
+    );
+
+    const result = await bffRequestOtp({ body: { phoneNumber: "+201012345678" }, origin: HTTPS_ORIGIN });
+
+    expect(dataOf(result)).not.toHaveProperty("refreshToken");
+    expect(JSON.stringify(result.body)).not.toContain("refresh-leak");
+  });
 });
 
 describe("bffVerify — take the token off the response and hide it", () => {
