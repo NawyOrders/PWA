@@ -1,9 +1,9 @@
 /**
  * Typed customer-side client for the NawyOrders Tenant API.
  *
- * Contract: the "Customer Login — Frontend Integration Guide" and the swagger
- * published on https://tenant-api.nawyorders.com. Every normal response is
- * wrapped in `{ statusCode, isSuccess, data, errors, timestamp }`, so this
+ * Contract: the "Customer OTP Login" frontend integration guide and the swagger
+ * the tenant host publishes at `/swagger/v1/swagger.json`. Every normal response
+ * is wrapped in `{ statusCode, isSuccess, data, errors, timestamp }`, so this
  * module is the only place that knows about the envelope: callers get typed
  * data back or an `AppError` — one shape for every failure, network level,
  * envelope level, `application/problem+json` level or a bare non-JSON `500`.
@@ -33,18 +33,40 @@
 /* -------------------------------------------------------------------------- */
 
 /**
- * The documented tenant API host. A per-tenant host later (`burger-house.…`)
- * is an environment change, never a code change.
+ * The tenant host the integration guide names, written out in full.
+ *
+ * The slug is the *whole* platform identifier — `tahrir-01a1ad3c…`, not
+ * `tahrir` — because the API resolves the tenant from this host and nothing
+ * else. A shortened slug answers `404 Tenant Not Found`; a host that is not a
+ * tenant host at all answers `401 Tenant.Unresolved`. Both are configuration
+ * failures, so the fix is this value, never an `X-Tenant-Id` header.
  */
-export const DEFAULT_TENANT_API_BASE_URL = "https://tenant-api.nawyorders.com";
+export const DEFAULT_TENANT_API_BASE_URL =
+  "https://tahrir-01a1ad3c89d47d70876527c9ef863dcc.api.nawyorders.com";
 
-/** Environment variable that names the tenant API host. */
+/**
+ * The browser-visible name. Only `NEXT_PUBLIC_` variables reach the client
+ * bundle, so this is the one a deploy sets to put the storefront on a tenant.
+ */
 export const TENANT_API_BASE_URL_ENV = "NEXT_PUBLIC_TENANT_API_BASE_URL";
+
+/**
+ * The guide's own name for the same setting. `next.config.ts` folds it into the
+ * browser bundle at build time, and the BFF reads it directly at runtime, so a
+ * deploy may set either one — but both sides of the app must end up on the same
+ * host, which is why the public name wins whenever it is present.
+ */
+export const TENANT_API_BASE_URL_SERVER_ENV = "TENANT_API_BASE_URL";
+
+/** Whichever name the deploy used, trimmed; empty when it named no backend. */
+function configuredTenantBaseUrl(): string {
+  const publicValue = (process.env[TENANT_API_BASE_URL_ENV] ?? "").trim();
+  return publicValue || (process.env[TENANT_API_BASE_URL_SERVER_ENV] ?? "").trim();
+}
 
 /** Trailing slashes are stripped so `${base}${path}` can never become `//api`. */
 export function apiBaseUrl(): string {
-  const configured = (process.env[TENANT_API_BASE_URL_ENV] ?? "").trim();
-  return (configured || DEFAULT_TENANT_API_BASE_URL).replace(/\/+$/, "");
+  return (configuredTenantBaseUrl() || DEFAULT_TENANT_API_BASE_URL).replace(/\/+$/, "");
 }
 
 /**
@@ -57,15 +79,15 @@ export function apiUrl(path: string): string {
 }
 
 /**
- * True when the deploy pointed the app at a backend.
+ * True when the deploy pointed the app at a backend, under either name.
  *
- * `apiBaseUrl()` deliberately answers with the documented host even when the
- * variable is missing — that is what makes the default useful — so "is auth
- * wired up" cannot be derived from it and is read from the variable directly.
+ * `apiBaseUrl()` deliberately answers with the guide's tenant host even when
+ * nothing is set — that is what makes the default useful — so "is auth wired
+ * up" cannot be derived from it and is read from the variables directly.
  * A deploy that sets nothing keeps the offline demo login it shipped with.
  */
 export function apiConfigured(): boolean {
-  return (process.env[TENANT_API_BASE_URL_ENV] ?? "").trim() !== "";
+  return configuredTenantBaseUrl() !== "";
 }
 
 /** Where the auth calls actually go. Chosen by configuration, never in code. */
@@ -131,7 +153,15 @@ export type RestaurantBranding = {
 
 export type OtpChannel = "sms" | "whatsapp";
 
-/** The two purposes the customer app is allowed to ask for. */
+/**
+ * The two purposes the customer screen offers.
+ *
+ * The guide also documents `PhoneVerification`, which the backend treats like
+ * `Registration`; this app has no screen that asks for it, so the union stays at
+ * the two a customer can actually choose. The deployed build ignores the field
+ * altogether — it decides new-vs-returning from the phone — and sending it is
+ * harmless against either contract.
+ */
 export type OtpPurpose = "Login" | "Registration";
 
 /** `POST /api/v1/auth/otp/request` → `data`. */
@@ -463,6 +493,21 @@ export function isFatalRefreshError(error: unknown): boolean {
   return error.status === 409 && (error.code ?? "").startsWith("RefreshToken.");
 }
 
+/**
+ * The one failure the guide says to retry: the first call after a backend
+ * restart can land before the tenant cache is warm, and the API answers
+ * `404 Tenant Not Found` or `401 Tenant.Unresolved` for a host that is right.
+ *
+ * Deliberately narrow. A `404 Customer.NotFoundByPhone` is a real answer about a
+ * real customer, a `429` is a limit that a second call would only spend again,
+ * and a `500` is a broken backend that one more request cannot fix. Retrying any
+ * of those turns a single honest failure into a small storm.
+ */
+export function isTenantResolutionError(error: unknown): boolean {
+  if (!(error instanceof AppError)) return false;
+  return error.code === "Tenant.NotFound" || error.code === "Tenant.Unresolved";
+}
+
 /* -------------------------------------------------------------------------- */
 /* Request plumbing                                                           */
 /* -------------------------------------------------------------------------- */
@@ -507,7 +552,6 @@ export const REFRESH_TOKEN_LIFETIME_DAYS = 14;
 type RequestOptions = {
   method?: "GET" | "POST";
   body?: unknown;
-  token?: string | null;
   /** Sent as `If-None-Match` so a cached branding payload costs a 304. */
   etag?: string | null;
   timeoutMs?: number;
@@ -533,16 +577,45 @@ type RawResponse = {
   nonJson: boolean;
 };
 
+/**
+ * One call, with the guide's cold-start retry folded into the same budget.
+ *
+ * The retry shares the caller's timeout rather than starting a new one: the
+ * cross-tab refresh lock is sized from `REQUEST_TIMEOUT_MS`, and a request that
+ * could quietly take two of them would outlive the lock guarding it — which is
+ * how two tabs end up rotating one token family and the backend revokes every
+ * session the customer has.
+ *
+ * Only tenant-direct calls retry here. A `local` call goes to this app's own
+ * BFF, which does its own single retry against the tenant; retrying at both
+ * layers would spend four requests on one cold start.
+ */
 async function rawRequest(path: string, options: RequestOptions = {}): Promise<RawResponse> {
+  const budgetMs = options.timeoutMs ?? REQUEST_TIMEOUT_MS;
+  const deadline = Date.now() + budgetMs;
+  try {
+    return await requestOnce(path, options, budgetMs);
+  } catch (error) {
+    const left = deadline - Date.now();
+    if (options.target !== "local" && left > 0 && isTenantResolutionError(error)) {
+      return requestOnce(path, options, left);
+    }
+    throw error;
+  }
+}
+
+async function requestOnce(path: string, options: RequestOptions, timeoutMs: number): Promise<RawResponse> {
   const url = options.target === "local" ? path : apiUrl(path);
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? REQUEST_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   const headers: Record<string, string> = { Accept: "application/json" };
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
-  if (options.token) headers.Authorization = `Bearer ${options.token}`;
   if (options.etag) headers["If-None-Match"] = options.etag;
   // No `X-Tenant-Id`, ever: for anonymous login requests the tenant comes from
   // the request host, and a header that disagrees with it is a documented 400.
+  // No `Authorization` either. Every credential-carrying call in this app goes
+  // to the BFF (`target: "local"`), which talks to the tenant itself, so nothing
+  // here has a reason to put a token on a browser request.
 
   let response: Response;
   try {
@@ -865,8 +938,9 @@ export async function requestOtp(options: {
     method: "POST",
     body: {
       phoneNumber: options.phoneNumber,
-      // The contract's own casing; the backend is case-insensitive, and being
-      // literal about it keeps this file readable against the guide.
+      // The guide's casing, which the API's own 422 names ("Sms or WhatsApp").
+      // The deployed build folds case, so `sms` is accepted too — being literal
+      // keeps this file readable against the contract either way.
       purpose: options.purpose ?? "Login",
       channel: options.channel === "whatsapp" ? "WhatsApp" : "Sms",
     },
@@ -884,6 +958,26 @@ export async function requestOtp(options: {
       : 0,
     devOtpCode: typeof data.devOtpCode === "string" ? data.devOtpCode : null,
   };
+}
+
+/**
+ * The name fields the deployed build actually sends.
+ *
+ * Its swagger answers `/otp/verify` with `firstName`/`lastName` and no
+ * `fullName`, while the integration guide documents `fullName`. Reading only
+ * the guide's field would sign every customer in as somebody with no name, so
+ * both shapes are accepted and reduced to the one the app stores.
+ */
+type DeployedCustomerName = { firstName?: unknown; lastName?: unknown };
+
+/** The guide's `fullName`, or the deployed pair joined into the same thing. */
+function customerName(data: Partial<CustomerLoginData> & DeployedCustomerName): string {
+  if (typeof data.fullName === "string" && data.fullName.trim()) return data.fullName.trim().slice(0, 200);
+  return [data.firstName, data.lastName]
+    .filter((part): part is string => typeof part === "string" && part.trim() !== "")
+    .map((part) => part.trim())
+    .join(" ")
+    .slice(0, 200);
 }
 
 /**
@@ -916,14 +1010,18 @@ export async function verifyOtp(options: {
       ...(fullName ? { fullName } : {}),
     },
   });
-  const data = unwrap<Partial<CustomerLoginData>>(response.body, response.status, response.retryAfterSeconds);
+  const data = unwrap<Partial<CustomerLoginData> & DeployedCustomerName>(
+    response.body,
+    response.status,
+    response.retryAfterSeconds,
+  );
   if (typeof data.accessToken !== "string" || !data.accessToken) {
     throw new AppError({ kind: "envelope", status: response.status, retryAfterSeconds: response.retryAfterSeconds });
   }
   return {
     customerId: typeof data.customerId === "string" ? data.customerId : "",
     phoneNumber: typeof data.phoneNumber === "string" ? data.phoneNumber : "",
-    fullName: typeof data.fullName === "string" ? data.fullName : "",
+    fullName: customerName(data),
     email: typeof data.email === "string" ? data.email : null,
     accessToken: data.accessToken,
     tokenType: typeof data.tokenType === "string" ? data.tokenType : "Bearer",
@@ -997,11 +1095,37 @@ export async function revokeSession(): Promise<void> {
  * The low-level forwarder the BFF routes use. It is kept here so there is one
  * place that knows the tenant host, the envelope and the timeout, and the route
  * handlers stay as thin as the guide's "thin BFF" wording asks.
+ *
+ * The cold-start retry lives here rather than in the routes: a verify, a
+ * rotation and a revoke all deserve the same single second chance, and putting
+ * it in four handlers is how one of them ends up without it.
  */
+export type TenantAnswer = {
+  status: number;
+  contentType: string;
+  body: unknown;
+  retryAfterSeconds: number | null;
+};
+
 export async function forwardToTenant(
   path: string,
   init: { method?: "GET" | "POST"; body?: unknown; token?: string | null },
-): Promise<{ status: number; contentType: string; body: unknown; retryAfterSeconds: number | null }> {
+): Promise<TenantAnswer> {
+  const deadline = Date.now() + REQUEST_TIMEOUT_MS;
+  const first = await forwardOnce(path, init, REQUEST_TIMEOUT_MS);
+  if (!isColdStartAnswer(first)) return first;
+  // Same shared budget as the browser client: the retry may not outlive the
+  // lock that is guarding this rotation.
+  const left = Math.floor(deadline - Date.now());
+  if (left <= 0) return first;
+  return forwardOnce(path, init, left);
+}
+
+async function forwardOnce(
+  path: string,
+  init: { method?: "GET" | "POST"; body?: unknown; token?: string | null },
+  timeoutMs: number,
+): Promise<TenantAnswer> {
   const response = await fetch(apiUrl(path), {
     method: init.method ?? "POST",
     headers: {
@@ -1012,7 +1136,7 @@ export async function forwardToTenant(
     body: init.body === undefined ? undefined : JSON.stringify(init.body),
     credentials: "omit",
     cache: "no-store",
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    signal: AbortSignal.timeout(Math.max(1, timeoutMs)),
   });
 
   const contentType = response.headers.get("Content-Type") ?? "application/json";
@@ -1024,4 +1148,27 @@ export async function forwardToTenant(
     body = null;
   }
   return { status: response.status, contentType, body, retryAfterSeconds };
+}
+
+/**
+ * Whether a relayed answer is the tenant cache being cold, judged exactly the
+ * way the browser client judges it — by parsing it into the same `AppError`.
+ *
+ * That sharing is the point: a `404` carrying `Customer.NotFoundByPhone` is an
+ * answer about a customer and must reach the screen untouched, while a `404`
+ * `ProblemDetails` titled "Tenant Not Found" is the restart case worth one more
+ * request. Two hand-written status checks would eventually disagree.
+ */
+function isColdStartAnswer(answer: TenantAnswer): boolean {
+  if (answer.status >= 200 && answer.status < 300) return false;
+  const problem = isProblem(answer.body, answer.contentType) ? (answer.body as ProblemDetails) : null;
+  const error = errorFromResponse(
+    answer.status,
+    answer.body,
+    problem,
+    answer.body === null,
+    answer.retryAfterSeconds,
+    answer.contentType,
+  );
+  return isTenantResolutionError(error);
 }
