@@ -1,4 +1,4 @@
-const VERSION = "nawy-orders-v2";
+const VERSION = "nawy-orders-v3";
 
 const CORE = [
   "/",
