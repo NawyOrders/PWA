@@ -1,14 +1,20 @@
 /**
  * The logic behind `/api/auth/*` — the thin BFF the integration guide asks for.
  *
- * Why these three calls belong on the app server and the OTP request does not:
- * `/otp/verify`, `/refresh` and `/revoke` are the only auth calls whose answer
+ * Why the credential-carrying calls belong on the app server: `/otp/verify`,
+ * `/refresh`, `/revoke` and `/account/profile` are the auth calls whose answer
  * or input carries a refresh token. A browser cannot keep that token safely —
  * `localStorage` is readable by any script on the origin, and the token is
  * good for days — so the app server takes it off the API's response, puts it in
  * an httpOnly cookie scoped to `/api/auth`, and removes it from the body the
- * page sees. `/otp/request` carries no credential at all, so the browser talks
- * to the tenant host directly and the tenant stays resolved from that host.
+ * page sees.
+ *
+ * `/otp/request` carries no credential, but it still comes through here. The
+ * tenant's CORS allow-list names deployment origins explicitly, so a browser
+ * calling the tenant host directly works only on the hosts someone remembered
+ * to add — and fails with an opaque network error everywhere else. The app
+ * server talks to the tenant over the configured base URL, where CORS does not
+ * apply, so login works on every origin the app is served from.
  *
  * The pass-through rule is what makes this safe to add: the status code, the
  * envelope and the `Retry-After` header come back exactly as the tenant API
@@ -54,6 +60,7 @@ type BffRequest = {
 
 type Upstream = Awaited<ReturnType<typeof forwardToTenant>>;
 
+const OTP_REQUEST_PATH = "/api/v1/auth/otp/request";
 const VERIFY_PATH = "/api/v1/auth/otp/verify";
 const REFRESH_PATH = "/api/v1/auth/refresh";
 const REVOKE_PATH = "/api/v1/auth/revoke";
@@ -127,6 +134,36 @@ function badRequest(): BffResult {
     retryAfterSeconds: null,
     cookie: null,
   };
+}
+
+/**
+ * `/otp/request` → relay the anonymous challenge request.
+ *
+ * This call carries no credential, so there is nothing to hide and no cookie to
+ * write: the whole job is to move a request the browser cannot make (the
+ * tenant's CORS allow-list is deployment-specific) onto the app server, which
+ * reaches the tenant over its configured base URL. Only the three documented
+ * fields are forwarded, so a page cannot turn this into a relay for anything
+ * else.
+ */
+export async function bffRequestOtp(input: BffRequest & { body: unknown }): Promise<BffResult> {
+  if (!isRecord(input.body)) return badRequest();
+  const { phoneNumber, channel, purpose } = input.body;
+  if (typeof phoneNumber !== "string" || !phoneNumber.trim()) {
+    return {
+      status: 400,
+      body: envelopeError(400, "Validation.Failed", "A phone number is required."),
+      retryAfterSeconds: null,
+      cookie: null,
+    };
+  }
+
+  const forwarded: Record<string, unknown> = { phoneNumber: phoneNumber.trim().slice(0, 32) };
+  if (typeof channel === "string" && channel.trim()) forwarded.channel = channel.trim().slice(0, 16);
+  if (typeof purpose === "string" && purpose.trim()) forwarded.purpose = purpose.trim().slice(0, 32);
+
+  const upstream = await forwardToTenant(OTP_REQUEST_PATH, { body: forwarded });
+  return relay(upstream, null);
 }
 
 /**

@@ -962,9 +962,15 @@ export async function fetchBranding(options: { etag?: string | null } = {}): Pro
 }
 
 /**
- * Step 1. Anonymous, so it goes straight to the tenant host: the host is what
- * resolves the tenant, and a BFF hop would add nothing to a request that carries
- * no credential.
+ * Step 1. Anonymous, but routed through the app server.
+ *
+ * The tenant's CORS allow-list names deployment origins explicitly, so a
+ * browser calling the tenant host directly works only on the origins someone
+ * remembered to add — and fails with an opaque network error on every other
+ * host the app is served from. The BFF forwards the request from the server,
+ * where CORS does not apply, and relays the answer (including `Retry-After`)
+ * unchanged. No credential is involved, so nothing is hidden and no cookie is
+ * written.
  */
 export async function requestOtp(options: {
   phoneNumber: string;
@@ -976,8 +982,10 @@ export async function requestOtp(options: {
     return mock.requestOtp(options);
   }
 
-  const response = await rawRequest("/api/v1/auth/otp/request", {
+  const response = await rawRequest("/api/auth/otp/request", {
     method: "POST",
+    target: "local",
+    credentials: "same-origin",
     body: {
       phoneNumber: options.phoneNumber,
       // The guide's casing, which the API's own 422 names ("Sms or WhatsApp").
