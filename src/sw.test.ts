@@ -8,6 +8,12 @@ type Handler = (event: Record<string, unknown>) => void;
 
 const ORIGIN = "https://app.test";
 
+// The cache name lives in the worker itself; reading it here keeps the suite
+// honest when the version is bumped to invalidate stale caches.
+const SW_SOURCE = readFileSync(new URL("../public/sw.js", import.meta.url), "utf8");
+const VERSION = /const VERSION = "([^"]+)"/.exec(SW_SOURCE)?.[1];
+if (!VERSION) throw new Error("public/sw.js must declare its cache VERSION");
+
 function request(url: string, overrides: Record<string, unknown> = {}) {
   return { method: "GET", url, mode: "no-cors", ...overrides };
 }
@@ -66,7 +72,7 @@ function createHarness() {
     clients: { claim: vi.fn(async () => undefined) },
   };
 
-  const source = readFileSync(new URL("../public/sw.js", import.meta.url), "utf8");
+  const source = SW_SOURCE;
   runInNewContext(source, { self, caches, fetch, URL, Response, Promise, console });
 
   return { listeners, stores, caches, fetch, self };
@@ -94,7 +100,7 @@ describe("service worker", () => {
   it("precaches the core shell and activates immediately", async () => {
     const { listeners, fetch, self, caches } = createHarness();
     await dispatch(listeners.get("install")!, {});
-    expect(caches.open).toHaveBeenCalledWith("nawy-orders-v2");
+    expect(caches.open).toHaveBeenCalledWith(VERSION);
     expect(fetch).toHaveBeenCalledTimes(6);
     expect(fetch).toHaveBeenCalledWith("/icons/logo.svg");
     expect(self.skipWaiting).toHaveBeenCalled();
@@ -105,7 +111,7 @@ describe("service worker", () => {
     stores.set("nawy-orders-v0", new Map());
     await dispatch(listeners.get("activate")!, {});
     expect(caches.delete).toHaveBeenCalledWith("nawy-orders-v0");
-    expect(caches.delete).not.toHaveBeenCalledWith("nawy-orders-v2");
+    expect(caches.delete).not.toHaveBeenCalledWith(VERSION);
     expect(self.clients.claim).toHaveBeenCalled();
   });
 
@@ -116,7 +122,7 @@ describe("service worker", () => {
     await flush();
     expect(fetch).toHaveBeenCalledWith(nav);
     expect((result as Response).status).toBe(200);
-    expect(stores.get("nawy-orders-v2")?.has(nav.url)).toBe(true);
+    expect(stores.get(VERSION)?.has(nav.url)).toBe(true);
   });
 
   it("never persists private navigations in the HTTP cache", async () => {
@@ -126,7 +132,7 @@ describe("service worker", () => {
       await dispatch(listeners.get("fetch")!, { request: nav });
       await flush();
       expect(fetch).toHaveBeenCalledWith(nav);
-      expect(stores.get("nawy-orders-v2")?.has(nav.url) ?? false).toBe(false);
+      expect(stores.get(VERSION)?.has(nav.url) ?? false).toBe(false);
     }
   });
 
@@ -134,7 +140,7 @@ describe("service worker", () => {
     const { listeners, fetch, stores } = createHarness();
     const nav = request(`${ORIGIN}/orders`, { mode: "navigate" });
     const cached = new Response("cached-orders", { status: 200 });
-    stores.set("nawy-orders-v2", new Map([[nav.url, cached]]));
+    stores.set(VERSION, new Map([[nav.url, cached]]));
     fetch.mockRejectedValueOnce(new Error("offline"));
     const { result } = await dispatch(listeners.get("fetch")!, { request: nav });
     expect(await (result as Response).text()).toBe("cached-orders");
@@ -143,7 +149,7 @@ describe("service worker", () => {
   it("falls back to /offline when neither route nor shell is cached", async () => {
     const { listeners, fetch, stores } = createHarness();
     const nav = request(`${ORIGIN}/unknown`, { mode: "navigate" });
-    stores.set("nawy-orders-v2", new Map([["/offline", new Response("offline-page")]]));
+    stores.set(VERSION, new Map([["/offline", new Response("offline-page")]]));
     fetch.mockRejectedValueOnce(new Error("offline"));
     const { result } = await dispatch(listeners.get("fetch")!, { request: nav });
     expect(await (result as Response).text()).toBe("offline-page");
@@ -153,7 +159,7 @@ describe("service worker", () => {
     const { listeners, fetch, stores } = createHarness();
     const chunk = request(`${ORIGIN}/_next/static/chunks/app.js`);
     const cached = new Response("cached-chunk");
-    stores.set("nawy-orders-v2", new Map([[chunk.url, cached]]));
+    stores.set(VERSION, new Map([[chunk.url, cached]]));
     const { result } = await dispatch(listeners.get("fetch")!, { request: chunk });
     expect(await (result as Response).text()).toBe("cached-chunk");
     expect(fetch).not.toHaveBeenCalled();
@@ -166,7 +172,7 @@ describe("service worker", () => {
     await flush();
     expect(fetch).toHaveBeenCalledWith(image);
     expect(await (result as Response).text()).toBe(`network:${image.url}`);
-    expect(stores.get("nawy-orders-v2")?.has(image.url)).toBe(true);
+    expect(stores.get(VERSION)?.has(image.url)).toBe(true);
   });
 
   it("ignores non-GET, cross-origin and non-static requests", async () => {
