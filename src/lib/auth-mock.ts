@@ -39,6 +39,7 @@ import {
   type AuthErrorCode,
 } from "@/lib/api";
 import { OTP_LENGTH, generateOtpCode } from "@/lib/otp";
+import { clearLocalAccounts } from "@/lib/local-accounts";
 import { clearLocalCustomers, localCustomer, rememberLocalCustomer } from "@/lib/local-customers";
 import type { CustomerSessionPayload, OtpPurpose, RequestOtpData, TokenPair } from "@/lib/api";
 
@@ -162,6 +163,8 @@ function reset(): void {
   // left it behind would let one test's registration answer the next test's
   // login, and would leave a developer's device remembering a stranger.
   clearLocalCustomers();
+  // The saved favorites, orders and points are part of that same database.
+  clearLocalAccounts();
   seedReservedCustomers();
 }
 

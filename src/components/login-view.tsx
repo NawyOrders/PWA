@@ -113,7 +113,7 @@ const NEW_CODE_REQUIRED_CODES = new Set([
 
 export function LoginView({ next = "/profile", mode = "Login" }: { next?: string; mode?: OtpPurpose }) {
   const router = useRouter();
-  const { login, updateProfile, toast, t, loggedIn, ready, profile } = useApp();
+  const { login, updateProfile, adoptLocalAccount, toast, t, loggedIn, ready, profile } = useApp();
   const transport = authTransport();
   const [phone, setPhone] = useState("");
   const [fullName, setFullName] = useState("");
@@ -479,6 +479,10 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
         // previous person's name and photo must not travel with the slot.
         updateProfile({ ...seedProfile, phone: signedInPhone });
       }
+      // The same proof, the same slot: what this number saved — favorites,
+      // orders, points — comes back with the name, and a number that saved
+      // nothing starts empty instead of wearing the seeded demo history.
+      adoptLocalAccount(signedInPhone);
       login();
       return;
     }
@@ -547,6 +551,7 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
       submittingRef.current = false;
     }
   }, [
+    adoptLocalAccount,
     attemptsLeft,
     clearError,
     code,

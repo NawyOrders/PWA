@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { CustomerAvatar } from "@/components/ui";
-import { user } from "@/lib/data";
 
 const accountLinks: { label: string; href: string; icon: React.ComponentType<LucideProps> }[] = [
   { label: "العناوين المحفوظة", href: "/addresses", icon: MapPinned },
@@ -26,11 +25,11 @@ const accountLinks: { label: string; href: string; icon: React.ComponentType<Luc
 ];
 
 export function ProfileView() {
-  const { favorites, profile, orders, t } = useApp();
+  const { favorites, profile, orders, points, t } = useApp();
   const stats = [
     { key: "favorites", label: "المفضلة", value: favorites.length, icon: Heart, tile: "bg-[#fde3e8] text-[#e24467]" },
     { key: "orders", label: "الطلبات", value: orders.length, icon: ShoppingBag, tile: "bg-[#fbdcd2] text-[#e8452c]" },
-    { key: "points", label: "النقاط", value: user.points, icon: Star, tile: "bg-[#fcecc9] text-[#eaa41c]" },
+    { key: "points", label: "النقاط", value: points, icon: Star, tile: "bg-[#fcecc9] text-[#eaa41c]" },
   ];
 
   return (

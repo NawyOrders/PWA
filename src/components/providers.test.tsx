@@ -3,13 +3,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   MAX_TRANSIENT_REFRESH_RETRIES,
   TRANSIENT_REFRESH_RETRY_MS,
+  seedProfile,
   useApp,
   useOptionalApp,
 } from "@/components/providers";
 import { AppError, type AuthErrorCode } from "@/lib/api";
 import { useCustomerSession } from "@/hooks/use-customer-session";
+import { localAccount, rememberLocalAccount } from "@/lib/local-accounts";
 import { renderAppHook } from "@/test/render";
-import { seedCart, productsById, orders as seedOrders, branches, user, type Order } from "@/lib/data";
+import { seedCart, seedFavorites, productsById, orders as seedOrders, branches, user, type Order } from "@/lib/data";
 import { savedAddresses } from "@/lib/account-data";
 import { storageKeys } from "@/lib/storage";
 import type { AuthTransport, CustomerSessionPayload, TokenPair } from "@/lib/api";
@@ -468,6 +470,196 @@ describe("AppProvider — order lifecycle", () => {
     expect(result.current.orders).toHaveLength(1);
     expect(result.current.orders[0]).toMatchObject({ id: "9001", status: "delivered" });
     expect(result.current.orders[0].image).toBe("/images/burger.webp");
+  });
+});
+
+describe("AppProvider — local account ownership", () => {
+  const PHONE = "01012345678";
+  const NORMALIZED = "+201012345678";
+  const OTHER = "+201198765432";
+
+  it("starts a new local account empty instead of inheriting the seeded history", async () => {
+    const { result } = await app();
+    expect(result.current.favorites).toEqual(seedFavorites);
+    expect(result.current.orders).toHaveLength(seedOrders.length);
+
+    act(() => {
+      result.current.adoptLocalAccount(PHONE);
+      result.current.login();
+    });
+
+    expect(result.current.loggedIn).toBe(true);
+    expect(result.current.favorites).toEqual([]);
+    expect(result.current.orders).toEqual([]);
+    expect(result.current.points).toBe(0);
+    await waitFor(() => expect(localAccount(NORMALIZED)).toEqual({ points: 0, favorites: [], orders: [] }));
+  });
+
+  it("saves what the customer changes into their own slot and nobody else's", async () => {
+    rememberLocalAccount(OTHER, { points: 90, favorites: ["fries"], orders: [] });
+    const { result } = await app();
+    act(() => {
+      result.current.adoptLocalAccount(PHONE);
+      result.current.login();
+    });
+
+    act(() => result.current.toggleFavorite("beef-burger"));
+    act(() => {
+      result.current.placeOrder("cash");
+    });
+
+    await waitFor(() => {
+      expect(localAccount(NORMALIZED)?.favorites).toEqual(["beef-burger"]);
+      expect(localAccount(NORMALIZED)?.orders).toHaveLength(1);
+    });
+    expect(localAccount(OTHER)).toEqual({ points: 90, favorites: ["fries"], orders: [] });
+  });
+
+  it("hands the shared device back the neutral view on logout and keeps the slot", async () => {
+    const { result } = await app();
+    act(() => {
+      result.current.adoptLocalAccount(PHONE);
+      result.current.login();
+    });
+    act(() => result.current.toggleFavorite("beef-burger"));
+    act(() => {
+      result.current.placeOrder("cash");
+    });
+    await waitFor(() => expect(localAccount(NORMALIZED)?.orders).toHaveLength(1));
+
+    act(() => result.current.logout());
+
+    expect(result.current.loggedIn).toBe(false);
+    expect(result.current.favorites).toEqual(seedFavorites);
+    expect(result.current.orders).toHaveLength(seedOrders.length);
+    expect(result.current.points).toBe(0);
+    // The slot is that customer's copy: the sign-out does not erase it, and the
+    // neutral view the device now shows is never written over it.
+    expect(localAccount(NORMALIZED)?.favorites).toEqual(["beef-burger"]);
+    expect(localAccount(NORMALIZED)?.orders).toHaveLength(1);
+    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.accountPhone)))).toBeNull());
+    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.favorites)))).toEqual(seedFavorites));
+  });
+
+  it("restores the saved slot — balance included — on the next sign-in", async () => {
+    rememberLocalAccount(PHONE, { points: 240, favorites: ["beef-burger"], orders: [seedOrders[0]] });
+    const { result } = await app();
+    act(() => {
+      // The same customer, typed the way a phone keypad offers it.
+      result.current.adoptLocalAccount("0020 10 1234 5678");
+      result.current.login();
+    });
+
+    expect(result.current.favorites).toEqual(["beef-burger"]);
+    expect(result.current.orders.map((order) => order.id)).toEqual([seedOrders[0].id]);
+    expect(result.current.points).toBe(240);
+  });
+
+  it("drops a tampered balance and an unsafe pointer from storage", async () => {
+    localStorage.setItem(storageKeys.points, JSON.stringify(-40));
+    localStorage.setItem(storageKeys.accountPhone, JSON.stringify("../../settings"));
+    const { result } = await app();
+
+    expect(result.current.points).toBe(0);
+    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.points)))).toBe(0));
+    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.accountPhone)))).toBeNull());
+  });
+
+  it("keeps a reload writing into the slot the pointer names", async () => {
+    localStorage.setItem(storageKeys.auth, "true");
+    localStorage.setItem(storageKeys.accountPhone, JSON.stringify(NORMALIZED));
+    localStorage.setItem(storageKeys.favorites, JSON.stringify(["beef-burger"]));
+    const { result } = await app();
+    expect(result.current.loggedIn).toBe(true);
+    await waitFor(() => expect(localAccount(NORMALIZED)?.favorites).toEqual(["beef-burger"]));
+
+    act(() => result.current.toggleFavorite("beef-burger"));
+    await waitFor(() => expect(localAccount(NORMALIZED)?.favorites).toEqual([]));
+  });
+
+  it("attaches the data on screen to the signed-in identity when storage has no pointer", async () => {
+    // Storage written before account data had an owner: dropping it would lose
+    // a returning customer's history, so the identity signs for it instead.
+    localStorage.setItem(storageKeys.auth, "true");
+    localStorage.setItem(storageKeys.favorites, JSON.stringify(["beef-burger"]));
+    const { result } = await app();
+
+    await waitFor(() => expect(localAccount(result.current.profile.phone)?.favorites).toEqual(["beef-burger"]));
+  });
+
+  it("attaches a restored session's own number when storage has no pointer", async () => {
+    apiMode.transport = "mock";
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    api.refreshSession.mockResolvedValue(tokenPair());
+    api.attachStoredRefresh.mockResolvedValue(undefined);
+    localStorage.setItem(storageKeys.session, JSON.stringify(identity));
+    localStorage.setItem(storageKeys.favorites, JSON.stringify(["fries"]));
+    const { result } = await app();
+
+    await waitFor(() => expect(result.current.customer?.customerId).toBe("customer-1"));
+    // The session's number owns the slot, not the profile the device happens to
+    // be showing: against the simulator the verified identity is the authority.
+    await waitFor(() => expect(localAccount(identity.phoneNumber)?.favorites).toEqual(["fries"]));
+  });
+
+  it("claims no slot for an identity with no number at all", async () => {
+    localStorage.setItem(storageKeys.auth, "true");
+    localStorage.setItem(storageKeys.profile, JSON.stringify({ ...seedProfile, phone: "" }));
+    const { result } = await app();
+
+    expect(result.current.loggedIn).toBe(true);
+    expect(localStorage.getItem(storageKeys.localAccounts)).toBeNull();
+  });
+
+  it("lets an existing slot win over the data a load happens to show", async () => {
+    rememberLocalAccount(NORMALIZED, { points: 7, favorites: ["fries"], orders: [] });
+    localStorage.setItem(storageKeys.auth, "true");
+    localStorage.setItem(storageKeys.profile, JSON.stringify({ ...seedProfile, phone: NORMALIZED }));
+    localStorage.setItem(storageKeys.favorites, JSON.stringify(["beef-burger"]));
+    const { result } = await app();
+
+    await waitFor(() => expect(result.current.favorites).toEqual(["fries"]));
+    expect(result.current.points).toBe(7);
+  });
+
+  it("ignores a phone with no digits rather than claiming a slot for it", async () => {
+    const { result } = await app();
+    act(() => result.current.adoptLocalAccount("+++"));
+    expect(result.current.favorites).toEqual(seedFavorites);
+    expect(localStorage.getItem(storageKeys.localAccounts)).toBeNull();
+  });
+
+  it("never reads or writes a browser slot against the live tenant API", async () => {
+    apiMode.transport = "live";
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    api.refreshSession.mockResolvedValue(tokenPair());
+    api.revokeSession.mockResolvedValue(undefined);
+    api.attachStoredRefresh.mockResolvedValue(undefined);
+    rememberLocalAccount(NORMALIZED, { points: 240, favorites: ["cola"], orders: [] });
+
+    const { result } = await app();
+    // The payload's phone is the slot's phone: only the transport guard stands
+    // between a real customer's history and a browser localStorage row.
+    act(() => result.current.login(sessionPayload()));
+    await waitFor(() => expect(result.current.loggedIn).toBe(true));
+
+    expect(result.current.favorites).toEqual(seedFavorites);
+    expect(result.current.orders).toHaveLength(seedOrders.length);
+    expect(result.current.points).toBe(0);
+
+    act(() => result.current.toggleFavorite("fries"));
+    act(() => {
+      result.current.placeOrder("cash");
+    });
+    const recorded = result.current.orders.length;
+
+    expect(localAccount(NORMALIZED)).toEqual({ points: 240, favorites: ["cola"], orders: [] });
+    expect(localStorage.getItem(storageKeys.accountPhone)).toBe("null");
+
+    // And a sign-out does not wipe what this device recorded for a real account.
+    act(() => result.current.logout());
+    expect(result.current.orders).toHaveLength(recorded);
+    expect(result.current.favorites).toContain("fries");
   });
 });
 
