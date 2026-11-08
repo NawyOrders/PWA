@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Check, ChevronLeft, Info, Minus, Plus, ShoppingCart } from "lucide-react";
 import { categoriesById, formatPrice, type Product } from "@/lib/data";
@@ -22,11 +21,11 @@ const extrasList = [
 ];
 
 export function ProductDetail({ product }: { product: Product }) {
-  const { addItem, changeQty, lines, t } = useApp();
-  const router = useRouter();
+  const { addItem, t } = useApp();
   const [sizeId, setSizeId] = useState("sandwich");
   const [extras, setExtras] = useState<string[]>([]);
   const [note, setNote] = useState("");
+  const [selectedQuantity, setSelectedQuantity] = useState(0);
 
   const customizable = product.category === "burger";
   const size = customizable ? (sizes.find((item) => item.id === sizeId) ?? sizes[0]) : null;
@@ -44,32 +43,20 @@ export function ProductDetail({ product }: { product: Product }) {
     [customizable, extras],
   );
 
-  const cartKey = [product.id, size?.label ?? "", [...selectedExtras].sort().join("+"), note.trim()]
-    .filter(Boolean)
-    .join("|");
-  const cartLine = lines.find((line) => line.key === cartKey);
-  const qty = cartLine?.qty ?? 0;
-  const total = unitPrice * qty;
+  const total = unitPrice * selectedQuantity;
 
-  const updateQuantity = (delta: number) => {
-    if (delta < 0) {
-      if (cartLine) changeQty(cartLine.key, delta);
-      return;
-    }
-
-    if (qty >= 20) return;
-    if (cartLine) {
-      changeQty(cartLine.key, delta);
-      return;
-    }
-
+  const addToCart = () => {
     addItem(product.id, {
-      qty: delta,
+      qty: selectedQuantity,
       price: unitPrice,
       size: size?.label,
       extras: customizable ? selectedExtras : undefined,
       note,
     });
+    setSelectedQuantity(0);
+    setSizeId("sandwich");
+    setExtras([]);
+    setNote("");
   };
 
   return (
@@ -267,18 +254,20 @@ export function ProductDetail({ product }: { product: Product }) {
                     <button
                       type="button"
                       aria-label={t("زيادة الكمية")}
-                      disabled={qty >= 20}
-                      onClick={() => updateQuantity(1)}
+                      disabled={selectedQuantity >= 20}
+                      onClick={() => setSelectedQuantity((quantity) => Math.min(20, quantity + 1))}
                       className="grid size-8 place-items-center rounded-full border border-brand/30 bg-brand-soft text-brand"
                     >
                       <Plus className="size-4" />
                     </button>
-                    <span className="w-6 text-center text-sm font-extrabold">{qty}</span>
+                    <span data-testid="selected-quantity" className="w-6 text-center text-sm font-extrabold">
+                      {selectedQuantity}
+                    </span>
                     <button
                       type="button"
                       aria-label={t("إنقاص الكمية")}
-                      disabled={qty === 0}
-                      onClick={() => updateQuantity(-1)}
+                      disabled={selectedQuantity === 0}
+                      onClick={() => setSelectedQuantity((quantity) => Math.max(0, quantity - 1))}
                       className="grid size-8 place-items-center rounded-full transition hover:bg-cream"
                     >
                       <Minus className="size-4" />
@@ -294,12 +283,12 @@ export function ProductDetail({ product }: { product: Product }) {
               <div className="mt-4 hidden lg:block">
                 <button
                   type="button"
-                  disabled={qty === 0}
-                  onClick={() => router.push("/cart")}
+                  disabled={selectedQuantity === 0}
+                  onClick={addToCart}
                   className={buttonStyles({ block: true })}
                 >
                   <ShoppingCart className="size-4" />
-                  {t("عرض السلة")}
+                  {t("أضف إلى السلة")}
                 </button>
               </div>
             </div>
@@ -324,18 +313,20 @@ export function ProductDetail({ product }: { product: Product }) {
               <button
                 type="button"
                 aria-label={t("زيادة الكمية")}
-                disabled={qty >= 20}
-                onClick={() => updateQuantity(1)}
+                disabled={selectedQuantity >= 20}
+                onClick={() => setSelectedQuantity((quantity) => Math.min(20, quantity + 1))}
                 className="grid size-8 place-items-center rounded-full bg-brand text-white"
               >
                 <Plus className="size-4" />
               </button>
-              <span className="w-6 text-center text-sm font-extrabold">{qty}</span>
+              <span data-testid="selected-quantity" className="w-6 text-center text-sm font-extrabold">
+                {selectedQuantity}
+              </span>
               <button
                 type="button"
                 aria-label={t("إنقاص الكمية")}
-                disabled={qty === 0}
-                onClick={() => updateQuantity(-1)}
+                disabled={selectedQuantity === 0}
+                onClick={() => setSelectedQuantity((quantity) => Math.max(0, quantity - 1))}
                 className="grid size-8 place-items-center rounded-full bg-cream-50"
               >
                 <Minus className="size-4" />
@@ -344,13 +335,13 @@ export function ProductDetail({ product }: { product: Product }) {
           </div>
           <button
             type="button"
-            disabled={qty === 0}
-            onClick={() => router.push("/cart")}
+            disabled={selectedQuantity === 0}
+            onClick={addToCart}
             className="btn-brand motion-press mt-2.5 flex h-12 w-full items-center justify-between px-5 text-sm disabled:pointer-events-none disabled:opacity-50"
           >
             <span className="flex items-center gap-2">
               <ShoppingCart className="size-4" />
-              {t("عرض السلة")}
+              {t("أضف إلى السلة")}
             </span>
             <span className="text-sm font-extrabold">{formatPrice(total)} {t("جنيه")}</span>
           </button>
