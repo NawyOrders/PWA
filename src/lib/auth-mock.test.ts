@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError, type CustomerSessionPayload, type RequestOtpData } from "@/lib/api";
 import { MOCK_TEST_PHONES, authMock } from "@/lib/auth-mock";
+import { localCustomer } from "@/lib/local-customers";
 
 /** An ordinary Egyptian number: the simulator treats it as a brand-new account. */
 const RETURNING_PHONE = "+201012345678";
@@ -560,5 +561,58 @@ describe("authMock without a cryptographic source", () => {
     }
     expect(codes.size).toBe(25);
     expect(codes.has("000000")).toBe(false);
+  });
+});
+
+describe("the registered customer outlives the page load", () => {
+  it("answers a login after a reload with the registered name and the same id", async () => {
+    const { session } = await signIn({ phone: RETURNING_PHONE, fullName: "Mona Hassan" });
+
+    // A reload: fresh module state, same device storage. Only the durable
+    // customer row may survive — challenges and tokens must not.
+    vi.resetModules();
+    const fresh = await import("@/lib/auth-mock");
+    const challenge = await fresh.authMock.requestOtp({ phoneNumber: RETURNING_PHONE, purpose: "Login" });
+    const again = await fresh.authMock.verifyOtp({
+      challengeId: challenge.challengeId,
+      code: codeOf(challenge),
+      purpose: "Login",
+    });
+    expect(again.fullName).toBe("Mona Hassan");
+    expect(again.customerId).toBe(session.customerId);
+    expect(again.phoneNumber).toBe(RETURNING_PHONE);
+  });
+
+  it("fills an empty registered name on the next registration and keeps it after a reload", async () => {
+    const unnamed = await signIn({ phone: RETURNING_PHONE, fullName: "" });
+    expect(unnamed.session.fullName).toBe("");
+    expect(localCustomer(RETURNING_PHONE)).toBeNull();
+
+    const named = await signIn({ phone: RETURNING_PHONE, fullName: "Mona Hassan" });
+    expect(named.session.fullName).toBe("Mona Hassan");
+    expect(named.session.customerId).toBe(unnamed.session.customerId);
+    expect(localCustomer(RETURNING_PHONE)?.fullName).toBe("Mona Hassan");
+
+    vi.resetModules();
+    const fresh = await import("@/lib/auth-mock");
+    const challenge = await fresh.authMock.requestOtp({ phoneNumber: RETURNING_PHONE, purpose: "Login" });
+    const again = await fresh.authMock.verifyOtp({
+      challengeId: challenge.challengeId,
+      code: codeOf(challenge),
+      purpose: "Login",
+    });
+    expect(again.fullName).toBe("Mona Hassan");
+  });
+
+  it("reset clears the durable row, so the next login is a first-time phone again", async () => {
+    await signIn({ phone: RETURNING_PHONE, fullName: "Mona Hassan" });
+    authMock.reset();
+    expect(localCustomer(RETURNING_PHONE)).toBeNull();
+
+    const challenge = await ask(RETURNING_PHONE, "Login");
+    const error = await failureOf(
+      authMock.verifyOtp({ challengeId: challenge.challengeId, code: codeOf(challenge), purpose: "Login" }),
+    );
+    expect(error.code).toBe("Customer.NotFoundByPhone");
   });
 });

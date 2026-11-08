@@ -20,6 +20,7 @@ export const storageKeys = {
   coupon: "nawy-coupon-v1",
   orderNote: "nawy-order-note-v1",
   profile: "nawy-profile-v1",
+  localCustomers: "nawy-local-customers-v1",
   notifications: "nawy-notifications-v1",
   notificationRead: "nawy-notification-read-v1",
 } as const;

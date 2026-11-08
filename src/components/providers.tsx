@@ -196,7 +196,13 @@ export const TRANSIENT_REFRESH_RETRY_MS = 30_000;
  */
 export const MAX_TRANSIENT_REFRESH_RETRIES = 3;
 
-const seedProfile: Profile = {
+/**
+ * The neutral identity a signed-out device shows. Exported because the demo
+ * login path needs the same fallback when a phone with no remembered name and
+ * no typed name signs in: a new local customer must not inherit the previous
+ * customer's name or photo.
+ */
+export const seedProfile: Profile = {
   name: user.name,
   phone: user.phone,
   email: user.email,

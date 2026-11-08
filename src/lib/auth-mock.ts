@@ -39,6 +39,7 @@ import {
   type AuthErrorCode,
 } from "@/lib/api";
 import { OTP_LENGTH, generateOtpCode } from "@/lib/otp";
+import { clearLocalCustomers, localCustomer, rememberLocalCustomer } from "@/lib/local-customers";
 import type { CustomerSessionPayload, OtpPurpose, RequestOtpData, TokenPair } from "@/lib/api";
 
 const ACCESS_TOKEN_SECONDS = 3600;
@@ -157,6 +158,10 @@ function reset(): void {
   state.requestsByPhone.clear();
   state.requestsGlobal = [];
   state.cookie = null;
+  // The durable customer row is part of the simulated database: a reset that
+  // left it behind would let one test's registration answer the next test's
+  // login, and would leave a developer's device remembering a stranger.
+  clearLocalCustomers();
   seedReservedCustomers();
 }
 
@@ -227,7 +232,22 @@ function enforceRateLimits(phone: string, now: number): void {
 }
 
 function findCustomer(phone: string): MockCustomer | null {
-  return state.customers.get(customerKey(phone)) ?? null;
+  const known = state.customers.get(customerKey(phone));
+  if (known) return known;
+  // A registration from an earlier page load is still this customer: the local
+  // table is the simulator's durable row, so logging in after a reload answers
+  // with the name the customer registered instead of demanding a new account.
+  const stored = localCustomer(phone);
+  if (!stored) return null;
+  const restored: MockCustomer = {
+    id: stored.id,
+    phone,
+    fullName: stored.fullName,
+    email: null,
+    state: "active",
+  };
+  state.customers.set(customerKey(phone), restored);
+  return restored;
 }
 
 function upsertCustomer(phone: string, fullName: string): MockCustomer {
@@ -236,11 +256,15 @@ function upsertCustomer(phone: string, fullName: string): MockCustomer {
   if (existing) {
     // Registration against a returning customer fills an empty name, which is
     // what the guide says the API does — it never overwrites one.
-    if (!existing.fullName && fullName) existing.fullName = fullName;
+    if (!existing.fullName && fullName) {
+      existing.fullName = fullName;
+      rememberLocalCustomer(phone, existing.fullName, existing.id);
+    }
     return existing;
   }
   const created: MockCustomer = { id: nextId("cus"), phone, fullName, email: null, state: "active" };
   state.customers.set(key, created);
+  rememberLocalCustomer(phone, created.fullName, created.id);
   return created;
 }
 
