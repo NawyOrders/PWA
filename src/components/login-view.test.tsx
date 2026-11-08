@@ -479,6 +479,22 @@ describe("LoginView typing the code", () => {
     expect(api.verifyOtp).not.toHaveBeenCalled();
   });
 
+  it("writes the code from the popup into the six boxes with one tap", async () => {
+    api.requestOtp.mockResolvedValue(challenge());
+    api.verifyOtp.mockResolvedValue(sessionPayload);
+    const user = userEvent.setup();
+    renderApp(<LoginView />);
+
+    await requestApiCode(user);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: /استخدم الكود/ }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(api.verifyOtp).toHaveBeenCalledWith({ challengeId: "challenge-1", code: "246810", fullName: "" }),
+    );
+  });
+
   it("submits a typed code exactly once", async () => {
     // The clock is frozen and the answer is held open: the guard has to be the
     // submit itself, not a lucky gap between two renders.

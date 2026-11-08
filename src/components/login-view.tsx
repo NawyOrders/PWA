@@ -257,6 +257,21 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
   );
 
   /**
+   * The one-tap path for a device where copying is awkward: put the issued code
+   * into the six boxes. The form's own "six digits submit" effect then finishes
+   * the sign-in, so the customer never has to move between clipboard and field.
+   */
+  const useShownCode = useCallback(() => {
+    if (!shownCode) return;
+    const digits = shownCode.replace(/\D/g, "").slice(0, OTP_LENGTH).split("");
+    if (digits.length !== OTP_LENGTH) return;
+    setError("");
+    setFieldErrors((current) => ({ ...current, code: undefined }));
+    setOtp(digits);
+    setCodeOpen(false);
+  }, [shownCode]);
+
+  /**
    * Puts the challenge away and returns to the phone step.
    *
    * Boxes go back to disabled rather than staying open with a dead code in
@@ -1012,6 +1027,7 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
           code={shownCode}
           channel={channel}
           expiresInSeconds={codeSeconds}
+          onUse={useShownCode}
           onClose={() => setCodeOpen(false)}
         />
       ) : null}
