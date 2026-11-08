@@ -21,6 +21,9 @@ export const storageKeys = {
   orderNote: "nawy-order-note-v1",
   profile: "nawy-profile-v1",
   localCustomers: "nawy-local-customers-v1",
+  localAccounts: "nawy-local-accounts-v1",
+  accountPhone: "nawy-account-phone-v1",
+  points: "nawy-points-v1",
   notifications: "nawy-notifications-v1",
   notificationRead: "nawy-notification-read-v1",
 } as const;

@@ -97,8 +97,9 @@ export type AuthTransport = "live" | "mock" | "demo";
  * `AUTH_MOCK=true` (or its `NEXT_PUBLIC_` twin, which is the one that reaches
  * the browser bundle) selects the contract simulator.
  *
- * The `NODE_ENV` test is inlined at build time, so a production build compiles
- * the mock away entirely: it cannot be turned on, and it is not in the bundle.
+ * The `NODE_ENV` test is inlined at build time, so a production build can never
+ * select the simulator — whatever the runtime environment says. The simulator
+ * is only imported behind that decision, so production never executes it.
  */
 export function authMockRequested(): boolean {
   const flag = process.env.NEXT_PUBLIC_AUTH_MOCK ?? process.env.AUTH_MOCK ?? "";

@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SiteChrome } from "@/components/site-chrome";
 import { LoginView } from "@/components/login-view";
-import { seedProfile } from "@/components/providers";
+import { seedProfile, useApp } from "@/components/providers";
 import { useCustomerSession } from "@/hooks/use-customer-session";
 import { MOCK_TEST_PHONES, authMock } from "@/lib/auth-mock";
+import { orders as seedOrders, seedFavorites } from "@/lib/data";
+import { localAccount, rememberLocalAccount } from "@/lib/local-accounts";
 import { localCustomer } from "@/lib/local-customers";
 import { loginHref } from "@/lib/routes";
 import { storageKeys } from "@/lib/storage";
@@ -84,6 +86,7 @@ function stubNetwork() {
 
 function FlowProbe() {
   const { customer, status, loggedIn, logout, authFetch } = useCustomerSession();
+  const { favorites, orders, points, toggleFavorite, placeOrder } = useApp();
   const [fetched, setFetched] = useState("idle");
   return (
     <div>
@@ -96,11 +99,20 @@ function FlowProbe() {
           name: customer?.fullName ?? null,
         })}
       </p>
+      <p data-testid="account">
+        {JSON.stringify({ favorites, orderIds: orders.map((order) => order.id), points })}
+      </p>
       <button type="button" onClick={() => void authFetch("/api/v1/orders").then((response) => setFetched(String(response.status)))}>
         probe fetch
       </button>
       <button type="button" onClick={() => logout()}>
         probe logout
+      </button>
+      <button type="button" onClick={() => toggleFavorite("beef-burger")}>
+        probe favorite
+      </button>
+      <button type="button" onClick={() => void placeOrder("cash")}>
+        probe order
       </button>
       <p data-testid="fetched">{fetched}</p>
     </div>
@@ -164,6 +176,15 @@ function sessionLine(): { status: string; loggedIn: boolean; phone: string | nul
 }
 
 const ordersCalls = (calls: Call[]) => calls.filter((call) => call.url.includes("/api/v1/orders"));
+
+/** What the account screens read: the history and balance owned by this visit. */
+function accountLine(): { favorites: string[]; orderIds: string[]; points: number } {
+  return JSON.parse(String(screen.getByTestId("account").textContent)) as {
+    favorites: string[];
+    orderIds: string[];
+    points: number;
+  };
+}
 
 beforeEach(() => {
   authMock.reset();
@@ -345,6 +366,54 @@ describe("the registered name outlives the visit, in mock mode", () => {
   }, 30_000);
 });
 
+describe("the customer's own history outlives the visit, in mock mode", () => {
+  it("answers the next login with the favorites and orders that phone saved", async () => {
+    stubNetwork();
+    const firstVisit = renderApp(<Flow />);
+
+    await userEvent.type(screen.getByLabelText("رقم الموبايل"), PHONE);
+    await userEvent.type(screen.getByLabelText("الاسم بالكامل"), NAME);
+    await userEvent.click(screen.getByRole("button", { name: "إرسال" }));
+    await typeCode(await readCodeFromThePopup());
+    await waitFor(() => expect(screen.getByText("protected content")).toBeInTheDocument());
+
+    // A customer who just registered has saved nothing: no seeded history, and
+    // no balance copied off the demo identity.
+    await waitFor(() => expect(accountLine()).toEqual({ favorites: [], orderIds: [], points: 0 }));
+
+    await userEvent.click(screen.getByRole("button", { name: "probe favorite" }));
+    await userEvent.click(screen.getByRole("button", { name: "probe order" }));
+    await waitFor(() => expect(accountLine().favorites).toEqual(["beef-burger"]));
+    await waitFor(() => expect(accountLine().orderIds).toHaveLength(1));
+    const savedIds = accountLine().orderIds;
+    await waitFor(() => expect(localAccount(PHONE)?.favorites).toEqual(["beef-burger"]));
+    expect(localAccount(PHONE)?.orders).toHaveLength(1);
+
+    // Logout hands the shared device back the neutral view…
+    await userEvent.click(screen.getByRole("button", { name: "probe logout" }));
+    await waitFor(() => expect(screen.queryByText("protected content")).not.toBeInTheDocument());
+    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.favorites)))).toEqual(seedFavorites));
+    expect(JSON.parse(String(localStorage.getItem(storageKeys.orders)))).toHaveLength(seedOrders.length);
+    expect(JSON.parse(String(localStorage.getItem(storageKeys.points)))).toBe(0);
+    // …without erasing the copy that belongs to the customer who just left.
+    expect(localAccount(PHONE)?.favorites).toEqual(["beef-burger"]);
+    expect(localAccount(PHONE)?.orders).toHaveLength(1);
+
+    firstVisit.unmount();
+    renderApp(<Flow mode="Login" />);
+    await userEvent.type(screen.getByLabelText("رقم الموبايل"), PHONE);
+    await userEvent.click(screen.getByRole("button", { name: "إرسال" }));
+    await typeCode(await readCodeFromThePopup());
+    await waitFor(() => expect(screen.getByText("protected content")).toBeInTheDocument());
+
+    // The number that verified owns the history: the same favorites, the same
+    // order, and the same registered name — not the seeded demo account.
+    await waitFor(() => expect(accountLine()).toEqual({ favorites: ["beef-burger"], orderIds: savedIds, points: 0 }));
+    await waitFor(() => expect(sessionLine().name).toBe(NAME));
+    expect(sessionLine().phone).toBe(PHONE);
+  }, 30_000);
+});
+
 describe("the registered name outlives the visit, in demo mode", () => {
   beforeEach(() => {
     // No simulator and no backend: the app is its own gateway, exactly like a
@@ -439,5 +508,94 @@ describe("the registered name outlives the visit, in demo mode", () => {
     // to this phone, so the edited name is what the next visit shows.
     await waitFor(() => expect(storedProfile().name).toBe("اسم معدل"));
     expect(storedProfile().phone).toBe("+201012345678");
+  }, 30_000);
+
+  it("answers the next login with the favorites and orders this customer saved", async () => {
+    const firstVisit = renderApp(<Flow />);
+    await register("01012345678", NAME);
+
+    // A new account inherits nothing: the seeded history belongs to the demo,
+    // not to the person who just registered.
+    await waitFor(() => expect(accountLine()).toEqual({ favorites: [], orderIds: [], points: 0 }));
+
+    await userEvent.click(screen.getByRole("button", { name: "probe favorite" }));
+    await userEvent.click(screen.getByRole("button", { name: "probe order" }));
+    await waitFor(() => expect(accountLine().favorites).toEqual(["beef-burger"]));
+    await waitFor(() => expect(accountLine().orderIds).toHaveLength(1));
+    const savedIds = accountLine().orderIds;
+    await waitFor(() => expect(localAccount("+201012345678")?.favorites).toEqual(["beef-burger"]));
+
+    await userEvent.click(screen.getByRole("button", { name: "probe logout" }));
+    await waitFor(() => expect(screen.queryByText("protected content")).not.toBeInTheDocument());
+    // The shared device shows the neutral catalogue view again…
+    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.favorites)))).toEqual(seedFavorites));
+    expect(JSON.parse(String(localStorage.getItem(storageKeys.orders)))).toHaveLength(seedOrders.length);
+    // …and the customer's own copy is still theirs.
+    expect(localAccount("+201012345678")?.favorites).toEqual(["beef-burger"]);
+    expect(localAccount("+201012345678")?.orders).toHaveLength(1);
+
+    firstVisit.unmount();
+    renderApp(<Flow mode="Login" />);
+    await loginWithPhone("01012345678");
+
+    await waitFor(() =>
+      expect(accountLine()).toEqual({ favorites: ["beef-burger"], orderIds: savedIds, points: 0 }),
+    );
+    await waitFor(() => expect(storedProfile().name).toBe(NAME));
+  }, 30_000);
+
+  it("restores a saved balance and gives a different phone none of it", async () => {
+    // The slot is this mode's backend row: what it holds is what the next login
+    // answers with, points included.
+    rememberLocalAccount("+201012345678", {
+      points: 240,
+      favorites: ["beef-burger"],
+      orders: [seedOrders[0]],
+    });
+
+    const firstVisit = renderApp(<Flow mode="Login" />);
+    await loginWithPhone("01012345678");
+    await waitFor(() =>
+      expect(accountLine()).toEqual({
+        favorites: ["beef-burger"],
+        orderIds: [seedOrders[0].id],
+        points: 240,
+      }),
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "probe logout" }));
+    await waitFor(() => expect(screen.queryByText("protected content")).not.toBeInTheDocument());
+
+    firstVisit.unmount();
+    renderApp(<Flow mode="Login" />);
+    // A second person picks up the device and signs in with their own number.
+    await loginWithPhone("01198765432");
+
+    await waitFor(() => expect(accountLine()).toEqual({ favorites: [], orderIds: [], points: 0 }));
+    // The first customer is untouched: their next login still finds their own.
+    expect(localAccount("+201012345678")).toEqual({
+      points: 240,
+      favorites: ["beef-burger"],
+      orders: [seedOrders[0]],
+    });
+  }, 30_000);
+
+  it("keeps writing into the same slot after a reload while signed in", async () => {
+    const firstVisit = renderApp(<Flow />);
+    await register("01012345678", NAME);
+    await userEvent.click(screen.getByRole("button", { name: "probe favorite" }));
+    await waitFor(() => expect(localAccount("+201012345678")?.favorites).toEqual(["beef-burger"]));
+
+    // A reload, not a logout: the flag and the ownership pointer both come back
+    // from storage, and the form steps aside for the account that is still in.
+    firstVisit.unmount();
+    renderApp(<Flow mode="Login" />);
+    await waitFor(() => expect(screen.getByText("protected content")).toBeInTheDocument());
+    await waitFor(() => expect(accountLine().favorites).toEqual(["beef-burger"]));
+
+    // The pointer survived, so this change still lands in the same slot rather
+    // than nowhere — which is what would lose it at the next sign-in.
+    await userEvent.click(screen.getByRole("button", { name: "probe favorite" }));
+    await waitFor(() => expect(localAccount("+201012345678")?.favorites).toEqual([]));
   }, 30_000);
 });

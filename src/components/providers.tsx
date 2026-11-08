@@ -34,11 +34,13 @@ import {
   authTransport,
   fetchBranding,
   isFatalRefreshError,
+  normalizeEgyptianPhone,
   refreshSession,
   revokeSession,
   type CustomerSessionPayload,
   type RestaurantBranding,
 } from "@/lib/api";
+import { localAccount, rememberLocalAccount } from "@/lib/local-accounts";
 import {
   createAuthFetch,
   createRefreshCoordinator,
@@ -114,6 +116,8 @@ type AppContextValue = {
   favorites: string[];
   isFavorite: (id: string) => boolean;
   toggleFavorite: (id: string) => void;
+  /** The signed-in customer's own balance; `0` for a new account or a signed-out device. */
+  points: number;
   loggedIn: boolean;
   ready: boolean;
   /**
@@ -148,6 +152,17 @@ type AppContextValue = {
    */
   login: (payload?: CustomerSessionPayload | null) => void;
   logout: () => void;
+  /**
+   * Swaps in the saved account for a phone: its own favorites, orders and
+   * points, or an empty account when that phone has never saved one.
+   *
+   * The offline login screen calls it once its own OTP challenge succeeded —
+   * the same proof `login(payload)` carries for the simulator — because the
+   * demo path has no payload to read the number from. It does nothing against
+   * the live tenant API, where this data belongs to the backend, not to a slot
+   * in this browser.
+   */
+  adoptLocalAccount: (phone: string) => void;
   /**
    * `fetch` for tenant endpoints: attaches the bearer token, refreshes once on
    * a 401, retries once, and never loops.
@@ -281,6 +296,20 @@ function decodeFavorites(stored: unknown, fallback: string[]): string[] {
 
 function decodeAuth(stored: unknown): boolean {
   return stored === true;
+}
+
+/** A balance is a whole, non-negative, safe integer; anything else is the fallback. */
+function decodePoints(stored: unknown, fallback: number): number {
+  return typeof stored === "number" && Number.isSafeInteger(stored) && stored >= 0 ? stored : fallback;
+}
+
+/**
+ * The pointer naming whose account the visible data is. It is a normalised
+ * number in the same 8–15 digit window `isUsablePhone` applies, so tampered
+ * storage cannot turn it into a path, a query or a key the table never wrote.
+ */
+function decodeAccountPhone(stored: unknown, fallback: string | null): string | null {
+  return typeof stored === "string" && /^\+\d{8,15}$/.test(stored) ? stored : fallback;
 }
 
 function decodeLang(stored: unknown): Lang {
@@ -549,6 +578,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     seedProfile,
     decodeProfile,
   );
+  /*
+   * The balance the account screen shows. It starts at nothing: the seeded
+   * `user.points` was a demo constant every customer inherited, which is not a
+   * reward anybody earned.
+   */
+  const [points, setPoints, pointsReady] = usePersistentState<number>(storageKeys.points, 0, decodePoints);
+  /*
+   * Whose account the visible favorites, orders and points are. It is persisted
+   * so a reload keeps writing to the same slot, and it is deliberately not the
+   * profile's phone: editing the contact number on the account screen must not
+   * move somebody's order history onto a different identity. Only a fresh OTP
+   * challenge claims a slot.
+   */
+  const [accountPhone, setAccountPhone, accountPhoneReady] = usePersistentState<string | null>(
+    storageKeys.accountPhone,
+    null,
+    decodeAccountPhone,
+  );
   const [lang, setLang, langReady] = usePersistentState<Lang>(storageKeys.lang, "ar", decodeLang);
   const [fulfilment, setFulfilment] = useState<"delivery" | "pickup">("delivery");
   const [loginPromptNext, setLoginPromptNext] = useState<string | null>(null);
@@ -593,6 +640,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     couponReady &&
     orderNoteReady &&
     profileReady &&
+    pointsReady &&
+    accountPhoneReady &&
     langReady;
 
   // Storage may reference a deleted address/branch; expose only values that
@@ -623,6 +672,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const dir = lang === "ar" ? "rtl" : "ltr";
   const t = useCallback((text: string, vars?: Vars) => translate(lang, text, vars), [lang]);
 
+  /* ------------------------------------------------------------------------ */
+  /* Local account ownership: one phone, one saved history.                    */
+  /* ------------------------------------------------------------------------ */
+
+  /**
+   * Claims the slot for a phone that just proved itself and shows what that
+   * customer saved. No slot means a new account, so it starts empty rather than
+   * inheriting the seeded demo history or the last person's favorites.
+   *
+   * The live API owns this data, so nothing is read from a browser slot there.
+   */
+  const adoptLocalAccount = useCallback(
+    (phone: string) => {
+      if (authTransport() === "live") return;
+      const normalized = normalizeEgyptianPhone(phone);
+      if (!normalized.replace(/\D/g, "")) return;
+      const slot = localAccount(normalized);
+      setAccountPhone(normalized);
+      setFavorites(slot ? decodeFavorites(slot.favorites, []) : []);
+      setOrders(slot ? decodeOrders(slot.orders, []) : []);
+      setPoints(slot ? slot.points : 0);
+    },
+    [setAccountPhone, setFavorites, setOrders, setPoints],
+  );
+
+  /**
+   * The other half of the same promise: once nobody is signed in, the device
+   * shows the neutral catalogue view again and the pointer is cleared, so the
+   * next person cannot see — or write into — the account that just left. The
+   * slot itself keeps that customer's copy for their next login.
+   */
+  const releaseLocalAccount = useCallback(() => {
+    // Nobody is signed in, so no slot owns the screen in any transport.
+    setAccountPhone(null);
+    if (authTransport() === "live") return;
+    setFavorites(seedFavorites);
+    setOrders(seedOrders);
+    setPoints(0);
+  }, [setAccountPhone, setFavorites, setOrders, setPoints]);
+
   useEffect(() => {
     document.documentElement.lang = lang;
     document.documentElement.dir = dir;
@@ -652,6 +741,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
           },
     );
   }, [customer, sessionReady, profileReady, setProfile]);
+
+  /*
+   * Every change to the visible account data lands in the signed-in customer's
+   * own slot, so a reload — or a logout and the next login — answers with what
+   * they actually saved. Signed out there is no slot to write to, which is what
+   * keeps the neutral seeded view from overwriting somebody's history.
+   */
+  useEffect(() => {
+    if (!ready || !loggedIn || !accountPhone) return;
+    if (authTransport() === "live") return;
+    rememberLocalAccount(accountPhone, { points, favorites, orders });
+  }, [ready, loggedIn, accountPhone, points, favorites, orders]);
+
+  /*
+   * A load that finds a session but no pointer — storage written before account
+   * data had an owner — attaches what is already on screen to the identity that
+   * is signed in instead of dropping it. An existing slot still wins: that is
+   * the customer's saved history, and the screen is only this load's view of it.
+   */
+  useEffect(() => {
+    if (!ready || !loggedIn || accountPhone) return;
+    if (authTransport() === "live") return;
+    const normalized = normalizeEgyptianPhone(customer?.phoneNumber || profile.phone);
+    if (!normalized.replace(/\D/g, "")) return;
+    if (localAccount(normalized)) {
+      adoptLocalAccount(normalized);
+      return;
+    }
+    setAccountPhone(normalized);
+  }, [ready, loggedIn, accountPhone, customer, profile.phone, adoptLocalAccount, setAccountPhone]);
 
   useEffect(() => {
     return () => {
@@ -736,13 +855,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     applyGrant(null);
     setCustomer(null);
     setAuthFlag(false);
+    // An expired session is a sign-out: the account data goes back to the
+    // neutral view rather than staying on screen for the next person.
+    releaseLocalAccount();
     // The session is over, so a retry that was waiting on it is cancelled
     // rather than left to spend a refresh on an empty cookie jar.
     refreshRetries.current = 0;
     retryDeadline.current = null;
     setRefreshRetryAt(null);
     toast(t("انتهت الجلسة، سجّل الدخول تاني"), "info");
-  }, [applyGrant, setCustomer, setAuthFlag, toast, t]);
+  }, [applyGrant, setCustomer, setAuthFlag, releaseLocalAccount, toast, t]);
 
   /*
    * Which refresh failures end the session, and which only cost a retry.
@@ -997,9 +1119,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (payload) {
         // A session from the API is the source of truth, so the demo flag is
         // cleared rather than left disagreeing with it.
+        const next = identityFromPayload(payload);
         applyGrant(grantFromPayload(payload));
-        setCustomer(identityFromPayload(payload));
+        setCustomer(next);
         setAuthFlag(false);
+        // The number that just verified owns the history: against the simulator
+        // the saved slot is the answer, and against the live API this does
+        // nothing at all.
+        adoptLocalAccount(next.phoneNumber);
         // A sign-in always starts a new recovery window; the reload effect must
         // not fire for the token this response just handed us.
         recoveringSession.current = true;
@@ -1013,7 +1140,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setLoginPromptNext(null);
       toast(t("تم تسجيل الدخول بنجاح"), "info");
     },
-    [toast, t, applyGrant, setCustomer, setAuthFlag],
+    [toast, t, applyGrant, setCustomer, setAuthFlag, adoptLocalAccount],
   );
 
   const logout = useCallback(() => {
@@ -1031,6 +1158,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // The account belonged to that customer, so a shared device is left with
     // the neutral seeded profile rather than someone else's name and phone.
     setProfile(seedProfile);
+    // And the same for what they saved: their history stays in their own slot
+    // for their next login, not on screen for the next person.
+    releaseLocalAccount();
     // The next sign-in on this page load earns its own recovery refresh.
     recoveringSession.current = false;
     // And no refresh from the account that just left may fire afterwards.
@@ -1038,7 +1168,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     adoptionPending.current = null;
     setRefreshRetryAt(null);
     toast(t("تم تسجيل الخروج"), "info");
-  }, [toast, t, applyGrant, setCustomer, setAuthFlag, setProfile]);
+  }, [toast, t, applyGrant, setCustomer, setAuthFlag, setProfile, releaseLocalAccount]);
 
   const addAddress = useCallback(
     (address: SavedAddress) => {
@@ -1180,6 +1310,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       favorites,
       isFavorite,
       toggleFavorite,
+      points,
       loggedIn,
       ready,
       customer,
@@ -1192,6 +1323,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       closeLoginPrompt,
       login,
       logout,
+      adoptLocalAccount,
       addresses,
       addAddress,
       removeAddress,
@@ -1229,6 +1361,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       favorites,
       isFavorite,
       toggleFavorite,
+      points,
       loggedIn,
       ready,
       customer,
@@ -1241,6 +1374,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       closeLoginPrompt,
       login,
       logout,
+      adoptLocalAccount,
       addresses,
       addAddress,
       removeAddress,

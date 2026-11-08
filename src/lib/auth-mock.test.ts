@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError, type CustomerSessionPayload, type RequestOtpData } from "@/lib/api";
 import { MOCK_TEST_PHONES, authMock } from "@/lib/auth-mock";
+import { localAccount, rememberLocalAccount } from "@/lib/local-accounts";
 import { localCustomer } from "@/lib/local-customers";
 
 /** An ordinary Egyptian number: the simulator treats it as a brand-new account. */
@@ -614,5 +615,15 @@ describe("the registered customer outlives the page load", () => {
       authMock.verifyOtp({ challengeId: challenge.challengeId, code: codeOf(challenge), purpose: "Login" }),
     );
     expect(error.code).toBe("Customer.NotFoundByPhone");
+  });
+
+  it("reset clears the saved account data with the customer row it belonged to", async () => {
+    await signIn({ phone: RETURNING_PHONE, fullName: "Mona Hassan" });
+    rememberLocalAccount(RETURNING_PHONE, { points: 40, favorites: ["beef-burger"], orders: [] });
+
+    authMock.reset();
+
+    expect(localCustomer(RETURNING_PHONE)).toBeNull();
+    expect(localAccount(RETURNING_PHONE)).toBeNull();
   });
 });
