@@ -41,7 +41,7 @@ import {
 import { OTP_LENGTH, generateOtpCode } from "@/lib/otp";
 import { clearLocalAccounts } from "@/lib/local-accounts";
 import { clearLocalCustomers, localCustomer, rememberLocalCustomer } from "@/lib/local-customers";
-import type { CustomerSessionPayload, OtpPurpose, RequestOtpData, TokenPair } from "@/lib/api";
+import type { CompleteProfileData, CustomerSessionPayload, OtpPurpose, RequestOtpData, TokenPair } from "@/lib/api";
 
 const ACCESS_TOKEN_SECONDS = 3600;
 /**
@@ -463,6 +463,57 @@ async function refreshSession(): Promise<TokenPair> {
   };
 }
 
+async function completeProfile(options: {
+  accessToken: string;
+  firstName: string;
+  lastName: string;
+  email?: string | null;
+}): Promise<CompleteProfileData> {
+  assertMockAllowed();
+  const now = Date.now();
+  const current = state.cookie;
+  const presented = current ? state.tokens.get(current) : null;
+  if (!presented) fail(401, "RefreshToken.Invalid", "No session is stored for this browser.");
+  const customer = customerById(presented.customerId);
+
+  const firstName = (options.firstName ?? "").trim();
+  const lastName = (options.lastName ?? "").trim();
+  if (!firstName || !lastName) {
+    fail(422, "Validation.Failed", "First and last name are required.");
+  }
+  const email = (options.email ?? "").trim() || null;
+
+  customer.fullName = `${firstName} ${lastName}`;
+  customer.email = email;
+  rememberLocalCustomer(customer.phone, customer.fullName, customer.id);
+
+  // Completion rotates the session the same way refresh does: the caller gets a
+  // new access token and the cookie's token is replaced.
+  presented.used = true;
+  const next = issueTokens(customer, now, presented.family);
+  return {
+    profile: {
+      customerId: customer.id,
+      phoneNumber: customer.phone,
+      firstName,
+      lastName,
+      fullName: customer.fullName,
+      email,
+      isPhoneVerified: true,
+      isEmailVerified: false,
+      profileCompleted: true,
+      nextStep: "Home",
+    },
+    session: {
+      accessToken: accessTokenFor(customer),
+      tokenType: "Bearer",
+      expiresIn: ACCESS_TOKEN_SECONDS,
+      expiresAtUtc: new Date(now + ACCESS_TOKEN_SECONDS * 1000).toISOString(),
+      refreshTokenExpiresAtUtc: new Date(next.expiresAt).toISOString(),
+    },
+  };
+}
+
 async function revokeSession(): Promise<void> {
   assertMockAllowed();
   const current = state.cookie;
@@ -484,6 +535,7 @@ async function revokeSession(): Promise<void> {
 export const authMock = {
   requestOtp,
   verifyOtp,
+  completeProfile,
   refreshSession,
   revokeSession,
   reset,

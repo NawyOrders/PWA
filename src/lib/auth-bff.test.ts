@@ -15,6 +15,7 @@ vi.mock(import("@/lib/api"), async (importOriginal) => {
 import { forwardToTenant } from "@/lib/api";
 import {
   bffAttach,
+  bffCompleteProfile,
   bffRefresh,
   bffRequest,
   bffResponse,
@@ -614,5 +615,95 @@ describe("bffRequest — the two facts a handler must not forget", () => {
     await expect(
       bffVerify({ body: { challengeId: "ch-1" }, origin: "https://shop.example/api/auth/otp/verify" }),
     ).resolves.toMatchObject({ cookie: { secure: true } });
+  });
+});
+
+describe("bffCompleteProfile ? finish the account, hide the rotated token", () => {
+  const PROFILE_PATH = "/api/v1/account/profile";
+  const PROFILE_DATA = {
+    profile: {
+      customerId: "cus-1",
+      phoneNumber: "+201012345678",
+      firstName: "Nawy",
+      lastName: "Guest",
+      fullName: "Nawy Guest",
+      email: null,
+      isPhoneVerified: true,
+      isEmailVerified: false,
+      profileCompleted: true,
+      nextStep: "Home",
+    },
+    session: { ...ROTATED_DATA },
+  };
+
+  it("forwards the name fields with the access token as a bearer credential", async () => {
+    forward.mockResolvedValue(upstream({ body: envelope(PROFILE_DATA) }));
+
+    const result = await bffCompleteProfile({
+      token: "access-1",
+      body: { accessToken: "access-1", firstName: "Nawy", lastName: "Guest" },
+      origin: HTTPS_ORIGIN,
+    });
+
+    expect(forward).toHaveBeenCalledWith(PROFILE_PATH, {
+      body: { firstName: "Nawy", lastName: "Guest" },
+      token: "access-1",
+    });
+    expect(result.cookie).toMatchObject({ name: "nawy_refresh", value: "refresh-2" });
+    expect(dataOf(result).session).not.toHaveProperty("refreshToken");
+    expect((dataOf(result).session as Record<string, unknown>).accessToken).toBe("access-2");
+  });
+
+  it("refuses a call with no access token before it reaches the tenant", async () => {
+    const result = await bffCompleteProfile({
+      token: null,
+      body: { firstName: "Nawy", lastName: "Guest" },
+      origin: HTTPS_ORIGIN,
+    });
+
+    expect(result.status).toBe(401);
+    expect(forward).not.toHaveBeenCalled();
+    expect(result.cookie).toBeNull();
+  });
+
+  it("rejects a body that is not a JSON object", async () => {
+    const result = await bffCompleteProfile({ token: "access-1", body: null, origin: HTTPS_ORIGIN });
+
+    expect(result.status).toBe(400);
+    expect(forward).not.toHaveBeenCalled();
+  });
+
+  it("relays a refused completion untouched and leaves the cookie alone", async () => {
+    forward.mockResolvedValue(
+      upstream({
+        status: 422,
+        body: envelope(null, { statusCode: 422, isSuccess: false, errors: { "Validation.Failed": "Invalid." } }),
+      }),
+    );
+
+    const result = await bffCompleteProfile({
+      token: "access-1",
+      body: { firstName: "", lastName: "" },
+      origin: HTTPS_ORIGIN,
+    });
+
+    expect(result.status).toBe(422);
+    expect(result.cookie).toBeNull();
+    expect(envelopeOf(result).errors).toEqual({ "Validation.Failed": "Invalid." });
+  });
+
+  it("answers 502 when a success carries no refresh token to store", async () => {
+    forward.mockResolvedValue(
+      upstream({ body: envelope({ ...PROFILE_DATA, session: { ...ROTATED_DATA, refreshToken: undefined } }) }),
+    );
+
+    const result = await bffCompleteProfile({
+      token: "access-1",
+      body: { firstName: "Nawy", lastName: "Guest" },
+      origin: HTTPS_ORIGIN,
+    });
+
+    expect(result.status).toBe(502);
+    expect(result.cookie).toBeNull();
   });
 });

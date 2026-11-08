@@ -17,6 +17,7 @@ import {
   attachStoredRefresh,
   authMockRequested,
   authTransport,
+  completeProfile,
   fetchBranding,
   forwardToTenant,
   isFatalRefreshError,
@@ -28,6 +29,7 @@ import {
   requestOtp,
   retryBackoffSeconds,
   revokeSession,
+  splitFullName,
   verifyOtp,
   type AppErrorKind,
   type AuthErrorCode,
@@ -1726,5 +1728,117 @@ describe("apiErrorFieldTarget", () => {
     for (const field of Object.keys(AUTH_FIELD_TARGETS)) {
       expect(apiErrorFieldTarget(withFieldErrors({ [field]: "x" }))).toBe(AUTH_FIELD_TARGETS[field]);
     }
+  });
+});
+
+describe("verifyOtp status fields", () => {
+  it("carries the API's nextStep and profileCompleted through", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    stubFetch(() =>
+      jsonResponse(
+        envelope({
+          ...sessionData,
+          isNewCustomer: true,
+          isPhoneVerified: true,
+          isEmailVerified: false,
+          profileCompleted: false,
+          nextStep: "CompleteProfile",
+        }),
+      ),
+    );
+
+    await expect(verifyOtp({ challengeId: "ch-1", code: "123456" })).resolves.toMatchObject({
+      profileCompleted: false,
+      nextStep: "CompleteProfile",
+      isNewCustomer: true,
+      isPhoneVerified: true,
+    });
+  });
+
+  it("does not invent a status the API did not send", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    stubFetch(() => jsonResponse(envelope(sessionData)));
+
+    const session = await verifyOtp({ challengeId: "ch-1", code: "123456" });
+    expect(session).not.toHaveProperty("profileCompleted");
+    expect(session).not.toHaveProperty("nextStep");
+  });
+});
+
+describe("splitFullName", () => {
+  it("keeps everything after the first word as the last name", () => {
+    expect(splitFullName("Ahmed Mohamed Ali")).toEqual({ firstName: "Ahmed", lastName: "Mohamed Ali" });
+    expect(splitFullName("  Nawy   Guest  ")).toEqual({ firstName: "Nawy", lastName: "Guest" });
+    expect(splitFullName("Cher")).toEqual({ firstName: "Cher", lastName: "" });
+    expect(splitFullName("   ")).toEqual({ firstName: "", lastName: "" });
+  });
+});
+
+describe("completeProfile", () => {
+  const profileData = {
+    customerId: "c-1",
+    phoneNumber: PHONE,
+    firstName: "Ahmed",
+    lastName: "Mohamed",
+    fullName: "Ahmed Mohamed",
+    email: "ahmed@example.com",
+    isPhoneVerified: true,
+    isEmailVerified: false,
+    profileCompleted: true,
+    nextStep: "Home",
+  };
+  const completedData = {
+    profile: profileData,
+    session: {
+      accessToken: "access-2",
+      tokenType: "Bearer",
+      expiresIn: 900,
+      expiresAtUtc: "2026-11-05T11:00:00Z",
+      refreshTokenExpiresAtUtc: "2026-11-19T11:00:00Z",
+    },
+  };
+
+  it("posts the access token and the trimmed name through the BFF", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    const fetchMock = stubFetch(() => jsonResponse(envelope(completedData)));
+
+    await expect(
+      completeProfile({
+        accessToken: "access-1",
+        firstName: " Ahmed ",
+        lastName: " Mohamed ",
+        email: " ahmed@example.com ",
+      }),
+    ).resolves.toEqual(completedData);
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/auth/profile");
+    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ method: "POST", credentials: "same-origin" });
+    expect(jsonOf(fetchMock.mock.calls[0]?.[1])).toEqual({
+      accessToken: "access-1",
+      firstName: "Ahmed",
+      lastName: "Mohamed",
+      email: "ahmed@example.com",
+    });
+  });
+
+  it("leaves a blank email out and rejects an answer with no access token", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    const fetchMock = stubFetch(() =>
+      jsonResponse(envelope({ ...completedData, session: { ...completedData.session, accessToken: "" } })),
+    );
+
+    const error = await failureFor(completeProfile({ accessToken: "access-1", firstName: "A", lastName: "B" }));
+    expect(error).toMatchObject({ kind: "envelope" });
+    expect(jsonOf(fetchMock.mock.calls[0]?.[1])).not.toHaveProperty("email");
+  });
+
+  it("keeps the rotated refresh token out of JavaScript", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    stubFetch(() =>
+      jsonResponse(envelope({ ...completedData, session: { ...completedData.session, refreshToken: "refresh-2" } })),
+    );
+
+    const result = await completeProfile({ accessToken: "access-1", firstName: "A", lastName: "B" });
+    expect(result.session).not.toHaveProperty("refreshToken");
   });
 });

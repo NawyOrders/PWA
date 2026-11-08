@@ -32,11 +32,13 @@ import {
   apiUrl,
   attachStoredRefresh,
   authTransport,
+  completeProfile as completeProfileRequest,
   fetchBranding,
   isFatalRefreshError,
   normalizeEgyptianPhone,
   refreshSession,
   revokeSession,
+  splitFullName,
   type CustomerSessionPayload,
   type RestaurantBranding,
 } from "@/lib/api";
@@ -47,6 +49,7 @@ import {
   createStorageRefreshLock,
   decodeSession,
   grantFromPayload,
+  grantFromTokens,
   identityFromPayload,
   sessionNeedsRefresh,
   type AccessGrant,
@@ -113,6 +116,14 @@ type AppContextValue = {
   setOrderNote: (note: string) => void;
   profile: Profile;
   updateProfile: (patch: Partial<Profile>) => void;
+  /**
+   * Persists the profile against the tenant API when a live session exists.
+   *
+   * The API reports `nextStep: "CompleteProfile"` until this succeeds, and its
+   * order endpoints refuse an incomplete account. The demo path falls back to
+   * `updateProfile` because there is no server row to write.
+   */
+  completeProfile: (input: { name: string; email?: string }) => Promise<void>;
   favorites: string[];
   isFavorite: (id: string) => boolean;
   toggleFavorite: (id: string) => void;
@@ -1095,6 +1106,50 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [setProfile],
   );
 
+  const completeProfile = useCallback(
+    async (input: { name: string; email?: string }) => {
+      const name = input.name.trim();
+      const email = (input.email ?? "").trim();
+
+      // The demo path has no server row, so the stored profile is the record.
+      if (authTransport() !== "live" || !customer) {
+        updateProfile({ name, email: email || profile.email });
+        return;
+      }
+
+      let grant = grantRef.current;
+      if (!grant || sessionNeedsRefresh(grant)) grant = await refreshNow();
+
+      const { firstName, lastName } = splitFullName(name);
+      const result = await completeProfileRequest({
+        accessToken: grant.accessToken,
+        firstName,
+        lastName,
+        email,
+      });
+
+      // Completion rotates the pair, so the in-memory grant has to move with it.
+      const nextGrant = grantFromTokens(result.session);
+      if (nextGrant) applyGrant(nextGrant);
+
+      const next: CustomerSession = {
+        customerId: result.profile.customerId || customer.customerId,
+        phoneNumber: result.profile.phoneNumber ?? customer.phoneNumber,
+        fullName: result.profile.fullName ?? name,
+        email: result.profile.email ?? (email || null),
+      };
+      setCustomer(next);
+      setProfile((current) => ({
+        ...current,
+        customerId: next.customerId || current.customerId,
+        name: next.fullName || current.name,
+        phone: next.phoneNumber || current.phone,
+        email: next.email ?? current.email,
+      }));
+    },
+    [applyGrant, customer, profile.email, refreshNow, setCustomer, setProfile, updateProfile],
+  );
+
   const isFavorite = useCallback((id: string) => favorites.includes(id), [favorites]);
 
   const toggleFavorite = useCallback(
@@ -1307,6 +1362,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setOrderNote,
       profile,
       updateProfile,
+      completeProfile,
       favorites,
       isFavorite,
       toggleFavorite,
@@ -1358,6 +1414,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setOrderNote,
       profile,
       updateProfile,
+      completeProfile,
       favorites,
       isFavorite,
       toggleFavorite,

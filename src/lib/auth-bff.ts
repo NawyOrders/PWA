@@ -57,6 +57,7 @@ type Upstream = Awaited<ReturnType<typeof forwardToTenant>>;
 const VERIFY_PATH = "/api/v1/auth/otp/verify";
 const REFRESH_PATH = "/api/v1/auth/refresh";
 const REVOKE_PATH = "/api/v1/auth/revoke";
+const PROFILE_PATH = "/api/v1/account/profile";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -82,9 +83,20 @@ function envelopeData(upstream: Upstream): Record<string, unknown> | null {
  */
 function scrub(body: unknown): unknown {
   if (!isRecord(body) || !isRecord(body.data)) return body;
-  if (!("refreshToken" in body.data)) return body;
-  const { refreshToken: _hidden, ...visible } = body.data;
-  return { ...body, data: visible };
+
+  let data = body.data;
+  if ("refreshToken" in data) {
+    const { refreshToken: _hidden, ...visible } = data;
+    data = visible;
+  }
+  // `/account/profile` nests the rotated pair under `data.session`, so the
+  // token lives one level deeper than it does on `/otp/verify`.
+  if (isRecord(data.session) && "refreshToken" in data.session) {
+    const { refreshToken: _hidden, ...session } = data.session;
+    data = { ...data, session };
+  }
+
+  return data === body.data ? body : { ...body, data };
 }
 
 /**
@@ -174,6 +186,41 @@ export async function bffRefresh(
   if (!rotated) return { ...relay(upstream, null), status: 502 };
 
   return relay(upstream, rotated);
+}
+
+/**
+ * `/account/profile` → finish the account the OTP login proved.
+ *
+ * The access token arrives from the page (it already holds it) and becomes the
+ * bearer header the tenant expects. The answer rotates both tokens, so the
+ * refresh half goes into the cookie and is scrubbed from the body exactly like
+ * `/otp/verify`. A failed completion changes nothing about the cookie.
+ */
+export async function bffCompleteProfile(
+  input: BffRequest & { token: string | null; body: unknown },
+): Promise<BffResult> {
+  const secure = shouldMarkSecure(input.origin, input.forwardedProto ?? null);
+  if (!isRecord(input.body)) return badRequest();
+  if (!input.token) {
+    return {
+      status: 401,
+      body: envelopeError(401, "RefreshToken.Invalid", "No access token was sent."),
+      retryAfterSeconds: null,
+      cookie: null,
+    };
+  }
+
+  const { accessToken: _dropped, ...profile } = input.body;
+  const upstream = await forwardToTenant(PROFILE_PATH, { body: profile, token: input.token });
+  const data = upstream.status === 200 ? envelopeData(upstream) : null;
+  const session = data && isRecord(data.session) ? data.session : null;
+  const stored = session ? refreshCookie(session.refreshToken, { secure }) : null;
+  if (!data || !session) return relay(upstream, null);
+
+  // A success with no refresh token is not a session the app can keep.
+  if (!stored) return { ...relay(upstream, null), status: 502 };
+
+  return relay(upstream, stored);
 }
 
 /**

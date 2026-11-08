@@ -173,6 +173,15 @@ export type RequestOtpData = {
   devOtpCode: string | null;
 };
 
+/**
+ * Which screen the API says to show after authentication.
+ *
+ * `CompleteProfile` means the account exists but still owes a first and last
+ * name, and the order endpoints refuse it until `/account/profile` accepts one.
+ * It is a status the API reports, not a guess the client makes.
+ */
+export type CustomerNextStep = "CompleteProfile" | "Home";
+
 /** `POST /api/v1/auth/otp/verify` → `data`, exactly as the API returns it. */
 export type CustomerLoginData = {
   customerId: string;
@@ -184,6 +193,12 @@ export type CustomerLoginData = {
   expiresIn: number;
   expiresAtUtc: string;
   refreshToken: string;
+  /** Present on the deployed API; absent from the guide's older sample. */
+  isNewCustomer?: boolean;
+  isPhoneVerified?: boolean;
+  isEmailVerified?: boolean;
+  profileCompleted?: boolean;
+  nextStep?: CustomerNextStep;
 };
 
 /**
@@ -207,6 +222,32 @@ export type RefreshData = {
 
 /** Same reasoning: the rotated token lands in the cookie, not in the page. */
 export type TokenPair = Omit<RefreshData, "refreshToken">;
+
+/** `GET /api/v1/account/me` and the `profile` half of `/account/profile`. */
+export type CustomerProfileData = {
+  customerId: string;
+  phoneNumber: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  fullName: string | null;
+  email: string | null;
+  isPhoneVerified: boolean;
+  isEmailVerified: boolean;
+  profileCompleted: boolean;
+  nextStep: CustomerNextStep;
+};
+
+/**
+ * `POST /api/v1/account/profile` → `data`.
+ *
+ * The answer carries a fresh token pair, so the call goes through the BFF for
+ * the same reason `/otp/verify` does: the refresh half has to land in the
+ * httpOnly cookie instead of in the page.
+ */
+export type CompleteProfileData = {
+  profile: CustomerProfileData;
+  session: TokenPair;
+};
 
 /** Kept as an alias so callers can name the challenge whatever reads best. */
 export type OtpChallenge = RequestOtpData;
@@ -1027,6 +1068,15 @@ export async function verifyOtp(options: {
     accessToken: data.accessToken,
     tokenType: typeof data.tokenType === "string" ? data.tokenType : "Bearer",
     ...tokenExpiry(data, response.status),
+    // Status fields are copied only when the API actually sent them: an older
+    // build that omits them must not read as "profile incomplete".
+    ...(typeof data.isNewCustomer === "boolean" ? { isNewCustomer: data.isNewCustomer } : {}),
+    ...(typeof data.isPhoneVerified === "boolean" ? { isPhoneVerified: data.isPhoneVerified } : {}),
+    ...(typeof data.isEmailVerified === "boolean" ? { isEmailVerified: data.isEmailVerified } : {}),
+    ...(typeof data.profileCompleted === "boolean" ? { profileCompleted: data.profileCompleted } : {}),
+    ...(data.nextStep === "CompleteProfile" || data.nextStep === "Home"
+      ? { nextStep: data.nextStep }
+      : {}),
   };
 }
 
@@ -1058,6 +1108,85 @@ export async function refreshSession(): Promise<TokenPair> {
     ...tokenExpiry(data, response.status),
     refreshTokenExpiresAtUtc:
       typeof data.refreshTokenExpiresAtUtc === "string" ? data.refreshTokenExpiresAtUtc : null,
+  };
+}
+
+/**
+ * Splits the single "full name" the sign-in screen collects into the two parts
+ * `/account/profile` expects. Everything after the first word is the last name,
+ * which keeps compound Arabic and Western surnames in one piece.
+ */
+export function splitFullName(value: string): { firstName: string; lastName: string } {
+  const parts = value.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return { firstName: "", lastName: "" };
+  return {
+    firstName: parts[0].slice(0, 100),
+    lastName: parts.slice(1).join(" ").slice(0, 100),
+  };
+}
+
+/**
+ * Completes the profile the OTP login just proved the phone for.
+ *
+ * This is the API's own instruction — `nextStep: "CompleteProfile"` — and the
+ * order endpoints refuse the account until it succeeds. The access token is
+ * posted in the body because the BFF is same-origin and already holds the
+ * refresh cookie; the BFF turns it into the bearer header the tenant expects
+ * and never lets the rotated refresh token back out.
+ */
+export async function completeProfile(options: {
+  accessToken: string;
+  firstName: string;
+  lastName: string;
+  email?: string | null;
+}): Promise<CompleteProfileData> {
+  if (authTransport() === "mock") {
+    const mock = await mockTransport();
+    return mock.completeProfile(options);
+  }
+
+  const email = (options.email ?? "").trim().slice(0, 200);
+  const response = await rawRequest("/api/auth/profile", {
+    method: "POST",
+    target: "local",
+    credentials: "same-origin",
+    body: {
+      accessToken: options.accessToken,
+      firstName: options.firstName.trim().slice(0, 100),
+      lastName: options.lastName.trim().slice(0, 100),
+      ...(email ? { email } : {}),
+    },
+  });
+  const data = unwrap<{
+    profile?: Partial<CustomerProfileData>;
+    session?: Partial<RefreshData>;
+  }>(response.body, response.status, response.retryAfterSeconds);
+  const session = data.session;
+  if (!session || typeof session.accessToken !== "string" || !session.accessToken) {
+    throw new AppError({ kind: "envelope", status: response.status, retryAfterSeconds: response.retryAfterSeconds });
+  }
+
+  const profile = data.profile ?? {};
+  return {
+    profile: {
+      customerId: typeof profile.customerId === "string" ? profile.customerId : "",
+      phoneNumber: typeof profile.phoneNumber === "string" ? profile.phoneNumber : null,
+      firstName: typeof profile.firstName === "string" ? profile.firstName : null,
+      lastName: typeof profile.lastName === "string" ? profile.lastName : null,
+      fullName: typeof profile.fullName === "string" ? profile.fullName : null,
+      email: typeof profile.email === "string" ? profile.email : null,
+      isPhoneVerified: profile.isPhoneVerified === true,
+      isEmailVerified: profile.isEmailVerified === true,
+      profileCompleted: profile.profileCompleted === true,
+      nextStep: profile.nextStep === "Home" ? "Home" : "CompleteProfile",
+    },
+    session: {
+      accessToken: session.accessToken,
+      tokenType: typeof session.tokenType === "string" ? session.tokenType : "Bearer",
+      ...tokenExpiry(session, response.status),
+      refreshTokenExpiresAtUtc:
+        typeof session.refreshTokenExpiresAtUtc === "string" ? session.refreshTokenExpiresAtUtc : null,
+    },
   };
 }
 
