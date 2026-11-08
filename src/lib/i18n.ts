@@ -324,6 +324,7 @@ const en: Record<string, string> = {
   "رسالة SMS": "an SMS message",
   "واتساب": "WhatsApp",
   "انسخ الكود": "Copy the code",
+  "استخدم الكود": "Use the code",
   "تم نسخ كود التحقق": "Verification code copied",
   "نسخ الكود مش متاح، اكتبه بإيدك": "Copying isn't available, type the code yourself",
   "الكود صالح {seconds} ثانية": "The code is valid for {seconds} seconds",

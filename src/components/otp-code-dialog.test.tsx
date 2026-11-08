@@ -11,7 +11,13 @@ vi.mock("@/lib/clipboard", () => ({
 }));
 
 function renderDialog(
-  props: Partial<{ code: string; channel: "sms" | "whatsapp"; expiresInSeconds: number; onClose: () => void }> = {},
+  props: Partial<{
+    code: string;
+    channel: "sms" | "whatsapp";
+    expiresInSeconds: number;
+    onUse: () => void;
+    onClose: () => void;
+  }> = {},
 ) {
   const onClose = vi.fn();
   renderApp(
@@ -43,6 +49,18 @@ describe("OtpCodeDialog", () => {
     await waitFor(() => expect(copyText).toHaveBeenCalledWith("246810"));
     expect(within(dialog).getByRole("button", { name: /تم النسخ/ })).toBeInTheDocument();
     expect(screen.getByText("تم نسخ كود التحقق")).toBeInTheDocument();
+  });
+
+  it("hands the code to the form when the customer taps use", async () => {
+    copyText.mockClear();
+    const onUse = vi.fn();
+    const user = userEvent.setup();
+    const { dialog } = renderDialog({ onUse });
+
+    await user.click(within(dialog).getByRole("button", { name: /استخدم الكود/ }));
+
+    expect(onUse).toHaveBeenCalledTimes(1);
+    expect(copyText).not.toHaveBeenCalled();
   });
 
   it("tells the customer to type it when the clipboard is refused", async () => {
