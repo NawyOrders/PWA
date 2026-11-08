@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SiteChrome } from "@/components/site-chrome";
 import { LoginView } from "@/components/login-view";
+import { seedProfile } from "@/components/providers";
 import { useCustomerSession } from "@/hooks/use-customer-session";
 import { MOCK_TEST_PHONES, authMock } from "@/lib/auth-mock";
+import { localCustomer } from "@/lib/local-customers";
 import { loginHref } from "@/lib/routes";
 import { storageKeys } from "@/lib/storage";
 import { renderApp } from "@/test/render";
@@ -290,5 +292,152 @@ describe("the OTP login journey, in mock mode", () => {
     await waitFor(() => expect(box(1)).toBeDisabled());
     expect(screen.getByRole("button", { name: "إرسال" })).toBeEnabled();
     expect(screen.queryByText("protected content")).not.toBeInTheDocument();
+  }, 30_000);
+});
+
+/* -------------------------------------------------------------------------- */
+/* The registered name is the name the device answers with                    */
+/* -------------------------------------------------------------------------- */
+
+/** What the account screen reads: the profile the provider persisted. */
+function storedProfile(): { name: string; phone: string; email: string; avatar: string } {
+  return JSON.parse(String(localStorage.getItem(storageKeys.profile))) as {
+    name: string;
+    phone: string;
+    email: string;
+    avatar: string;
+  };
+}
+
+describe("the registered name outlives the visit, in mock mode", () => {
+  it("answers the next login with the registered name after logout and a fresh load", async () => {
+    stubNetwork();
+    const firstVisit = renderApp(<Flow />);
+
+    // 1. Register: the name typed here is the account the simulator creates.
+    await userEvent.type(screen.getByLabelText("رقم الموبايل"), PHONE);
+    await userEvent.type(screen.getByLabelText("الاسم بالكامل"), NAME);
+    await userEvent.click(screen.getByRole("button", { name: "إرسال" }));
+    await typeCode(await readCodeFromThePopup());
+    await waitFor(() => expect(screen.getByText("protected content")).toBeInTheDocument());
+    await waitFor(() => expect(sessionLine().name).toBe(NAME));
+
+    // 2. Logout hands the shared device back the neutral identity…
+    await userEvent.click(screen.getByRole("button", { name: "probe logout" }));
+    await waitFor(() => expect(screen.queryByText("protected content")).not.toBeInTheDocument());
+    await waitFor(() => expect(storedProfile().name).toBe(seedProfile.name));
+
+    // 3. …and a fresh page load starts from storage alone. The login question
+    //    is a phone number only: no name field to retype anything into.
+    firstVisit.unmount();
+    renderApp(<Flow mode="Login" />);
+    await userEvent.type(screen.getByLabelText("رقم الموبايل"), PHONE);
+    await userEvent.click(screen.getByRole("button", { name: "إرسال" }));
+    await typeCode(await readCodeFromThePopup());
+
+    // 4. The session and the visible profile both carry the registered name —
+    //    the same person who registered, not the seeded demo identity.
+    await waitFor(() => expect(screen.getByText("protected content")).toBeInTheDocument());
+    await waitFor(() => expect(sessionLine().name).toBe(NAME));
+    expect(sessionLine().phone).toBe(PHONE);
+    await waitFor(() => expect(storedProfile().name).toBe(NAME));
+    expect(storedProfile().phone).toBe(PHONE);
+  }, 30_000);
+});
+
+describe("the registered name outlives the visit, in demo mode", () => {
+  beforeEach(() => {
+    // No simulator and no backend: the app is its own gateway, exactly like a
+    // deploy that configured nothing.
+    vi.stubEnv("NEXT_PUBLIC_AUTH_MOCK", "false");
+    vi.stubEnv("NEXT_PUBLIC_TENANT_API_BASE_URL", "");
+    vi.stubEnv("TENANT_API_BASE_URL", "");
+  });
+
+  /** Registers a customer the way the offline form does, name included. */
+  async function register(phone: string, name: string) {
+    await userEvent.type(screen.getByLabelText("رقم الموبايل"), phone);
+    await userEvent.type(screen.getByLabelText("الاسم بالكامل"), name);
+    await userEvent.click(screen.getByRole("button", { name: "إرسال" }));
+    await typeCode(await readCodeFromThePopup());
+    await waitFor(() => expect(screen.getByText("protected content")).toBeInTheDocument());
+  }
+
+  /** Signs in with a phone alone, the way the Login question asks it. */
+  async function loginWithPhone(phone: string) {
+    await userEvent.type(screen.getByLabelText("رقم الموبايل"), phone);
+    await userEvent.click(screen.getByRole("button", { name: "إرسال" }));
+    await typeCode(await readCodeFromThePopup());
+    await waitFor(() => expect(screen.getByText("protected content")).toBeInTheDocument());
+  }
+
+  it("answers the next login with the registered name after logout and a fresh load", async () => {
+    const firstVisit = renderApp(<Flow />);
+    await register("01012345678", NAME);
+    await waitFor(() => expect(storedProfile().name).toBe(NAME));
+
+    await userEvent.click(screen.getByRole("button", { name: "probe logout" }));
+    await waitFor(() => expect(screen.queryByText("protected content")).not.toBeInTheDocument());
+    await waitFor(() => expect(storedProfile().name).toBe(seedProfile.name));
+
+    firstVisit.unmount();
+    renderApp(<Flow mode="Login" />);
+    await loginWithPhone("01012345678");
+
+    // The demo has no session payload, so the profile is the account: it must
+    // answer with the name the customer registered, on the normalised phone.
+    await waitFor(() => expect(sessionLine().loggedIn).toBe(true));
+    await waitFor(() => expect(storedProfile().name).toBe(NAME));
+    expect(storedProfile().phone).toBe("+201012345678");
+    // The row that answered is still there for the load after this one.
+    expect(localCustomer("+201012345678")?.fullName).toBe(NAME);
+  }, 30_000);
+
+  it("does not hand the previous customer's name or photo to a different phone", async () => {
+    const firstVisit = renderApp(<Flow />);
+    await register("01012345678", NAME);
+    await waitFor(() => expect(storedProfile().name).toBe(NAME));
+    // The customer uploads a photo: it lives on the profile.
+    localStorage.setItem(
+      storageKeys.profile,
+      JSON.stringify({ ...storedProfile(), avatar: "data:image/png;base64,AAAA" }),
+    );
+    // The session ends without the shared-device reset: the flag is gone but
+    // the profile is still on the device. (A logout would wipe the profile as
+    // well, hiding exactly the state this fallback has to answer.)
+    localStorage.setItem(storageKeys.auth, "false");
+
+    firstVisit.unmount();
+    renderApp(<Flow mode="Login" />);
+    // A second person picks up the device and signs in with their own number,
+    // no name typed: they must not inherit the first person's identity.
+    await loginWithPhone("01198765432");
+
+    await waitFor(() => expect(storedProfile().phone).toBe("+201198765432"));
+    expect(storedProfile().name).toBe(seedProfile.name);
+    expect(storedProfile().avatar).toBe("");
+    // The first customer is untouched: their own next login still finds them.
+    expect(localCustomer("+201012345678")?.fullName).toBe(NAME);
+  }, 30_000);
+
+  it("keeps a name edited on the account when the same phone signs back in", async () => {
+    const firstVisit = renderApp(<Flow mode="Login" />);
+    // Signed in with no name typed: no registered row exists for this phone.
+    await loginWithPhone("01012345678");
+    expect(localCustomer("+201012345678")).toBeNull();
+    await waitFor(() => expect(storedProfile().phone).toBe("+201012345678"));
+    // Then the customer edits their name on the account screen, and the
+    // session ends leaving that edited profile on the device.
+    localStorage.setItem(storageKeys.profile, JSON.stringify({ ...storedProfile(), name: "اسم معدل" }));
+    localStorage.setItem(storageKeys.auth, "false");
+
+    firstVisit.unmount();
+    renderApp(<Flow mode="Login" />);
+    await loginWithPhone("01012345678");
+
+    // Nothing registered overrides it, and the device profile already belongs
+    // to this phone, so the edited name is what the next visit shows.
+    await waitFor(() => expect(storedProfile().name).toBe("اسم معدل"));
+    expect(storedProfile().phone).toBe("+201012345678");
   }, 30_000);
 });

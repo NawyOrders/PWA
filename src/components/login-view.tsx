@@ -16,7 +16,7 @@ import {
   ShieldCheck,
   UserPlus,
 } from "lucide-react";
-import { useApp } from "@/components/providers";
+import { seedProfile, useApp } from "@/components/providers";
 import { BackLink, Breadcrumbs, buttonStyles } from "@/components/ui";
 import { LogoMark } from "@/components/logo";
 import { LoadingIndicator } from "@/components/loading-indicator";
@@ -43,6 +43,7 @@ import {
   resendCooldownSeconds,
 } from "@/lib/otp-clock";
 import { DEMO_MAX_ATTEMPTS, OTP_LENGTH, generateOtpCode } from "@/lib/otp";
+import { localCustomer, rememberLocalCustomer } from "@/lib/local-customers";
 
 /**
  * The contract's own code lifetime. Used only when a response carries neither a
@@ -112,7 +113,7 @@ const NEW_CODE_REQUIRED_CODES = new Set([
 
 export function LoginView({ next = "/profile", mode = "Login" }: { next?: string; mode?: OtpPurpose }) {
   const router = useRouter();
-  const { login, updateProfile, toast, t, loggedIn, ready } = useApp();
+  const { login, updateProfile, toast, t, loggedIn, ready, profile } = useApp();
   const transport = authTransport();
   const [phone, setPhone] = useState("");
   const [fullName, setFullName] = useState("");
@@ -462,7 +463,22 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
       // on the account, so a new customer never inherits the seeded demo
       // identity on every screen.
       const signedInPhone = normalizeEgyptianPhone(phone);
-      updateProfile(typedName ? { name: typedName, phone: signedInPhone } : { phone: signedInPhone });
+      // The local customer table is this mode's backend row. Remembering the
+      // typed name here is what makes the next login — after a logout reset the
+      // visible profile, or after a reload — answer with the same name the
+      // customer registered, instead of the neutral seed identity.
+      if (typedName) rememberLocalCustomer(signedInPhone, typedName);
+      const name = typedName || localCustomer(signedInPhone)?.fullName || "";
+      if (name) {
+        updateProfile({ name, phone: signedInPhone });
+      } else if (profile.phone === signedInPhone) {
+        // Same device, same phone, name edited on the account screen: keep it.
+        updateProfile({ phone: signedInPhone });
+      } else {
+        // A different phone with no name anywhere is a new local customer: the
+        // previous person's name and photo must not travel with the slot.
+        updateProfile({ ...seedProfile, phone: signedInPhone });
+      }
       login();
       return;
     }
@@ -539,6 +555,7 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
     fullName,
     login,
     phone,
+    profile,
     retireChallenge,
     sent,
     showFieldError,
