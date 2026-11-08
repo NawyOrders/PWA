@@ -6,7 +6,9 @@ import {
   AUTH_FIELD_MESSAGES,
   AUTH_FIELD_TARGETS,
   DEFAULT_TENANT_API_BASE_URL,
+  REQUEST_TIMEOUT_MS,
   TENANT_API_BASE_URL_ENV,
+  TENANT_API_BASE_URL_SERVER_ENV,
   apiBaseUrl,
   apiConfigured,
   apiUrl,
@@ -17,6 +19,8 @@ import {
   authTransport,
   fetchBranding,
   forwardToTenant,
+  isFatalRefreshError,
+  isTenantResolutionError,
   isUsablePhone,
   normalizeEgyptianPhone,
   parseRetryAfter,
@@ -180,6 +184,7 @@ afterEach(() => {
   vi.stubEnv("AUTH_MOCK", "");
   vi.stubEnv("NEXT_PUBLIC_AUTH_MOCK", "");
   vi.stubEnv(TENANT_API_BASE_URL_ENV, "");
+  vi.stubEnv(TENANT_API_BASE_URL_SERVER_ENV, "");
 });
 
 describe("API configuration", () => {
@@ -222,6 +227,46 @@ describe("API configuration", () => {
     await requestOtp({ phoneNumber: PHONE });
     expect(urlsCalled(fetchMock)).toEqual([`${BASE}/api/v1/auth/otp/request`]);
     expect(tenantHeaderViolations(fetchMock)).toEqual([]);
+  });
+
+  it("names the tenant host with the full slug the guide requires", () => {
+    expect(DEFAULT_TENANT_API_BASE_URL).toBe(
+      "https://tahrir-01a1ad3c89d47d70876527c9ef863dcc.api.nawyorders.com",
+    );
+    // Shortening the slug to the restaurant name is the documented way to earn
+    // a 404 Tenant Not Found, so the default has to carry the whole identifier.
+    const slug = new URL(DEFAULT_TENANT_API_BASE_URL).hostname.split(".api.")[0];
+    expect(slug.length).toBeGreaterThan(20);
+    expect(DEFAULT_TENANT_API_BASE_URL.endsWith("/")).toBe(false);
+  });
+
+  it("reads the guide's own variable name when the public one was never declared", () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, undefined);
+    vi.stubEnv(TENANT_API_BASE_URL_SERVER_ENV, "https://slug.api.nawyorders.com");
+    expect(apiConfigured()).toBe(true);
+    expect(apiBaseUrl()).toBe("https://slug.api.nawyorders.com");
+    expect(apiUrl("/api/v1/auth/otp/request")).toBe("https://slug.api.nawyorders.com/api/v1/auth/otp/request");
+    expect(authTransport()).toBe("live");
+  });
+
+  it("trims the guide's name exactly like the public one", () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, "");
+    vi.stubEnv(TENANT_API_BASE_URL_SERVER_ENV, "  https://slug.api.nawyorders.com///  ");
+    expect(apiBaseUrl()).toBe("https://slug.api.nawyorders.com");
+    expect(apiConfigured()).toBe(true);
+  });
+
+  it("lets the public name win, so the browser and the BFF cannot land on two tenants", () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, "https://browser.api.nawyorders.com");
+    vi.stubEnv(TENANT_API_BASE_URL_SERVER_ENV, "https://server.api.nawyorders.com");
+    expect(apiBaseUrl()).toBe("https://browser.api.nawyorders.com");
+  });
+
+  it("stays in demo mode when both names are blank", () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, "   ");
+    vi.stubEnv(TENANT_API_BASE_URL_SERVER_ENV, "");
+    expect(apiConfigured()).toBe(false);
+    expect(authTransport()).toBe("demo");
   });
 });
 
@@ -560,9 +605,81 @@ describe("verifyOtp", () => {
     });
   });
 
+  /**
+   * A session answer carrying a name in whichever shape the build sends.
+   * `fullName` is removed rather than blanked when the caller did not name it,
+   * because that is what the deployed swagger's answer actually looks like.
+   */
+  function namedSession(name: Record<string, unknown>): Record<string, unknown> {
+    const answer: Record<string, unknown> = { ...sessionData, ...name };
+    if (!("fullName" in name)) delete answer.fullName;
+    return answer;
+  }
+
+  it("reads the name the deployed build sends instead of signing everybody in nameless", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    // The deployed `/otp/verify` answers `firstName`/`lastName`; the guide
+    // documents `fullName`. Reading only the guide's field would greet every
+    // customer with an empty name.
+    stubFetch(() => jsonResponse(envelope(namedSession({ firstName: "Ahmed", lastName: "Mohamed" }))));
+
+    const session = await verifyOtp({ challengeId: "ch-1", code: "123456" });
+    expect(session.fullName).toBe("Ahmed Mohamed");
+    expect(session).toMatchObject({ customerId: "c-1", accessToken: "access-1", expiresIn: 900 });
+    expect(session).not.toHaveProperty("firstName");
+    expect(session).not.toHaveProperty("lastName");
+  });
+
+  it("lets the guide's fullName win, so a corrected contract needs no client change", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    stubFetch(() =>
+      jsonResponse(envelope(namedSession({ fullName: "  Ahmed Mohamed Ali  ", firstName: "Ahmed", lastName: "Mohamed" }))),
+    );
+
+    await expect(verifyOtp({ challengeId: "ch-1", code: "123456" })).resolves.toMatchObject({
+      fullName: "Ahmed Mohamed Ali",
+    });
+  });
+
+  it("falls back to the pair when fullName arrived blank, not only when it is missing", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    stubFetch(() => jsonResponse(envelope(namedSession({ fullName: "   ", firstName: " Ahmed ", lastName: "Mohamed " }))));
+
+    await expect(verifyOtp({ challengeId: "ch-1", code: "123456" })).resolves.toMatchObject({
+      fullName: "Ahmed Mohamed",
+    });
+  });
+
+  it("joins only the parts that are really names", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    const answers = [
+      namedSession({ firstName: "  Ahmed  ", lastName: null }),
+      namedSession({ firstName: 42, lastName: { value: "Mohamed" } }),
+      namedSession({ lastName: "Mohamed" }),
+      namedSession({ firstName: "   ", lastName: "" }),
+      namedSession({ firstName: null, lastName: null }),
+    ];
+    let index = 0;
+    stubFetch(() => jsonResponse(envelope(answers[index++])));
+
+    expect((await verifyOtp({ challengeId: "ch-1", code: "123456" })).fullName).toBe("Ahmed");
+    expect((await verifyOtp({ challengeId: "ch-1", code: "123456" })).fullName).toBe("");
+    expect((await verifyOtp({ challengeId: "ch-1", code: "123456" })).fullName).toBe("Mohamed");
+    expect((await verifyOtp({ challengeId: "ch-1", code: "123456" })).fullName).toBe("");
+    expect((await verifyOtp({ challengeId: "ch-1", code: "123456" })).fullName).toBe("");
+  });
+
+  it("caps a joined name at the same 200 characters the rest of the app stores", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    stubFetch(() => jsonResponse(envelope(namedSession({ firstName: "م".repeat(150), lastName: "ع".repeat(150) }))));
+
+    const session = await verifyOtp({ challengeId: "ch-1", code: "123456" });
+    expect(session.fullName).toHaveLength(200);
+    expect(session.fullName).toBe(`${"م".repeat(150)} ${"ع".repeat(49)}`);
+  });
+
   it("refuses a session it cannot put an expiry on", async () => {
     // A success with no usable `expiresIn` or `expiresAtUtc` reads as stale the
-    // instant it lands, so the proactive refresh would call `/refresh` again
     // immediately, and again after that — against the tenant-wide limiter every
     // customer shares. One honest failure beats that loop.
     vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
@@ -723,6 +840,18 @@ describe("refreshSession, revokeSession and attachStoredRefresh", () => {
     expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ method: "POST", credentials: "same-origin" });
     expect(jsonOf(fetchMock.mock.calls[0]?.[1])).toEqual({ refreshToken: "refresh-1" });
     expect(tenantHeaderViolations(fetchMock)).toEqual([]);
+  });
+
+  it("adopts nothing in the simulator, whose whole point is that no request leaves the page", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    vi.stubEnv("NEXT_PUBLIC_AUTH_MOCK", "true");
+    const fetchMock = stubFetch(() => new Response(null, { status: 204 }));
+
+    // The simulator keeps its own in-memory jar and never reads a cookie, so
+    // posting a legacy token would forward a live-shaped body to the real
+    // tenant host from a mode that promises not to touch the network.
+    await expect(attachStoredRefresh("legacy-refresh")).resolves.toBeUndefined();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 
@@ -1073,6 +1202,174 @@ describe("authMock transport selection in the endpoints", () => {
   });
 });
 
+describe("isFatalRefreshError", () => {
+  it("signs the customer out only when the token family is really gone", () => {
+    // A 401 from `/refresh` is the guide's hard rule: expired, revoked or reuse
+    // detected all mean the same thing — there is no session left to keep.
+    expect(isFatalRefreshError(new AppError({ kind: "unauthorized", status: 401 }))).toBe(true);
+    expect(isFatalRefreshError(new AppError({ kind: "unauthorized", status: 401, code: "RefreshToken.Expired" }))).toBe(true);
+    expect(isFatalRefreshError(new AppError({ kind: "unauthorized", status: 401, code: "Tenant.Unresolved" }))).toBe(true);
+    // A 409 that names a refresh token is the reuse-detection answer, which is
+    // just as final as the 401.
+    expect(isFatalRefreshError(new AppError({ kind: "conflict", status: 409, code: "RefreshToken.CompromisedReuse" }))).toBe(true);
+    expect(isFatalRefreshError(new AppError({ kind: "conflict", status: 409, code: "RefreshToken.AlreadyRevoked" }))).toBe(true);
+  });
+
+  it("keeps a recoverable failure from logging anybody out", () => {
+    // Everything below is a bad minute, not a dead session. Treating it as fatal
+    // would sign the customer out on a lift ride and spend the tenant's shared
+    // limiter re-authenticating them.
+    expect(isFatalRefreshError(new AppError({ kind: "offline", status: 0 }))).toBe(false);
+    expect(isFatalRefreshError(new AppError({ kind: "timeout", status: 0 }))).toBe(false);
+    expect(isFatalRefreshError(new AppError({ kind: "server", status: 500 }))).toBe(false);
+    expect(isFatalRefreshError(new AppError({ kind: "rateLimited", status: 429, retryAfterSeconds: 30 }))).toBe(false);
+    expect(isFatalRefreshError(new AppError({ kind: "notFound", status: 404, code: "Tenant.NotFound" }))).toBe(false);
+    // A 409 about something else — an OTP, a customer — says nothing about the
+    // refresh token, so the prefix check is what keeps it out.
+    expect(isFatalRefreshError(new AppError({ kind: "conflict", status: 409, code: "Customer.OtpAlreadyUsed" }))).toBe(false);
+    expect(isFatalRefreshError(new AppError({ kind: "conflict", status: 409 }))).toBe(false);
+    expect(isFatalRefreshError(new Error("socket hang up"))).toBe(false);
+    expect(isFatalRefreshError(null)).toBe(false);
+  });
+});
+
+describe("the cold-start tenant retry", () => {
+  /** The middleware's answer for a host it has not mapped yet. */
+  function tenantProblem(status: number, title: string) {
+    return problemResponse({ status, title, detail: "No tenant is configured for this host." }, status);
+  }
+
+  it("asks once more when the first call after a restart could not resolve the tenant", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    let calls = 0;
+    const fetchMock = stubFetch(() => {
+      calls += 1;
+      return calls === 1 ? tenantProblem(404, "Tenant Not Found") : jsonResponse(envelope(challenge));
+    });
+
+    await expect(requestOtp({ phoneNumber: PHONE })).resolves.toMatchObject({ challengeId: "ch-1" });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(urlsCalled(fetchMock)).toEqual([
+      `${BASE}/api/v1/auth/otp/request`,
+      `${BASE}/api/v1/auth/otp/request`,
+    ]);
+    // The second ask is the same anonymous request: no tenant header, no
+    // tenant field in the body, and nothing the first attempt changed.
+    expect(tenantHeaderViolations(fetchMock)).toEqual([]);
+    expect(tenantBodyViolations(fetchMock)).toEqual([]);
+    expect(jsonOf(fetchMock.mock.calls[1]?.[1])).toEqual(jsonOf(fetchMock.mock.calls[0]?.[1]));
+  });
+
+  it("gives an unresolved host the same single second chance", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    let calls = 0;
+    const fetchMock = stubFetch(() => {
+      calls += 1;
+      return calls === 1 ? tenantProblem(401, "Tenant Unresolved") : jsonResponse(envelope(brandingData));
+    });
+
+    await expect(fetchBranding()).resolves.toMatchObject({ notModified: false, branding: brandingData });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("stops after one retry, because a host that is wrong stays wrong", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    const fetchMock = stubFetch(() => tenantProblem(404, "Tenant Not Found"));
+
+    const error = await failureFor(requestOtp({ phoneNumber: PHONE }));
+    expect(error).toMatchObject({ code: "Tenant.NotFound", status: 404, kind: "notFound" });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(apiErrorMessageKey(error)).toBe(AUTH_ERROR_MESSAGES["Tenant.NotFound"]);
+  });
+
+  it("does not spend a second request on an answer about a customer", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    const fetchMock = stubFetch(() =>
+      jsonResponse(
+        envelope(null, {
+          statusCode: 404,
+          isSuccess: false,
+          errors: { "Customer.NotFoundByPhone": "No customer exists for this phone number." },
+        }),
+        { status: 404 },
+      ),
+    );
+
+    // A 404 about a phone is the registration offer, not a cold cache. Retrying
+    // it would only ask the same question twice and still end at the same place.
+    expect(await failureFor(requestOtp({ phoneNumber: PHONE }))).toMatchObject({
+      code: "Customer.NotFoundByPhone",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not retry a rate limit, a broken backend or a dead connection", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    const answers = [
+      () =>
+        jsonResponse(
+          envelope(null, {
+            statusCode: 429,
+            isSuccess: false,
+            errors: { "Auth.OtpRateLimitExceeded": "Too many OTP requests for this phone number." },
+          }),
+          { status: 429, headers: { "Retry-After": "180" } },
+        ),
+      () =>
+        textResponse(
+          "System.InvalidOperationException: Database credential 'Database:MasterUser' is not configured.",
+          500,
+          "text/plain",
+        ),
+      () => Promise.reject(new TypeError("Failed to fetch")),
+    ];
+
+    for (const answer of answers) {
+      const fetchMock = stubFetch(answer);
+      const error = await failureFor(requestOtp({ phoneNumber: PHONE }));
+      expect(error).toBeInstanceOf(AppError);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      if (error.status === 429) expect(error.retryAfterSeconds).toBe(180);
+    }
+  });
+
+  it("leaves the BFF's own retry to the BFF, so one cold start is not four requests", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    const fetchMock = stubFetch(() => tenantProblem(404, "Tenant Not Found"));
+
+    expect(await failureFor(verifyOtp({ challengeId: "ch-1", code: "123456" }))).toMatchObject({
+      code: "Tenant.NotFound",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(urlsCalled(fetchMock)).toEqual(["/api/auth/otp/verify"]);
+  });
+
+  it("shares one timeout budget, so a retry cannot outlive the lock guarding a rotation", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    vi.useFakeTimers();
+    const fetchMock = stubFetch(() => {
+      // The first attempt ate the whole budget answering cold. There is no time
+      // left for a second one, and the lock TTL is sized from that same budget.
+      vi.advanceTimersByTime(REQUEST_TIMEOUT_MS);
+      return tenantProblem(404, "Tenant Not Found");
+    });
+
+    expect(await failureFor(requestOtp({ phoneNumber: PHONE }))).toMatchObject({ code: "Tenant.NotFound" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("names only the two tenant-resolution failures as worth another ask", () => {
+    expect(isTenantResolutionError(new AppError({ kind: "notFound", status: 404, code: "Tenant.NotFound" }))).toBe(true);
+    expect(isTenantResolutionError(new AppError({ kind: "unauthorized", status: 401, code: "Tenant.Unresolved" }))).toBe(true);
+    expect(isTenantResolutionError(new AppError({ kind: "validation", status: 400, code: "Tenant.Conflicting" }))).toBe(false);
+    expect(isTenantResolutionError(new AppError({ kind: "notFound", status: 404, code: "Customer.NotFoundByPhone" }))).toBe(false);
+    expect(isTenantResolutionError(new AppError({ kind: "notFound", status: 404 }))).toBe(false);
+    expect(isTenantResolutionError(new AppError({ kind: "server", status: 500 }))).toBe(false);
+    expect(isTenantResolutionError(new Error("offline"))).toBe(false);
+    expect(isTenantResolutionError(null)).toBe(false);
+  });
+});
+
 describe("forwardToTenant", () => {
   it("relays the status, body and Retry-After exactly as the tenant host sent them", async () => {
     vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
@@ -1134,6 +1431,106 @@ describe("forwardToTenant", () => {
       body: null,
       retryAfterSeconds: null,
     });
+  });
+
+  it("gives a cold tenant cache one second chance and relays the answer that worked", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    // The first request after a backend restart can land before the host has
+    // been mapped. The guide's rule is one retry, and the BFF owns it here so
+    // all four routes get it from the same place.
+    const session = envelopeObj({ ...sessionData, refreshToken: "refresh-1" });
+    let calls = 0;
+    const fetchMock = stubFetch(() => {
+      calls += 1;
+      return calls === 1
+        ? problemResponse({ status: 404, title: "Tenant Not Found", detail: "host not mapped yet" }, 404)
+        : jsonResponse(JSON.stringify(session));
+    });
+
+    const relayed = await forwardToTenant("/api/v1/auth/otp/verify", {
+      body: { challengeId: "ch-1", code: "123456", fullName: "Nawy Guest" },
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(urlsCalled(fetchMock)).toEqual([`${BASE}/api/v1/auth/otp/verify`, `${BASE}/api/v1/auth/otp/verify`]);
+    // The retry is the same request, not a modified one: no tenant header, no
+    // tenant field, and the code is not consumed by a question nobody answered.
+    expect(jsonOf(fetchMock.mock.calls[1]?.[1])).toEqual(jsonOf(fetchMock.mock.calls[0]?.[1]));
+    expect(tenantHeaderViolations(fetchMock)).toEqual([]);
+    expect(tenantBodyViolations(fetchMock)).toEqual([]);
+    // The forwarder stays a dumb relay: stripping the refresh token is the
+    // route's job, and a test that expected it here would hide a leak.
+    expect(relayed).toEqual({ status: 200, contentType: "application/json", body: session, retryAfterSeconds: null });
+  });
+
+  it("stops after one retry and relays the failure untouched", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    const problem = { status: 404, title: "Tenant Not Found", detail: "No tenant is configured for this host." };
+    const fetchMock = stubFetch(() => problemResponse(problem, 404));
+
+    const relayed = await forwardToTenant("/api/v1/auth/refresh", { body: { refreshToken: "r-1" } });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(relayed).toEqual({
+      status: 404,
+      contentType: "application/problem+json",
+      body: problem,
+      retryAfterSeconds: null,
+    });
+  });
+
+  it("relays every failure that is not a cold cache on the first answer", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    const answers = [
+      // A 404 about a phone number is the registration offer.
+      () =>
+        jsonResponse(
+          envelope(null, {
+            statusCode: 404,
+            isSuccess: false,
+            errors: { "Customer.NotFoundByPhone": "No customer exists for this phone number." },
+          }),
+          { status: 404 },
+        ),
+      // A dead refresh token is a signed-out customer, not a cold host.
+      () =>
+        jsonResponse(
+          envelope(null, {
+            statusCode: 401,
+            isSuccess: false,
+            errors: { "RefreshToken.Revoked": "The refresh token was revoked." },
+          }),
+          { status: 401 },
+        ),
+      // The deployed 500 is a missing database credential. Asking again cannot
+      // configure it, and the stack trace must reach the log, not a second ask.
+      () => textResponse("Database credential 'Database:MasterUser' is not configured.", 500, "text/plain"),
+      () => jsonResponse(envelope(null, { statusCode: 409, isSuccess: false, errors: { "RefreshToken.AlreadyRevoked": "gone" } }), { status: 409 }),
+    ];
+
+    for (const answer of answers) {
+      const fetchMock = stubFetch(answer);
+      const relayed = await forwardToTenant("/api/v1/auth/refresh", { body: { refreshToken: "r-1" } });
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(relayed.status).not.toBe(200);
+    }
+  });
+
+  it("shares one timeout budget with the rotation lock, just like the browser client", async () => {
+    vi.stubEnv(TENANT_API_BASE_URL_ENV, BASE);
+    vi.useFakeTimers();
+    const fetchMock = stubFetch(() => {
+      vi.advanceTimersByTime(REQUEST_TIMEOUT_MS);
+      return problemResponse({ status: 404, title: "Tenant Not Found" }, 404);
+    });
+
+    const relayed = await forwardToTenant("/api/v1/auth/refresh", { body: { refreshToken: "r-1" } });
+
+    // The cross-tab lock's TTL is sized from REQUEST_TIMEOUT_MS. A retry with
+    // its own fresh budget would let this forwarder outlive the lock guarding
+    // the very rotation it is performing.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(relayed.status).toBe(404);
   });
 });
 
