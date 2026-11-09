@@ -1668,19 +1668,7 @@ describe("LoginView in a production bundle against the tenant API", () => {
     vi.unstubAllEnvs();
   });
 
-  it("keeps the backend's test code out of the popup", async () => {
-    const user = userEvent.setup();
-    renderApp(<LoginView />);
-
-    await requestApiCode(user);
-
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByText(/اكتب الكود اللي وصل في رسالة SMS/)).toBeInTheDocument();
-    await waitFor(() => expect(otpInputs()[0]).toHaveFocus());
-  });
-
-  it("shows it again when the deploy opts in with NEXT_PUBLIC_SHOW_DEV_OTP", async () => {
-    vi.stubEnv("NEXT_PUBLIC_SHOW_DEV_OTP", "true");
+  it("captures the backend's test code into the popup without any opt-in", async () => {
     const user = userEvent.setup();
     renderApp(<LoginView />);
 
@@ -1688,6 +1676,31 @@ describe("LoginView in a production bundle against the tenant API", () => {
 
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("246810")).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: /انسخ الكود/ })).toBeEnabled();
+    expect(within(dialog).getByRole("button", { name: /استخدم الكود/ })).toBeEnabled();
+  });
+
+  it("keeps the popup shut when the backend returns no test code", async () => {
+    api.requestOtp.mockResolvedValue(challenge({ devOtpCode: null }));
+    const user = userEvent.setup();
+    renderApp(<LoginView />);
+
+    await requestApiCode(user);
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /إظهار الكود/ })).not.toBeInTheDocument();
+    await waitFor(() => expect(otpInputs()[0]).toHaveFocus());
+  });
+
+  it("keeps a malformed test code out of the popup", async () => {
+    api.requestOtp.mockResolvedValue(challenge({ devOtpCode: "12ab" }));
+    const user = userEvent.setup();
+    renderApp(<LoginView />);
+
+    await requestApiCode(user);
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /إظهار الكود/ })).not.toBeInTheDocument();
   });
 });
 
