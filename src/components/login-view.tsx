@@ -78,26 +78,15 @@ const OTP_CHANNELS: { value: OtpChannel; label: string; icon: typeof MessageCirc
 ];
 
 /**
- * `devOtpCode` from the API is a testing aid, so it is never surfaced from a
- * production bundle unless the deploy explicitly opts in. Read at call time so
- * a test can put the app in either mode.
+ * A code only reaches the popup when one was actually issued: the demo code
+ * this screen mints when no backend is configured, or the `devOtpCode` the
+ * backend chose to return inside the OTP-request response. The response is
+ * captured straight back into the popup so the customer can read and copy it
+ * on any deploy — the server decides whether a test code exists at all, and a
+ * production backend that sends none gets no popup, no inline hint and no
+ * fabricated code. Well-formed six digits only; anything else stays hidden.
  */
-function apiDevCodeVisible(): boolean {
-  return process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_SHOW_DEV_OTP === "true";
-}
-
-/**
- * Where a code came from decides whether the popup may show it.
- *
- * `demo` is the local code the app invents when no backend is configured. It
- * already ships inside the client bundle, so putting it on screen leaks nothing
- * — and the old single gate hid it in a production build, which left the
- * deployed app asking a customer for a code they could never see or copy.
- *
- * `api` is the backend's `devOtpCode`. That one is a real test-environment
- * shortcut, so it stays gated exactly as before.
- */
-type CodeOrigin = "demo" | "api";
+const ISSUED_CODE = /^\d{6}$/;
 
 /** The account is refused outright; only a human at the brand can fix that. */
 const ACCOUNT_REFUSED_CODES = new Set([
@@ -246,8 +235,8 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
   }, []);
 
   const showCode = useCallback(
-    (issued: string | null, lifetimeSeconds: number, origin: CodeOrigin) => {
-      const visible = issued && (origin === "demo" || apiDevCodeVisible()) ? issued : null;
+    (issued: string | null, lifetimeSeconds: number) => {
+      const visible = issued && ISSUED_CODE.test(issued) ? issued : null;
       setShownCode(visible);
       setCodeOpen(Boolean(visible));
       startChallenge(!visible, lifetimeSeconds);
@@ -329,7 +318,7 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
       setChallenge(null);
       setDemoCode(issued);
       setAttemptsLeft(DEMO_MAX_ATTEMPTS);
-      showCode(issued, RESEND_COOLDOWN_SECONDS, "demo");
+      showCode(issued, RESEND_COOLDOWN_SECONDS);
       toast(t("تم إرسال كود التحقق على موبايلك — كود التجربة {code}", { code: issued }), "info");
       return;
     }
@@ -347,7 +336,10 @@ export function LoginView({ next = "/profile", mode = "Login" }: { next?: string
       // The code's own lifetime drives both clocks: the boxes stay open for as
       // long as it is verifiable, and the resend link waits the shorter of that
       // and the local cooldown.
-      showCode(result.devOtpCode, codeSecondsLeft(result) || DEFAULT_CHALLENGE_SECONDS, "api");
+      // Capture the request's own answer back into the popup: when the backend
+      // returns a test code, it is shown and copyable on every deploy; when it
+      // returns none, the boxes simply take the typed SMS code.
+      showCode(result.devOtpCode, codeSecondsLeft(result) || DEFAULT_CHALLENGE_SECONDS);
       toast(t("تم إرسال كود التحقق عن طريق {channel}", { channel: channelLabel }), "info");
     } catch (cause) {
       const message = t(apiErrorMessageKey(cause));
