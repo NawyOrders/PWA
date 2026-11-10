@@ -35,6 +35,7 @@ import {
   type CookieValue,
 } from "@/lib/auth-cookie";
 import { forwardToTenant } from "@/lib/api";
+import { tenantApiBaseUrl, tenantSlugFromHost } from "@/lib/tenant";
 
 export type BffResult = {
   status: number;
@@ -56,6 +57,8 @@ export type BffResult = {
 type BffRequest = {
   origin: string;
   forwardedProto?: string | null;
+  /** Tenant API host resolved from this request's `Host`, when it has one. */
+  apiBaseUrl?: string;
 };
 
 type Upstream = Awaited<ReturnType<typeof forwardToTenant>>;
@@ -161,7 +164,10 @@ export async function bffRequestOtp(input: BffRequest & { body: unknown }): Prom
   const forwarded: Record<string, unknown> = { phoneNumber: phoneNumber.trim().slice(0, 32) };
   if (typeof channel === "string" && channel.trim()) forwarded.channel = channel.trim().slice(0, 16);
 
-  const upstream = await forwardToTenant(OTP_REQUEST_PATH, { body: forwarded });
+  const upstream = await forwardToTenant(OTP_REQUEST_PATH, {
+    body: forwarded,
+    baseUrl: input.apiBaseUrl,
+  });
   return relay(upstream, null);
 }
 
@@ -179,7 +185,10 @@ export async function bffVerify(input: BffRequest & { body: unknown }): Promise<
   // reaches the tenant.
   const { challengeId, code } = input.body;
 
-  const upstream = await forwardToTenant(VERIFY_PATH, { body: { challengeId, code } });
+  const upstream = await forwardToTenant(VERIFY_PATH, {
+    body: { challengeId, code },
+    baseUrl: input.apiBaseUrl,
+  });
   const data = upstream.status === 200 ? envelopeData(upstream) : null;
   const stored = data ? refreshCookie(data.refreshToken, { secure }) : null;
   if (!data) return relay(upstream, null);
@@ -213,7 +222,10 @@ export async function bffRefresh(
     };
   }
 
-  const upstream = await forwardToTenant(REFRESH_PATH, { body: { refreshToken: input.token } });
+  const upstream = await forwardToTenant(REFRESH_PATH, {
+    body: { refreshToken: input.token },
+    baseUrl: input.apiBaseUrl,
+  });
   const data = upstream.status === 200 ? envelopeData(upstream) : null;
   const rotated = data ? refreshCookie(data.refreshToken, { secure }) : null;
   if (!data) {
@@ -250,7 +262,11 @@ export async function bffCompleteProfile(
   }
 
   const { accessToken: _dropped, ...profile } = input.body;
-  const upstream = await forwardToTenant(PROFILE_PATH, { body: profile, token: input.token });
+  const upstream = await forwardToTenant(PROFILE_PATH, {
+    body: profile,
+    token: input.token,
+    baseUrl: input.apiBaseUrl,
+  });
   const data = upstream.status === 200 ? envelopeData(upstream) : null;
   const session = data && isRecord(data.session) ? data.session : null;
   const stored = session ? refreshCookie(session.refreshToken, { secure }) : null;
@@ -285,6 +301,7 @@ export async function bffRevoke(
 
   const upstream = await forwardToTenant(REVOKE_PATH, {
     body: { refreshToken: input.token, reason: "User logged out" },
+    baseUrl: input.apiBaseUrl,
   });
   return relay(upstream, clearRefreshCookie({ secure }));
 }
@@ -316,7 +333,21 @@ export type { CookieValue };
  * plaintext.
  */
 export function bffRequest(input: { url: string; headers: Headers }): BffRequest {
-  return { origin: input.url, forwardedProto: input.headers.get("x-forwarded-proto") };
+  const host = input.headers.get("host") ?? hostFromUrl(input.url);
+  const slug = tenantSlugFromHost(host);
+  return {
+    origin: input.url,
+    forwardedProto: input.headers.get("x-forwarded-proto"),
+    apiBaseUrl: slug ? (tenantApiBaseUrl(slug) ?? undefined) : undefined,
+  };
+}
+
+function hostFromUrl(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return "";
+  }
 }
 
 /**

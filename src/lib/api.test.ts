@@ -188,18 +188,20 @@ afterEach(() => {
   vi.stubEnv("NEXT_PUBLIC_AUTH_MOCK", "");
   vi.stubEnv(TENANT_API_BASE_URL_ENV, "");
   vi.stubEnv(TENANT_API_BASE_URL_SERVER_ENV, "");
+  vi.stubEnv("TENANT_ROOT_DOMAIN", "");
+  vi.stubEnv("TENANT_API_BASE_URL_TEMPLATE", "");
 });
 
 describe("API configuration", () => {
-  it("answers with the documented tenant host when the deploy pointed at nothing", () => {
+  it("answers with no tenant host when the deploy pointed at nothing", () => {
     vi.stubEnv(TENANT_API_BASE_URL_ENV, "");
-    expect(apiBaseUrl()).toBe(DEFAULT_TENANT_API_BASE_URL);
+    expect(apiBaseUrl()).toBe("");
     expect(apiConfigured()).toBe(false);
   });
 
-  it("answers with the documented tenant host when the variable is absent entirely", () => {
+  it("answers with no tenant host when the variable is absent entirely", () => {
     vi.stubEnv(TENANT_API_BASE_URL_ENV, undefined);
-    expect(apiBaseUrl()).toBe(DEFAULT_TENANT_API_BASE_URL);
+    expect(apiBaseUrl()).toBe("");
     expect(apiConfigured()).toBe(false);
   });
 
@@ -232,15 +234,18 @@ describe("API configuration", () => {
     expect(tenantHeaderViolations(fetchMock)).toEqual([]);
   });
 
-  it("names the tenant host with the full slug the guide requires", () => {
-    expect(DEFAULT_TENANT_API_BASE_URL).toBe(
-      "https://tahrir-01a1ad3c89d47d70876527c9ef863dcc.api.nawyorders.com",
-    );
-    // Shortening the slug to the restaurant name is the documented way to earn
-    // a 404 Tenant Not Found, so the default has to carry the whole identifier.
-    const slug = new URL(DEFAULT_TENANT_API_BASE_URL).hostname.split(".api.")[0];
-    expect(slug.length).toBeGreaterThan(20);
-    expect(DEFAULT_TENANT_API_BASE_URL.endsWith("/")).toBe(false);
+  it("has no hardcoded tenant fallback, because one image serves every store", () => {
+    // The old default named the Tahrir tenant. On a multi-tenant storefront that
+    // would quietly point every unknown host at one restaurant, so the only safe
+    // default is "not configured".
+    expect(DEFAULT_TENANT_API_BASE_URL).toBe("");
+  });
+
+  it("treats the multi-tenant server settings as a configured backend", () => {
+    vi.stubEnv("TENANT_ROOT_DOMAIN", "nawyorders.com");
+    vi.stubEnv("TENANT_API_BASE_URL_TEMPLATE", "https://{slug}.api.nawyorders.com");
+    expect(apiConfigured()).toBe(true);
+    expect(authTransport()).toBe("live");
   });
 
   it("reads the guide's own variable name when the public one was never declared", () => {

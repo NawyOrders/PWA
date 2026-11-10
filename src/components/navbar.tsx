@@ -6,6 +6,7 @@ import { Bell, ClipboardList, Home, ShoppingCart, UserRound } from "lucide-react
 import { LogoMark } from "@/components/logo";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useApp } from "@/components/providers";
+import { brandingName } from "@/lib/branding";
 import { loginHref } from "@/lib/routes";
 
 const links = [
@@ -16,15 +17,25 @@ const links = [
 
 export function Navbar() {
   const pathname = usePathname();
-  const { count, t, loggedIn, openLoginPrompt } = useApp();
+  const { count, t, loggedIn, openLoginPrompt, branding, lang } = useApp();
+  const storeName = brandingName(branding, lang);
   const cartActive = pathname === "/cart" || pathname.startsWith("/checkout");
 
   return (
     <header className="motion-header sticky top-0 z-40 hidden border-b border-line bg-white/95 backdrop-blur lg:block">
       <div className="shell flex h-[88px] items-center">
         <div className="flex w-60 items-center justify-start">
-          <Link href="/" aria-label={t("ناوي أوردرز - الرئيسية")} className="motion-press inline-flex">
-            <LogoMark className="size-14 transition-transform duration-300 hover:-rotate-3" />
+          <Link
+            href="/"
+            aria-label={t("ناوي أوردرز - الرئيسية")}
+            className="motion-press inline-flex min-w-0 items-center gap-3"
+          >
+            <LogoMark className="size-14 shrink-0 transition-transform duration-300 hover:-rotate-3" />
+            {storeName ? (
+              <span className="min-w-0 truncate font-display text-lg font-extrabold text-brand">
+                {storeName}
+              </span>
+            ) : null}
           </Link>
         </div>
 

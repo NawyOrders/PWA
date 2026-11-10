@@ -31,6 +31,7 @@ import {
   apiConfigured,
   apiUrl,
   attachStoredRefresh,
+  joinApiUrl,
   authTransport,
   completeProfile as completeProfileRequest,
   fetchBranding,
@@ -58,6 +59,7 @@ import {
   type RefreshCoordinator,
 } from "@/lib/session";
 import { applyBranding, decodeBrandingCache, type BrandingCache } from "@/lib/branding";
+import { setRuntimeTenantApiBaseUrl } from "@/lib/runtime-tenant";
 import { usePersistentState } from "@/hooks/use-persistent-state";
 import { LoadingIndicator } from "@/components/loading-indicator";
 
@@ -513,7 +515,23 @@ function decodeProfile(stored: unknown, fallback: Profile): Profile {
   return { ...stored, avatar: usableAvatar(stored.avatar) };
 }
 
-export function AppProvider({ children }: { children: ReactNode }) {
+export function AppProvider({
+  children,
+  initialBranding = null,
+  initialBrandingEtag = null,
+  tenantApiBaseUrl = "",
+}: {
+  children: ReactNode;
+  /** Branding the server fetched for this request's tenant, before first paint. */
+  initialBranding?: RestaurantBranding | null;
+  initialBrandingEtag?: string | null;
+  /** Tenant API host resolved from the request, for direct browser calls. */
+  tenantApiBaseUrl?: string;
+}) {
+  // Client components below render after this line, so the runtime value is in
+  // place before `authTransport()` or `apiConfigured()` is asked. The server
+  // keeps its own per-request resolution and never writes this module value.
+  if (typeof window !== "undefined") setRuntimeTenantApiBaseUrl(tenantApiBaseUrl);
   const [lines, setLines, cartReady] = usePersistentState<CartLine[]>(storageKeys.cart, seedCart, decodeCart);
   const [favorites, setFavorites, favoritesReady] = usePersistentState<string[]>(
     storageKeys.favorites,
@@ -547,7 +565,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [refreshRetryAt, setRefreshRetryAt] = useState<number | null>(null);
   const [brandingCache, setBrandingCache, brandingReady] = usePersistentState<BrandingCache | null>(
     storageKeys.branding,
-    null,
+    initialBranding ? { etag: initialBrandingEtag, branding: initialBranding } : null,
     decodeBrandingCache,
   );
   const [addresses, setAddresses, addressesReady] = usePersistentState<SavedAddress[]>(
@@ -613,6 +631,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [toastState, setToastState] = useState<ToastState>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const brandingFetched = useRef(false);
+  /** The server already fetched this tenant's branding; do not overwrite it with a stale browser cache. */
+  const serverBrandingApplied = useRef(false);
   /** Mirror of `grant` for callbacks that must read the token without re-subscribing. */
   const grantRef = useRef<AccessGrant | null>(null);
   /** The recovery refresh runs once per load, not once per render. */
@@ -734,6 +754,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     applyBranding(branding);
   }, [branding]);
 
+  /*
+   * The server's branding is this request's truth. localStorage is per-origin,
+   * so it cannot cross tenants, but it can be older than the payload the server
+   * just fetched. Applying it once after hydration keeps a returning visitor
+   * from seeing a renamed restaurant until the next conditional GET.
+   */
+  useEffect(() => {
+    if (!brandingReady || serverBrandingApplied.current) return;
+    serverBrandingApplied.current = true;
+    if (initialBranding) {
+      setBrandingCache({ etag: initialBrandingEtag, branding: initialBranding });
+    }
+  }, [brandingReady, initialBranding, initialBrandingEtag, setBrandingCache]);
+
   /* A session is the source of truth for who the customer is, so the account
      screens stop showing the seeded demo identity as soon as somebody signs in
      through the API. Details the customer edited are kept — they are replaced
@@ -798,7 +832,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   /* One conditional GET per load: the stored ETag turns a fresh branding into
      a 304, and any failure simply leaves the palette that is already applied. */
   useEffect(() => {
-    if (!apiConfigured() || !brandingReady || brandingFetched.current) return;
+    if (!apiConfigured() || !brandingReady || brandingFetched.current || initialBranding) return;
     brandingFetched.current = true;
     fetchBranding({ etag: brandingCache?.etag ?? null })
       .then((result) => {
@@ -808,7 +842,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Branding is cosmetic and the backend may be unreachable offline: the
         // built-in palette (or the cached one) stays and the next load retries.
       });
-  }, [brandingReady, brandingCache?.etag, setBrandingCache]);
+  }, [brandingReady, brandingCache?.etag, initialBranding, setBrandingCache]);
 
   /* ------------------------------------------------------------------------ */
   /* Session: one refresh at a time, one token in memory, none in storage.     */
@@ -921,9 +955,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         getGrant: () => grantRef.current,
         refresh: refreshNow,
         onSignedOut: expireSession,
-        join: (path) => apiUrl(path),
+        join: (path) => (tenantApiBaseUrl ? joinApiUrl(tenantApiBaseUrl, path) : apiUrl(path)),
       }),
-    [refreshNow, expireSession],
+    [refreshNow, expireSession, tenantApiBaseUrl],
   );
 
   /*

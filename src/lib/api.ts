@@ -28,21 +28,22 @@
  *     in-memory login they shipped with before this client existed.
  */
 
+import { getRuntimeTenantApiBaseUrl } from "@/lib/runtime-tenant";
+
 /* -------------------------------------------------------------------------- */
 /* Configuration                                                              */
 /* -------------------------------------------------------------------------- */
 
 /**
- * The tenant host the integration guide names, written out in full.
+ * There is deliberately no default tenant host.
  *
- * The slug is the *whole* platform identifier — `tahrir-01a1ad3c…`, not
- * `tahrir` — because the API resolves the tenant from this host and nothing
- * else. A shortened slug answers `404 Tenant Not Found`; a host that is not a
- * tenant host at all answers `401 Tenant.Unresolved`. Both are configuration
- * failures, so the fix is this value, never an `X-Tenant-Id` header.
+ * The storefront is multi-tenant: the API base URL comes from the request host
+ * at runtime (`TENANT_API_BASE_URL_TEMPLATE` in `src/lib/tenant.ts`). A
+ * hardcoded fallback would silently point every unknown host at one store,
+ * which is exactly the cross-tenant leak this deployment must avoid. Empty
+ * means "not configured", which the app treats as demo mode.
  */
-export const DEFAULT_TENANT_API_BASE_URL =
-  "https://tahrir-01a1ad3c89d47d70876527c9ef863dcc.api.nawyorders.com";
+export const DEFAULT_TENANT_API_BASE_URL = "";
 
 /**
  * The browser-visible name. Only `NEXT_PUBLIC_` variables reach the client
@@ -58,36 +59,52 @@ export const TENANT_API_BASE_URL_ENV = "NEXT_PUBLIC_TENANT_API_BASE_URL";
  */
 export const TENANT_API_BASE_URL_SERVER_ENV = "TENANT_API_BASE_URL";
 
-/** Whichever name the deploy used, trimmed; empty when it named no backend. */
+/**
+ * The base URL this browser tab was rendered for, then the deploy's own
+ * variables. The runtime value wins because it is the only one that can name a
+ * different tenant on a different host from the same image.
+ */
 function configuredTenantBaseUrl(): string {
+  const runtime = getRuntimeTenantApiBaseUrl();
+  if (runtime) return runtime;
   const publicValue = (process.env[TENANT_API_BASE_URL_ENV] ?? "").trim();
   return publicValue || (process.env[TENANT_API_BASE_URL_SERVER_ENV] ?? "").trim();
 }
 
 /** Trailing slashes are stripped so `${base}${path}` can never become `//api`. */
 export function apiBaseUrl(): string {
-  return (configuredTenantBaseUrl() || DEFAULT_TENANT_API_BASE_URL).replace(/\/+$/, "");
+  return configuredTenantBaseUrl().replace(/\/+$/, "");
 }
 
 /**
- * Joins the base URL and an endpoint path without ever producing a double
- * slash, whatever the config looks like.
+ * Joins a base URL and an endpoint path without ever producing a double slash.
+ * Exported so the server can join the per-request tenant host it resolved.
  */
-export function apiUrl(path: string): string {
+export function joinApiUrl(baseUrl: string, path: string): string {
+  const base = (baseUrl ?? "").trim().replace(/\/+$/, "");
   const suffix = path.startsWith("/") ? path : `/${path}`;
-  return `${apiBaseUrl()}${suffix}`;
+  return `${base}${suffix}`;
+}
+
+/** The configured base URL, or the path itself when no backend is configured. */
+export function apiUrl(path: string): string {
+  return joinApiUrl(apiBaseUrl(), path);
 }
 
 /**
- * True when the deploy pointed the app at a backend, under either name.
+ * True when this request has a tenant API to talk to.
  *
- * `apiBaseUrl()` deliberately answers with the guide's tenant host even when
- * nothing is set — that is what makes the default useful — so "is auth wired
- * up" cannot be derived from it and is read from the variables directly.
- * A deploy that sets nothing keeps the offline demo login it shipped with.
+ * In the browser that is the base URL the server resolved from the host. On the
+ * server it is also true when the deployment has the multi-tenant settings, so
+ * the server render and the hydrated client agree about the transport. A local
+ * `next dev` with none of those settings stays in demo mode.
  */
 export function apiConfigured(): boolean {
-  return configuredTenantBaseUrl() !== "";
+  if (configuredTenantBaseUrl() !== "") return true;
+  return Boolean(
+    (process.env.TENANT_ROOT_DOMAIN ?? "").trim() &&
+      (process.env.TENANT_API_BASE_URL_TEMPLATE ?? "").trim(),
+  );
 }
 
 /** Where the auth calls actually go. Chosen by configuration, never in code. */
@@ -605,6 +622,8 @@ type RequestOptions = {
   credentials?: RequestCredentials;
   /** `local` targets this app's own `/api/auth/*` routes instead of the tenant host. */
   target?: "tenant" | "local";
+  /** Per-request tenant host resolved from the request, when the caller has one. */
+  baseUrl?: string;
 };
 
 type RawResponse = {
@@ -647,7 +666,7 @@ async function rawRequest(path: string, options: RequestOptions = {}): Promise<R
 }
 
 async function requestOnce(path: string, options: RequestOptions, timeoutMs: number): Promise<RawResponse> {
-  const url = options.target === "local" ? path : apiUrl(path);
+  const url = options.target === "local" ? path : joinApiUrl(options.baseUrl ?? apiBaseUrl(), path);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   const headers: Record<string, string> = { Accept: "application/json" };
@@ -951,8 +970,13 @@ export type BrandingResult =
   | { notModified: true; branding: null; etag: string | null }
   | { notModified: false; branding: RestaurantBranding; etag: string | null };
 
-export async function fetchBranding(options: { etag?: string | null } = {}): Promise<BrandingResult> {
-  const response = await rawRequest("/api/v1/Branding", { etag: options.etag ?? null });
+export async function fetchBranding(
+  options: { etag?: string | null; baseUrl?: string } = {},
+): Promise<BrandingResult> {
+  const response = await rawRequest("/api/v1/Branding", {
+    etag: options.etag ?? null,
+    baseUrl: options.baseUrl,
+  });
   if (response.status === 304) return { notModified: true, branding: null, etag: response.etag };
   return {
     notModified: false,
@@ -1246,7 +1270,7 @@ export type TenantAnswer = {
 
 export async function forwardToTenant(
   path: string,
-  init: { method?: "GET" | "POST"; body?: unknown; token?: string | null },
+  init: { method?: "GET" | "POST"; body?: unknown; token?: string | null; baseUrl?: string },
 ): Promise<TenantAnswer> {
   const deadline = Date.now() + REQUEST_TIMEOUT_MS;
   const first = await forwardOnce(path, init, REQUEST_TIMEOUT_MS);
@@ -1260,10 +1284,10 @@ export async function forwardToTenant(
 
 async function forwardOnce(
   path: string,
-  init: { method?: "GET" | "POST"; body?: unknown; token?: string | null },
+  init: { method?: "GET" | "POST"; body?: unknown; token?: string | null; baseUrl?: string },
   timeoutMs: number,
 ): Promise<TenantAnswer> {
-  const response = await fetch(apiUrl(path), {
+  const response = await fetch(joinApiUrl(init.baseUrl ?? apiBaseUrl(), path), {
     method: init.method ?? "POST",
     headers: {
       Accept: "application/json",

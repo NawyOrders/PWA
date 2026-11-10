@@ -1,0 +1,43 @@
+services:
+  tenant-web:
+    image: nawyorders/tenant-web:${IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nawyorders-tenant-web
+    restart: unless-stopped
+    env_file:
+      - .env.tenant-web
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+    networks:
+      - caddy
+    # No published port: Caddy reaches this container by name on its own
+    # network. Publishing 3000 would expose the storefront directly.
+    expose:
+      - "3000"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:3000/manifest.webmanifest').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+networks:
+  # Caddy's own compose network. The storefront only needs Caddy, not the
+  # backend's dev_nawy-network, and this keeps the proxy working even if the
+  # manual dev_nawy-network attachment on Caddy is lost on a recreate.
+  caddy:
+    external: true
+    name: genmarka_default
