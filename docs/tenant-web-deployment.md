@@ -71,7 +71,29 @@ expression from `.endsWith(".api.nawyorders.com")` to:
 @allowed expression {http.request.uri.query}.endsWith(".nawyorders.com")
 ```
 
-Add the storefront block; leave the existing `*.api.nawyorders.com` block alone:
+Add the storefront block; leave the existing `*.api.nawyorders.com` block alone.
+The new `*.nawyorders.com` wildcard also matches the two legacy one-label API
+hosts, so give their existing blocks `tls { on_demand }` too. Without that,
+Caddy has both an automatic and an on-demand certificate policy for the same
+name and the TLS handshake fails for `platform-api.nawyorders.com` and
+`tenant-api.nawyorders.com`. The `*.api.nawyorders.com` wildcard is already
+on-demand and is unaffected.
+
+```caddyfile
+platform-api.nawyorders.com {
+	tls {
+		on_demand
+	}
+	# ...existing proxy settings...
+}
+
+tenant-api.nawyorders.com {
+	tls {
+		on_demand
+	}
+	# ...existing proxy settings...
+}
+```
 
 ```caddyfile
 *.nawyorders.com {
