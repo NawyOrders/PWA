@@ -27,7 +27,7 @@ import {
   trackingRoute,
   trackingSteps,
 } from "@/lib/account-data";
-import { formatPrice, branches, paymentMethodLabels, toArabicDigits, user, type Order } from "@/lib/data";
+import { formatPrice, paymentMethodLabels, toArabicDigits, user, type Order } from "@/lib/data";
 
 const stepIcons: Record<string, React.ComponentType<LucideProps>> = {
   check: Check,
@@ -41,7 +41,7 @@ const TRACK_INSET = 12.5;
 const TRACK_SPAN = 100 - TRACK_INSET * 2;
 
 export function OrderTrackingView({ order }: { order: Order }) {
-  const { t, lang } = useApp();
+  const { t, lang, branches } = useApp();
   const [liveEta, setLiveEta] = useState(12);
   const delivered = order.status === "delivered";
   const pickup = order.fulfilment === "pickup";

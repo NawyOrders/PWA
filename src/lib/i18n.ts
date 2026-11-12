@@ -41,6 +41,7 @@ const en: Record<string, string> = {
   "صح": "OK",
   "تمام": "Done",
   "مفتوح الآن": "Open now",
+  "مغلق مؤقتاً": "Temporarily closed",
   "كم": "km",
   "صنف": "items",
   "أصناف": "items",

@@ -13,7 +13,7 @@ import {
 import Link from "next/link";
 import { Check, ShoppingCart } from "lucide-react";
 import {
-  branches,
+  branches as demoBranches,
   deliveryFee,
   orders as seedOrders,
   productsById,
@@ -58,7 +58,15 @@ import {
   type CustomerSession,
   type RefreshCoordinator,
 } from "@/lib/session";
-import { applyBranding, decodeBrandingCache, type BrandingCache } from "@/lib/branding";
+import {
+  applyBranding,
+  applyBrandingAssets,
+  brandingBranches,
+  decodeBrandingCache,
+  sanitizeBranding,
+  type BrandingCache,
+  type StoreBranch,
+} from "@/lib/branding";
 import { setRuntimeTenantApiBaseUrl } from "@/lib/runtime-tenant";
 import { usePersistentState } from "@/hooks/use-persistent-state";
 import { LoadingIndicator } from "@/components/loading-indicator";
@@ -183,6 +191,11 @@ type AppContextValue = {
   authFetch: AuthFetch;
   /** Tenant identity and palette, or `null` while running on built-in defaults. */
   branding: RestaurantBranding | null;
+  /**
+   * Branches the pickup flow can choose between: the tenant's active branches
+   * when `/api/v1/Branding` returned any, otherwise the local demo branches.
+   */
+  branches: StoreBranch[];
   addresses: SavedAddress[];
   addAddress: (address: SavedAddress) => void;
   removeAddress: (id: string) => void;
@@ -258,6 +271,23 @@ const seedDeliveryDetails: DeliveryDetails = {
 const ADDRESS_KINDS = new Set<AddressKind>(["home", "work", "family", "cafe", "other"]);
 const PAYMENT_METHODS = new Set<PaymentMethodId>(["cash", "instapay", "wallet"]);
 const SAFE_ID = /^[A-Za-z0-9_-]{1,40}$/;
+
+/** The demo branch list, shaped like the branding branches the screens accept. */
+const DEMO_BRANCHES: StoreBranch[] = demoBranches.map((branch, index) => ({
+  id: branch.id,
+  name: branch.name,
+  nameAr: branch.name,
+  nameEn: branch.name,
+  address: branch.address,
+  open: branch.open,
+  phone: null,
+  isPrimary: index === 0,
+  distance: branch.distance,
+  latitude: null,
+  longitude: null,
+  workingHours: [],
+  deliveryAreas: [],
+}));
 
 function limited(value: unknown, max: number): string | undefined {
   return typeof value === "string" ? value.slice(0, max) : undefined;
@@ -376,9 +406,10 @@ function decodeSelectedAddress(stored: unknown, fallback: string | null): string
 }
 
 function decodeSelectedBranch(stored: unknown, fallback: string): string {
-  return typeof stored === "string" && branches.some((branch) => branch.id === stored)
-    ? stored
-    : fallback;
+  // Tenant branch ids are UUIDs, so the demo list cannot validate this. The
+  // provider resolves the selection against the branches that actually exist
+  // after branding loads.
+  return typeof stored === "string" && stored.trim() ? stored.trim().slice(0, 80) : fallback;
 }
 
 function decodeDeliveryDetails(stored: unknown, fallback: DeliveryDetails): DeliveryDetails {
@@ -456,7 +487,7 @@ function decodeOrders(stored: unknown, fallback: Order[]): Order[] {
             ? order.fulfilment
             : undefined,
         branchId:
-          typeof order.branchId === "string" && branches.some((branch) => branch.id === order.branchId)
+          typeof order.branchId === "string" && SAFE_ID.test(order.branchId)
             ? order.branchId
             : undefined,
         address: limited(order.address, 200),
@@ -578,7 +609,7 @@ export function AppProvider({
   >(storageKeys.selectedAddress, savedAddresses[0].id, decodeSelectedAddress);
   const [storedBranchId, setSelectedBranchId, branchReady] = usePersistentState<string>(
     storageKeys.selectedBranch,
-    branches[0].id,
+    DEMO_BRANCHES[0].id,
     decodeSelectedBranch,
   );
   const [deliveryDetails, setDeliveryDetails, deliveryDetailsReady] =
@@ -680,9 +711,19 @@ export function AppProvider({
   const selectedAddressId = addresses.some((address) => address.id === storedSelectedAddressId)
     ? storedSelectedAddressId
     : null;
-  const selectedBranchId = branches.some((branch) => branch.id === storedBranchId)
+  const branding = brandingCache?.branding ?? null;
+  /*
+   * `/api/v1/Branding` owns the pickup branches. The demo list only survives
+   * when the payload has no branches, which is exactly when the app is running
+   * without a tenant (or against a backend that has not configured any).
+   */
+  const storeBranches = useMemo(() => {
+    const tenantBranches = brandingBranches(branding, lang);
+    return tenantBranches.length > 0 ? tenantBranches : DEMO_BRANCHES;
+  }, [branding, lang]);
+  const selectedBranchId = storeBranches.some((branch) => branch.id === storedBranchId)
     ? storedBranchId
-    : branches[0].id;
+    : storeBranches[0].id;
 
   const loginPromptOpen = loginPromptNext !== null;
   // Two ways in: the local demo flag, or a session issued by the tenant API.
@@ -699,7 +740,6 @@ export function AppProvider({
       : refreshRetryAt !== null
         ? "recovering"
         : "signed-out";
-  const branding = brandingCache?.branding ?? null;
   const dir = lang === "ar" ? "rtl" : "ltr";
   const t = useCallback((text: string, vars?: Vars) => translate(lang, text, vars), [lang]);
 
@@ -752,6 +792,7 @@ export function AppProvider({
      the colours from globals.css and a tenant payload repaints nothing. */
   useEffect(() => {
     applyBranding(branding);
+    applyBrandingAssets(branding);
   }, [branding]);
 
   /*
@@ -836,7 +877,9 @@ export function AppProvider({
     brandingFetched.current = true;
     fetchBranding({ etag: brandingCache?.etag ?? null })
       .then((result) => {
-        if (!result.notModified) setBrandingCache({ etag: result.etag, branding: result.branding });
+        if (result.notModified) return;
+        const safe = sanitizeBranding(result.branding);
+        if (safe) setBrandingCache({ etag: result.etag, branding: safe });
       })
       .catch(() => {
         // Branding is cosmetic and the backend may be unreachable offline: the
@@ -1284,9 +1327,9 @@ export function AppProvider({
 
   const selectBranch = useCallback(
     (id: string) => {
-      if (branches.some((branch) => branch.id === id)) setSelectedBranchId(id);
+      if (storeBranches.some((branch) => branch.id === id)) setSelectedBranchId(id);
     },
-    [setSelectedBranchId],
+    [setSelectedBranchId, storeBranches],
   );
 
   const updateDeliveryDetails = useCallback(
@@ -1326,7 +1369,7 @@ export function AppProvider({
         note: line.note,
       }));
       const address = addresses.find((item) => item.id === selectedAddressId) ?? null;
-      const branch = branches.find((item) => item.id === selectedBranchId) ?? branches[0];
+      const branch = storeBranches.find((item) => item.id === selectedBranchId) ?? storeBranches[0];
       const separator = lang === "ar" ? "، " : ", ";
       const deliveryAddress = address
         ? `${t(address.area)}${separator}${t(address.detail)}`
@@ -1375,6 +1418,7 @@ export function AppProvider({
       selectedAddressId,
       selectedBranchId,
       setOrders,
+      storeBranches,
       subtotal,
       t,
     ],
@@ -1407,6 +1451,7 @@ export function AppProvider({
       sessionStatus,
       authFetch,
       branding,
+      branches: storeBranches,
       loginPromptOpen,
       loginPromptNext,
       openLoginPrompt,
@@ -1459,6 +1504,7 @@ export function AppProvider({
       sessionStatus,
       authFetch,
       branding,
+      storeBranches,
       loginPromptOpen,
       loginPromptNext,
       openLoginPrompt,

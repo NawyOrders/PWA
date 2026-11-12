@@ -14,6 +14,7 @@
  */
 
 import type { RestaurantBranding } from "@/lib/api";
+import { sanitizeBranding } from "@/lib/branding";
 import { isTenantNotFoundProblem } from "@/lib/tenant";
 
 export type TenantBrandingResult =
@@ -35,9 +36,9 @@ function unwrapBranding(body: unknown): RestaurantBranding | null {
   if (body.isSuccess === false) return null;
 
   const data = isRecord(body.data) ? body.data : body;
-  if (!isRecord(data)) return null;
   if (!("nameAr" in data) && !("nameEn" in data) && !("tenantId" in data)) return null;
-  return data as RestaurantBranding;
+  const branding = sanitizeBranding(data);
+  return branding && Object.keys(branding).length > 0 ? branding : null;
 }
 
 export async function fetchTenantBranding(

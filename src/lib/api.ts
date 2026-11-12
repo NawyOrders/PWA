@@ -149,6 +149,46 @@ export type ProblemDetails = {
   errors?: Record<string, string> | null;
 };
 
+/** One day in a branch's weekly schedule, as `/api/v1/Branding` reports it. */
+export type RestaurantBranchWorkingHour = {
+  dayOfWeek?: string | null;
+  isClosed?: boolean;
+  openTime?: string | null;
+  closeTime?: string | null;
+  closesNextDay?: boolean;
+};
+
+/** A customer-selectable delivery area and its fixed fee for one branch. */
+export type RestaurantBranchDeliveryArea = {
+  deliveryAreaId?: string | null;
+  nameAr?: string | null;
+  nameEn?: string | null;
+  deliveryFee?: number | null;
+};
+
+/**
+ * An active branch from `/api/v1/Branding`.
+ *
+ * Branch ids are the same ids the order contract expects, so the pickup screen
+ * and a placed order can both refer to the tenant's real branches instead of
+ * the demo list.
+ */
+export type RestaurantBranch = {
+  branchId?: string | null;
+  nameAr?: string | null;
+  nameEn?: string | null;
+  address?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  phone?: string | null;
+  /** `Open` or `TemporarilyClosed`. */
+  status?: string | null;
+  isPrimary?: boolean;
+  sortOrder?: number | null;
+  workingHours?: RestaurantBranchWorkingHour[] | null;
+  deliveryAreas?: RestaurantBranchDeliveryArea[] | null;
+};
+
 export type RestaurantBranding = {
   tenantId?: string | null;
   nameAr?: string | null;
@@ -167,6 +207,7 @@ export type RestaurantBranding = {
   messengerUrl?: string | null;
   socialLinks?: Record<string, string> | null;
   eTag?: string | null;
+  branches?: RestaurantBranch[] | null;
 };
 
 export type OtpChannel = "sms" | "whatsapp";

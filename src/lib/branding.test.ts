@@ -2,6 +2,11 @@ import { waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   applyBranding,
+  applyBrandingAssets,
+  branchHoursLabel,
+  brandingBranches,
+  brandingFaviconUrl,
+  brandingLogoUrl,
   brandingName,
   brandingVars,
   brandingVarNames,
@@ -9,6 +14,7 @@ import {
   darken,
   lighten,
   safeColor,
+  sanitizeBranding,
   tenantColorsEnabled,
   type BrandingCache,
 } from "@/lib/branding";
@@ -304,5 +310,144 @@ describe("decodeBrandingCache", () => {
       branding: { socialLinks: { x: `https://x.com/${"u".repeat(600)}` } },
     });
     expect(decoded?.branding.socialLinks?.x).toHaveLength(300);
+  });
+});
+
+const branchPayload = {
+  branchId: "01a1c7cf-d522-73a7-b311-732a5150c803",
+  nameAr: "سموحة",
+  nameEn: "Smouha",
+  address: "47, شارع ثقيف, الإسكندرية",
+  latitude: 31.199969,
+  longitude: 29.931818,
+  phone: "+201234567890",
+  status: "Open",
+  isPrimary: true,
+  sortOrder: 0,
+  workingHours: [
+    { dayOfWeek: "Sunday", isClosed: false, openTime: "10:00:00", closeTime: "23:00:00", closesNextDay: false },
+  ],
+  deliveryAreas: [{ deliveryAreaId: "area-1", nameAr: "سموحة", nameEn: "Smouha", deliveryFee: 15 }],
+};
+
+describe("sanitizeBranding", () => {
+  it("keeps the documented payload, including branches", () => {
+    const branding = sanitizeBranding({
+      tenantId: "t-1",
+      nameAr: "ميرزي",
+      nameEn: "Merzy",
+      logoUrl: "https://cdn.example.com/logo.jpg",
+      primaryColor: "#1e3a8a",
+      branches: [branchPayload],
+    });
+
+    expect(branding?.nameEn).toBe("Merzy");
+    expect(branding?.primaryColor).toBe("#1E3A8A");
+    expect(branding?.logoUrl).toBe("https://cdn.example.com/logo.jpg");
+    expect(branding?.branches).toHaveLength(1);
+    expect(branding?.branches?.[0]?.workingHours?.[0]?.openTime).toBe("10:00:00");
+    expect(branding?.branches?.[0]?.deliveryAreas?.[0]?.deliveryFee).toBe(15);
+  });
+
+  it("drops non-HTTPS assets and malformed branches", () => {
+    const branding = sanitizeBranding({
+      logoUrl: "javascript:alert(1)",
+      faviconUrl: "http://cdn.example.com/icon.png",
+      whatsAppUrl: "https://wa.me/201234567890",
+      branches: [
+        { nameAr: "بلا معرف" },
+        { branchId: "b-1", nameAr: "فرع", longitude: "not-a-number", workingHours: [{ dayOfWeek: "Funday" }] },
+      ],
+    });
+
+    expect(branding?.logoUrl).toBeUndefined();
+    expect(branding?.faviconUrl).toBeUndefined();
+    expect(branding?.whatsAppUrl).toBe("https://wa.me/201234567890");
+    expect(branding?.branches).toHaveLength(1);
+    expect(branding?.branches?.[0]?.longitude).toBeNull();
+    expect(branding?.branches?.[0]?.workingHours).toEqual([]);
+  });
+
+  it("sorts branches by their display order", () => {
+    const branding = sanitizeBranding({
+      branches: [
+        { branchId: "b-2", sortOrder: 2 },
+        { branchId: "b-1", sortOrder: 1 },
+      ],
+    });
+    expect(branding?.branches?.map((branch) => branch.branchId)).toEqual(["b-1", "b-2"]);
+  });
+
+  it("rejects a value that is not an object", () => {
+    for (const value of [null, undefined, "branding", 7, []]) {
+      expect(sanitizeBranding(value)).toBeNull();
+    }
+  });
+});
+
+describe("brandingBranches", () => {
+  it("localizes names and exposes the pickup-ready shape", () => {
+    const branding = sanitizeBranding({ branches: [branchPayload] });
+    const [branch] = brandingBranches(branding, "en");
+
+    expect(branch?.id).toBe(branchPayload.branchId);
+    expect(branch?.name).toBe("Smouha");
+    expect(branch?.open).toBe(true);
+    expect(branch?.isPrimary).toBe(true);
+    expect(branch?.deliveryAreas[0]).toEqual({ id: "area-1", name: "Smouha", fee: 15 });
+    expect(branchHoursLabel(branch!)).toBe("10:00 – 23:00");
+  });
+
+  it("falls back to the other language and marks a temporarily closed branch", () => {
+    const branding = sanitizeBranding({
+      branches: [{ branchId: "b-1", nameEn: "Only English", status: "TemporarilyClosed" }],
+    });
+    const [branch] = brandingBranches(branding, "ar");
+
+    expect(branch?.name).toBe("Only English");
+    expect(branch?.open).toBe(false);
+    expect(branchHoursLabel(branch!)).toBeNull();
+  });
+
+  it("returns no branches when the payload has none", () => {
+    expect(brandingBranches(null, "ar")).toEqual([]);
+    expect(brandingBranches({ nameAr: "ميرزي" }, "ar")).toEqual([]);
+  });
+});
+
+describe("branding assets", () => {
+  it("accepts only HTTPS logo and favicon URLs", () => {
+    expect(brandingLogoUrl({ logoUrl: "https://cdn.example.com/logo.jpg" })).toBe(
+      "https://cdn.example.com/logo.jpg",
+    );
+    expect(brandingLogoUrl({ logoUrl: "http://cdn.example.com/logo.jpg" })).toBeNull();
+    expect(brandingFaviconUrl({ logoUrl: "https://cdn.example.com/logo.jpg" })).toBe(
+      "https://cdn.example.com/logo.jpg",
+    );
+    expect(
+      brandingFaviconUrl({
+        logoUrl: "https://cdn.example.com/logo.jpg",
+        faviconUrl: "https://cdn.example.com/icon.png",
+      }),
+    ).toBe("https://cdn.example.com/icon.png");
+  });
+
+  it("points the icon links at the tenant asset and restores the defaults", () => {
+    document.head.innerHTML = '<link rel="icon" href="/icons/logo.svg">';
+
+    applyBrandingAssets({ faviconUrl: "https://cdn.example.com/icon.png" });
+    const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    expect(icon?.getAttribute("href")).toBe("https://cdn.example.com/icon.png");
+
+    applyBrandingAssets(null);
+    expect(icon?.getAttribute("href")).toBe("/icons/logo.svg");
+  });
+
+  it("is a no-op outside the browser", () => {
+    const original = globalThis.document;
+    vi.stubGlobal("document", undefined);
+    expect(() => applyBrandingAssets({ faviconUrl: "https://cdn.example.com/icon.png" })).not.toThrow();
+    vi.unstubAllGlobals();
+    expect(globalThis.document).toBe(original);
   });
 });

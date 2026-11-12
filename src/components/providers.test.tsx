@@ -1154,6 +1154,41 @@ describe("AppProvider — tenant API session and branding", () => {
     );
   });
 
+  it("switches the pickup branches to the tenant's when branding has them", async () => {
+    api.fetchBranding.mockResolvedValue({
+      notModified: false,
+      branding: {
+        tenantId: "t-1",
+        nameAr: "ميرزي",
+        branches: [
+          {
+            branchId: "brand-branch",
+            nameAr: "سموحة",
+            nameEn: "Smouha",
+            status: "Open",
+            isPrimary: true,
+            workingHours: [
+              {
+                dayOfWeek: "Sunday",
+                isClosed: false,
+                openTime: "10:00:00",
+                closeTime: "23:00:00",
+                closesNextDay: false,
+              },
+            ],
+          },
+        ],
+      },
+      etag: '"b1"',
+    });
+
+    const { result } = await app();
+    await waitFor(() => expect(result.current.branches).toHaveLength(1));
+
+    expect(result.current.branches[0]).toMatchObject({ id: "brand-branch", name: "سموحة", open: true });
+    expect(result.current.selectedBranchId).toBe("brand-branch");
+  });
+
   it("paints the tenant palette only when the deploy opts in", async () => {
     vi.stubEnv("NEXT_PUBLIC_APPLY_TENANT_COLORS", "true");
     api.fetchBranding.mockResolvedValue({
