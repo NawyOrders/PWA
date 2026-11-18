@@ -116,6 +116,11 @@ export function tenantSlugFromHost(hostHeader: string | null | undefined): strin
   return slug;
 }
 
+/** Whether a string is a usable tenant slug: one DNS label, never a reserved name. */
+export function isValidTenantSlug(slug: string): boolean {
+  return TENANT_SLUG_PATTERN.test(slug) && !reservedTenantSlugs().has(slug);
+}
+
 /**
  * `https://{slug}.api.nawyorders.com` for a resolved slug.
  *

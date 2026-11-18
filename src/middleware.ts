@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { fetchTenantBranding } from "@/lib/tenant-branding";
-import { isTenantRootHost, tenantApiBaseUrl, tenantSlugFromHost } from "@/lib/tenant";
+import { isTenantRootHost, tenantSlugFromHost } from "@/lib/tenant";
 import { tenantNotFoundResponse } from "@/lib/tenant-not-found";
+import { loadTenantBranding } from "@/lib/static-tenant-data";
 
 /**
  * A document request is the one that will render HTML. Client-side RSC
@@ -51,15 +51,8 @@ export async function middleware(request: NextRequest) {
   headers.set("x-tenant-slug", slug);
 
   if (isDocumentRequest(request)) {
-    const apiBaseUrl = tenantApiBaseUrl(slug);
-    if (!apiBaseUrl) {
-      return new Response("Tenant storefront is misconfigured.", {
-        status: 500,
-        headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
-      });
-    }
-
-    const result = await fetchTenantBranding(apiBaseUrl);
+    // The slug's folder under `tenants/` is the tenant. No folder, no store.
+    const result = await loadTenantBranding(slug);
     if (result.status === "not-found") return tenantNotFoundResponse();
     if (result.status === "ok") {
       headers.set("x-tenant-branding", encodeURIComponent(JSON.stringify(result.branding)));
@@ -71,6 +64,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
+  // Reads the tenant's branding file from disk, which the Edge runtime cannot do.
+  runtime: "nodejs",
   // Static assets and the service worker do not need tenant resolution. The
   // HTML routes and the BFF all do.
   matcher: [

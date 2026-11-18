@@ -31,7 +31,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * A raw branding object is accepted too, because older deployments answered
  * without the envelope.
  */
-function unwrapBranding(body: unknown): RestaurantBranding | null {
+export function unwrapBranding(body: unknown): RestaurantBranding | null {
   if (!isRecord(body)) return null;
   if (body.isSuccess === false) return null;
 

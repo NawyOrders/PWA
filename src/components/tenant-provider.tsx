@@ -2,8 +2,9 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { AppProvider } from "@/components/providers";
-import { fetchTenantBranding, type TenantBrandingResult } from "@/lib/tenant-branding";
+import type { TenantBrandingResult } from "@/lib/tenant-branding";
 import { isTenantRootHost, tenantApiBaseUrl, tenantSlugFromHost } from "@/lib/tenant";
+import { loadTenantBranding } from "@/lib/static-tenant-data";
 
 /**
  * Server half of the storefront's tenant bootstrap.
@@ -29,8 +30,8 @@ export async function TenantProvider({ children }: { children: React.ReactNode }
   // request that reached the render without passing through it.
   if (!slug && isTenantRootHost(host)) notFound();
 
-  // The single-tenant env name is a local-development fallback only; the
-  // production deployment uses the per-request slug and never sets it.
+  // The tenant API still owns auth and OTP, so the app keeps its base URL. Branding
+  // and the menu data come from the tenant's folder on disk instead.
   const fallbackApiBaseUrl = (process.env.TENANT_API_BASE_URL ?? "").trim();
   const apiBaseUrl = slug ? tenantApiBaseUrl(slug) : fallbackApiBaseUrl || null;
 
@@ -50,7 +51,7 @@ export async function TenantProvider({ children }: { children: React.ReactNode }
       branding = null;
     }
   }
-  if (!branding && apiBaseUrl) branding = await fetchTenantBranding(apiBaseUrl);
+  if (!branding && slug) branding = await loadTenantBranding(slug);
 
   if (branding?.status === "not-found") notFound();
 

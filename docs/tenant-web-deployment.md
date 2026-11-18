@@ -45,6 +45,35 @@ The app also recognises these legacy single-tenant names for local development:
 `TENANT_API_BASE_URL` / `NEXT_PUBLIC_TENANT_API_BASE_URL`. Do not set them in
 this deployment; they would defeat the per-request resolution.
 
+## Tenant data (branding)
+
+Branding and branches are read from disk, not from the tenant API. Each tenant
+has one folder under `tenants/`, named by its slug:
+
+```
+tenants/
+  pablo/
+    branding.json
+  <another-slug>/
+    branding.json
+```
+
+The slug is the first label of the request host (`pablo.nawyorders.com` →
+`pablo`). A slug with no folder, or a folder with no `branding.json`, gets the
+friendly 404. `branding.json` holds either the API envelope or the bare branding
+object. To snapshot a tenant's current branding from the API:
+
+```bash
+curl -sS https://pablo.api.nawyorders.com/api/v1/Branding -o tenants/pablo/branding.json
+```
+
+The data folder is read on every request, so a new tenant folder is live
+without a rebuild once it is on the VPS. The Docker runner copies `tenants/`
+into the image; `TENANT_DATA_DIR` overrides the location.
+
+Auth, OTP and account calls still go to the tenant API. The menu catalogue is
+still the built-in demo data in `src/lib/data.ts`.
+
 ## DNS
 
 Both wildcards must point at the VPS:

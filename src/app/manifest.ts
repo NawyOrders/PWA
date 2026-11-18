@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
 import { brandingFaviconUrl, brandingName, safeColor } from "@/lib/branding";
-import { fetchTenantBranding } from "@/lib/tenant-branding";
-import { tenantApiBaseUrl, tenantSlugFromHost } from "@/lib/tenant";
+import { loadTenantBranding } from "@/lib/static-tenant-data";
+import { tenantSlugFromHost } from "@/lib/tenant";
 
 const DEFAULT_ICON = {
   src: "/icons/logo.svg",
@@ -31,9 +31,8 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const host = requestHeaders.get("host");
   const slug = requestHeaders.get("x-tenant-slug") ?? tenantSlugFromHost(host);
   // Only a tenant host is branded. The container health check asks for this
-  // file on localhost, and that request should never depend on the tenant API.
-  const apiBaseUrl = slug ? tenantApiBaseUrl(slug) : "";
-  const result = apiBaseUrl ? await fetchTenantBranding(apiBaseUrl) : null;
+  // file on localhost, which has no tenant folder and no file read.
+  const result = slug ? await loadTenantBranding(slug) : null;
   const branding = result?.status === "ok" ? result.branding : null;
 
   const name = brandingName(branding, "ar") ?? "ناوي أوردرز";

@@ -33,6 +33,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./tsconfig.json
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+# Per-tenant data (tenants/<slug>/branding.json), read at request time.
+COPY --from=builder --chown=nextjs:nodejs /app/tenants ./tenants
 
 RUN mkdir -p /app/.next/cache && chown -R nextjs:nodejs /app/.next
 
