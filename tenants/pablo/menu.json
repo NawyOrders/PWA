@@ -1,0 +1,56 @@
+{
+  "currency": "EGP",
+  "categories": [
+    {
+      "id": "meals-menu",
+      "nameAr": "منيو الوجبات",
+      "nameEn": "Meals Menu",
+      "items": [
+        {
+          "id": "quarter-broasted-chicken",
+          "nameAr": "ربع فرخة بروستد",
+          "nameEn": "Quarter Broasted Chicken",
+          "price": 140,
+          "variants": {}
+        },
+        {
+          "id": "strips-meal",
+          "nameAr": "وجبة ستربس",
+          "nameEn": "Strips Meal",
+          "price": null,
+          "variants": {
+            "3 قطع": 155,
+            "5 قطع": 200
+          }
+        },
+        {
+          "id": "al-baraka-meal",
+          "nameAr": "وجبة البركة",
+          "nameEn": "Al Baraka Meal",
+          "price": 240,
+          "variants": {}
+        }
+      ]
+    },
+    {
+      "id": "add-ons",
+      "nameAr": "الإضافات",
+      "nameEn": "Add-ons",
+      "items": [
+        { "id": "strips-piece", "nameAr": "قطعة ستربس", "nameEn": "Strips Piece", "price": 40, "variants": {} },
+        { "id": "basmati-rice", "nameAr": "أرز بسمتي", "nameEn": "Basmati Rice", "price": 30, "variants": {} },
+        { "id": "fries-packet", "nameAr": "باكيت بطاطس", "nameEn": "Fries Packet", "price": 40, "variants": {} },
+        { "id": "large-garlic-sauce", "nameAr": "ثومية كبير", "nameEn": "Large Garlic Sauce", "price": 40, "variants": {} },
+        { "id": "kaiser-bun", "nameAr": "1 عيش كيزر", "nameEn": "1 Kaiser Bun", "price": 5, "variants": {} },
+        { "id": "coleslaw", "nameAr": "كول سلو", "nameEn": "Coleslaw", "price": 20, "variants": {} },
+        { "id": "bbq-sauce", "nameAr": "صوص باربيكيو", "nameEn": "BBQ Sauce", "price": 30, "variants": {} },
+        { "id": "cheddar-sauce", "nameAr": "صوص شيدر", "nameEn": "Cheddar Sauce", "price": 40, "variants": {} },
+        { "id": "water", "nameAr": "مياه", "nameEn": "Water", "price": 10, "variants": {} },
+        { "id": "sweet-chili-sauce", "nameAr": "صوص سويت تشيلي", "nameEn": "Sweet Chili Sauce", "price": 30, "variants": {} },
+        { "id": "ranch-sauce", "nameAr": "صوص رانش", "nameEn": "Ranch Sauce", "price": 30, "variants": {} },
+        { "id": "cheesy-fries", "nameAr": "تشيزي فرايز", "nameEn": "Cheesy Fries", "price": 60, "variants": {} },
+        { "id": "drink", "nameAr": "مشروب", "nameEn": "Drink", "price": 25, "variants": {} }
+      ]
+    }
+  ]
+}
