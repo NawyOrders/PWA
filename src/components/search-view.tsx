@@ -33,7 +33,7 @@ function matchesQuery(product: Product, query: string) {
     product.name,
     product.description,
     product.type ?? "",
-    categoriesById[product.category].name,
+    categoriesById[product.category]?.name ?? "",
     ...product.tags,
   ];
   return fields.some((field) => {
