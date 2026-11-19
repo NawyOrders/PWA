@@ -205,7 +205,7 @@ export function ProductDetail({ product }: { product: Product }) {
                           <span className="flex items-center gap-2 text-sm">
                             <span
                               className={`grid size-4 place-items-center rounded border ${
-                                active ? "border-brand bg-brand text-white" : "border-line-soft bg-white"
+                                active ? "border-brand bg-brand text-brand-contrast" : "border-line-soft bg-white"
                               }`}
                             >
                               {active ? <Check className="size-3" strokeWidth={3} /> : null}
@@ -315,7 +315,7 @@ export function ProductDetail({ product }: { product: Product }) {
                 aria-label={t("زيادة الكمية")}
                 disabled={selectedQuantity >= 20}
                 onClick={() => setSelectedQuantity((quantity) => Math.min(20, quantity + 1))}
-                className="grid size-8 place-items-center rounded-full bg-brand text-white"
+                className="grid size-8 place-items-center rounded-full bg-brand text-brand-contrast"
               >
                 <Plus className="size-4" />
               </button>

@@ -50,7 +50,7 @@ export function CartSummary({
   const ctaClasses = `motion-press mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full text-sm font-bold transition ${
     ctaDisabled
       ? "cursor-not-allowed bg-line text-muted"
-      : "bg-brand text-white shadow-[0_16px_30px_-18px_color-mix(in_srgb,var(--color-brand)_90%,transparent)] hover:bg-brand-dark"
+      : "bg-brand text-brand-contrast shadow-[0_16px_30px_-18px_color-mix(in_srgb,var(--color-brand)_90%,transparent)] hover:bg-brand-dark"
   }`;
 
   return (

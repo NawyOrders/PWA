@@ -100,7 +100,7 @@ export function SettingsView() {
                 onClick={() => setLang("ar")}
                 dir="rtl"
                 className={`h-10 w-24 rounded-full text-xs font-extrabold transition ${
-                  lang === "ar" ? "bg-brand text-white" : "text-ink"
+                  lang === "ar" ? "bg-brand text-brand-contrast" : "text-ink"
                 }`}
               >
                 عربي
@@ -110,7 +110,7 @@ export function SettingsView() {
                 onClick={() => setLang("en")}
                 dir="ltr"
                 className={`h-10 w-24 rounded-full text-xs font-extrabold transition ${
-                  lang === "en" ? "bg-brand text-white" : "text-ink"
+                  lang === "en" ? "bg-brand text-brand-contrast" : "text-ink"
                 }`}
               >
                 English

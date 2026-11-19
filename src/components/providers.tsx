@@ -1555,7 +1555,7 @@ export function AppProvider({
             key={toastState.id}
             className="animate-toast-in pointer-events-auto flex items-center gap-3 rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white shadow-[0_20px_50px_-20px_color-mix(in_srgb,black_60%,transparent)]"
           >
-            <span className="grid size-7 place-items-center rounded-full bg-brand text-white">
+            <span className="grid size-7 place-items-center rounded-full bg-brand text-brand-contrast">
               {toastState.kind === "cart" ? <ShoppingCart className="size-4" /> : <Check className="size-4" />}
             </span>
             <span>{toastState.message}</span>

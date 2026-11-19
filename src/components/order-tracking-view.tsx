@@ -184,7 +184,7 @@ export function OrderTrackingView({ order }: { order: Order }) {
                       <span
                         className={`grid size-10 place-items-center rounded-full border-2 bg-white transition lg:size-11 ${
                           done
-                            ? "border-brand bg-brand text-white"
+                            ? "border-brand bg-brand text-brand-contrast"
                             : next
                               ? "border-brand text-brand"
                               : "border-line-soft text-muted"

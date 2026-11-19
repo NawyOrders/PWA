@@ -85,7 +85,7 @@ export function Navbar() {
               }
             }}
             className={`motion-press flex h-12 items-center gap-2 rounded-full px-4 text-sm font-bold transition-all duration-300 hover:-translate-y-0.5 ${
-              cartActive ? "bg-brand text-white" : "bg-brand-soft text-brand hover:bg-brand/15"
+              cartActive ? "bg-brand text-brand-contrast" : "bg-brand-soft text-brand hover:bg-brand/15"
             }`}
           >
             <ShoppingCart className="size-5" strokeWidth={2} />

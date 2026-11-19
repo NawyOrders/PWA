@@ -115,7 +115,7 @@ export function OrdersView() {
             {isCurrent ? (
               <Link
                 href={`/orders/${order.id}`}
-                className="flex h-9 items-center gap-1.5 rounded-full bg-brand px-4 text-[11px] font-bold text-white transition hover:bg-brand-dark"
+                className="flex h-9 items-center gap-1.5 rounded-full bg-brand px-4 text-[11px] font-bold text-brand-contrast transition hover:bg-brand-dark"
               >
                 <Truck className="size-3.5" />
                 {t("تتبع الطلب")}

@@ -45,7 +45,7 @@ export function CartBar({ aboveBottomNav = true }: { aboveBottomNav?: boolean })
                 openLoginPrompt();
               }
             }}
-            className="motion-press grid size-9 shrink-0 place-items-center rounded-full bg-brand text-xs font-extrabold text-white transition hover:scale-105 lg:size-10 lg:text-sm"
+            className="motion-press grid size-9 shrink-0 place-items-center rounded-full bg-brand text-xs font-extrabold text-brand-contrast transition hover:scale-105 lg:size-10 lg:text-sm"
             aria-label={t("السلة")}
           >
             <span key={count} className="motion-badge-pop inline-block">{count}</span>
@@ -74,7 +74,7 @@ export function CartBar({ aboveBottomNav = true }: { aboveBottomNav?: boolean })
                 openLoginPrompt();
               }
             }}
-            className="motion-press flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-brand px-3.5 text-xs font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-dark sm:px-5 lg:h-12 lg:gap-2 lg:px-6 lg:text-sm"
+            className="motion-press flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-brand px-3.5 text-xs font-bold text-brand-contrast transition hover:-translate-y-0.5 hover:bg-brand-dark sm:px-5 lg:h-12 lg:gap-2 lg:px-6 lg:text-sm"
           >
             {t("عرض السلة")}
             <ArrowLeft className="size-4 ltr:rotate-180" />

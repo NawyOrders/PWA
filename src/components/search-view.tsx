@@ -182,7 +182,7 @@ export function SearchView({ query }: { query: string }) {
                       <span className="flex items-center gap-2 text-ink/80">
                         <span
                           className={`grid size-4 place-items-center rounded border transition ${
-                            checked ? "border-brand bg-brand text-white" : "border-line-soft bg-white"
+                            checked ? "border-brand bg-brand text-brand-contrast" : "border-line-soft bg-white"
                           }`}
                         >
                           {checked ? <Check className="size-3" strokeWidth={3} /> : null}
@@ -240,7 +240,7 @@ export function SearchView({ query }: { query: string }) {
                 <span className="flex items-center gap-2">
                   <span
                     className={`grid size-4 place-items-center rounded border transition ${
-                      offersOnly ? "border-brand bg-brand text-white" : "border-line-soft bg-white"
+                      offersOnly ? "border-brand bg-brand text-brand-contrast" : "border-line-soft bg-white"
                     }`}
                   >
                     {offersOnly ? <Check className="size-3" strokeWidth={3} /> : null}
@@ -260,7 +260,7 @@ export function SearchView({ query }: { query: string }) {
               onClick={() =>
                 document.getElementById("search-results")?.scrollIntoView({ behavior: "smooth", block: "start" })
               }
-              className="mt-6 flex h-11 w-full items-center justify-center rounded-full bg-brand text-xs font-bold text-white transition hover:bg-brand-dark"
+              className="mt-6 flex h-11 w-full items-center justify-center rounded-full bg-brand text-xs font-bold text-brand-contrast transition hover:bg-brand-dark"
             >
               {t("عرض {count} نتائج", { count: results.length })}
             </button>

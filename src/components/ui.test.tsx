@@ -88,7 +88,7 @@ describe("chipStyles", () => {
     const styles = chipStyles(true);
 
     expect(styles).toContain("bg-brand");
-    expect(styles).toContain("text-white");
+    expect(styles).toContain("text-brand-contrast");
     expect(styles).not.toContain("border-line");
   });
 

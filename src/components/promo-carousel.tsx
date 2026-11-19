@@ -141,8 +141,8 @@ export function PromoCarousel() {
                 tabIndex={slideIndex === index ? 0 : -1}
                 className={`mt-1 inline-flex h-9 w-fit items-center gap-2 rounded-full px-4 text-[11px] font-bold transition lg:h-11 lg:px-6 lg:text-sm ${
                   item.theme === "dark"
-                    ? "bg-brand-600 text-white hover:bg-brand-700"
-                    : "bg-brand text-white hover:bg-brand-dark"
+                    ? "bg-brand-600 text-brand-contrast hover:bg-brand-700"
+                    : "bg-brand text-brand-contrast hover:bg-brand-dark"
                 }`}
               >
                 {t(item.cta)}

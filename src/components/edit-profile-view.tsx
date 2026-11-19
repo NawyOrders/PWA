@@ -140,7 +140,7 @@ export function EditProfileView() {
                 type="button"
                 aria-label={avatarLabel}
                 onClick={() => fileInput.current?.click()}
-                className="absolute -bottom-0.5 start-0 grid size-10 place-items-center rounded-full bg-brand-400 text-white ring-4 ring-white transition hover:bg-brand-dark active:scale-95"
+                className="absolute -bottom-0.5 start-0 grid size-10 place-items-center rounded-full bg-brand-400 text-brand-contrast ring-4 ring-white transition hover:bg-brand-dark active:scale-95"
               >
                 <Camera className="size-[18px]" strokeWidth={2} />
               </button>

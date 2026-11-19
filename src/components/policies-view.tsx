@@ -92,7 +92,7 @@ export function PoliciesView() {
                   >
                     <span
                       className={`grid size-7 shrink-0 place-items-center rounded-[9px] ${
-                        selected ? "bg-white/20 text-white" : "bg-brand-soft text-brand"
+                        selected ? "bg-white/20 text-brand-contrast" : "bg-brand-soft text-brand"
                       }`}
                     >
                       <Icon className="size-4" strokeWidth={2} />

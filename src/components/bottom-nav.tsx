@@ -53,7 +53,7 @@ export function BottomNav() {
                 {item.href === "/cart" && count > 0 ? (
                   <span
                     key={count}
-                    className="motion-badge-pop absolute -end-2.5 -top-2 grid size-[17px] place-items-center rounded-full bg-brand text-[9px] font-bold text-white ring-2 ring-white"
+                    className="motion-badge-pop absolute -end-2.5 -top-2 grid size-[17px] place-items-center rounded-full bg-brand text-[9px] font-bold text-brand-contrast ring-2 ring-white"
                   >
                     {count}
                   </span>

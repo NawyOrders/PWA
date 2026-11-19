@@ -114,7 +114,7 @@ export function PickupView() {
 
                       <span
                         className={`grid size-10 shrink-0 place-items-center rounded-2xl sm:size-11 ${
-                          active ? "bg-brand text-white" : "bg-cream text-ink/70"
+                          active ? "bg-brand text-brand-contrast" : "bg-cream text-ink/70"
                         }`}
                       >
                         <Icon className="size-5" strokeWidth={1.8} />

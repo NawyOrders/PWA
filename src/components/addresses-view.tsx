@@ -96,7 +96,7 @@ export function AddressesView() {
                       </button>
                       <span
                         className={`grid size-10 shrink-0 place-items-center rounded-xl ${
-                          active ? "bg-brand text-white" : "bg-cream text-ink/70"
+                          active ? "bg-brand text-brand-contrast" : "bg-cream text-ink/70"
                         }`}
                       >
                         <AddressKindIcon kind={item.kind} />
@@ -151,7 +151,7 @@ export function AddressesView() {
                         </button>
                         <span
                           className={`grid size-11 shrink-0 place-items-center rounded-2xl ${
-                            active ? "bg-brand text-white" : "bg-brand-soft text-brand"
+                            active ? "bg-brand text-brand-contrast" : "bg-brand-soft text-brand"
                           }`}
                         >
                           <AddressKindIcon kind={item.kind} />

@@ -335,7 +335,7 @@ export function AddressNewView() {
             {pin && mode === "list" ? (
               <div className="mx-auto mb-[-18px] w-fit max-w-[92%] px-2 text-center">
                 <span className="inline-flex items-center gap-2.5 rounded-2xl bg-cream px-4 py-3 shadow-pop">
-                  <span className="grid size-8 place-items-center rounded-full bg-brand text-white">
+                  <span className="grid size-8 place-items-center rounded-full bg-brand text-brand-contrast">
                     <Navigation className="size-4" strokeWidth={2} />
                   </span>
                   <span className="text-sm font-extrabold text-ink">{locationLabel}</span>
@@ -449,7 +449,7 @@ export function AddressNewView() {
                         {pin ? formatCoords(pin) : formatCoords({ lat: center[0], lng: center[1] })}
                       </span>
                     </span>
-                    <span className="grid size-11 shrink-0 place-items-center rounded-full bg-brand text-white">
+                    <span className="grid size-11 shrink-0 place-items-center rounded-full bg-brand text-brand-contrast">
                       <Navigation className="size-5" strokeWidth={2} />
                     </span>
                   </div>
@@ -473,7 +473,7 @@ export function AddressNewView() {
                           >
                             <span
                               className={`grid size-11 place-items-center rounded-2xl ${
-                                active ? "bg-brand text-white" : "bg-cream text-ink/70"
+                                active ? "bg-brand text-brand-contrast" : "bg-cream text-ink/70"
                               }`}
                             >
                               <Icon className="size-5" strokeWidth={1.8} />

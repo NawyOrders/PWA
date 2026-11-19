@@ -37,7 +37,7 @@ export function LoginRequiredDialog({ onClose }: { onClose: () => void }) {
 
         <div className="relative mx-auto grid size-[88px] place-items-center text-brand">
           <UserRound className="size-[74px] fill-brand/10" strokeWidth={1.9} />
-          <span className="absolute bottom-2 end-0 grid size-8 place-items-center rounded-lg bg-brand text-white shadow-md">
+          <span className="absolute bottom-2 end-0 grid size-8 place-items-center rounded-lg bg-brand text-brand-contrast shadow-md">
             <Pencil className="size-4" strokeWidth={2.2} />
           </span>
         </div>
@@ -52,7 +52,7 @@ export function LoginRequiredDialog({ onClose }: { onClose: () => void }) {
         <Link
           href={loginHref(next)}
           onClick={onClose}
-          className="motion-press mt-6 flex h-12 w-full items-center justify-center rounded-full bg-brand text-sm font-extrabold text-white shadow-[0_16px_32px_-18px_color-mix(in_srgb,var(--color-brand)_90%,transparent)] transition hover:-translate-y-0.5 hover:bg-brand-dark"
+          className="motion-press mt-6 flex h-12 w-full items-center justify-center rounded-full bg-brand text-sm font-extrabold text-brand-contrast shadow-[0_16px_32px_-18px_color-mix(in_srgb,var(--color-brand)_90%,transparent)] transition hover:-translate-y-0.5 hover:bg-brand-dark"
         >
           {t("سجل الآن")}
         </Link>

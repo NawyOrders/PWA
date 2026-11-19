@@ -198,7 +198,7 @@ export function HomeView() {
               <ProductCard key={product.id} product={product} />
             ))}
 
-          <div className="motion-lift relative hidden overflow-hidden rounded-[26px] bg-brand p-5 text-white shadow-soft lg:block">
+          <div className="motion-lift relative hidden overflow-hidden rounded-[26px] bg-brand p-5 text-brand-contrast shadow-soft lg:block">
             <div className="motion-float absolute -right-10 -top-10 size-40 rounded-full bg-white/10" />
             <div
               className="motion-float absolute -bottom-14 -left-8 size-40 rounded-full bg-gold-500/25"
