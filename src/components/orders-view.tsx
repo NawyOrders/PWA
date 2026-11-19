@@ -5,10 +5,10 @@ import { useState } from "react";
 import { ChevronLeft, ReceiptText, RotateCcw, Truck } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { formatPrice, paymentMethodLabels, toArabicDigits, user, type Order } from "@/lib/data";
-import { ItemMedia } from "@/components/ui";
+import { MenuImage } from "@/components/menu-image";
 
 export function OrdersView() {
-  const { addItem, toast, t, lang, orders, nameOf } = useApp();
+  const { addItem, toast, t, lang, orders, nameOf, itemsById } = useApp();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const current = orders.filter((order) => order.status === "preparing");
@@ -40,6 +40,7 @@ export function OrdersView() {
     const expanded = expandedId === key;
     const separator = lang === "ar" ? "، " : ", ";
     const firstItem = order.items?.[0];
+    const firstMenuItem = firstItem ? itemsById.get(firstItem.productId) : undefined;
     const title = firstItem ? nameOf(firstItem) : t("طلب");
     const description = (order.items ?? [])
       .map((item) => `${item.qty} × ${nameOf(item)}`)
@@ -65,8 +66,9 @@ export function OrdersView() {
         </div>
 
         <div className="mt-4 flex items-start gap-3.5">
-          <ItemMedia
-            name={firstItem?.nameAr ?? title}
+          <MenuImage
+            src={firstMenuItem?.image}
+            name={title}
             className="size-20 shrink-0 rounded-2xl"
             textClassName="text-[8px]"
           />

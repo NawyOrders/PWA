@@ -6,7 +6,8 @@ import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { startingPrice, type Item } from "@/lib/menu";
 import { SearchField } from "@/components/search-field";
 import { StoreHeader } from "@/components/store-header";
-import { Breadcrumbs, ItemMedia, MobilePageHeader, buttonStyles } from "@/components/ui";
+import { Breadcrumbs, MobilePageHeader, buttonStyles } from "@/components/ui";
+import { MenuImage } from "@/components/menu-image";
 import { ProductCard } from "@/components/product-card";
 import { MenuRow } from "@/components/menu-row";
 import { useApp } from "@/components/providers";
@@ -86,8 +87,9 @@ export function SearchView({ query }: { query: string }) {
                     active ? "border-brand shadow-[0_10px_24px_-14px_color-mix(in_srgb,var(--color-brand)_70%,transparent)]" : "border-line"
                   }`}
                 >
-                  <ItemMedia
-                    name={category.nameAr}
+                  <MenuImage
+                    src={category.image}
+                    name={name}
                     className="size-12 rounded-full"
                     textClassName="text-[7px]"
                   />

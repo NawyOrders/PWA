@@ -7,11 +7,11 @@ import { formatPrice } from "@/lib/data";
 import { hasVariants, resolveVariantPrice, startingPrice } from "@/lib/menu";
 import { useApp } from "@/components/providers";
 import { StoreHeader } from "@/components/store-header";
+import { MenuImage } from "@/components/menu-image";
 import {
   buttonStyles,
   EmptyState,
   FavoriteButton,
-  ItemMedia,
   MobilePageHeader,
   Price,
 } from "@/components/ui";
@@ -90,8 +90,9 @@ export function ProductDetail({ productId }: { productId: string }) {
         <div className="mt-5 grid gap-4 lg:mt-6 lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-6">
           <div className="order-1">
             <div className="motion-fade relative aspect-[2.1/1] overflow-hidden rounded-[24px] bg-peach shadow-soft lg:aspect-[1.55/1] lg:rounded-[30px]">
-              <ItemMedia
-                name={item.nameAr}
+              <MenuImage
+                src={item.image}
+                name={name}
                 className="absolute inset-0"
                 textClassName="text-2xl lg:text-3xl"
               />

@@ -5,7 +5,8 @@ import { useState } from "react";
 import { ChevronLeft, LayoutGrid, SlidersHorizontal } from "lucide-react";
 import { startingPrice } from "@/lib/menu";
 import { StoreHeader } from "@/components/store-header";
-import { ItemMedia, MobilePageHeader } from "@/components/ui";
+import { MenuImage } from "@/components/menu-image";
+import { MobilePageHeader } from "@/components/ui";
 import { ProductCard } from "@/components/product-card";
 import { useApp } from "@/components/providers";
 
@@ -16,12 +17,12 @@ const sortOptions = [
 ];
 
 function CategoryTile({
-  nameAr,
+  image,
   name,
   count,
   active = false,
 }: {
-  nameAr: string;
+  image: string | null;
   name: string;
   count: number;
   active?: boolean;
@@ -30,7 +31,7 @@ function CategoryTile({
   return (
     <>
       <span className="grid size-[68px] place-items-center rounded-full bg-peach/80 transition-colors duration-300 group-hover:bg-brand-soft">
-        <ItemMedia name={nameAr} className="size-12 rounded-full" textClassName="text-[8px]" />
+        <MenuImage src={image} name={name} className="size-12 rounded-full" textClassName="text-[8px]" />
       </span>
       <span className={`mt-2.5 text-[15px] font-extrabold ${active ? "text-brand" : "text-ink"}`}>{name}</span>
       <span className="mt-1 text-[11px] font-semibold text-muted">
@@ -90,7 +91,7 @@ export function CategoriesView() {
               className="group flex flex-col items-center rounded-[18px] bg-white px-3 py-4 text-center shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.98]"
             >
               <CategoryTile
-                nameAr={category.nameAr}
+                image={category.image}
                 name={nameOf(category)}
                 count={category.items.length}
               />
@@ -112,7 +113,7 @@ export function CategoriesView() {
                 }`}
               >
                 <CategoryTile
-                  nameAr={category.nameAr}
+                  image={category.image}
                   name={nameOf(category)}
                   count={category.items.length}
                   active={active}

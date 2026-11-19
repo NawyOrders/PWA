@@ -3,7 +3,8 @@
 import { Trash2, Wallet } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { CartSummary } from "@/components/cart-summary";
-import { CheckoutShell, EmptyState, ItemMedia, MobilePageHeader, Price, QtyStepper } from "@/components/ui";
+import { MenuImage } from "@/components/menu-image";
+import { CheckoutShell, EmptyState, MobilePageHeader, Price, QtyStepper } from "@/components/ui";
 
 function CartItem({ lineKey }: { lineKey: string }) {
   const { lines, changeQty, removeLine, t, itemsById, nameOf } = useApp();
@@ -15,8 +16,9 @@ function CartItem({ lineKey }: { lineKey: string }) {
 
   return (
     <article className="relative flex gap-3 rounded-[24px] bg-white p-3 shadow-soft transition duration-300 hover:shadow-pop lg:gap-4 lg:p-4">
-      <ItemMedia
-        name={item.nameAr}
+      <MenuImage
+        src={item.image}
+        name={name}
         className="size-24 shrink-0 rounded-2xl lg:size-32"
         textClassName="text-[10px] lg:text-xs"
       />

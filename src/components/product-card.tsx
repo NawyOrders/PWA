@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { hasVariants, startingPrice, type Item } from "@/lib/menu";
 import { useApp } from "@/components/providers";
-import { AddButton, FavoriteButton, ItemMedia, Price, QtyStepper } from "@/components/ui";
+import { MenuImage } from "@/components/menu-image";
+import { AddButton, FavoriteButton, Price, QtyStepper } from "@/components/ui";
 
 export function ProductCard({
   item,
@@ -29,8 +30,9 @@ export function ProductCard({
       <FavoriteButton productId={item.id} className="absolute end-4 top-4 z-20 size-10" />
 
       <Link href={`/product/${item.id}`} className="flex flex-1 flex-col">
-        <ItemMedia
-          name={item.nameAr}
+        <MenuImage
+          src={item.image}
+          name={name}
           className={`relative w-full rounded-[20px] ${mediaClassName}`}
           textClassName="text-sm"
         />

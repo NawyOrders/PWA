@@ -5,7 +5,7 @@ import { useState, type ReactNode } from "react";
 import { ArrowLeft, Tag } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { deliveryFee as baseDeliveryFee, formatPrice } from "@/lib/data";
-import { ItemMedia } from "@/components/ui";
+import { MenuImage } from "@/components/menu-image";
 
 export function CartSummary({
   ctaLabel,
@@ -67,7 +67,7 @@ export function CartSummary({
             if (!item) return null;
             return (
               <li key={line.key} className="flex items-center gap-3">
-                <ItemMedia name={item.nameAr} className="size-14 shrink-0 rounded-xl" textClassName="text-[8px]" />
+                <MenuImage src={item.image} name={nameOf(item)} className="size-14 shrink-0 rounded-xl" textClassName="text-[8px]" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold">{nameOf(item)}</p>
                   {line.variant ? (

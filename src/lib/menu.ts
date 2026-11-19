@@ -20,6 +20,8 @@ export type Item = {
   /** `null` when the item is sold by variant only. */
   price: number | null;
   variants: Variant[];
+  /** Absolute https URL or same-origin tenant asset URL; `null` means no artwork. */
+  image: string | null;
   /** Filled by the loader so a component holding an item knows its section. */
   categoryId: string;
 };
@@ -28,6 +30,8 @@ export type Category = {
   id: string;
   nameAr: string;
   nameEn: string;
+  /** Normalised the same way as an item image. */
+  image: string | null;
   items: Item[];
 };
 
@@ -98,4 +102,51 @@ export function isValidSelection(
   variantKey: string | null | undefined,
 ): boolean {
   return resolveVariantPrice(item, variantKey) !== null;
+}
+
+/** Same-origin route that serves files from a tenant folder. */
+export const TENANT_ASSET_ROUTE_PREFIX = "/api/tenant-assets";
+
+/** `/api/tenant-assets/<slug>/images/antara.jpg` for a file in the tenant folder. */
+export function tenantAssetUrl(slug: string, segments: string[]): string {
+  return `${TENANT_ASSET_ROUTE_PREFIX}/${encodeURIComponent(slug)}/${segments
+    .map((segment) => encodeURIComponent(segment))
+    .join("/")}`;
+}
+
+const HTTP_URL = /^https?:\/\//i;
+const ANY_SCHEME = /^[a-z][a-z0-9+.-]*:/i;
+
+/**
+ * Normalises a `menu.json` image value.
+ *
+ * Only two shapes are usable: an absolute http(s) URL (hosted elsewhere), or a
+ * relative path to a file inside the tenant folder. Everything else — an empty
+ * value, a non-string, `javascript:`, `data:`, `file:`, a protocol-relative URL
+ * or a path that could escape the tenant folder — becomes `null` so the UI
+ * shows its placeholder instead of a broken image.
+ */
+export function normalizeMenuImage(value: unknown, slug: string): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (HTTP_URL.test(trimmed)) {
+    try {
+      const { protocol } = new URL(trimmed);
+      return protocol === "http:" || protocol === "https:" ? trimmed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  // Any other scheme, plus protocol-relative and rooted paths, does not name a
+  // file inside this tenant's folder.
+  if (ANY_SCHEME.test(trimmed) || trimmed.startsWith("/") || trimmed.includes("\\")) return null;
+  if (trimmed.includes("\0") || trimmed.includes("?") || trimmed.includes("#")) return null;
+
+  const segments = trimmed.split("/");
+  if (segments.some((segment) => !segment || segment === "." || segment === "..")) return null;
+
+  return tenantAssetUrl(slug, segments);
 }

@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { hasVariants, startingPrice, type Item } from "@/lib/menu";
 import { useApp } from "@/components/providers";
-import { AddButton, FavoriteButton, ItemMedia, Price, QtyStepper } from "@/components/ui";
+import { MenuImage } from "@/components/menu-image";
+import { AddButton, FavoriteButton, Price, QtyStepper } from "@/components/ui";
 
 export function MenuRow({ item, className = "" }: { item: Item; className?: string }) {
   const { changeQty, lines, quickAdd, nameOf, t } = useApp();
@@ -26,7 +27,7 @@ export function MenuRow({ item, className = "" }: { item: Item; className?: stri
           className="absolute inset-0 block"
           aria-label={name}
         >
-          <ItemMedia name={item.nameAr} className="absolute inset-0" textClassName="text-xs" />
+          <MenuImage src={item.image} name={name} className="absolute inset-0" textClassName="text-xs" />
         </Link>
       </div>
 

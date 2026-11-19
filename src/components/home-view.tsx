@@ -16,7 +16,7 @@ import { MenuRow } from "@/components/menu-row";
 import { InstallButton } from "@/components/install-button";
 import { MenuFilters } from "@/components/menu-filters";
 import { SectionTitle } from "@/components/ui";
-import { ItemMedia } from "@/components/ui";
+import { MenuImage } from "@/components/menu-image";
 import { StoreHeader } from "@/components/store-header";
 import {
   DesktopOrderTrackingCard,
@@ -112,8 +112,9 @@ export function HomeView() {
                       : "border-line"
                   }`}
                 >
-                  <ItemMedia
-                    name={category.nameAr}
+                  <MenuImage
+                    src={category.image}
+                    name={nameOf(category)}
                     className="size-12 rounded-full"
                     textClassName="text-[7px]"
                   />
@@ -142,8 +143,9 @@ export function HomeView() {
                 }`}
               >
                 <span className="grid size-[56px] place-items-center rounded-full bg-peach/80 transition-colors duration-300 group-hover:bg-brand-soft md:size-[62px] lg:size-[68px]">
-                  <ItemMedia
-                    name={category.nameAr}
+                  <MenuImage
+                    src={category.image}
+                    name={nameOf(category)}
                     className="size-12 rounded-full md:size-[52px] lg:size-14"
                     textClassName="text-[8px]"
                   />

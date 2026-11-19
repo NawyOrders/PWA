@@ -16,13 +16,14 @@ function item(
   price: number | null,
   variants: Item["variants"] = [],
 ): Item {
-  return { id, nameAr, nameEn, price, variants, categoryId };
+  return { id, nameAr, nameEn, price, variants, image: null, categoryId };
 }
 
 const burger: Category = {
   id: "burger",
   nameAr: "برجر",
   nameEn: "Burgers",
+  image: null,
   items: [
     item("burger", "beef-burger", "برجر لحم", "Beef Burger", 120),
     item("burger", "fish-burger", "برجر سمك", "Fish Burger", 125),
@@ -44,6 +45,7 @@ const pizza: Category = {
   id: "pizza",
   nameAr: "بيتزا",
   nameEn: "Pizza",
+  image: null,
   items: [
     item("pizza", "pizza-pepperoni", "بيتزا بيبروني", "Pepperoni Pizza", 180),
     item("pizza", "pizza-margherita", "بيتزا مارجريتا", "Margherita Pizza", 150),
@@ -54,6 +56,7 @@ const chicken: Category = {
   id: "chicken",
   nameAr: "فرايد تشيكن",
   nameEn: "Fried Chicken",
+  image: null,
   items: [item("chicken", "chicken-bucket", "وجبة فرايد تشيكن", "Fried Chicken Meal", 160)],
 };
 
@@ -61,6 +64,7 @@ const tost: Category = {
   id: "tost",
   nameAr: "توست",
   nameEn: "Toast",
+  image: null,
   items: [item("tost", "cheese-tost", "توست جبن", "Cheese Toast", 70)],
 };
 
@@ -68,6 +72,7 @@ const appetizers: Category = {
   id: "appetizers",
   nameAr: "مقبلات",
   nameEn: "Appetizers",
+  image: null,
   items: [item("appetizers", "fries", "بطاطس مقرمشة", "Crispy Fries", 45)],
 };
 
@@ -75,6 +80,7 @@ const drinks: Category = {
   id: "drinks",
   nameAr: "مشروبات",
   nameEn: "Drinks",
+  image: null,
   items: [item("drinks", "cola", "كوب كولا", "Cola Cup", 25)],
 };
 
@@ -82,6 +88,7 @@ const desserts: Category = {
   id: "desserts",
   nameAr: "حلويات",
   nameEn: "Desserts",
+  image: null,
   items: [item("desserts", "chocolate-cake", "تشيز كيك شوكولاتة", "Chocolate Cheesecake", 60)],
 };
 

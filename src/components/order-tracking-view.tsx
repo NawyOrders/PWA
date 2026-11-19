@@ -17,7 +17,8 @@ import {
 } from "lucide-react";
 import { LeafletMap, type MapMarker } from "@/components/leaflet-map";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs, ItemMedia, MobilePageHeader } from "@/components/ui";
+import { Breadcrumbs, MobilePageHeader } from "@/components/ui";
+import { MenuImage } from "@/components/menu-image";
 import {
   courier,
   courierPosition,
@@ -41,13 +42,14 @@ const TRACK_INSET = 12.5;
 const TRACK_SPAN = 100 - TRACK_INSET * 2;
 
 export function OrderTrackingView({ order }: { order: Order }) {
-  const { t, lang, branches, nameOf } = useApp();
+  const { t, lang, branches, nameOf, itemsById } = useApp();
   const [liveEta, setLiveEta] = useState(12);
   const delivered = order.status === "delivered";
   const pickup = order.fulfilment === "pickup";
   const branch = pickup ? branches.find((item) => item.id === order.branchId) ?? null : null;
   const completedSteps = delivered ? trackingSteps.length : COMPLETED_STEPS;
   const firstItem = order.items?.[0];
+  const firstMenuItem = firstItem ? itemsById.get(firstItem.productId) : undefined;
   const orderTitle = firstItem ? nameOf(firstItem) : t("طلب");
   const orderDescription = (order.items ?? [])
     .map((item) => `${item.qty} × ${nameOf(item)}`)
@@ -225,8 +227,9 @@ export function OrderTrackingView({ order }: { order: Order }) {
             </div>
 
             <div className="mt-4 flex items-center gap-3">
-              <ItemMedia
-                name={firstItem?.nameAr ?? orderTitle}
+              <MenuImage
+                src={firstMenuItem?.image}
+                name={orderTitle}
                 className="size-16 shrink-0 rounded-2xl"
                 textClassName="text-[8px]"
               />

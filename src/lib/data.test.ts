@@ -4,8 +4,10 @@ import {
   hasVariants,
   indexMenu,
   isValidSelection,
+  normalizeMenuImage,
   resolveVariantPrice,
   startingPrice,
+  tenantAssetUrl,
 } from "@/lib/menu";
 import { testMenu } from "@/test/menu";
 
@@ -51,5 +53,46 @@ describe("menu helpers", () => {
     expect(resolveVariantPrice(variant, "غير موجود")).toBeNull();
     expect(isValidSelection(variant, null)).toBe(false);
     expect(isValidSelection(variant, "5 قطع")).toBe(true);
+  });
+});
+
+describe("menu image normalisation", () => {
+  it("keeps an absolute http(s) URL as written", () => {
+    expect(normalizeMenuImage("https://cdn.example.com/a.jpg", "pablo")).toBe("https://cdn.example.com/a.jpg");
+    expect(normalizeMenuImage("  http://cdn.example.com/b.png  ", "pablo")).toBe("http://cdn.example.com/b.png");
+  });
+
+  it("maps a relative path into the tenant asset route", () => {
+    expect(normalizeMenuImage("images/antara.jpg", "pablo")).toBe("/api/tenant-assets/pablo/images/antara.jpg");
+    expect(normalizeMenuImage("logo.webp", "pablo")).toBe("/api/tenant-assets/pablo/logo.webp");
+    expect(normalizeMenuImage("photos/وجبة لحم.jpg", "pablo")).toBe(
+      `/api/tenant-assets/pablo/photos/${encodeURIComponent("وجبة لحم.jpg")}`,
+    );
+    expect(tenantAssetUrl("pablo", ["images", "a b.jpg"])).toBe("/api/tenant-assets/pablo/images/a%20b.jpg");
+  });
+
+  it("rejects anything that is not an absolute http(s) URL or a safe relative path", () => {
+    for (const value of [
+      "",
+      "   ",
+      null,
+      undefined,
+      42,
+      "javascript:alert(1)",
+      "data:image/png;base64,AAAA",
+      "file:///etc/passwd",
+      "//evil.example.com/a.jpg",
+      "/images/a.jpg",
+      "images\\a.jpg",
+      "../secret.jpg",
+      "images/../secret.jpg",
+      "./images/a.jpg",
+      "images//a.jpg",
+      "images/a.jpg?x=1",
+      "images/a.jpg#frag",
+      "https://",
+    ]) {
+      expect(normalizeMenuImage(value, "pablo")).toBeNull();
+    }
   });
 });

@@ -16,6 +16,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { isValidTenantSlug } from "@/lib/tenant";
+import { normalizeMenuImage } from "@/lib/menu";
 import type { Category, Item, Menu, Variant } from "@/lib/menu";
 import { tenantDataDir } from "@/lib/static-tenant-data";
 
@@ -66,9 +67,25 @@ function parseVariants(value: unknown): Variant[] | null {
   return variants;
 }
 
+/**
+ * A bad image is a presentation problem, not a menu problem: it becomes `null`
+ * (the UI's placeholder) and is logged, but the item keeps its price and stays
+ * on the menu. Only a present-but-rejected value is logged; an absent or empty
+ * image is simply "no artwork".
+ */
+function readImage(raw: unknown, slug: string, where: string): string | null {
+  const image = normalizeMenuImage(raw, slug);
+  if (image) return image;
+
+  const present = typeof raw === "string" ? raw.trim().length > 0 : raw !== undefined && raw !== null;
+  if (present) console.warn(`[tenant-menu] ${slug}: ignoring invalid image on ${where}`);
+  return null;
+}
+
 function parseItem(
   raw: unknown,
   categoryId: string,
+  slug: string,
 ): { item: Item } | { error: string } {
   if (!isRecord(raw)) return { error: "item is not an object" };
   const id = raw.id;
@@ -94,12 +111,13 @@ function parseItem(
       nameEn: nameEn ?? nameAr!,
       price,
       variants,
+      image: readImage(raw.image, slug, `item ${id}`),
       categoryId,
     },
   };
 }
 
-function parseCategory(raw: unknown): { category: Category } | { error: string } {
+function parseCategory(raw: unknown, slug: string): { category: Category } | { error: string } {
   if (!isRecord(raw)) return { error: "category is not an object" };
   const id = raw.id;
   if (typeof id !== "string" || !ID_PATTERN.test(id)) {
@@ -113,7 +131,7 @@ function parseCategory(raw: unknown): { category: Category } | { error: string }
 
   const items: Item[] = [];
   for (const rawItem of raw.items) {
-    const parsed = parseItem(rawItem, id);
+    const parsed = parseItem(rawItem, id, slug);
     if ("error" in parsed) return parsed;
     items.push(parsed.item);
   }
@@ -123,6 +141,7 @@ function parseCategory(raw: unknown): { category: Category } | { error: string }
       id,
       nameAr: nameAr ?? nameEn!,
       nameEn: nameEn ?? nameAr!,
+      image: readImage(raw.image, slug, `category ${id}`),
       items,
     },
   };
@@ -130,12 +149,13 @@ function parseCategory(raw: unknown): { category: Category } | { error: string }
 
 /**
  * Validates an already-parsed JSON body. Exported so tests (and future callers
- * reading the file some other way) can reuse the shape checks.
+ * reading the file some other way) can reuse the shape checks. The slug is
+ * needed because a relative image path becomes a URL into that tenant's folder.
  *
  * Ids must be unique across the whole menu: cart lines and deep links address an
  * item by id alone, so a duplicate would silently resolve to the wrong price.
  */
-export function parseMenu(body: unknown): { menu: Menu } | { error: string } {
+export function parseMenu(body: unknown, slug: string): { menu: Menu } | { error: string } {
   if (!isRecord(body)) return { error: "menu is not an object" };
 
   const currency = body.currency ?? "EGP";
@@ -148,7 +168,7 @@ export function parseMenu(body: unknown): { menu: Menu } | { error: string } {
   const itemIds = new Set<string>();
 
   for (const rawCategory of body.categories) {
-    const parsed = parseCategory(rawCategory);
+    const parsed = parseCategory(rawCategory, slug);
     if ("error" in parsed) return parsed;
     const { category } = parsed;
 
@@ -188,7 +208,7 @@ export async function loadTenantMenu(slug: string): Promise<TenantMenuResult> {
     return { status: "unavailable" };
   }
 
-  const parsed = parseMenu(body);
+  const parsed = parseMenu(body, slug);
   if ("error" in parsed) {
     console.error(`[tenant-menu] ${slug}: ${parsed.error}`);
     return { status: "unavailable" };

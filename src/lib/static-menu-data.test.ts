@@ -148,3 +148,77 @@ describe("loadTenantMenu", () => {
     expect(await loadTenantMenu("pablo")).toEqual({ status: "unavailable" });
   });
 });
+
+describe("menu images", () => {
+  function imageMenu(item: Record<string, unknown>, categoryImage: unknown = undefined) {
+    return {
+      categories: [
+        {
+          id: "burger",
+          nameAr: "برجر",
+          ...(categoryImage === undefined ? {} : { image: categoryImage }),
+          items: [{ id: "beef-burger", nameAr: "برجر لحم", price: 120, ...item }],
+        },
+      ],
+    };
+  }
+
+  async function firstCategory(body: unknown) {
+    writeMenu("pablo", body);
+    const result = await loadTenantMenu("pablo");
+    if (result.status !== "ok") throw new Error(`expected ok, got ${result.status}`);
+    return result.menu.categories[0];
+  }
+
+  it("keeps an absolute https URL on both the category and the item", async () => {
+    const category = await firstCategory(
+      imageMenu(
+        { image: "  https://cdn.example.com/items/beef.jpg  " },
+        "https://cdn.example.com/categories/burger.jpg",
+      ),
+    );
+
+    expect(category.image).toBe("https://cdn.example.com/categories/burger.jpg");
+    expect(category.items[0].image).toBe("https://cdn.example.com/items/beef.jpg");
+  });
+
+  it("maps a relative path to the tenant asset route", async () => {
+    const category = await firstCategory(imageMenu({ image: "images/antara.jpg" }, "images/burger.jpg"));
+
+    expect(category.image).toBe("/api/tenant-assets/pablo/images/burger.jpg");
+    expect(category.items[0].image).toBe("/api/tenant-assets/pablo/images/antara.jpg");
+  });
+
+  it("nulls javascript:, empty, non-string and escaping images without dropping the menu", async () => {
+    const warnings = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+    writeMenu("pablo", {
+      categories: [
+        {
+          id: "burger",
+          nameAr: "برجر",
+          image: "javascript:alert(1)",
+          items: [
+            { id: "script", nameAr: "سكربت", price: 10, image: "javascript:alert(1)" },
+            { id: "empty", nameAr: "فاضي", price: 20, image: "" },
+            { id: "number", nameAr: "رقم", price: 30, image: 42 },
+            { id: "escape", nameAr: "هروب", price: 40, image: "../secret.jpg" },
+            { id: "missing", nameAr: "مخفي", price: 50 },
+          ],
+        },
+      ],
+    });
+
+    const result = await loadTenantMenu("pablo");
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
+
+    const category = result.menu.categories[0];
+    expect(category.image).toBeNull();
+    expect(category.items.map((item) => item.image)).toEqual([null, null, null, null, null]);
+    expect(category.items.map((item) => item.id)).toEqual(["script", "empty", "number", "escape", "missing"]);
+    // javascript:, the number, the traversal and the category value are logged;
+    // an absent or empty image is simply "no artwork".
+    expect(warnings).toHaveBeenCalledTimes(4);
+  });
+});
