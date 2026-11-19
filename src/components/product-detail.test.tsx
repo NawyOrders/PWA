@@ -38,6 +38,18 @@ function CartControls() {
 }
 
 describe("ProductDetail cart quantity controls", () => {
+  it("renders a remote tenant item whose category is a server UUID", () => {
+    const remote = {
+      ...productsById["beef-burger"],
+      id: "remote-item-id",
+      category: "01a1c7cf-d522-73a7-b311-732a5150c803",
+    };
+
+    renderApp(<ProductDetail product={remote} />);
+
+    expect(screen.getAllByRole("heading", { name: remote.name }).length).toBeGreaterThan(0);
+  });
+
   it("starts at zero, disables adding, and quantity controls only adjust the pending order", async () => {
     const user = userEvent.setup();
     renderApp(

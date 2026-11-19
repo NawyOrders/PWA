@@ -42,7 +42,12 @@ export function CategoriesView() {
   const branchId = branding?.branches?.some((branch) => branch.branchId === selectedBranchId) ? selectedBranchId : undefined;
   const remoteItems = useMenuItems({ categoryId, branchId, pageSize: 100 });
   const categories = apiConfigured() ? remoteCategories.data.map((item) => ({ id: item.id, name: (lang === "ar" ? item.nameAr : item.nameEn) || item.nameEn || item.nameAr || "", image: menuImage(item.imageKey), count: item.itemCount ?? 0 })) : demoCategories;
-  const category = categories.find((item) => item.id === categoryId) ?? categories[0];
+  const category = categories.find((item) => item.id === categoryId) ?? categories[0] ?? {
+    id: "",
+    name: lang === "ar" ? "الأقسام" : "Categories",
+    image: "/images/burger.webp",
+    count: 0,
+  };
   const categoryItems = apiConfigured() ? remoteItems.data.items.map((item) => menuProduct(item, lang, categoryId)) : products.filter((product) => product.category === categoryId);
   const categoryTotal = categoryItems.length;
   let items = categoryItems;
@@ -102,7 +107,7 @@ export function CategoriesView() {
                 </span>
                 <span className="mt-2.5 text-[15px] font-extrabold text-ink">{t(item.name)}</span>
                 <span className="mt-1 text-[11px] font-semibold text-muted">
-                  {categoryCounts[id] ?? 0} {t("صنف")}
+                  {(apiConfigured() ? item.count : categoryCounts[id] ?? 0)} {t("صنف")}
                 </span>
               </Link>
             );
@@ -138,7 +143,7 @@ export function CategoriesView() {
                   </span>
                 </span>
                 <span className={`mt-2.5 text-sm font-extrabold ${active ? "text-brand" : "text-ink"}`}>{t(item.name)}</span>
-                <span className="mt-1 text-[10px] font-semibold text-muted">{categoryCounts[id] ?? 0} {t("صنف")}</span>
+                <span className="mt-1 text-[10px] font-semibold text-muted">{(apiConfigured() ? item.count : categoryCounts[id] ?? 0)} {t("صنف")}</span>
               </button>
             );
           })}

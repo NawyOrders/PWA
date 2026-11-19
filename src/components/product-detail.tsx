@@ -35,7 +35,7 @@ export function ProductDetail({ product }: { product: Product }) {
     ? extras.reduce((total, id) => total + (availableExtras.find((item) => item.id === id)?.price ?? 0), 0)
     : 0;
   const unitPrice = product.price + (size?.extra ?? 0) + extrasPrice;
-  const category = categoriesById[product.category];
+  const category = categoriesById[product.category] ?? { name: "القائمة", image: "/images/burger.webp", count: 0 };
 
   const selectedExtras = useMemo(
     () =>

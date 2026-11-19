@@ -61,7 +61,7 @@ export function menuProduct(item: MenuItemDto, lang: "ar" | "en", category = "me
   const name = (lang === "ar" ? item.nameAr : item.nameEn) || item.nameEn || item.nameAr || "";
   const description = (lang === "ar" ? item.descriptionAr : item.descriptionEn) || item.descriptionEn || item.descriptionAr || "";
   const defaultSize = item.sizes?.find((size) => size.isDefault) ?? item.sizes?.[0];
-  return { id: item.id, name, description, price: defaultSize?.price ?? item.price ?? 0, image: menuImage(item.imageKey, item.imageUrl), category: category as Product["category"], tags: [], popular: item.isBestSeller, isAvailable: item.isAvailable !== false,
+  return { id: item.id, name, description, price: defaultSize?.price ?? item.price ?? 0, image: menuImage(item.imageKey, item.imageUrl), category, tags: [], popular: item.isBestSeller, isAvailable: item.isAvailable !== false,
     sizes: item.sizes?.map((size) => ({ id: size.id, label: (lang === "ar" ? size.nameAr : size.nameEn) || size.nameEn || size.nameAr || "", price: size.price ?? 0, isDefault: size.isDefault })),
     addOns: (item as MenuItemDetails).addOns?.map((addOn) => ({ id: addOn.id, label: (lang === "ar" ? addOn.nameAr : addOn.nameEn) || addOn.nameEn || addOn.nameAr || "", price: addOn.price ?? 0 })),
   };
