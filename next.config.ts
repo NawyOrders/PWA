@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   reactCompiler: true,
+  outputFileTracingIncludes: {
+    "/**": ["./tenants/**/*"],
+  },
   turbopack: {
     rules: {
       "*.css": {
