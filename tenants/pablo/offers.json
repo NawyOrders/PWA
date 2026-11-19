@@ -1,0 +1,68 @@
+{
+  "offers": [
+    {
+      "id": "offer-1",
+      "enabled": true,
+      "order": 1,
+      "theme": "dark",
+      "image": "https://www.themealdb.com/images/media/meals/j80gmw1764372176.jpg",
+      "badgeAr": "الأكثر طلباً",
+      "badgeEn": "Most ordered",
+      "titleAr": "كومبو برجر ببلاش",
+      "titleEn": "Free burger combo",
+      "textAr": "جرّب انهيارة عرض الشقاوة.. عرض برجر الشقاوة على الكومبو لآخر اليوم.",
+      "textEn": "Try the Shaqawa offer on the combo, until the end of the day.",
+      "ctaAr": "اطلب الان",
+      "ctaEn": "Order now",
+      "action": { "type": "product", "value": "antara" }
+    },
+    {
+      "id": "offer-2",
+      "enabled": true,
+      "order": 2,
+      "theme": "light",
+      "image": "https://www.themealdb.com/images/media/meals/vdwloy1713225718.jpg",
+      "badgeAr": "خصم 20%",
+      "badgeEn": "20% off",
+      "titleAr": "بيتزا طازة من الفرن",
+      "titleEn": "Fresh pizza from the oven",
+      "textAr": "خصم 20% على كل أنواع البيتزا مع صوص الجبنة الإضافي.",
+      "textEn": "20% off all pizzas with extra cheese sauce.",
+      "ctaAr": "اطلب بيتزا",
+      "ctaEn": "Order pizza",
+      "action": { "type": "search", "value": "بيتزا" }
+    },
+    {
+      "id": "offer-3",
+      "enabled": true,
+      "order": 3,
+      "theme": "light",
+      "image": "https://www.themealdb.com/images/media/meals/fg7d641784666908.jpg",
+      "badgeAr": "وجبة عائلية",
+      "badgeEn": "Family meal",
+      "titleAr": "فرايد تشيكن مقرمش",
+      "titleEn": "Crispy fried chicken",
+      "textAr": "وجبة العائلة بـ 4 قطع دجاج وبطاطس وكول سلو بسعر مميز.",
+      "textEn": "Family meal with 4 chicken pieces, fries and coleslaw at a special price.",
+      "ctaAr": "اطلب دلوقتي",
+      "ctaEn": "Order now",
+      "action": { "type": "category", "value": "mixes" }
+    },
+    {
+      "id": "offer-4",
+      "enabled": true,
+      "order": 4,
+      "theme": "dark",
+      "image": "https://www.themealdb.com/images/media/meals/oal8x31764119345.jpg",
+      "badgeAr": "عرض محدود",
+      "badgeEn": "Limited offer",
+      "titleAr": "توصيل علينا",
+      "titleEn": "Free delivery",
+      "textAr": "اطلب من 200 جنيه واستمتع بتوصيل مجاني لحد باب البيت.",
+      "textEn": "Order 200 EGP or more and enjoy free delivery to your door.",
+      "ctaAr": "اطلب الان",
+      "ctaEn": "Order now",
+      "action": { "type": "path", "value": "/categories" }
+    }
+  ]
+}
