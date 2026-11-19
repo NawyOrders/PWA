@@ -1,3 +1,284 @@
+vphonix9
+vphonix9
+Invisible
+MAZEN ELNEMS — 11/11/2026 8:03 PM
+md
+The tenant onboarding flow begins with submitting the onboarding form, followed by request review in the platform admin dashboard. Next, the system provisions the tenant, creates the restaurant owner account, and sends an email invitation to the owner. Finally, the restaurant website is prepared with the necessary configurations, identity and branding and then displaying at least the initial menu and categories come from backend.
+
+
+- [ ] Integrate the email delivery service (`info.nawyorders.com`).
+    
+- [ ] Refactor the branding endpoint to return full restaurant configuration (identity, branding, branches config, payment channels,...).
+    
+- [ ] Integrate the restaurant website with the menu and categories endpoints.
+    
+- [ ] Deploy the Restaurant Admin Panel to the VPS with authentication and staff management.
+    
+- [ ] Add slug input and domain selection (custom domain `restaurant_domain.com` vs. subdomain `*.nawyorders.com`) to the onboarding form.
+    
+- [ ] Test the full tenant provisioning flow.
+MAZEN ELNEMS — 11/11/2026 8:05 PM
+.
+P@ssw0rd!
+MAZEN ELNEMS — 11/11/2026 8:20 PM
+https://el-fahm-01a1c1ed11cf79ffbe51681899bb90fd.api.nawyorders.com/
+شيخ البيه — 11/11/2026 8:21 PM
+Image
+MAZEN ELNEMS — 11/11/2026 8:21 PM
+https://el-fahm-01a1c1ed11cf79ffbe51681899bb90fd.api.nawyorders.com/swagger/index.html
+Body 🖤 — 11/13/2026 11:27 PM
+كله ميه ميه
+انتو اي الاخبار
+ممكن انهارده بليل
+بأذن الله
+Ali hatem [HPXL],  — Yesterday at 8:36 PM
+https://meet.google.com/pja-jroa-qsy
+Meet
+Real-time meetings by Google. Using your browser, share your video, desktop, and presentations with teammates and customers.
+Image
+Rodina — Yesterday at 8:36 PM
+https://meet.google.com/pja-jroa-qsy
+Meet
+Real-time meetings by Google. Using your browser, share your video, desktop, and presentations with teammates and customers.
+Image
+Ali hatem [HPXL],  — Yesterday at 10:11 PM
+Image
+Image
+Image
+Image
+Image
+{
+  "currency": "EGP",
+  "categories": [
+    {
+      "id": "meals-menu",
+      "nameAr": "منيو الوجبات",
+
+message.txt
+3 KB
+Rodina — Yesterday at 10:51 PM
+{
+  "currency": "EGP",
+  "categories": [
+    {
+      "id": "mixes",
+      "nameAr": "ميكسات",
+      "nameEn": "Mixes",
+      "Image": "https://images.unsplash.com/photo-1511421585906-57a6e6dc3a2f?w=800&auto=format&fit=crop&q=80",
+      "items": [
+        {
+          "id": "antara",
+          "nameAr": "عنترة",
+          "nameEn": "Antara",
+          "descriptionAr": "سدق - بسطرمة - سوسيس - شيدر - تركي - موتزاريلا",
+          "descriptionEn": "Sogo2 Sausage, Pastrami, Hot Dog Sausage, Cheddar, Rumi (Turki) Cheese, Mozzarella",
+          "price": null,
+          "variants": {
+            "M": 40,
+            "L": 54,
+            "سوري": 80
+          },
+          "Image": "https://www.themealdb.com/images/media/meals/j80gmw1764372176.jpg"
+        },
+        {
+          "id": "antara-basha",
+          "nameAr": "عنترة باشا",
+          "nameEn": "Antara Basha",
+          "descriptionAr": "بسطرمة - روزبيف - كيري - موتزاريلا",
+          "descriptionEn": "Pastrami, Roast Beef, Kiri Cream Cheese, Mozzarella",
+          "price": null,
+          "variants": {
+            "M": 55,
+            "L": 70,
+            "سوري": 110
+          },
+          "Image": "https://www.themealdb.com/images/media/meals/djdg8l1784578885.jpg"
+        },
+        {
+          "id": "al-shami-al-maghrebi",
+          "nameAr": "الشامي ع المغربي",
+          "nameEn": "Al Shami Al Maghrebi",
+          "descriptionAr": "زعتر سمسم - فلفل ألوان - طماطم - جبنة حلوم",
+          "descriptionEn": "Zaatar & Sesame, Bell Peppers, Tomatoes, Halloumi Cheese",
+          "price": null,
+          "variants": {
+            "M": 37,
+            "L": 45,
+            "سوري": 60
+          },
+          "Image": "https://www.themealdb.com/images/media/meals/vdwloy1713225718.jpg"
+        },
+        {
+          "id": "mix-cheese",
+          "nameAr": "مكس جبن",
+          "nameEn": "Mix Cheese",
+          "descriptionAr": "شيدر - تركي - موتزاريلا",
+          "descriptionEn": "Cheddar, Rumi (Turki) Cheese, Mozzarella",
+          "price": null,
+          "variants": {
+            "M": 20,
+            "L": 25,
+            "سوري": 42
+          },
+          "Image": "https://images.unsplash.com/photo-1788843304341-7edbe347ba66?w=800&auto=format&fit=crop&q=80"
+        },
+        {
+          "id": "ba2aly-fakher",
+          "nameAr": "بقالي فاخر",
+          "nameEn": "Ba2aly Fakher (Deluxe)",
+          "descriptionAr": "جودة - فلمنك - ريكفورد - موتزاريلا",
+          "descriptionEn": "Gouda, Edam (Falamank), Roquefort Blue Cheese, Mozzarella",
+          "price": null,
+          "variants": {
+            "M": 55,
+            "L": 70,
+            "سوري": 90
+          },
+          "Image": "https://www.themealdb.com/images/media/meals/fg7d641784666908.jpg"
+        }
+      ]
+    },
+    {
+      "id": "cheeses",
+      "nameAr": "الجبن",
+      "nameEn": "Cheeses",
+      "Image": "https://www.themealdb.com/images/media/meals/oal8x31764119345.jpg",
+      "items": [
+        {
+          "id": "labneh-zaatar",
+          "nameAr": "لبنة زعتر",
+          "nameEn": "Labneh Zaatar",
+          "price": null,
+          "variants": {
+            "M": 15,
+            "L": 20
+          },
+          "Image": "https://www.themealdb.com/images/media/meals/16zbeu1763789342.jpg"
+        },
+        {
+          "id": "kiri-focaccia",
+... (647 lines left)
+
+ba2aly-menu.json
+28 KB
+Rodina — Yesterday at 11:01 PM
+واحد سوري  - بقالي - dady - Country hills - طازج - مسلم - عصافيري
+Rodina — Yesterday at 11:32 PM
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Baqqali (بقّالي) — Brand Identity &amp; App Design System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+    body {
+      font-family: "Cairo", "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    }
+    .font-arabic {
+      font-family: "Cairo", "Tajawal", "Segoe UI", Tahoma, Arial, sans-serif;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    .brand-canvas {
+      background-color: #FAF5EC;
+      color: #231712;
+      border-color: #E7D8C3;
+    }
+    .brand-card {
+      background-color: #FFFDF9;
+      color: #231712;
+      border: 1px solid #E7D8C3;
+      box-shadow: 0 10px 30px -12px rgba(35, 23, 18, 0.08);
+    }
+    .kraft-texture {
+      background-color: #E6CCA8;
+      background-image:
+        radial-gradient(rgba(140, 98, 57, 0.10) 1px, transparent 0),
+        radial-gradient(rgba(255, 253, 249, 0.25) 1px, transparent 0);
+      background-size: 20px 20px;
+      background-position: 0 0, 10px 10px;
+    }
+    .swatch-card {
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .swatch-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 24px -10px rgba(35, 23, 18, 0.16);
+    }
+    .phone-frame {
+      border-radius: 38px;
+      border: 8px solid #231712;
+      box-shadow: 0 24px 50px -15px rgba(35, 23, 18, 0.28);
+      overflow: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    }
+    .phone-scroll::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .phone-scroll::-webkit-scrollbar-thumb {
+      background: rgba(156, 133, 115, 0.35);
+      border-radius: 999px;
+    }
+    .toast-enter {
+      animation: toastSlide 0.22s ease forwards;
+    }
+    @keyframes toastSlide {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-[#EFE4D2] text-[#231712] antialiased p-4 sm:p-6 md:p-8">
+
+  <!-- Main Brand Book Container -->
+  <div class="max-w-7xl mx-auto brand-canvas rounded-3xl border overflow-hidden shadow-xl">
+
+    <!-- Sticky Editorial Header -->
+    <header class="sticky top-0 z-30 backdrop-blur-md bg-[#FAF5EC]/95 border-b border-[#E7D8C3] px-5 sm:px-8 py-3.5">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <img src="assets/baqali-logo.jpg" alt="Baqqali Logo" class="w-10 h-10 rounded-full object-cover border-2 border-[#E01E26] shadow-sm" />
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-base tracking-tight text-[#231712]">BAQQALI</span>
+              <span class="font-arabic font-bold text-base text-[#B8141B]">بقّالي</span>
+              <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-[#F5CD21] text-[#231712]">Brand Book v1.0</span>
+            </div>
+            <p class="text-xs text-[#6B5546]">App Color System, Identity &amp; Interactive UI Preview</p>
+          </div>
+        </div>
+
+        <nav class="hidden lg:flex items-center gap-5 text-xs font-semibold text-[#6B5546]">
+          <a href="#essence" class="hover:text-[#B8141B] transition-colors">01 Essence</a>
+          <a href="#palette" class="hover:text-[#B8141B] transition-colors">02 Palette</a>
+          <a href="#contrast" class="hover:text-[#B8141B] transition-colors">03 Contrast</a>
+          <a href="#uikit" class="hover:text-[#B8141B] transition-colors">04 Typography &amp; UI</a>
+          <a href="#preview" class="hover:text-[#B8141B] transition-colors">05 App Preview</a>
+          <a href="#tokens" class="hover:text-[#B8141B] transition-colors">06 Tokens</a>... (32 KB left)
+
+index.html
+82 KB
+Ali hatem [HPXL],  — 12:07 AM
+1800 × 380
+{
+  "offers": [
+    {
+      "id": "offer-1",
+      "enabled": true,
+      "order": 1,
+
+message.txt
+3 KB
+Rodina — 12:29 AM
 {
   "offers": [
     {
@@ -5,7 +286,7 @@
       "enabled": true,
       "order": 1,
       "theme": "dark",
-      "image": "https://www.themealdb.com/images/media/meals/j80gmw1764372176.jpg",
+      "image": "https://images.pexels.com/photos/36007382/pexels-photo-36007382/free-photo-of-cheeseburger-and-fries-on-fast-food-tray.jpeg?auto=compress&cs=tinysrgb&w=1800&h=380&fit=crop",
       "badgeAr": "الأكثر طلباً",
       "badgeEn": "Most ordered",
       "titleAr": "كومبو برجر ببلاش",
@@ -21,7 +302,7 @@
       "enabled": true,
       "order": 2,
       "theme": "light",
-      "image": "https://www.themealdb.com/images/media/meals/vdwloy1713225718.jpg",
+      "image": "https://images.unsplash.com/photo-1622880833523-7cf1c0bd4296?auto=format&fit=crop&w=1800&h=380&q=85",
       "badgeAr": "خصم 20%",
       "badgeEn": "20% off",
       "titleAr": "بيتزا طازة من الفرن",
@@ -37,7 +318,7 @@
       "enabled": true,
       "order": 3,
       "theme": "light",
-      "image": "https://www.themealdb.com/images/media/meals/fg7d641784666908.jpg",
+      "image": "https://images.pexels.com/photos/33254639/pexels-photo-33254639/free-photo-of-close-up-of-crispy-fried-chicken-on-plate.jpeg?auto=compress&cs=tinysrgb&w=1800&h=380&fit=crop",
       "badgeAr": "وجبة عائلية",
       "badgeEn": "Family meal",
       "titleAr": "فرايد تشيكن مقرمش",
@@ -53,7 +334,79 @@
       "enabled": true,
       "order": 4,
       "theme": "dark",
-      "image": "https://www.themealdb.com/images/media/meals/oal8x31764119345.jpg",
+      "image": "https://images.unsplash.com/photo-1526367790999-0150786686a2?auto=format&fit=crop&w=1800&h=380&q=85",
+      "badgeAr": "عرض محدود",
+      "badgeEn": "Limited offer",
+      "titleAr": "توصيل علينا",
+      "titleEn": "Free delivery",
+      "textAr": "اطلب من 200 جنيه واستمتع بتوصيل مجاني لحد باب البيت.",
+      "textEn": "Order 200 EGP or more and enjoy free delivery to your door.",
+      "ctaAr": "اطلب الان",
+      "ctaEn": "Order now",
+      "action": { "type": "path", "value": "/categories" }
+    }
+  ]
+}
+
+message.txt
+3 KB
+﻿
+{
+  "offers": [
+    {
+      "id": "offer-1",
+      "enabled": true,
+      "order": 1,
+      "theme": "dark",
+      "image": "https://images.pexels.com/photos/36007382/pexels-photo-36007382/free-photo-of-cheeseburger-and-fries-on-fast-food-tray.jpeg?auto=compress&cs=tinysrgb&w=1800&h=380&fit=crop",
+      "badgeAr": "الأكثر طلباً",
+      "badgeEn": "Most ordered",
+      "titleAr": "كومبو برجر ببلاش",
+      "titleEn": "Free burger combo",
+      "textAr": "جرّب انهيارة عرض الشقاوة.. عرض برجر الشقاوة على الكومبو لآخر اليوم.",
+      "textEn": "Try the Shaqawa offer on the combo, until the end of the day.",
+      "ctaAr": "اطلب الان",
+      "ctaEn": "Order now",
+      "action": { "type": "product", "value": "antara" }
+    },
+    {
+      "id": "offer-2",
+      "enabled": true,
+      "order": 2,
+      "theme": "light",
+      "image": "https://images.unsplash.com/photo-1622880833523-7cf1c0bd4296?auto=format&fit=crop&w=1800&h=380&q=85",
+      "badgeAr": "خصم 20%",
+      "badgeEn": "20% off",
+      "titleAr": "بيتزا طازة من الفرن",
+      "titleEn": "Fresh pizza from the oven",
+      "textAr": "خصم 20% على كل أنواع البيتزا مع صوص الجبنة الإضافي.",
+      "textEn": "20% off all pizzas with extra cheese sauce.",
+      "ctaAr": "اطلب بيتزا",
+      "ctaEn": "Order pizza",
+      "action": { "type": "search", "value": "بيتزا" }
+    },
+    {
+      "id": "offer-3",
+      "enabled": true,
+      "order": 3,
+      "theme": "light",
+      "image": "https://images.pexels.com/photos/33254639/pexels-photo-33254639/free-photo-of-close-up-of-crispy-fried-chicken-on-plate.jpeg?auto=compress&cs=tinysrgb&w=1800&h=380&fit=crop",
+      "badgeAr": "وجبة عائلية",
+      "badgeEn": "Family meal",
+      "titleAr": "فرايد تشيكن مقرمش",
+      "titleEn": "Crispy fried chicken",
+      "textAr": "وجبة العائلة بـ 4 قطع دجاج وبطاطس وكول سلو بسعر مميز.",
+      "textEn": "Family meal with 4 chicken pieces, fries and coleslaw at a special price.",
+      "ctaAr": "اطلب دلوقتي",
+      "ctaEn": "Order now",
+      "action": { "type": "category", "value": "mixes" }
+    },
+    {
+      "id": "offer-4",
+      "enabled": true,
+      "order": 4,
+      "theme": "dark",
+      "image": "https://images.unsplash.com/photo-1526367790999-0150786686a2?auto=format&fit=crop&w=1800&h=380&q=85",
       "badgeAr": "عرض محدود",
       "badgeEn": "Limited offer",
       "titleAr": "توصيل علينا",
