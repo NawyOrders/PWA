@@ -17,7 +17,23 @@ async function protectedRequest<T>(authFetch: AuthFetch, path: string, init?: Re
 
 export function savedAddress(dto: AddressDto): SavedAddress {
   const kind = dto.placeType === "Office" ? "work" : dto.label.toLowerCase().includes("family") ? "family" : "home";
-  return { id: dto.id, title: dto.label, detail: [dto.street, dto.buildingName, dto.floor, dto.apartmentNumber, dto.landmark].filter(Boolean).join(" - "), area: dto.branchNameAr || dto.branchNameEn || dto.street, kind, lat: dto.latitude, lng: dto.longitude, branchId: dto.branchId ?? null, isDefault: dto.isDefault };
+  return {
+    id: dto.id,
+    title: dto.label,
+    detail: [dto.buildingName, dto.floor, dto.apartmentNumber, dto.landmark].filter(Boolean).join(" - ") || dto.street,
+    area: dto.branchNameAr || dto.branchNameEn || dto.street,
+    kind: dto.placeType === "Villa" ? "family" : kind,
+    lat: dto.latitude,
+    lng: dto.longitude,
+    branchId: dto.branchId ?? null,
+    isDefault: dto.isDefault,
+    placeType: dto.placeType,
+    street: dto.street,
+    buildingName: dto.buildingName,
+    floor: dto.floor,
+    apartmentNumber: dto.apartmentNumber,
+    landmark: dto.landmark,
+  };
 }
 
 export const addressApi = {

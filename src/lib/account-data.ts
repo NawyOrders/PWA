@@ -9,6 +9,12 @@ export type SavedAddress = {
   lastUsed?: string;
   lat: number;
   lng: number;
+  placeType?: "Apartment" | "Villa" | "Office";
+  street?: string;
+  buildingName?: string | null;
+  floor?: string | null;
+  apartmentNumber?: string | null;
+  landmark?: string | null;
   /** Server-assigned branch; never sent back while creating/updating an address. */
   branchId?: string | null;
   isDefault?: boolean;

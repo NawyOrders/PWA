@@ -397,6 +397,14 @@ function decodeAddresses(stored: unknown, fallback: SavedAddress[]): SavedAddres
         lastUsed: limited(value.lastUsed, 80),
         lat: value.lat,
         lng: value.lng,
+        placeType: value.placeType === "Apartment" || value.placeType === "Villa" || value.placeType === "Office" ? value.placeType : undefined,
+        street: typeof value.street === "string" ? value.street.slice(0, 200) : undefined,
+        buildingName: typeof value.buildingName === "string" ? value.buildingName.slice(0, 50) : null,
+        floor: typeof value.floor === "string" ? value.floor.slice(0, 20) : null,
+        apartmentNumber: typeof value.apartmentNumber === "string" ? value.apartmentNumber.slice(0, 20) : null,
+        landmark: typeof value.landmark === "string" ? value.landmark.slice(0, 500) : null,
+        branchId: typeof value.branchId === "string" ? value.branchId : null,
+        isDefault: typeof value.isDefault === "boolean" ? value.isDefault : undefined,
       },
     ];
   });
@@ -944,6 +952,10 @@ export function AppProvider({
     applyGrant(null);
     setCustomer(null);
     setAuthFlag(false);
+    if (authTransport() === "live") {
+      setAddresses([]);
+      setSelectedAddressId(null);
+    }
     // An expired session is a sign-out: the account data goes back to the
     // neutral view rather than staying on screen for the next person.
     releaseLocalAccount();
@@ -953,7 +965,7 @@ export function AppProvider({
     retryDeadline.current = null;
     setRefreshRetryAt(null);
     toast(t("انتهت الجلسة، سجّل الدخول تاني"), "info");
-  }, [applyGrant, setCustomer, setAuthFlag, releaseLocalAccount, toast, t]);
+  }, [applyGrant, setCustomer, setAuthFlag, setAddresses, setSelectedAddressId, releaseLocalAccount, toast, t]);
 
   /*
    * Which refresh failures end the session, and which only cost a retry.
@@ -1009,9 +1021,12 @@ export function AppProvider({
   // bearer token is available.
   useEffect(() => {
     if (!ready || authTransport() !== "live" || !customer || sessionStatus !== "active") return;
+    const customerId = customer.customerId;
     let cancelled = false;
+    setAddresses([]);
+    setSelectedAddressId(null);
     Promise.all([addressApi.list(authFetch), addressApi.default(authFetch).catch(() => null)]).then(([remote, defaultAddress]) => {
-      if (!cancelled) {
+      if (!cancelled && grantRef.current && customer?.customerId === customerId) {
         setAddresses(remote);
         const selected = defaultAddress ?? remote.find((item) => item.isDefault) ?? null;
         setSelectedAddressId(selected?.id ?? null);
@@ -1272,6 +1287,10 @@ export function AppProvider({
         applyGrant(grantFromPayload(payload));
         setCustomer(next);
         setAuthFlag(false);
+        if (authTransport() === "live") {
+          setAddresses([]);
+          setSelectedAddressId(null);
+        }
         // The number that just verified owns the history: against the simulator
         // the saved slot is the answer, and against the live API this does
         // nothing at all.
@@ -1289,7 +1308,7 @@ export function AppProvider({
       setLoginPromptNext(null);
       toast(t("تم تسجيل الدخول بنجاح"), "info");
     },
-    [toast, t, applyGrant, setCustomer, setAuthFlag, adoptLocalAccount],
+    [toast, t, applyGrant, setCustomer, setAuthFlag, setAddresses, setSelectedAddressId, adoptLocalAccount],
   );
 
   const logout = useCallback(() => {
@@ -1304,6 +1323,10 @@ export function AppProvider({
     applyGrant(null);
     setCustomer(null);
     setAuthFlag(false);
+    if (authTransport() === "live") {
+      setAddresses([]);
+      setSelectedAddressId(null);
+    }
     // The account belonged to that customer, so a shared device is left with
     // the neutral seeded profile rather than someone else's name and phone.
     setProfile(seedProfile);
@@ -1317,17 +1340,21 @@ export function AppProvider({
     adoptionPending.current = null;
     setRefreshRetryAt(null);
     toast(t("تم تسجيل الخروج"), "info");
-  }, [toast, t, applyGrant, setCustomer, setAuthFlag, setProfile, releaseLocalAccount]);
+  }, [toast, t, applyGrant, setCustomer, setAuthFlag, setAddresses, setSelectedAddressId, setProfile, releaseLocalAccount]);
 
   const addAddress = useCallback(
     (address: SavedAddress) => {
       if (authTransport() === "live" && customer) {
         void addressApi.create(authFetch, {
-          placeType: address.kind === "work" ? "Office" : "Apartment",
+          placeType: address.placeType ?? (address.kind === "work" ? "Office" : address.kind === "family" ? "Villa" : "Apartment"),
           label: address.title.slice(0, 50),
-          street: address.detail.slice(0, 200),
+          street: (address.street ?? address.detail).slice(0, 200),
           latitude: address.lat,
           longitude: address.lng,
+          buildingName: address.buildingName?.slice(0, 50),
+          floor: address.placeType === "Apartment" || (!address.placeType && address.kind !== "family" && address.kind !== "work") ? address.floor?.slice(0, 20) : undefined,
+          apartmentNumber: address.placeType === "Apartment" || (!address.placeType && address.kind !== "family" && address.kind !== "work") ? address.apartmentNumber?.slice(0, 20) : undefined,
+          landmark: address.landmark?.slice(0, 500),
           isDefault: addresses.length === 0,
         }).then((created) => {
           setAddresses((current) => [created, ...current.filter((item) => item.id !== created.id)]);
