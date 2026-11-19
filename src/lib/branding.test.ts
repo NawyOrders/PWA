@@ -1,5 +1,5 @@
 import { waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   applyBranding,
   applyBrandingAssets,
@@ -12,14 +12,14 @@ import {
   brandingVarNames,
   decodeBrandingCache,
   darken,
+  iconMimeType,
   lighten,
   safeColor,
   sanitizeBranding,
-  tenantColorsEnabled,
   type BrandingCache,
 } from "@/lib/branding";
 
-/** `applyBranding` is a no-op while opt-in is off, so cleanup wipes the DOM. */
+/** The tests write inline properties on <html>, so cleanup wipes them. */
 function wipeBrandingDom(): void {
   for (const name of brandingVarNames) document.documentElement.style.removeProperty(name);
   document.head.innerHTML = "";
@@ -117,41 +117,30 @@ describe("brandingVars", () => {
   it("returns nothing for a branding object with no usable colours", () => {
     expect(brandingVars({ nameAr: "ناوي", tenantId: "t-1" })).toEqual({});
   });
-});
 
-describe("tenantColorsEnabled", () => {
-  it("is off unless the deploy explicitly asks for the tenant palette", () => {
-    expect(tenantColorsEnabled()).toBe(false);
-    vi.stubEnv("NEXT_PUBLIC_APPLY_TENANT_COLORS", "true");
-    expect(tenantColorsEnabled()).toBe(true);
-    vi.stubEnv("NEXT_PUBLIC_APPLY_TENANT_COLORS", "yes");
-    expect(tenantColorsEnabled()).toBe(false);
+  it("leaves null fields to the default palette", () => {
+    expect(
+      brandingVars({
+        primaryColor: null,
+        secondaryColor: null,
+        accentColor: null,
+        backgroundColor: null,
+        surfaceColor: null,
+        textOnPrimaryColor: null,
+      }),
+    ).toEqual({});
   });
 });
 
-describe("applyBranding — the app keeps its own colours by default", () => {
-  it("paints no variable and does not touch the theme colour meta", () => {
+describe("applyBranding", () => {
+  it("keeps the default palette when the tenant sent no colours", () => {
     document.head.innerHTML = '<meta name="theme-color" content="#E8452C">';
-    applyBranding({ primaryColor: "#123456", accentColor: "#ABCDEF", backgroundColor: "#000000" });
+    applyBranding({ nameAr: "ناوي" });
 
     for (const name of brandingVarNames) {
       expect(document.documentElement.style.getPropertyValue(name)).toBe("");
     }
     expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#E8452C");
-  });
-
-  it("is a no-op outside the browser", () => {
-    const original = globalThis.document;
-    vi.stubGlobal("document", undefined);
-    expect(() => applyBranding({ primaryColor: "#123456" })).not.toThrow();
-    vi.unstubAllGlobals();
-    expect(globalThis.document).toBe(original);
-  });
-});
-
-describe("applyBranding with NEXT_PUBLIC_APPLY_TENANT_COLORS=true", () => {
-  beforeEach(() => {
-    vi.stubEnv("NEXT_PUBLIC_APPLY_TENANT_COLORS", "true");
   });
 
   it("writes the palette inline on <html> and the theme colour meta", () => {
@@ -421,15 +410,23 @@ describe("branding assets", () => {
       "https://cdn.example.com/logo.jpg",
     );
     expect(brandingLogoUrl({ logoUrl: "http://cdn.example.com/logo.jpg" })).toBeNull();
-    expect(brandingFaviconUrl({ logoUrl: "https://cdn.example.com/logo.jpg" })).toBe(
-      "https://cdn.example.com/logo.jpg",
+    expect(brandingFaviconUrl({ faviconUrl: "https://cdn.example.com/icon.png" })).toBe(
+      "https://cdn.example.com/icon.png",
     );
-    expect(
-      brandingFaviconUrl({
-        logoUrl: "https://cdn.example.com/logo.jpg",
-        faviconUrl: "https://cdn.example.com/icon.png",
-      }),
-    ).toBe("https://cdn.example.com/icon.png");
+    expect(brandingFaviconUrl({ faviconUrl: "http://cdn.example.com/icon.png" })).toBeNull();
+  });
+
+  it("does not use the logo as a favicon and falls back to nothing", () => {
+    expect(brandingFaviconUrl({ logoUrl: "https://cdn.example.com/logo.jpg" })).toBeNull();
+    expect(brandingFaviconUrl(null)).toBeNull();
+  });
+
+  it("derives a MIME type from the icon path", () => {
+    expect(iconMimeType("https://cdn.example.com/icon.png?v=2")).toBe("image/png");
+    expect(iconMimeType("https://cdn.example.com/icon.webp")).toBe("image/webp");
+    expect(iconMimeType("https://cdn.example.com/icon.svg")).toBe("image/svg+xml");
+    expect(iconMimeType("https://cdn.example.com/icon.ico")).toBe("image/x-icon");
+    expect(iconMimeType("https://cdn.example.com/icon.jpg")).toBe("image/jpeg");
   });
 
   it("points the icon links at the tenant asset and restores the defaults", () => {

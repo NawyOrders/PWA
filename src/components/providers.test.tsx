@@ -1137,7 +1137,7 @@ describe("AppProvider — tenant API session and branding", () => {
     expect(api.attachStoredRefresh).not.toHaveBeenCalled();
   });
 
-  it("caches tenant branding without repainting the app palette", async () => {
+  it("caches tenant branding and paints its palette", async () => {
     api.fetchBranding.mockResolvedValue({
       notModified: false,
       branding: { tenantId: "t-1", nameAr: "ناوي", primaryColor: "#123456" },
@@ -1148,7 +1148,9 @@ describe("AppProvider — tenant API session and branding", () => {
     await waitFor(() => expect(result.current.branding?.nameAr).toBe("ناوي"));
 
     expect(api.fetchBranding).toHaveBeenCalled();
-    expect(document.documentElement.style.getPropertyValue("--color-brand")).toBe("");
+    await waitFor(() =>
+      expect(document.documentElement.style.getPropertyValue("--color-brand")).toBe("#123456"),
+    );
     await waitFor(() =>
       expect(JSON.parse(localStorage.getItem(storageKeys.branding)!)).toMatchObject({ etag: '"b1"' }),
     );
@@ -1189,8 +1191,7 @@ describe("AppProvider — tenant API session and branding", () => {
     expect(result.current.selectedBranchId).toBe("brand-branch");
   });
 
-  it("paints the tenant palette only when the deploy opts in", async () => {
-    vi.stubEnv("NEXT_PUBLIC_APPLY_TENANT_COLORS", "true");
+  it("paints the tenant palette", async () => {
     api.fetchBranding.mockResolvedValue({
       notModified: false,
       branding: { tenantId: "t-1", primaryColor: "#123456" },
@@ -1213,7 +1214,9 @@ describe("AppProvider — tenant API session and branding", () => {
 
     expect(api.fetchBranding.mock.calls[0]?.[0]).toEqual({ etag: '"b1"' });
     expect(result.current.branding).toMatchObject({ primaryColor: "#654321" });
-    expect(document.documentElement.style.getPropertyValue("--color-brand")).toBe("");
+    await waitFor(() =>
+      expect(document.documentElement.style.getPropertyValue("--color-brand")).toBe("#654321"),
+    );
   });
 
   it("keeps working when branding cannot be loaded", async () => {

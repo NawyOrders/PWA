@@ -1,24 +1,19 @@
 import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
-import { brandingFaviconUrl, brandingName, safeColor } from "@/lib/branding";
+import { brandingFaviconUrl, brandingName, iconMimeType } from "@/lib/branding";
+import {
+  brandingBackgroundColor,
+  brandingThemeColor,
+  DEFAULT_FAVICON,
+} from "@/lib/branding-metadata";
 import { loadTenantBranding } from "@/lib/static-tenant-data";
 import { tenantSlugFromHost } from "@/lib/tenant";
 
 const DEFAULT_ICON = {
-  src: "/icons/logo.svg",
+  src: DEFAULT_FAVICON.url,
   sizes: "any",
-  type: "image/svg+xml",
+  type: DEFAULT_FAVICON.type,
 } as const;
-
-/** Best-effort MIME type for a tenant-uploaded icon URL. */
-function iconType(url: string): string {
-  const path = url.split("?")[0]?.toLowerCase() ?? "";
-  if (path.endsWith(".png")) return "image/png";
-  if (path.endsWith(".webp")) return "image/webp";
-  if (path.endsWith(".svg")) return "image/svg+xml";
-  if (path.endsWith(".ico")) return "image/x-icon";
-  return "image/jpeg";
-}
 
 /**
  * The manifest is per tenant: the browser resolves this URL on the storefront
@@ -39,7 +34,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const shortName = brandingName(branding, "ar", 12) ?? "ناوي أوردرز";
   const icon = brandingFaviconUrl(branding);
   const icons: MetadataRoute.Manifest["icons"] = icon
-    ? [{ src: icon, sizes: "any", type: iconType(icon), purpose: "any" }]
+    ? [{ src: icon, sizes: "any", type: iconMimeType(icon), purpose: "any" }]
     : [
         { ...DEFAULT_ICON, purpose: "any" },
         { ...DEFAULT_ICON, purpose: "maskable" },
@@ -54,8 +49,8 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     scope: "/",
     display: "standalone",
     orientation: "any",
-    background_color: safeColor(branding?.backgroundColor) ?? "#FBF3EA",
-    theme_color: safeColor(branding?.primaryColor) ?? "#E8452C",
+    background_color: brandingBackgroundColor(branding),
+    theme_color: brandingThemeColor(branding),
     lang: "ar",
     dir: "rtl",
     categories: ["food", "shopping", "lifestyle"],

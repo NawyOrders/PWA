@@ -7,10 +7,8 @@
  * block) and being able to remove every one of them again, so a tenant with no
  * branding — or an API that is down — keeps the built-in Nawy palette.
  *
- * The palette is opt-in. The app ships its own visual identity, so a tenant
- * payload never repaints it unless the deploy sets
- * `NEXT_PUBLIC_APPLY_TENANT_COLORS=true`; branding data (names, contact
- * channels) is still fetched, cached and exposed either way.
+ * Only the fields the tenant actually sent are written, so a null or missing
+ * colour falls through to the matching default in `globals.css`.
  *
  * Colours are validated before they touch the DOM: a server string that is not
  * a `#rgb`/`#rrggbb` literal is dropped rather than injected into a style.
@@ -34,14 +32,6 @@ const DAYS = new Set([
   "Friday",
   "Saturday",
 ]);
-
-/**
- * Read on every call rather than once at import so a test can flip it, and so
- * an unset variable stays falsy instead of throwing during the build.
- */
-export function tenantColorsEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_APPLY_TENANT_COLORS === "true";
-}
 
 export const brandingVarNames = [
   "--color-brand",
@@ -175,12 +165,11 @@ function setThemeColor(color: string | null): void {
 
 /**
  * Writes the palette onto `<html>`; passing `null` clears every branding
- * override so the theme block in `globals.css` shows through again. With the
- * opt-in off nothing is ever written, so the built-in colours simply stand.
+ * override so the theme block in `globals.css` shows through again. Fields the
+ * tenant did not send are left alone, which also keeps the defaults.
  */
 export function applyBranding(branding: RestaurantBranding | null): void {
   if (typeof document === "undefined") return;
-  if (!tenantColorsEnabled()) return;
   const root = document.documentElement;
   const vars = branding ? brandingVars(branding) : {};
   for (const name of brandingVarNames) {
@@ -416,8 +405,22 @@ export function brandingLogoUrl(branding: RestaurantBranding | null): string | n
   return branding ? safeUrl(branding.logoUrl) : null;
 }
 
+/**
+ * The tenant's own favicon. The logo is deliberately not used here: a tenant
+ * that has not uploaded a favicon keeps the app's default icon.
+ */
 export function brandingFaviconUrl(branding: RestaurantBranding | null): string | null {
-  return branding ? safeUrl(branding.faviconUrl) ?? safeUrl(branding.logoUrl) : null;
+  return branding ? safeUrl(branding.faviconUrl) : null;
+}
+
+/** Best-effort MIME type for a tenant-uploaded icon URL. */
+export function iconMimeType(url: string): string {
+  const path = url.split("?")[0]?.toLowerCase() ?? "";
+  if (path.endsWith(".png")) return "image/png";
+  if (path.endsWith(".webp")) return "image/webp";
+  if (path.endsWith(".svg")) return "image/svg+xml";
+  if (path.endsWith(".ico")) return "image/x-icon";
+  return "image/jpeg";
 }
 
 /**

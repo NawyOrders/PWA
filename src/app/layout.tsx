@@ -1,9 +1,13 @@
+import type { CSSProperties } from "react";
 import type { Metadata, Viewport } from "next";
 import { Baloo_Bhaijaan_2, Cairo } from "next/font/google";
 import "./globals.css";
 import { TenantProvider } from "@/components/tenant-provider";
 import { SiteChrome } from "@/components/site-chrome";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
+import { brandingVars } from "@/lib/branding";
+import { brandingMetadataIcons, brandingThemeColor } from "@/lib/branding-metadata";
+import { requestTenantBranding } from "@/lib/request-tenant-branding";
 import { storageKeys } from "@/lib/storage";
 
 const cairo = Cairo({
@@ -25,43 +29,54 @@ const baloo = Baloo_Bhaijaan_2({
  */
 export const instant = false;
 
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
-  title: {
-    default: "ناوي أوردرز | Nawy Orders",
-    template: "%s | ناوي أوردرز",
-  },
-  description:
-    "ناوي أوردرز — اطلب برجر وبيتزا وفرايد تشيكن على مزاجك، توصيل سريع وعروض حصرية. Nawy Orders food delivery PWA.",
-  applicationName: "ناوي أوردرز",
-  manifest: "/manifest.webmanifest",
-  appleWebApp: {
-    capable: true,
-    title: "ناوي أوردرز",
-    statusBarStyle: "default",
-  },
-  icons: {
-    icon: [{ url: "/icons/logo.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/icons/logo.svg", type: "image/svg+xml" }],
-  },
-  keywords: ["ناوي أوردرز", "برجر", "توصيل", "Nawy Orders", "food delivery", "PWA"],
-  openGraph: {
-    title: "ناوي أوردرز | Nawy Orders",
-    description: "اطلب أكلك المفضل من ناوي أوردرز — توصيل سريع وعروض على البرجر والبيتزا.",
-    type: "website",
-    locale: "ar_EG",
-    images: [{ url: "/og/cover.jpg", width: 1200, height: 630, alt: "ناوي أوردرز" }],
-  },
-};
+/**
+ * The tenant's favicon and browser-chrome colour must be in the first HTML
+ * response, so both are resolved here rather than patched in after hydration.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const branding = await requestTenantBranding();
+  return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+    title: {
+      default: "ناوي أوردرز | Nawy Orders",
+      template: "%s | ناوي أوردرز",
+    },
+    description:
+      "ناوي أوردرز — اطلب برجر وبيتزا وفرايد تشيكن على مزاجك، توصيل سريع وعروض حصرية. Nawy Orders food delivery PWA.",
+    applicationName: "ناوي أوردرز",
+    manifest: "/manifest.webmanifest",
+    appleWebApp: {
+      capable: true,
+      title: "ناوي أوردرز",
+      statusBarStyle: "default",
+    },
+    icons: brandingMetadataIcons(branding),
+    keywords: ["ناوي أوردرز", "برجر", "توصيل", "Nawy Orders", "food delivery", "PWA"],
+    openGraph: {
+      title: "ناوي أوردرز | Nawy Orders",
+      description: "اطلب أكلك المفضل من ناوي أوردرز — توصيل سريع وعروض على البرجر والبيتزا.",
+      type: "website",
+      locale: "ar_EG",
+      images: [{ url: "/og/cover.jpg", width: 1200, height: 630, alt: "ناوي أوردرز" }],
+    },
+  };
+}
 
-export const viewport: Viewport = {
-  themeColor: "#E8452C",
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover",
-};
+export async function generateViewport(): Promise<Viewport> {
+  const branding = await requestTenantBranding();
+  return {
+    themeColor: brandingThemeColor(branding),
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
+  };
+}
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Inline custom properties on <html> beat the `:root` defaults, and writing
+  // them during the server render means the tenant palette is painted before
+  // the first frame.
+  const theme = brandingVars((await requestTenantBranding()) ?? {}) as unknown as CSSProperties;
   return (
     <html
       lang="ar"
@@ -69,6 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       data-scroll-behavior="smooth"
       suppressHydrationWarning
       className={`${cairo.variable} ${baloo.variable}`}
+      style={theme}
     >
       <head>
         <script
