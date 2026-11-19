@@ -13,6 +13,7 @@ import { localAccount, rememberLocalAccount } from "@/lib/local-accounts";
 import { renderAppHook } from "@/test/render";
 import { seedCart, seedFavorites, productsById, orders as seedOrders, branches, user, type Order } from "@/lib/data";
 import { savedAddresses } from "@/lib/account-data";
+import { brandingVarNames } from "@/lib/branding";
 import { storageKeys } from "@/lib/storage";
 import type { AuthTransport, CustomerSessionPayload, TokenPair } from "@/lib/api";
 import type { CustomerSession } from "@/lib/session";
@@ -782,16 +783,6 @@ describe("AppProvider — auth and addresses", () => {
   });
 });
 
-const brandingNames = [
-  "--color-brand",
-  "--color-brand-dark",
-  "--color-brand-soft",
-  "--color-brand-contrast",
-  "--color-gold",
-  "--color-cream",
-  "--color-cream-50",
-];
-
 describe("AppProvider — tenant API session and branding", () => {
   beforeEach(() => {
     apiMode.transport = "live";
@@ -808,7 +799,7 @@ describe("AppProvider — tenant API session and branding", () => {
   });
 
   function clearBranding() {
-    for (const name of brandingNames) document.documentElement.style.removeProperty(name);
+    for (const name of brandingVarNames) document.documentElement.style.removeProperty(name);
   }
 
   it("keeps a real session instead of the demo flag once the API is wired", async () => {

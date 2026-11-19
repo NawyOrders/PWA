@@ -18,6 +18,7 @@ import {
   sanitizeBranding,
   type BrandingCache,
 } from "@/lib/branding";
+import { colorScale } from "@/lib/color-scale";
 
 /** The tests write inline properties on <html>, so cleanup wipes them. */
 function wipeBrandingDom(): void {
@@ -79,10 +80,14 @@ describe("color math", () => {
 
 describe("brandingVars", () => {
   it("derives the whole brand ramp from the primary colour", () => {
+    const scale = colorScale("#E8452C");
     const vars = brandingVars({ primaryColor: "#E8452C" });
     expect(vars["--color-brand"]).toBe("#E8452C");
-    expect(vars["--color-brand-soft"]).toBe(lighten("#E8452C", 0.84));
-    expect(vars["--color-brand-dark"]).toBe(darken("#E8452C", 0.14));
+    expect(vars["--color-brand-500"]).toBe("#E8452C");
+    expect(vars["--color-brand-50"]).toBe(scale[50]);
+    expect(vars["--color-brand-900"]).toBe(scale[900]);
+    expect(vars["--color-brand-soft"]).toBe(scale[100]);
+    expect(vars["--color-brand-dark"]).toBe(scale[800]);
   });
 
   it("uses the tenant secondary colour as the dark brand step", () => {
@@ -96,7 +101,7 @@ describe("brandingVars", () => {
 
   it("ignores a secondary colour that is not a hex literal", () => {
     const vars = brandingVars({ primaryColor: "#E8452C", secondaryColor: "crimson" });
-    expect(vars["--color-brand-dark"]).toBe(darken("#E8452C", 0.14));
+    expect(vars["--color-brand-dark"]).toBe(colorScale("#E8452C")[800]);
   });
 
   it("maps accent, background, surface and on-brand text", () => {
@@ -106,16 +111,43 @@ describe("brandingVars", () => {
       surfaceColor: "#FFFBF5",
       textOnPrimaryColor: "#FFFFFF",
     });
-    expect(vars).toEqual({
+    expect(vars).toMatchObject({
       "--color-gold": "#F2B705",
+      "--color-gold-500": "#F2B705",
       "--color-cream": "#FFF7ED",
       "--color-cream-50": "#FFFBF5",
       "--color-brand-contrast": "#FFFFFF",
     });
   });
 
+  it("falls back to a readable on-brand colour when the supplied one fails 4.5:1", () => {
+    const vars = brandingVars({ primaryColor: "#4C1354", textOnPrimaryColor: "#4C1354" });
+    expect(vars["--color-brand-contrast"]).toBe("#FFFFFF");
+    expect(() =>
+      brandingVars({ primaryColor: "#4C1354", textOnPrimaryColor: "#000000" }),
+    ).not.toThrow();
+  });
+
+  it("keeps every written variable in brandingVarNames so applyBranding can clear it", () => {
+    const vars = brandingVars({
+      primaryColor: "#4C1354",
+      secondaryColor: "#240223",
+      accentColor: "#C9A227",
+      backgroundColor: "#FBF3EA",
+      surfaceColor: "#FFFBF6",
+      textOnPrimaryColor: "#FFFFFF",
+    });
+    for (const name of Object.keys(vars)) {
+      expect(brandingVarNames as readonly string[]).toContain(name);
+    }
+  });
+
   it("returns nothing for a branding object with no usable colours", () => {
     expect(brandingVars({ nameAr: "ناوي", tenantId: "t-1" })).toEqual({});
+  });
+
+  it("writes no scale variables when there is no branding", () => {
+    expect(brandingVars({})).toEqual({});
   });
 
   it("leaves null fields to the default palette", () => {
@@ -416,8 +448,14 @@ describe("branding assets", () => {
     expect(brandingFaviconUrl({ faviconUrl: "http://cdn.example.com/icon.png" })).toBeNull();
   });
 
-  it("does not use the logo as a favicon and falls back to nothing", () => {
-    expect(brandingFaviconUrl({ logoUrl: "https://cdn.example.com/logo.jpg" })).toBeNull();
+  it("falls back to the logo, then to nothing", () => {
+    expect(brandingFaviconUrl({ logoUrl: "https://cdn.example.com/logo.jpg" })).toBe(
+      "https://cdn.example.com/logo.jpg",
+    );
+    expect(
+      brandingFaviconUrl({ faviconUrl: null, logoUrl: "https://cdn.example.com/logo.jpg" }),
+    ).toBe("https://cdn.example.com/logo.jpg");
+    expect(brandingFaviconUrl({})).toBeNull();
     expect(brandingFaviconUrl(null)).toBeNull();
   });
 

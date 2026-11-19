@@ -19,14 +19,28 @@ describe("brandingIcon", () => {
     });
   });
 
-  it("falls back to the shipped icon when faviconUrl is null", () => {
-    expect(brandingIcon({ logoUrl: "https://cdn.example.com/logo.jpg", faviconUrl: null })).toEqual(
-      DEFAULT_FAVICON,
-    );
-    expect(brandingIcon({ logoUrl: "https://cdn.example.com/logo.jpg" })).toEqual(DEFAULT_FAVICON);
+  it("falls back to the logo when faviconUrl is null", () => {
+    expect(brandingIcon({ logoUrl: "https://cdn.example.com/logo.jpg", faviconUrl: null })).toEqual({
+      url: "https://cdn.example.com/logo.jpg",
+      type: "image/jpeg",
+    });
+    expect(brandingIcon({ logoUrl: "https://cdn.example.com/logo.jpg" })).toEqual({
+      url: "https://cdn.example.com/logo.jpg",
+      type: "image/jpeg",
+    });
   });
 
-  it("ignores a favicon URL that is not safe HTTPS", () => {
+  it("falls back to the shipped icon when both URLs are missing", () => {
+    expect(brandingIcon({})).toEqual(DEFAULT_FAVICON);
+  });
+
+  it("ignores an unsafe favicon and uses the logo instead", () => {
+    expect(
+      brandingIcon({
+        faviconUrl: "http://cdn.example.com/icon.png",
+        logoUrl: "https://cdn.example.com/logo.png",
+      }),
+    ).toEqual({ url: "https://cdn.example.com/logo.png", type: "image/png" });
     expect(brandingIcon({ faviconUrl: "http://cdn.example.com/icon.png" })).toEqual(DEFAULT_FAVICON);
   });
 

@@ -11,6 +11,16 @@
   --color-brand-soft: #fbe7df;
   /* Text drawn on brand surfaces; tenant branding may override it. */
   --color-brand-contrast: #ffffff;
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
   --color-pink-soft: #fdecef;
   --color-ink: #201a16;
   --color-muted: #9b8d82;
@@ -22,6 +32,16 @@
   --color-success: #38a475;
   --color-success-soft: #ddf3e7;
   --color-gold: #f6a723;
+  --color-gold-50: var(--gold-50);
+  --color-gold-100: var(--gold-100);
+  --color-gold-200: var(--gold-200);
+  --color-gold-300: var(--gold-300);
+  --color-gold-400: var(--gold-400);
+  --color-gold-500: var(--gold-500);
+  --color-gold-600: var(--gold-600);
+  --color-gold-700: var(--gold-700);
+  --color-gold-800: var(--gold-800);
+  --color-gold-900: var(--gold-900);
 
   --font-sans: var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-baloo), var(--font-cairo), ui-sans-serif, sans-serif;
@@ -38,6 +58,36 @@
   --motion-base: 240ms;
   --motion-slow: 460ms;
   --motion-enter-x: 20px;
+}
+
+/*
+ * Default scales behind --color-brand-N / --color-gold-N. These are the values
+ * colorScale() produces for the built-in palette, so step 500 is exactly the
+ * existing --color-brand / --color-gold colour and the default look is
+ * unchanged. Tenant branding overwrites the same steps on <html>.
+ */
+:root {
+  --brand-50: #FBEDEB;
+  --brand-100: #F6CDC7;
+  --brand-200: #F1ACA1;
+  --brand-300: #ED8A7B;
+  --brand-400: #EA6450;
+  --brand-500: #E8452C;
+  --brand-600: #CA3019;
+  --brand-700: #9B2715;
+  --brand-800: #6C1C10;
+  --brand-900: #3B100A;
+
+  --gold-50: #FDF6EA;
+  --gold-100: #F9E6C5;
+  --gold-200: #F7D69E;
+  --gold-300: #F5C676;
+  --gold-400: #F5B548;
+  --gold-500: #F6A723;
+  --gold-600: #DA8D0C;
+  --gold-700: #A86E0C;
+  --gold-800: #754D0A;
+  --gold-900: #402A06;
 }
 
 [dir="rtl"] {

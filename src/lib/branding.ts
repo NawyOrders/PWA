@@ -20,6 +20,12 @@ import type {
   RestaurantBranchWorkingHour,
   RestaurantBranding,
 } from "@/lib/api";
+import {
+  colorScale,
+  COLOR_SCALE_STEPS,
+  contrastRatio,
+  readableTextOn,
+} from "@/lib/color-scale";
 
 const COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 const TIME = /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
@@ -35,10 +41,30 @@ const DAYS = new Set([
 
 export const brandingVarNames = [
   "--color-brand",
+  "--color-brand-50",
+  "--color-brand-100",
+  "--color-brand-200",
+  "--color-brand-300",
+  "--color-brand-400",
+  "--color-brand-500",
+  "--color-brand-600",
+  "--color-brand-700",
+  "--color-brand-800",
+  "--color-brand-900",
   "--color-brand-dark",
   "--color-brand-soft",
   "--color-brand-contrast",
   "--color-gold",
+  "--color-gold-50",
+  "--color-gold-100",
+  "--color-gold-200",
+  "--color-gold-300",
+  "--color-gold-400",
+  "--color-gold-500",
+  "--color-gold-600",
+  "--color-gold-700",
+  "--color-gold-800",
+  "--color-gold-900",
   "--color-cream",
   "--color-cream-50",
 ] as const;
@@ -108,17 +134,27 @@ export function darken(hex: string, amount: number): string {
 export function brandingVars(branding: RestaurantBranding): Record<string, string> {
   const vars: Record<string, string> = {};
   const primary = safeColor(branding.primaryColor);
+
   if (primary) {
+    const scale = colorScale(primary);
     vars["--color-brand"] = primary;
-    vars["--color-brand-soft"] = lighten(primary, 0.84);
-    vars["--color-brand-dark"] = safeColor(branding.secondaryColor) ?? darken(primary, 0.14);
+    for (const step of COLOR_SCALE_STEPS) vars[`--color-brand-${step}`] = scale[step];
+    vars["--color-brand-soft"] = scale[100];
+    vars["--color-brand-dark"] = safeColor(branding.secondaryColor) ?? scale[800];
+    vars["--color-brand-contrast"] = brandContrast(branding.textOnPrimaryColor, primary);
   } else {
     const secondary = safeColor(branding.secondaryColor);
     if (secondary) vars["--color-brand-dark"] = secondary;
+    const onPrimary = safeColor(branding.textOnPrimaryColor);
+    if (onPrimary) vars["--color-brand-contrast"] = onPrimary;
   }
 
   const accent = safeColor(branding.accentColor);
-  if (accent) vars["--color-gold"] = accent;
+  if (accent) {
+    const scale = colorScale(accent);
+    vars["--color-gold"] = accent;
+    for (const step of COLOR_SCALE_STEPS) vars[`--color-gold-${step}`] = scale[step];
+  }
 
   const background = safeColor(branding.backgroundColor);
   if (background) vars["--color-cream"] = background;
@@ -126,10 +162,25 @@ export function brandingVars(branding: RestaurantBranding): Record<string, strin
   const surface = safeColor(branding.surfaceColor);
   if (surface) vars["--color-cream-50"] = surface;
 
-  const onPrimary = safeColor(branding.textOnPrimaryColor);
-  if (onPrimary) vars["--color-brand-contrast"] = onPrimary;
-
   return vars;
+}
+
+/**
+ * A tenant-supplied on-primary colour is trusted only when it actually reads on
+ * the primary background. Otherwise the app picks white or ink by contrast.
+ */
+function brandContrast(value: string | null | undefined, primary: string): string {
+  const supplied = safeColor(value);
+  if (supplied && contrastRatio(supplied, primary) >= 4.5) return supplied;
+
+  const fallback = readableTextOn(primary);
+  if (supplied && process.env.NODE_ENV === "development") {
+    const ratio = contrastRatio(supplied, primary).toFixed(2);
+    console.warn(
+      `[branding] textOnPrimaryColor ${supplied} has ${ratio}:1 contrast on ${primary}; using ${fallback}.`,
+    );
+  }
+  return fallback;
 }
 
 /**
@@ -406,11 +457,11 @@ export function brandingLogoUrl(branding: RestaurantBranding | null): string | n
 }
 
 /**
- * The tenant's own favicon. The logo is deliberately not used here: a tenant
- * that has not uploaded a favicon keeps the app's default icon.
+ * The tenant's favicon: its own icon, then its logo, then `null` so the caller
+ * can fall back to the icon the app ships.
  */
 export function brandingFaviconUrl(branding: RestaurantBranding | null): string | null {
-  return branding ? safeUrl(branding.faviconUrl) : null;
+  return branding ? safeUrl(branding.faviconUrl) ?? safeUrl(branding.logoUrl) : null;
 }
 
 /** Best-effort MIME type for a tenant-uploaded icon URL. */
