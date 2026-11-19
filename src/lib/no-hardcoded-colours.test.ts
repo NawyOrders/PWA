@@ -10,7 +10,8 @@ import { describe, expect, it } from "vitest";
  */
 
 const ROOTS = ["src/components", "src/app"];
-const COLOUR_PATTERN = /#[0-9a-fA-F]{3,8}\b|rgba?\(/g;
+// Not \b: Tailwind arbitrary values put hex next to `_`, as in `linear-gradient(...#f25b43_100%)`.
+const COLOUR_PATTERN = /#[0-9a-fA-F]{3,8}(?![0-9a-fA-F])|rgba?\(/g;
 
 type AllowlistEntry = {
   /** Repository-relative path, forward slashes. */
@@ -83,6 +84,10 @@ function isAllowed({ file, value }: ColourLiteral): boolean {
 }
 
 describe("hardcoded colour guard", () => {
+  it("catches hex values that sit next to an arbitrary-value underscore", () => {
+    expect("linear-gradient(110deg,#f25b43_100%)".match(COLOUR_PATTERN)).toEqual(["#f25b43"]);
+  });
+
   it("scans the component and app trees, skipping tests", () => {
     expect(scannedFiles).toContain("src/components/ui.tsx");
     expect(scannedFiles.some((file) => file.endsWith("globals.css"))).toBe(true);
