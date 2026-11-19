@@ -1,0 +1,40 @@
+{
+  "statusCode": 200,
+  "isSuccess": true,
+  "data": {
+    "tenantId": "eltazag",
+    "nameAr": "الطازج اكسبرس",
+    "nameEn": "el tazag express",
+    "logoUrl": "https://scontent.fcai19-3.fna.fbcdn.net/v/t39.30808-6/687037004_994521949756245_8315009499516241549_n.avif?stp=dst-jpg_tt6&cstp=mx960x960&ctp=s960x960&_nc_cat=107&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=LBIeU_ayFlgQ7kNvwGbijCt&_nc_oc=AdohbG20FpOX2nCn6gyKUyMdtHF-f5uJReMIHeArlHkW3CNWdlJKYANjxGd7X0oNSuM&_nc_zt=23&_nc_ht=scontent.fcai19-3.fna&_nc_gid=QqAGbPktwLAMuiluc-FAzQ&_nc_ss=7b289&oh=00_AQRDeiYEhJX9BQXVaXVCLTdJFVRVd_qCE_ljWdPg_oHRKg&oe=6B054E17",
+    "faviconUrl": "https://scontent.fcai19-3.fna.fbcdn.net/v/t39.30808-6/687037004_994521949756245_8315009499516241549_n.avif?stp=dst-jpg_tt6&cstp=mx960x960&ctp=s960x960&_nc_cat=107&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=LBIeU_ayFlgQ7kNvwGbijCt&_nc_oc=AdohbG20FpOX2nCn6gyKUyMdtHF-f5uJReMIHeArlHkW3CNWdlJKYANjxGd7X0oNSuM&_nc_zt=23&_nc_ht=scontent.fcai19-3.fna&_nc_gid=QqAGbPktwLAMuiluc-FAzQ&_nc_ss=7b289&oh=00_AQRDeiYEhJX9BQXVaXVCLTdJFVRVd_qCE_ljWdPg_oHRKg&oe=6B054E17",
+    "primaryColor": "#E01E26",
+    "secondaryColor": "#F5CD21",
+    "accentColor": "#B8141B",
+    "backgroundColor": "#E6CCA8",
+    "surfaceColor": "#FFFBF6",
+    "textOnPrimaryColor": "#FFFFFF",
+    "contactPhone": null,
+    "contactEmail": null,
+    "whatsAppUrl": null,
+    "messengerUrl": null,
+    "socialLinks": {},
+    "branches": [
+      {
+        "branchId": "eltazag",
+        "nameAr": "الفرع الرئيسي",
+        "nameEn": "Main branch",
+        "address": null,
+        "latitude": 30.0444,
+        "longitude": 31.2357,
+        "phone": null,
+        "status": "Open",
+        "isPrimary": true,
+        "sortOrder": 0,
+        "workingHours": [],
+        "deliveryAreas": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-11-18T00:00:00Z"
+}
