@@ -1,25 +1,16 @@
 import { Suspense } from "react";
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { ProductDetail } from "@/components/product-detail";
 import { LoadingIndicator } from "@/components/loading-indicator";
-import { products, productsById } from "@/lib/data";
 
-export async function generateStaticParams() {
-  return products.map((product) => ({ id: product.id }));
-}
-
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params;
-  const product = productsById[id];
-  return { title: product ? product.name : "الطبق غير موجود" };
-}
-
+/**
+ * The menu lives per tenant and is already loaded by the provider, so this page
+ * cannot enumerate static ids or resolve names on the server. It passes the id
+ * down and the client resolves it against the tenant menu, showing a friendly
+ * empty state for an id the tenant no longer sells.
+ */
 async function ProductContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = productsById[id];
-  if (!product) notFound();
-  return <ProductDetail product={product} />;
+  return <ProductDetail productId={id} />;
 }
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {

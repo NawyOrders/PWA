@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { LeafletMap, type MapMarker } from "@/components/leaflet-map";
 import { useApp } from "@/components/providers";
-import { Breadcrumbs, MobilePageHeader } from "@/components/ui";
+import { Breadcrumbs, ItemMedia, MobilePageHeader } from "@/components/ui";
 import {
   courier,
   courierPosition,
@@ -41,12 +41,17 @@ const TRACK_INSET = 12.5;
 const TRACK_SPAN = 100 - TRACK_INSET * 2;
 
 export function OrderTrackingView({ order }: { order: Order }) {
-  const { t, lang, branches } = useApp();
+  const { t, lang, branches, nameOf } = useApp();
   const [liveEta, setLiveEta] = useState(12);
   const delivered = order.status === "delivered";
   const pickup = order.fulfilment === "pickup";
   const branch = pickup ? branches.find((item) => item.id === order.branchId) ?? null : null;
   const completedSteps = delivered ? trackingSteps.length : COMPLETED_STEPS;
+  const firstItem = order.items?.[0];
+  const orderTitle = firstItem ? nameOf(firstItem) : t("طلب");
+  const orderDescription = (order.items ?? [])
+    .map((item) => `${item.qty} × ${nameOf(item)}`)
+    .join(lang === "ar" ? "، " : ", ");
 
   const markers: MapMarker[] = [
     { id: "kitchen", lat: kitchenPosition.lat, lng: kitchenPosition.lng, variant: "pin", glyph: "fork" },
@@ -220,12 +225,14 @@ export function OrderTrackingView({ order }: { order: Order }) {
             </div>
 
             <div className="mt-4 flex items-center gap-3">
-              <div className="relative size-16 shrink-0 overflow-hidden rounded-2xl bg-peach">
-                <Image src={order.image} alt={t(order.title)} fill sizes="64px" className="object-cover" />
-              </div>
+              <ItemMedia
+                name={firstItem?.nameAr ?? orderTitle}
+                className="size-16 shrink-0 rounded-2xl"
+                textClassName="text-[8px]"
+              />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-extrabold">{t(order.title)}</p>
-                <p className="mt-0.5 text-[11px] text-muted">{t(order.description)}</p>
+                <p className="text-sm font-extrabold">{orderTitle}</p>
+                <p className="mt-0.5 text-[11px] text-muted">{orderDescription}</p>
                 <p className="mt-1 text-[10px] text-muted">{t(order.date)}</p>
                 <p className="mt-1 text-[10px] text-muted">
                   {t("طريقة الدفع: ")}

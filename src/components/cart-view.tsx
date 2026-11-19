@@ -1,32 +1,29 @@
 "use client";
 
-import Image from "next/image";
 import { Trash2, Wallet } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { productsById } from "@/lib/data";
 import { CartSummary } from "@/components/cart-summary";
-import { CheckoutShell, EmptyState, MobilePageHeader, Price, QtyStepper } from "@/components/ui";
+import { CheckoutShell, EmptyState, ItemMedia, MobilePageHeader, Price, QtyStepper } from "@/components/ui";
 
 function CartItem({ lineKey }: { lineKey: string }) {
-  const { lines, changeQty, removeLine, t, lang } = useApp();
+  const { lines, changeQty, removeLine, t, itemsById, nameOf } = useApp();
   const line = lines.find((item) => item.key === lineKey);
   if (!line) return null;
-  const product = productsById[line.productId];
-  if (!product) return null;
+  const item = itemsById.get(line.productId);
+  if (!item) return null;
+  const name = nameOf(item);
 
   return (
     <article className="relative flex gap-3 rounded-[24px] bg-white p-3 shadow-soft transition duration-300 hover:shadow-pop lg:gap-4 lg:p-4">
-      <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-peach lg:size-32">
-        <Image src={product.image} alt={t(product.name)} fill sizes="128px" className="object-cover" />
-      </div>
+      <ItemMedia
+        name={item.nameAr}
+        className="size-24 shrink-0 rounded-2xl lg:size-32"
+        textClassName="text-[10px] lg:text-xs"
+      />
       <div className="flex min-w-0 flex-1 flex-col justify-center">
-        <h3 className="pe-12 text-base font-extrabold lg:text-lg">{t(product.name)}</h3>
-        <p className="mt-1 line-2 text-[11px] leading-5 text-muted">{t(product.description)}</p>
-        {line.extras?.length ? (
-          <p className="mt-1 text-[10px] font-semibold text-brand">
-            {t("الإضافات: ")}
-            {line.extras.map((extra) => t(extra)).join(lang === "ar" ? "، " : ", ")}
-          </p>
+        <h3 className="pe-12 text-base font-extrabold lg:text-lg">{name}</h3>
+        {line.variant ? (
+          <p className="mt-1 text-[11px] font-semibold text-brand">{line.variant}</p>
         ) : null}
         {line.note ? <p className="mt-1 text-[10px] text-muted">{t("ملاحظات: ")}{line.note}</p> : null}
         <div className="mt-2 flex items-center justify-between gap-2">
@@ -42,7 +39,7 @@ function CartItem({ lineKey }: { lineKey: string }) {
         type="button"
         onClick={() => removeLine(line.key)}
         className="absolute end-3 top-3 flex items-center gap-1.5 text-[11px] font-semibold text-muted transition hover:text-brand"
-        aria-label={t("حذف {name}", { name: t(product.name) })}
+        aria-label={t("حذف {name}", { name })}
       >
         <Trash2 className="size-3.5" />
         {t("حذف")}

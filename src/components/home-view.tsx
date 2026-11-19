@@ -5,27 +5,18 @@ import Link from "next/link";
 import { useState } from "react";
 import {
   ChevronDown,
-  Flame,
   LayoutGrid,
   ListFilter,
   Smartphone,
   Sparkles,
 } from "lucide-react";
-import {
-  categoriesById,
-  categoryCounts,
-  desktopCategoryOrder,
-  filterMenu,
-  menuFilters,
-  products,
-  type CategoryId,
-} from "@/lib/data";
 import { PromoCarousel } from "@/components/promo-carousel";
 import { ProductCard } from "@/components/product-card";
 import { MenuRow } from "@/components/menu-row";
 import { InstallButton } from "@/components/install-button";
 import { MenuFilters } from "@/components/menu-filters";
 import { SectionTitle } from "@/components/ui";
+import { ItemMedia } from "@/components/ui";
 import { StoreHeader } from "@/components/store-header";
 import {
   DesktopOrderTrackingCard,
@@ -59,26 +50,30 @@ function PhoneMockup() {
 }
 
 export function HomeView() {
-  const { t, loggedIn, orders, toast } = useApp();
-  const [filter, setFilter] = useState("الكل");
-  const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(
-    "burger",
-  );
+  const { t, loggedIn, orders, toast, categories, items, nameOf } = useApp();
+  const [filter, setFilter] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showActiveOrder, setShowActiveOrder] = useState(true);
-  const menu = selectedCategory
-    ? products.filter((product) => product.category === selectedCategory)
-    : filterMenu(filter);
+  const activeCategoryId = selectedCategory ?? categories[0]?.id ?? null;
+  const activeCategory = categories.find((category) => category.id === activeCategoryId) ?? null;
+  const menu = filter === "all" ? items : items.filter((item) => item.categoryId === filter);
+  const featured = (activeCategory ? activeCategory.items : items).slice(0, 4);
   const activeOrder = orders.find((order) => order.status === "preparing");
 
-  const selectCategory = (categoryId: CategoryId) => {
+  const selectCategory = (categoryId: string) => {
     setSelectedCategory(categoryId);
-    setFilter("الكل");
+    setFilter(categoryId);
   };
 
   const selectMenuFilter = (value: string) => {
     setSelectedCategory(null);
     setFilter(value);
   };
+
+  const filterOptions = [
+    { id: "all", label: t("كل الأصناف") },
+    ...categories.map((category) => ({ id: category.id, label: nameOf(category) })),
+  ];
 
   return (
     <div className="pb-6 lg:pb-0">
@@ -94,21 +89,20 @@ export function HomeView() {
         <SectionTitle
           title="الاقسام"
           icon={<LayoutGrid className="size-5 text-brand lg:size-6" />}
-          action={{ label: "عرض كل الأصناف (12)", href: "/categories" }}
+          action={{ label: t("عرض كل الأصناف ({count})", { count: items.length }), href: "/categories" }}
         />
 
         {/* Phones scroll the rail edge to edge; from the tablet breakpoint up
-            the same seven categories become a card grid that fills the shell. */}
+            the same categories become a card grid that fills the shell. */}
         <div className="motion-stagger hide-scrollbar -mx-4 mt-3 flex gap-2.5 overflow-x-auto px-4 pb-1 sm:hidden">
-          {desktopCategoryOrder.map((id) => {
-            const category = categoriesById[id];
-            const active = id === selectedCategory;
+          {categories.map((category) => {
+            const active = category.id === activeCategoryId;
             return (
               <button
-                key={id}
+                key={category.id}
                 type="button"
                 aria-pressed={active}
-                onClick={() => selectCategory(id)}
+                onClick={() => selectCategory(category.id)}
                 className="group flex w-[68px] shrink-0 flex-col items-center gap-2 text-center"
               >
                 <span
@@ -118,20 +112,16 @@ export function HomeView() {
                       : "border-line"
                   }`}
                 >
-                  <span className="relative size-12 overflow-hidden rounded-full">
-                    <Image
-                      src={category.image}
-                      alt={t(category.name)}
-                      fill
-                      sizes="48px"
-                      className="object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                  </span>
+                  <ItemMedia
+                    name={category.nameAr}
+                    className="size-12 rounded-full"
+                    textClassName="text-[7px]"
+                  />
                 </span>
                 <span
                   className={`whitespace-nowrap text-[10px] font-bold ${active ? "text-brand" : "text-ink"}`}
                 >
-                  {t(category.name)}
+                  {nameOf(category)}
                 </span>
               </button>
             );
@@ -139,64 +129,57 @@ export function HomeView() {
         </div>
 
         <div className="motion-stagger mt-4 hidden grid-cols-4 gap-3 sm:grid lg:mt-5 lg:grid-cols-7 lg:gap-4">
-          {desktopCategoryOrder.map((id) => {
-            const category = categoriesById[id];
-            const active = id === selectedCategory;
+          {categories.map((category) => {
+            const active = category.id === activeCategoryId;
             return (
               <button
-                key={id}
+                key={category.id}
                 type="button"
                 aria-pressed={active}
-                onClick={() => selectCategory(id)}
+                onClick={() => selectCategory(category.id)}
                 className={`group flex flex-col items-center rounded-[18px] bg-white px-2.5 py-3.5 text-center shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.98] sm:px-3 sm:py-4 ${
                   active ? "ring-2 ring-inset ring-brand/60" : ""
                 }`}
               >
                 <span className="grid size-[56px] place-items-center rounded-full bg-peach/80 transition-colors duration-300 group-hover:bg-brand-soft md:size-[62px] lg:size-[68px]">
-                  <span className="relative size-10 overflow-hidden rounded-full md:size-11 lg:size-12">
-                    <Image
-                      src={category.image}
-                      alt={t(category.name)}
-                      fill
-                      sizes="(max-width: 767px) 40px, (max-width: 1023px) 44px, 48px"
-                      className="object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                  </span>
+                  <ItemMedia
+                    name={category.nameAr}
+                    className="size-12 rounded-full md:size-[52px] lg:size-14"
+                    textClassName="text-[8px]"
+                  />
                 </span>
                 <span
                   className={`mt-2 text-xs font-extrabold sm:mt-2.5 sm:text-[13px] lg:text-sm ${
                     active ? "text-brand" : "text-ink"
                   }`}
                 >
-                  {t(category.name)}
+                  {nameOf(category)}
                 </span>
                 <span className="mt-1 text-[10px] font-semibold text-muted">
-                  {categoryCounts[id] ?? 0} {t("صنف")}
+                  {category.items.length} {t("صنف")}
                 </span>
               </button>
             );
           })}
         </div>
+
+        {categories.length === 0 ? (
+          <p className="card mt-4 px-6 py-8 text-center text-sm text-muted">
+            {t("منيو المطعم فاضي حالياً.")}
+          </p>
+        ) : null}
       </section>
 
       <section className="shell mt-7 lg:mt-10">
         <SectionTitle
-          title="الأكثر طلباً"
-          icon={<Flame className="size-5 fill-brand/20 text-brand lg:size-6" />}
+          title="من المنيو"
+          icon={<LayoutGrid className="size-5 text-brand lg:size-6" />}
           className="translate-x-1.5"
         />
         <div className="motion-stagger mt-3 grid grid-cols-2 gap-3 lg:mt-5 lg:grid-cols-5 lg:gap-4">
-          {products
-            .filter(
-              (product) => product.category === (selectedCategory ?? "burger"),
-            )
-            .sort(
-              (a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)),
-            )
-            .slice(0, 4)
-            .map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+          {featured.map((item) => (
+            <ProductCard key={item.id} item={item} />
+          ))}
 
           <div className="motion-lift relative hidden overflow-hidden rounded-[26px] bg-brand p-5 text-brand-contrast shadow-soft lg:block">
             <div className="motion-float absolute -right-10 -top-10 size-40 rounded-full bg-white/10" />
@@ -248,7 +231,7 @@ export function HomeView() {
             {t("قائمة الطعام")}
           </h2>
           <MenuFilters
-            filters={menuFilters}
+            options={filterOptions}
             value={filter}
             onChange={selectMenuFilter}
             className="hidden lg:flex"
@@ -256,10 +239,16 @@ export function HomeView() {
         </div>
 
         <div className="motion-stagger mt-3 grid gap-3 lg:mt-5 lg:grid-cols-2 lg:gap-4">
-          {menu.slice(0, 6).map((product) => (
-            <MenuRow key={product.id} product={product} />
+          {menu.slice(0, 6).map((item) => (
+            <MenuRow key={item.id} item={item} />
           ))}
         </div>
+
+        {menu.length === 0 ? (
+          <p className="card mt-4 px-6 py-10 text-center text-sm text-muted">
+            {t("منيو المطعم فاضي حالياً.")}
+          </p>
+        ) : null}
 
         <div className="mt-5 hidden justify-center lg:flex">
           <Link

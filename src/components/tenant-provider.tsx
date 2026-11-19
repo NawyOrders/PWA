@@ -5,6 +5,7 @@ import { AppProvider } from "@/components/providers";
 import type { TenantBrandingResult } from "@/lib/tenant-branding";
 import { isTenantRootHost, tenantApiBaseUrl, tenantSlugFromHost } from "@/lib/tenant";
 import { loadTenantBranding } from "@/lib/static-tenant-data";
+import { loadTenantMenu } from "@/lib/static-menu-data";
 
 /**
  * Server half of the storefront's tenant bootstrap.
@@ -55,10 +56,16 @@ export async function TenantProvider({ children }: { children: React.ReactNode }
 
   if (branding?.status === "not-found") notFound();
 
+  // Branding decides whether the storefront exists; the menu only decides what
+  // it sells. A missing or broken menu therefore renders an empty storefront
+  // instead of a 404, and its loader logs the reason it was rejected.
+  const menu = slug ? await loadTenantMenu(slug) : null;
+
   return (
     <AppProvider
       initialBranding={branding?.status === "ok" ? branding.branding : null}
       initialBrandingEtag={branding?.status === "ok" ? branding.etag : null}
+      initialMenu={menu?.status === "ok" ? menu.menu : null}
       tenantApiBaseUrl={apiBaseUrl ?? ""}
     >
       {children}

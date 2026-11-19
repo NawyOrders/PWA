@@ -7,7 +7,7 @@ import { LoginView } from "@/components/login-view";
 import { seedProfile, useApp } from "@/components/providers";
 import { useCustomerSession } from "@/hooks/use-customer-session";
 import { MOCK_TEST_PHONES, authMock } from "@/lib/auth-mock";
-import { orders as seedOrders, seedFavorites } from "@/lib/data";
+import { seedOrders } from "@/test/menu";
 import { localAccount, rememberLocalAccount } from "@/lib/local-accounts";
 import { localCustomer } from "@/lib/local-customers";
 import { loginHref } from "@/lib/routes";
@@ -392,8 +392,8 @@ describe("the customer's own history outlives the visit, in mock mode", () => {
     // Logout hands the shared device back the neutral view…
     await userEvent.click(screen.getByRole("button", { name: "probe logout" }));
     await waitFor(() => expect(screen.queryByText("protected content")).not.toBeInTheDocument());
-    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.favorites)))).toEqual(seedFavorites));
-    expect(JSON.parse(String(localStorage.getItem(storageKeys.orders)))).toHaveLength(seedOrders.length);
+    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.favorites)))).toEqual([]));
+    expect(JSON.parse(String(localStorage.getItem(storageKeys.orders)))).toHaveLength(0);
     expect(JSON.parse(String(localStorage.getItem(storageKeys.points)))).toBe(0);
     // …without erasing the copy that belongs to the customer who just left.
     expect(localAccount(PHONE)?.favorites).toEqual(["beef-burger"]);
@@ -527,9 +527,9 @@ describe("the registered name outlives the visit, in demo mode", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "probe logout" }));
     await waitFor(() => expect(screen.queryByText("protected content")).not.toBeInTheDocument());
-    // The shared device shows the neutral catalogue view again…
-    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.favorites)))).toEqual(seedFavorites));
-    expect(JSON.parse(String(localStorage.getItem(storageKeys.orders)))).toHaveLength(seedOrders.length);
+    // The shared device shows an empty catalogue view again…
+    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.favorites)))).toEqual([]));
+    expect(JSON.parse(String(localStorage.getItem(storageKeys.orders)))).toHaveLength(0);
     // …and the customer's own copy is still theirs.
     expect(localAccount("+201012345678")?.favorites).toEqual(["beef-burger"]);
     expect(localAccount("+201012345678")?.orders).toHaveLength(1);

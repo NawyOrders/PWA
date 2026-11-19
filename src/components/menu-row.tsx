@@ -1,21 +1,20 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import type { Product } from "@/lib/data";
+import { Plus } from "lucide-react";
+import { hasVariants, startingPrice, type Item } from "@/lib/menu";
 import { useApp } from "@/components/providers";
-import { AddButton, FavoriteButton, Price, QtyStepper } from "@/components/ui";
+import { AddButton, FavoriteButton, ItemMedia, Price, QtyStepper } from "@/components/ui";
 
-export function MenuRow({ product, className = "" }: { product: Product; className?: string }) {
-  const { changeQty, lines, quickAdd, t } = useApp();
-  const defaultSize = product.category === "burger" ? "ساندوتش فقط" : undefined;
-  const cartLine = lines.find(
-    (line) =>
-      line.productId === product.id &&
-      line.size === defaultSize &&
-      !line.extras?.length &&
-      !line.note,
-  );
+export function MenuRow({ item, className = "" }: { item: Item; className?: string }) {
+  const { changeQty, lines, quickAdd, nameOf, t } = useApp();
+  const variantItem = hasVariants(item);
+  const name = nameOf(item);
+  // A variant item never has a single line "added by default": the cart holds
+  // the variant the customer picked on the detail screen.
+  const cartLine = variantItem
+    ? undefined
+    : lines.find((line) => line.productId === item.id && !line.variant && !line.note);
 
   return (
     <article
@@ -23,44 +22,46 @@ export function MenuRow({ product, className = "" }: { product: Product; classNa
     >
       <div className="relative w-[116px] shrink-0 lg:w-[150px]">
         <Link
-          href={`/product/${product.id}`}
-          className="absolute inset-0 overflow-hidden bg-peach"
-          aria-label={t(product.name)}
+          href={`/product/${item.id}`}
+          className="absolute inset-0 block"
+          aria-label={name}
         >
-          <Image
-            src={product.image}
-            alt={t(product.name)}
-            fill
-            sizes="150px"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+          <ItemMedia name={item.nameAr} className="absolute inset-0" textClassName="text-xs" />
         </Link>
       </div>
 
       <Link
-        href={`/product/${product.id}`}
+        href={`/product/${item.id}`}
         className="relative z-10 flex min-w-0 flex-1 flex-col justify-center py-3 pe-16 ps-3.5 text-start"
       >
-        <h3 className="text-lg font-extrabold lg:text-xl">{t(product.name)}</h3>
-        <p className="line-2 mt-1 max-w-[95%] text-[11px] leading-5 text-muted lg:text-xs">
-          {t(product.description)}
-        </p>
-        <div className="mt-3">
-          <Price value={product.price} />
+        <h3 className="text-lg font-extrabold lg:text-xl">{name}</h3>
+        <div className="mt-3 flex items-baseline gap-1.5">
+          {variantItem || item.price === null ? (
+            <span className="text-[11px] font-bold text-muted">{t("من")}</span>
+          ) : null}
+          <Price value={startingPrice(item)} />
         </div>
       </Link>
 
-      <FavoriteButton productId={product.id} className="absolute end-3 top-3 z-20 size-9 lg:size-10" />
+      <FavoriteButton productId={item.id} className="absolute end-3 top-3 z-20 size-9 lg:size-10" />
       <div className="absolute bottom-3 end-3 z-20">
-        {!cartLine ? (
-          <AddButton onClick={() => quickAdd(product.id)} className="size-10 lg:size-11" />
-        ) : (
+        {variantItem ? (
+          <Link
+            href={`/product/${item.id}`}
+            aria-label={t("اختار الحجم")}
+            className="motion-press grid size-10 place-items-center rounded-full bg-brand text-brand-contrast shadow-[0_12px_24px_-12px_color-mix(in_srgb,var(--color-brand)_90%,transparent)] transition hover:scale-105 hover:bg-brand-dark active:scale-90 lg:size-11"
+          >
+            <Plus className="size-5" strokeWidth={2.4} />
+          </Link>
+        ) : cartLine ? (
           <QtyStepper
             value={cartLine.qty}
             min={0}
             onChange={(quantity) => changeQty(cartLine.key, quantity - cartLine.qty)}
             className="gap-1 p-1 [&_button]:size-8 [&_span]:min-w-5 [&_span]:text-sm lg:[&_button]:size-9 max-[375px]:gap-0.5 max-[375px]:p-0.5 max-[375px]:[&_button]:size-7 max-[375px]:[&_span]:min-w-4 max-[375px]:[&_span]:text-xs max-[375px]:[&_svg]:size-3"
           />
+        ) : (
+          <AddButton onClick={() => quickAdd(item.id)} className="size-10 lg:size-11" />
         )}
       </div>
     </article>

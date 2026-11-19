@@ -1,61 +1,63 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { Check, ChevronLeft, Info, Minus, Plus, ShoppingCart } from "lucide-react";
-import { categoriesById, formatPrice, type Product } from "@/lib/data";
+import { useState } from "react";
+import { ChevronLeft, Minus, Plus, ShoppingCart } from "lucide-react";
+import { formatPrice } from "@/lib/data";
+import { hasVariants, resolveVariantPrice, startingPrice } from "@/lib/menu";
 import { useApp } from "@/components/providers";
 import { StoreHeader } from "@/components/store-header";
-import { buttonStyles, FavoriteButton, HotBadge, MobilePageHeader, Price } from "@/components/ui";
+import {
+  buttonStyles,
+  EmptyState,
+  FavoriteButton,
+  ItemMedia,
+  MobilePageHeader,
+  Price,
+} from "@/components/ui";
 
-const sizes = [
-  { id: "sandwich", label: "ساندوتش فقط", extra: 0, hint: "ساندوتش برجر طازة" },
-  { id: "combo", label: "كومبو", extra: 45, hint: "ساندوتش + بطاطس + مشروب" },
-];
-
-const extrasList = [
-  { id: "cheese", label: "شريحة جبنة", price: 10 },
-  { id: "garlic", label: "صوص تومية إضافي", price: 15 },
-  { id: "fries", label: "بطاطس صغيرة", price: 25 },
-];
-
-export function ProductDetail({ product }: { product: Product }) {
-  const { addItem, t } = useApp();
-  const [sizeId, setSizeId] = useState("sandwich");
-  const [extras, setExtras] = useState<string[]>([]);
+export function ProductDetail({ productId }: { productId: string }) {
+  const { addItem, t, itemsById, categoriesById, nameOf } = useApp();
+  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [selectedQuantity, setSelectedQuantity] = useState(0);
 
-  const customizable = product.category === "burger";
-  const size = customizable ? (sizes.find((item) => item.id === sizeId) ?? sizes[0]) : null;
-  const extrasPrice = customizable
-    ? extras.reduce((total, id) => total + (extrasList.find((item) => item.id === id)?.price ?? 0), 0)
-    : 0;
-  const unitPrice = product.price + (size?.extra ?? 0) + extrasPrice;
-  const category = categoriesById[product.category];
+  const item = itemsById.get(productId);
 
-  const selectedExtras = useMemo(
-    () =>
-      customizable
-        ? extras.map((id) => extrasList.find((item) => item.id === id)?.label ?? "").filter(Boolean)
-        : [],
-    [customizable, extras],
-  );
+  if (!item) {
+    return (
+      <div className="pb-10">
+        <MobilePageHeader title="تفاصيل الوجبة" backHref="/" />
+        <div className="shell mt-4 lg:mt-10">
+          <EmptyState
+            title="الصنف مش موجود"
+            description="هذا الصنف مش متاح في منيو المطعم دلوقتي."
+            ctaLabel="تصفح الأصناف"
+            ctaHref="/categories"
+          />
+        </div>
+      </div>
+    );
+  }
 
+  const category = categoriesById.get(item.categoryId);
+  const categoryName = category ? nameOf(category) : t("المنيو");
+  const name = nameOf(item);
+  const variantItem = hasVariants(item);
+  const variantPrice = resolveVariantPrice(item, selectedVariant);
+  const unitPrice = variantPrice ?? startingPrice(item);
+  const canAdd = selectedQuantity > 0 && (!variantItem || variantPrice !== null);
   const total = unitPrice * selectedQuantity;
 
   const addToCart = () => {
-    addItem(product.id, {
+    if (!canAdd) return;
+    addItem(item.id, {
       qty: selectedQuantity,
-      price: unitPrice,
-      size: size?.label,
-      extras: customizable ? selectedExtras : undefined,
+      variant: variantItem ? (selectedVariant ?? undefined) : undefined,
       note,
     });
     setSelectedQuantity(0);
-    setSizeId("sandwich");
-    setExtras([]);
+    setSelectedVariant(null);
     setNote("");
   };
 
@@ -74,11 +76,11 @@ export function ProductDetail({ product }: { product: Product }) {
               {t("الرئيسية")}
             </Link>
             <ChevronLeft className="size-3.5 ltr:rotate-180" />
-            <Link href="/categories" className="hover:text-brand">
-              {t(category.name)}
+            <Link href={`/categories/${item.categoryId}`} className="hover:text-brand">
+              {categoryName}
             </Link>
             <ChevronLeft className="size-3.5 ltr:rotate-180" />
-            <span className="font-semibold text-brand">{t(product.name)}</span>
+            <span className="font-semibold text-brand">{name}</span>
           </nav>
           <Link href="/categories" className="text-sm font-bold text-muted transition hover:text-brand">
             {t("متابعة التصفح")}
@@ -88,68 +90,49 @@ export function ProductDetail({ product }: { product: Product }) {
         <div className="mt-5 grid gap-4 lg:mt-6 lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-6">
           <div className="order-1">
             <div className="motion-fade relative aspect-[2.1/1] overflow-hidden rounded-[24px] bg-peach shadow-soft lg:aspect-[1.55/1] lg:rounded-[30px]">
-              <Image
-                src={product.image}
-                alt={t(product.name)}
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 560px"
-                className="object-cover"
+              <ItemMedia
+                name={item.nameAr}
+                className="absolute inset-0"
+                textClassName="text-2xl lg:text-3xl"
               />
-              <FavoriteButton productId={product.id} className="absolute end-4 top-4 size-11" />
-              <div className="absolute start-4 top-4 lg:hidden">
-                <HotBadge label={product.popular ? "الأكثر طلباً" : category.name} />
-              </div>
+              <FavoriteButton productId={item.id} className="absolute end-4 top-4 size-11" />
             </div>
 
             <div className="mt-4 hidden lg:block">
-              <HotBadge label={product.popular ? "الأكثر طلباً" : category.name} />
-              <h1 className="mt-3 text-[30px] font-extrabold leading-tight">{t(product.name)}</h1>
-              <p className="mt-2 text-sm leading-7 text-muted">{t(product.description)}</p>
-              <div className="mt-3 flex justify-start">
-                <Price value={product.price} size="lg" oldValue={product.oldPrice} />
+              <h1 className="text-[30px] font-extrabold leading-tight">{name}</h1>
+              <div className="mt-3 flex items-baseline gap-1.5">
+                {variantItem && selectedVariant === null ? (
+                  <span className="text-[11px] font-bold text-muted">{t("من")}</span>
+                ) : null}
+                <Price value={unitPrice} size="lg" />
               </div>
             </div>
 
             <div className="mt-3 flex items-start justify-between gap-3 lg:hidden">
-              <div>
-                <h1 className="text-xl font-extrabold">{t(product.name)}</h1>
-                <p className="mt-1 text-xs leading-6 text-muted">{t(product.description)}</p>
-              </div>
-              <Price value={unitPrice} size="sm" className="shrink-0" />
-            </div>
-
-            <div className="mt-4 hidden items-start gap-3 rounded-2xl border border-line bg-white px-4 py-3 text-xs leading-6 text-muted lg:flex">
-              <span className="grid size-7 shrink-0 place-items-center rounded-full bg-cream-100 text-brand">
-                <Info className="size-4" />
+              <h1 className="text-xl font-extrabold">{name}</h1>
+              <span className="flex shrink-0 items-baseline gap-1">
+                {variantItem && selectedVariant === null ? (
+                  <span className="text-[10px] font-bold text-muted">{t("من")}</span>
+                ) : null}
+                <Price value={unitPrice} size="sm" />
               </span>
-              <p>
-                {t("يحتوي على السمك والجلوتين. لو عندك حساسية من أي مكون، اكتب لنا في الملاحظات وهنحضره على مزاجك.")}
-              </p>
             </div>
           </div>
 
           <div className="order-2 space-y-3 lg:space-y-4">
             <div className="motion-rise card p-4 lg:p-6">
-              <div className="hidden text-center lg:block">
-                <h2 className="text-xl font-extrabold">{t("خطط طلبك على مزاجك")}</h2>
-                {customizable ? (
-                  <p className="mt-1 text-xs text-muted">{t("اختار وجبتك وإضافاتك المفضلة")}</p>
-                ) : null}
-              </div>
-
-              {customizable ? (
-                <div className="mt-4">
+              {variantItem ? (
+                <div>
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold">{t("اختار وجبتك")}</h3>
+                    <h3 className="text-sm font-bold">{t("اختار الحجم")}</h3>
                     <span className="text-[10px] text-muted">{t("مطلوب · اختار واحد")}</span>
                   </div>
                   <div className="mt-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:mt-3">
-                    {sizes.map((item) => {
-                      const active = sizeId === item.id;
+                    {item.variants.map((variant) => {
+                      const active = selectedVariant === variant.key;
                       return (
                         <label
-                          key={item.id}
+                          key={variant.key}
                           className={`flex cursor-pointer flex-col gap-0.5 rounded-xl border-2 px-4 py-3 transition ${
                             active ? "border-brand bg-brand-soft/45" : "border-line bg-white hover:border-brand/30"
                           }`}
@@ -163,67 +146,18 @@ export function ProductDetail({ product }: { product: Product }) {
                               >
                                 {active ? <span className="size-2 rounded-full bg-brand" /> : null}
                               </span>
-                              {t(item.label)}
+                              {variant.key}
                             </span>
                             <span className="text-[11px] font-bold text-brand">
-                              {item.extra
-                                ? `+ ${item.extra} ${t("جنيه")}`
-                                : `${formatPrice(product.price)} ${t("جنيه")}`}
+                              {formatPrice(variant.price)} {t("جنيه")}
                             </span>
                           </span>
-                          <span className="ps-6 text-[10px] text-muted">{t(item.hint)}</span>
                           <input
                             type="radio"
-                            name="size"
+                            name="variant"
                             className="sr-only"
                             checked={active}
-                            onChange={() => setSizeId(item.id)}
-                          />
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : null}
-
-              {customizable ? (
-                <div className="mt-5">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold">{t("إضافات على مزاجك")}</h3>
-                    <span className="text-[10px] text-muted">{t("اختياري · اختر اللي يعجبك")}</span>
-                  </div>
-                  <div className="mt-2.5 space-y-2 lg:space-y-2.5">
-                    {extrasList.map((item) => {
-                      const active = extras.includes(item.id);
-                      return (
-                        <label
-                          key={item.id}
-                          className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border-2 px-4 py-3 transition ${
-                            active ? "border-brand/40 bg-brand-soft/40" : "border-line bg-white hover:border-brand/25"
-                          }`}
-                        >
-                          <span className="flex items-center gap-2 text-sm">
-                            <span
-                              className={`grid size-4 place-items-center rounded border ${
-                                active ? "border-brand bg-brand text-brand-contrast" : "border-line-soft bg-white"
-                              }`}
-                            >
-                              {active ? <Check className="size-3" strokeWidth={3} /> : null}
-                            </span>
-                            {t(item.label)}
-                          </span>
-                          <span className="text-[11px] font-bold text-brand">+ {item.price} {t("جنيه")}</span>
-                          <input
-                            type="checkbox"
-                            className="sr-only"
-                            checked={active}
-                            onChange={() =>
-                              setExtras((current) =>
-                                current.includes(item.id)
-                                  ? current.filter((id) => id !== item.id)
-                                  : [...current, item.id],
-                              )
-                            }
+                            onChange={() => setSelectedVariant(variant.key)}
                           />
                         </label>
                       );
@@ -247,7 +181,7 @@ export function ProductDetail({ product }: { product: Product }) {
                 <p className="mt-1 text-end text-[10px] text-muted">{note.length} / 200</p>
               </div>
 
-              <div className="mt-4 hidden items-center justify-between border-t border-line pt-4 lg:flex">
+              <div className="mt-4 flex items-center justify-between border-t border-line pt-4">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-muted">{t("الكمية")}</span>
                   <div className="inline-flex items-center gap-1 rounded-full border border-line p-1">
@@ -283,7 +217,7 @@ export function ProductDetail({ product }: { product: Product }) {
               <div className="mt-4 hidden lg:block">
                 <button
                   type="button"
-                  disabled={selectedQuantity === 0}
+                  disabled={!canAdd}
                   onClick={addToCart}
                   className={buttonStyles({ block: true })}
                 >
@@ -291,15 +225,6 @@ export function ProductDetail({ product }: { product: Product }) {
                   {t("أضف إلى السلة")}
                 </button>
               </div>
-            </div>
-
-            <div className="card flex items-start gap-3 p-4 text-xs leading-6 text-muted lg:hidden">
-              <span className="grid size-7 shrink-0 place-items-center rounded-full bg-cream-100 text-brand">
-                <Info className="size-4" />
-              </span>
-              <p>
-                {t("يحتوي على السمك والجلوتين. لو عندك حساسية من أي مكون، اكتب لنا في الملاحظات وهنحضره على مزاجك.")}
-              </p>
             </div>
           </div>
         </div>
@@ -335,7 +260,7 @@ export function ProductDetail({ product }: { product: Product }) {
           </div>
           <button
             type="button"
-            disabled={selectedQuantity === 0}
+            disabled={!canAdd}
             onClick={addToCart}
             className="btn-brand motion-press mt-2.5 flex h-12 w-full items-center justify-between px-5 text-sm disabled:pointer-events-none disabled:opacity-50"
           >
@@ -343,7 +268,9 @@ export function ProductDetail({ product }: { product: Product }) {
               <ShoppingCart className="size-4" />
               {t("أضف إلى السلة")}
             </span>
-            <span className="text-sm font-extrabold">{formatPrice(total)} {t("جنيه")}</span>
+            <span className="text-sm font-extrabold">
+              {formatPrice(total)} {t("جنيه")}
+            </span>
           </button>
         </div>
       </div>

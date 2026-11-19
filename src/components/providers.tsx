@@ -15,15 +15,21 @@ import { Check, ShoppingCart } from "lucide-react";
 import {
   branches as demoBranches,
   deliveryFee,
-  orders as seedOrders,
-  productsById,
-  seedCart,
-  seedFavorites,
   user,
   type Order,
   type OrderItem,
   type PaymentMethodId,
 } from "@/lib/data";
+import {
+  EMPTY_MENU,
+  hasVariants,
+  indexMenu,
+  localizedName,
+  resolveVariantPrice,
+  type Category,
+  type Item,
+  type Menu,
+} from "@/lib/menu";
 import { savedAddresses, type AddressKind, type SavedAddress } from "@/lib/account-data";
 import { translate, type Lang, type Vars } from "@/lib/i18n";
 import { storageKeys } from "@/lib/storage";
@@ -76,17 +82,15 @@ export type CartLine = {
   productId: string;
   qty: number;
   price: number;
-  size?: string;
-  extras?: string[];
+  /** The variant label chosen for a variant-only item. */
+  variant?: string;
   note?: string;
 };
 
 type AddOptions = {
   qty?: number;
-  size?: string;
-  extras?: string[];
+  variant?: string;
   note?: string;
-  price: number;
 };
 
 export type Profile = {
@@ -191,6 +195,14 @@ type AppContextValue = {
   authFetch: AuthFetch;
   /** Tenant identity and palette, or `null` while running on built-in defaults. */
   branding: RestaurantBranding | null;
+  /** The tenant's menu, loaded on the server; empty when the tenant has none. */
+  menu: Menu;
+  categories: Category[];
+  items: Item[];
+  categoriesById: Map<string, Category>;
+  itemsById: Map<string, Item>;
+  /** The menu name for the active UI language, with the other language as fallback. */
+  nameOf: (entry: { nameAr: string; nameEn: string }) => string;
   /**
    * Branches the pickup flow can choose between: the tenant's active branches
    * when `/api/v1/Branding` returned any, otherwise the local demo branches.
@@ -293,45 +305,56 @@ function limited(value: unknown, max: number): string | undefined {
   return typeof value === "string" ? value.slice(0, max) : undefined;
 }
 
-function decodeCart(stored: unknown, fallback: CartLine[]): CartLine[] {
+function cartKey(productId: string, variant: string, note: string): string {
+  return [productId, variant, note].filter(Boolean).join("|");
+}
+
+/**
+ * Stored lines are re-resolved against the menu every load: an id the tenant no
+ * longer sells is dropped, a variant that no longer exists is dropped, and the
+ * price always comes from `menu.json` rather than from whatever storage held.
+ */
+function decodeCart(
+  stored: unknown,
+  fallback: CartLine[],
+  itemsById: Map<string, Item>,
+): CartLine[] {
   if (!Array.isArray(stored)) return fallback;
+  const seen = new Set<string>();
   return stored.flatMap((value) => {
     if (!value || typeof value !== "object") return [];
     const line = value as Record<string, unknown>;
     const productId = limited(line.productId, 80);
-    if (!line.key || typeof line.key !== "string" || !productId) return [];
-    const product = productsById[productId];
-    if (!product) return [];
+    if (!productId) return [];
+    const item = itemsById.get(productId);
+    if (!item) return [];
+    const variant = hasVariants(item) ? limited(line.variant, 80) : undefined;
+    if (hasVariants(item) && !(variant && item.variants.some((entry) => entry.key === variant))) {
+      return [];
+    }
+    const price = resolveVariantPrice(item, variant);
+    if (price === null) return [];
     const qty =
       typeof line.qty === "number" && Number.isInteger(line.qty) && line.qty > 0
         ? Math.min(line.qty, 99)
         : 1;
-    const price =
-      typeof line.price === "number" && Number.isFinite(line.price) && line.price > 0
-        ? line.price
-        : product.price;
-    const extras = Array.isArray(line.extras)
-      ? line.extras.filter((extra): extra is string => typeof extra === "string").slice(0, 20)
-      : undefined;
-    return [
-      {
-        key: line.key.slice(0, 240),
-        productId,
-        qty,
-        price,
-        size: limited(line.size, 60),
-        extras: extras?.length ? extras : undefined,
-        note: limited(line.note, 200),
-      },
-    ];
+    const note = limited(line.note, 200);
+    const key = cartKey(productId, variant ?? "", note ?? "");
+    if (seen.has(key)) return [];
+    seen.add(key);
+    return [{ key, productId, qty, price, variant, note }];
   });
 }
 
-function decodeFavorites(stored: unknown, fallback: string[]): string[] {
+function decodeFavorites(
+  stored: unknown,
+  fallback: string[],
+  itemsById: Map<string, Item>,
+): string[] {
   if (!Array.isArray(stored)) return fallback;
   const seen = new Set<string>();
   return stored.flatMap((id) => {
-    if (typeof id !== "string" || !productsById[id] || seen.has(id)) return [];
+    if (typeof id !== "string" || !itemsById.has(id) || seen.has(id)) return [];
     seen.add(id);
     return [id];
   });
@@ -430,23 +453,50 @@ function decodeDeliveryDetails(stored: unknown, fallback: DeliveryDetails): Deli
   return next;
 }
 
-function isOrderItem(value: unknown): value is OrderItem {
-  if (!value || typeof value !== "object") return false;
+function decodeOrderItem(value: unknown, itemsById: Map<string, Item>): OrderItem | null {
+  if (!value || typeof value !== "object") return null;
   const item = value as Record<string, unknown>;
-  return (
-    typeof item.productId === "string" &&
-    Boolean(productsById[item.productId]) &&
-    typeof item.name === "string" &&
-    typeof item.qty === "number" &&
-    Number.isInteger(item.qty) &&
-    item.qty > 0 &&
-    typeof item.price === "number" &&
-    Number.isFinite(item.price) &&
-    item.price >= 0
-  );
+  const productId = limited(item.productId, 80);
+  if (!productId) return null;
+  const menuItem = itemsById.get(productId);
+  if (!menuItem) return null;
+
+  const variant = hasVariants(menuItem) ? limited(item.variant, 80) : undefined;
+  if (hasVariants(menuItem) && !(variant && menuItem.variants.some((entry) => entry.key === variant))) {
+    return null;
+  }
+
+  const qty =
+    typeof item.qty === "number" && Number.isInteger(item.qty) && item.qty > 0
+      ? Math.min(item.qty, 99)
+      : null;
+  if (qty === null) return null;
+
+  // A saved order keeps the price the customer actually paid. If storage lost
+  // it, the current menu price is the honest replacement rather than dropping
+  // an otherwise valid history entry.
+  const storedPrice =
+    typeof item.price === "number" && Number.isFinite(item.price) && item.price >= 0
+      ? item.price
+      : resolveVariantPrice(menuItem, variant);
+  if (storedPrice === null) return null;
+
+  return {
+    productId,
+    nameAr: menuItem.nameAr,
+    nameEn: menuItem.nameEn,
+    qty,
+    price: storedPrice,
+    variant,
+    note: limited(item.note, 200),
+  };
 }
 
-function decodeOrders(stored: unknown, fallback: Order[]): Order[] {
+function decodeOrders(
+  stored: unknown,
+  fallback: Order[],
+  itemsById: Map<string, Item>,
+): Order[] {
   if (!Array.isArray(stored)) return fallback;
   return stored.flatMap((value) => {
     if (!value || typeof value !== "object") return [];
@@ -454,8 +504,6 @@ function decodeOrders(stored: unknown, fallback: Order[]): Order[] {
     if (
       typeof order.id !== "string" ||
       !SAFE_ID.test(order.id) ||
-      typeof order.title !== "string" ||
-      typeof order.description !== "string" ||
       typeof order.total !== "number" ||
       !Number.isFinite(order.total) ||
       order.total < 0 ||
@@ -463,21 +511,23 @@ function decodeOrders(stored: unknown, fallback: Order[]): Order[] {
     ) {
       return [];
     }
-    const items = Array.isArray(order.items) ? order.items.filter(isOrderItem) : undefined;
+    const items = Array.isArray(order.items)
+      ? order.items.flatMap((item) => {
+          const decoded = decodeOrderItem(item, itemsById);
+          return decoded ? [decoded] : [];
+        })
+      : [];
+    // An order whose every line points at a product the tenant no longer sells
+    // has nothing left to show, so it is dropped rather than rendered empty.
+    if (items.length === 0) return [];
     return [
       {
         id: order.id.slice(0, 40),
         status: order.status,
-        title: order.title.slice(0, 120),
         date: limited(order.date, 120) ?? "",
-        description: order.description.slice(0, 300),
         total: order.total,
-        image:
-          typeof order.image === "string" && order.image.startsWith("/images/")
-            ? order.image
-            : "/images/burger.webp",
         eta: limited(order.eta, 80),
-        items: items?.length ? items : undefined,
+        items,
         paymentMethod:
           typeof order.paymentMethod === "string" && PAYMENT_METHODS.has(order.paymentMethod as PaymentMethodId)
             ? (order.paymentMethod as PaymentMethodId)
@@ -550,12 +600,15 @@ export function AppProvider({
   children,
   initialBranding = null,
   initialBrandingEtag = null,
+  initialMenu = null,
   tenantApiBaseUrl = "",
 }: {
   children: ReactNode;
   /** Branding the server fetched for this request's tenant, before first paint. */
   initialBranding?: RestaurantBranding | null;
   initialBrandingEtag?: string | null;
+  /** The tenant menu the server read from disk. `null` means no usable menu. */
+  initialMenu?: Menu | null;
   /** Tenant API host resolved from the request, for direct browser calls. */
   tenantApiBaseUrl?: string;
 }) {
@@ -563,11 +616,31 @@ export function AppProvider({
   // place before `authTransport()` or `apiConfigured()` is asked. The server
   // keeps its own per-request resolution and never writes this module value.
   if (typeof window !== "undefined") setRuntimeTenantApiBaseUrl(tenantApiBaseUrl);
-  const [lines, setLines, cartReady] = usePersistentState<CartLine[]>(storageKeys.cart, seedCart, decodeCart);
+  const menu = initialMenu ?? EMPTY_MENU;
+  const { categories, items, categoriesById, itemsById } = useMemo(() => indexMenu(menu), [menu]);
+  // The decoder runs once on hydrate; the menu is already here from the server
+  // render, so it can validate what storage holds on the very first pass.
+  const decodeCartLine = useCallback(
+    (stored: unknown, fallback: CartLine[]) => decodeCart(stored, fallback, itemsById),
+    [itemsById],
+  );
+  const decodeFavoriteIds = useCallback(
+    (stored: unknown, fallback: string[]) => decodeFavorites(stored, fallback, itemsById),
+    [itemsById],
+  );
+  const decodeOrderHistory = useCallback(
+    (stored: unknown, fallback: Order[]) => decodeOrders(stored, fallback, itemsById),
+    [itemsById],
+  );
+  const [lines, setLines, cartReady] = usePersistentState<CartLine[]>(
+    storageKeys.cart,
+    [],
+    decodeCartLine,
+  );
   const [favorites, setFavorites, favoritesReady] = usePersistentState<string[]>(
     storageKeys.favorites,
-    seedFavorites,
-    decodeFavorites,
+    [],
+    decodeFavoriteIds,
   );
   const [authFlag, setAuthFlag, authReady] = usePersistentState<boolean>(storageKeys.auth, false, decodeAuth);
   /*
@@ -620,8 +693,8 @@ export function AppProvider({
     );
   const [orders, setOrders, ordersReady] = usePersistentState<Order[]>(
     storageKeys.orders,
-    seedOrders,
-    decodeOrders,
+    [],
+    decodeOrderHistory,
   );
   const [coupon, setCoupon, couponReady] = usePersistentState<string | null>(
     storageKeys.coupon,
@@ -742,6 +815,10 @@ export function AppProvider({
         : "signed-out";
   const dir = lang === "ar" ? "rtl" : "ltr";
   const t = useCallback((text: string, vars?: Vars) => translate(lang, text, vars), [lang]);
+  const nameOf = useCallback(
+    (entry: { nameAr: string; nameEn: string }) => localizedName(entry, lang),
+    [lang],
+  );
 
   /* ------------------------------------------------------------------------ */
   /* Local account ownership: one phone, one saved history.                    */
@@ -761,11 +838,11 @@ export function AppProvider({
       if (!normalized.replace(/\D/g, "")) return;
       const slot = localAccount(normalized);
       setAccountPhone(normalized);
-      setFavorites(slot ? decodeFavorites(slot.favorites, []) : []);
-      setOrders(slot ? decodeOrders(slot.orders, []) : []);
+      setFavorites(slot ? decodeFavorites(slot.favorites, [], itemsById) : []);
+      setOrders(slot ? decodeOrders(slot.orders, [], itemsById) : []);
       setPoints(slot ? slot.points : 0);
     },
-    [setAccountPhone, setFavorites, setOrders, setPoints],
+    [setAccountPhone, setFavorites, setOrders, setPoints, itemsById],
   );
 
   /**
@@ -778,8 +855,10 @@ export function AppProvider({
     // Nobody is signed in, so no slot owns the screen in any transport.
     setAccountPhone(null);
     if (authTransport() === "live") return;
-    setFavorites(seedFavorites);
-    setOrders(seedOrders);
+    // The demo path has no neutral history to fall back to any more; an empty
+    // device view is the only truthful thing to show.
+    setFavorites([]);
+    setOrders([]);
     setPoints(0);
   }, [setAccountPhone, setFavorites, setOrders, setPoints]);
 
@@ -1093,18 +1172,28 @@ export function AppProvider({
   }, [refreshRetryAt]);
 
   const addItem = useCallback(
-    (productId: string, options: AddOptions) => {
-      const product = productsById[productId];
-      if (!product) return;
-      const size = options.size ?? "";
-      const extras = options.extras?.length ? [...options.extras].sort() : [];
+    (productId: string, options: AddOptions = {}) => {
+      const item = itemsById.get(productId);
+      if (!item) return;
+
+      // A variant-only item has no price until the customer picks a variant, so
+      // an add without a valid label is refused rather than guessed at.
+      const variant = hasVariants(item) ? (options.variant ?? "").trim() : "";
+      if (hasVariants(item) && !item.variants.some((entry) => entry.key === variant)) return;
+      const price = resolveVariantPrice(item, variant || undefined);
+      if (price === null) return;
+
       const note = options.note?.trim() ?? "";
-      const key = [productId, size, extras.join("+"), note].filter(Boolean).join("|");
+      const key = cartKey(productId, variant, note);
+      const qty =
+        options.qty && Number.isInteger(options.qty) && options.qty > 0
+          ? Math.min(options.qty, 99)
+          : 1;
       setLines((current) => {
         const existing = current.find((line) => line.key === key);
         if (existing) {
           return current.map((line) =>
-            line.key === key ? { ...line, qty: line.qty + (options.qty ?? 1) } : line,
+            line.key === key ? { ...line, qty: Math.min(line.qty + qty, 99) } : line,
           );
         }
         return [
@@ -1112,29 +1201,26 @@ export function AppProvider({
           {
             key,
             productId,
-            qty: options.qty ?? 1,
-            price: options.price,
-            size: size || undefined,
-            extras: extras.length ? extras : undefined,
+            qty,
+            price,
+            variant: variant || undefined,
             note: note || undefined,
           },
         ];
       });
-      toast(t("تمت إضافة {name} إلى السلة", { name: t(product.name) }));
+      toast(t("تمت إضافة {name} إلى السلة", { name: nameOf(item) }));
     },
-    [toast, t, setLines],
+    [itemsById, nameOf, toast, t, setLines],
   );
 
   const quickAdd = useCallback(
     (productId: string) => {
-      const product = productsById[productId];
-      if (!product) return;
-      addItem(productId, {
-        price: product.price,
-        size: product.category === "burger" ? "ساندوتش فقط" : undefined,
-      });
+      const item = itemsById.get(productId);
+      // Variant items must go through the detail screen to choose a variant.
+      if (!item || hasVariants(item)) return;
+      addItem(productId);
     },
-    [addItem],
+    [addItem, itemsById],
   );
 
   const changeQty = useCallback(
@@ -1231,13 +1317,14 @@ export function AppProvider({
 
   const toggleFavorite = useCallback(
     (id: string) => {
+      if (!itemsById.has(id)) return;
       setFavorites((current) => {
         const exists = current.includes(id);
         toast(t(exists ? "تمت الإزالة من المفضلة" : "تمت الإضافة إلى المفضلة"), "info");
         return exists ? current.filter((item) => item !== id) : [...current, id];
       });
     },
-    [toast, t, setFavorites],
+    [toast, t, setFavorites, itemsById],
   );
 
   const openLoginPrompt = useCallback((next: string = "/cart") => setLoginPromptNext(next), []);
@@ -1359,15 +1446,22 @@ export function AppProvider({
       if (lines.length === 0) return null;
 
       const now = Date.now();
-      const items: OrderItem[] = lines.map((line) => ({
-        productId: line.productId,
-        name: productsById[line.productId]?.name ?? line.productId,
-        qty: line.qty,
-        price: line.price,
-        size: line.size,
-        extras: line.extras,
-        note: line.note,
-      }));
+      const items: OrderItem[] = lines.flatMap((line) => {
+        const item = itemsById.get(line.productId);
+        if (!item) return [];
+        return [
+          {
+            productId: line.productId,
+            nameAr: item.nameAr,
+            nameEn: item.nameEn,
+            qty: line.qty,
+            price: line.price,
+            variant: line.variant,
+            note: line.note,
+          },
+        ];
+      });
+      if (items.length === 0) return null;
       const address = addresses.find((item) => item.id === selectedAddressId) ?? null;
       const branch = storeBranches.find((item) => item.id === selectedBranchId) ?? storeBranches[0];
       const separator = lang === "ar" ? "، " : ", ";
@@ -1391,11 +1485,8 @@ export function AppProvider({
       const order: Order = {
         id: String(latestId + 1),
         status: "preparing",
-        title: items[0].name,
         date: lang === "ar" ? `اليوم، ${formattedDate}` : formattedDate,
-        description: items.map((item) => `${item.qty} ${item.name}`).join(" + "),
         total: Math.max(0, subtotal - discount + fee),
-        image: productsById[items[0].productId]?.image ?? "/images/burger.webp",
         eta: fulfilment === "delivery" ? "25 - 35 دقيقة" : "20 - 30 دقيقة",
         items,
         paymentMethod,
@@ -1412,6 +1503,7 @@ export function AppProvider({
       addresses,
       coupon,
       fulfilment,
+      itemsById,
       lang,
       lines,
       orders,
@@ -1451,6 +1543,12 @@ export function AppProvider({
       sessionStatus,
       authFetch,
       branding,
+      menu,
+      categories,
+      items,
+      categoriesById,
+      itemsById,
+      nameOf,
       branches: storeBranches,
       loginPromptOpen,
       loginPromptNext,
@@ -1504,6 +1602,12 @@ export function AppProvider({
       sessionStatus,
       authFetch,
       branding,
+      menu,
+      categories,
+      items,
+      categoriesById,
+      itemsById,
+      nameOf,
       storeBranches,
       loginPromptOpen,
       loginPromptNext,

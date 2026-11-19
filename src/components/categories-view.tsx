@@ -1,48 +1,54 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { ChevronLeft, LayoutGrid, SlidersHorizontal } from "lucide-react";
-import {
-  categories,
-  catalogCategoryOrder,
-  categoriesById,
-  categoryCounts,
-  desktopCategoryOrder,
-  products,
-  type CategoryId,
-} from "@/lib/data";
+import { startingPrice } from "@/lib/menu";
 import { StoreHeader } from "@/components/store-header";
-import { MobilePageHeader } from "@/components/ui";
+import { ItemMedia, MobilePageHeader } from "@/components/ui";
 import { ProductCard } from "@/components/product-card";
 import { useApp } from "@/components/providers";
 
-const chips = ["الكل", "الأكثر طلباً", "العروض"];
-
 const sortOptions = [
-  { id: "popular", label: "الترتيب: الأكثر طلباً" },
+  { id: "default", label: "الترتيب الافتراضي" },
   { id: "price-asc", label: "السعر: من الأقل للأعلى" },
   { id: "price-desc", label: "السعر: من الأعلى للأقل" },
 ];
 
-export function CategoriesView() {
+function CategoryTile({
+  nameAr,
+  name,
+  count,
+  active = false,
+}: {
+  nameAr: string;
+  name: string;
+  count: number;
+  active?: boolean;
+}) {
   const { t } = useApp();
-  const [categoryId, setCategoryId] = useState<CategoryId>("burger");
-  const [chip, setChip] = useState("الكل");
-  const [sort, setSort] = useState("popular");
+  return (
+    <>
+      <span className="grid size-[68px] place-items-center rounded-full bg-peach/80 transition-colors duration-300 group-hover:bg-brand-soft">
+        <ItemMedia name={nameAr} className="size-12 rounded-full" textClassName="text-[8px]" />
+      </span>
+      <span className={`mt-2.5 text-[15px] font-extrabold ${active ? "text-brand" : "text-ink"}`}>{name}</span>
+      <span className="mt-1 text-[11px] font-semibold text-muted">
+        {count} {t("صنف")}
+      </span>
+    </>
+  );
+}
 
-  const category = categoriesById[categoryId];
-  const categoryItems = products.filter((product) => product.category === categoryId);
-  const categoryTotal = categoryItems.length;
-  let items = categoryItems;
+export function CategoriesView() {
+  const { t, categories, nameOf } = useApp();
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [sort, setSort] = useState("default");
 
-  if (chip === "الأكثر طلباً") items = items.filter((product) => product.popular);
-  if (chip === "العروض") items = items.filter((product) => product.offer);
-
-  if (sort === "price-asc") items = [...items].sort((a, b) => a.price - b.price);
-  if (sort === "price-desc") items = [...items].sort((a, b) => b.price - a.price);
-  if (sort === "popular") items = [...items].sort((a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)));
+  const selected = categories.find((category) => category.id === categoryId) ?? categories[0] ?? null;
+  let items = selected ? [...selected.items] : [];
+  if (sort === "price-asc") items = items.sort((a, b) => startingPrice(a) - startingPrice(b));
+  if (sort === "price-desc") items = items.sort((a, b) => startingPrice(b) - startingPrice(a));
 
   return (
     <div className="pb-4">
@@ -70,65 +76,47 @@ export function CategoriesView() {
           </h1>
         </div>
 
+        {categories.length === 0 ? (
+          <p className="card mt-5 px-6 py-10 text-center text-sm text-muted">
+            {t("منيو المطعم فاضي حالياً.")}
+          </p>
+        ) : null}
+
         <div className="motion-stagger mt-4 grid grid-cols-2 gap-3 lg:hidden">
-          {catalogCategoryOrder.map((id) => {
-            const item = categoriesById[id];
-            return (
-              <Link
-                key={id}
-                href={`/categories/${id}`}
-                className="group flex flex-col items-center rounded-[18px] bg-white px-3 py-4 text-center shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.98]"
-              >
-                <span className="grid size-[68px] place-items-center rounded-full bg-peach/80 transition-colors duration-300 group-hover:bg-brand-soft">
-                  <span className="relative size-12 overflow-hidden rounded-full">
-                    <Image
-                      src={item.image}
-                      alt={t(item.name)}
-                      fill
-                      sizes="48px"
-                      className="object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                  </span>
-                </span>
-                <span className="mt-2.5 text-[15px] font-extrabold text-ink">{t(item.name)}</span>
-                <span className="mt-1 text-[11px] font-semibold text-muted">
-                  {categoryCounts[id] ?? 0} {t("صنف")}
-                </span>
-              </Link>
-            );
-          })}
+          {categories.map((category) => (
+            <Link
+              key={category.id}
+              href={`/categories/${category.id}`}
+              className="group flex flex-col items-center rounded-[18px] bg-white px-3 py-4 text-center shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.98]"
+            >
+              <CategoryTile
+                nameAr={category.nameAr}
+                name={nameOf(category)}
+                count={category.items.length}
+              />
+            </Link>
+          ))}
         </div>
 
         <div className="motion-stagger mt-5 hidden grid-cols-7 gap-3 lg:grid">
-          {desktopCategoryOrder.map((id) => {
-            const item = categoriesById[id];
-            const active = id === categoryId;
+          {categories.map((category) => {
+            const active = category.id === selected?.id;
             return (
               <button
-                key={id}
+                key={category.id}
                 type="button"
-                onClick={() => {
-                  setCategoryId(id);
-                  setChip("الكل");
-                }}
+                onClick={() => setCategoryId(category.id)}
                 aria-pressed={active}
                 className={`group flex flex-col items-center rounded-[18px] bg-white px-3 py-4 text-center shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.98] ${
                   active ? "ring-2 ring-inset ring-brand/60" : ""
                 }`}
               >
-                <span className="grid size-[68px] place-items-center rounded-full bg-peach/80 transition-colors duration-300 group-hover:bg-brand-soft">
-                  <span className="relative size-12 overflow-hidden rounded-full">
-                    <Image
-                      src={item.image}
-                      alt={t(item.name)}
-                      fill
-                      sizes="48px"
-                      className="object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                  </span>
-                </span>
-                <span className={`mt-2.5 text-sm font-extrabold ${active ? "text-brand" : "text-ink"}`}>{t(item.name)}</span>
-                <span className="mt-1 text-[10px] font-semibold text-muted">{categoryCounts[id] ?? 0} {t("صنف")}</span>
+                <CategoryTile
+                  nameAr={category.nameAr}
+                  name={nameOf(category)}
+                  count={category.items.length}
+                  active={active}
+                />
               </button>
             );
           })}
@@ -139,9 +127,11 @@ export function CategoriesView() {
         <div className="hidden items-center justify-between gap-4 lg:flex">
           <div className="text-start">
             <h2 className="text-2xl font-extrabold">
-              {t(category.name)} <span className="text-base font-bold text-muted">{items.length} {t("أطباق")}</span>
+              {selected ? nameOf(selected) : t("الأقسام")}{" "}
+              <span className="text-base font-bold text-muted">
+                {items.length} {t("أطباق")}
+              </span>
             </h2>
-            <p className="mt-1.5 text-sm text-muted">{t("برجر بطعم تحفة، طازة ومحضر مخصوص ليك")}</p>
           </div>
 
           <label className="relative">
@@ -162,52 +152,29 @@ export function CategoriesView() {
           </label>
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-3 lg:justify-start lg:gap-2">
-          <div className="hide-scrollbar flex gap-2 overflow-x-auto lg:order-2">
-            {chips.map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => setChip(item)}
-                aria-pressed={chip === item}
-                className={`motion-press h-9 shrink-0 rounded-full px-4 text-xs font-bold transition ${
-                  chip === item
-                    ? "border border-brand bg-white text-brand"
-                    : "border border-line bg-white text-ink/70 hover:border-brand/30"
-                }`}
-              >
-                {t(item)}
-              </button>
-            ))}
-          </div>
-          <span className="shrink-0 text-[11px] text-muted lg:hidden">{items.length} {t("أطباق")}</span>
-        </div>
-
         <div className="motion-stagger mt-4 grid grid-cols-2 gap-3 lg:mt-4 lg:grid-cols-5 lg:gap-4">
-          {items.map((product) => (
-            <ProductCard key={product.id} product={product} className="lg:p-2.5" />
+          {items.map((item) => (
+            <ProductCard key={item.id} item={item} className="lg:p-2.5" />
           ))}
         </div>
 
-        {items.length === 0 ? (
+        {items.length === 0 && selected ? (
           <p className="card mt-4 px-6 py-10 text-center text-sm text-muted">
-            {t("لا توجد أطباق مطابقة لهذا الاختيار حالياً، جرّب قسم آخر.")}
+            {t("لا توجد أصناف حالياً.")}
           </p>
         ) : null}
 
         <p className="mt-6 hidden text-center text-xs text-muted lg:block">
           {t("عرض {count} من {total} أطباق في قسم {category}", {
             count: items.length,
-            total: categoryTotal,
-            category: t(category.name),
+            total: selected?.items.length ?? 0,
+            category: selected ? nameOf(selected) : t("الأقسام"),
           })}
         </p>
       </div>
 
       <div className="shell mt-8 hidden text-center text-xs text-muted lg:block">
-        <span>
-          {t("{count} أقسام رئيسية — كل الأصناف محضرة طازة في مطبخ ناوي أوردرز", { count: categories.length })}
-        </span>
+        <span>{t("{count} أقسام رئيسية — كل الأصناف محضرة طازة في مطبخ ناوي أوردرز", { count: categories.length })}</span>
       </div>
     </div>
   );

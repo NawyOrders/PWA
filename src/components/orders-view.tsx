@@ -1,14 +1,14 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { ChevronLeft, ReceiptText, RotateCcw, Truck } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { formatPrice, paymentMethodLabels, productsById, toArabicDigits, user, type Order } from "@/lib/data";
+import { formatPrice, paymentMethodLabels, toArabicDigits, user, type Order } from "@/lib/data";
+import { ItemMedia } from "@/components/ui";
 
 export function OrdersView() {
-  const { addItem, toast, t, lang, orders } = useApp();
+  const { addItem, toast, t, lang, orders, nameOf } = useApp();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const current = orders.filter((order) => order.status === "preparing");
@@ -23,13 +23,11 @@ export function OrdersView() {
       return;
     }
     items.forEach((item) => {
-      const product = productsById[item.productId];
-      if (!product) return;
+      // The menu owns the current price; unknown ids are already dropped by
+      // the order decoder, so this only re-adds what the tenant still sells.
       addItem(item.productId, {
         qty: item.qty,
-        price: item.price > 0 ? item.price : product.price,
-        size: item.size,
-        extras: item.extras,
+        variant: item.variant,
         note: item.note,
       });
     });
@@ -40,6 +38,12 @@ export function OrdersView() {
     const key = `${order.id}-${index}`;
     const isCurrent = order.status === "preparing";
     const expanded = expandedId === key;
+    const separator = lang === "ar" ? "، " : ", ";
+    const firstItem = order.items?.[0];
+    const title = firstItem ? nameOf(firstItem) : t("طلب");
+    const description = (order.items ?? [])
+      .map((item) => `${item.qty} × ${nameOf(item)}`)
+      .join(separator);
 
     return (
       <article key={key} className="rounded-[26px] bg-white p-4 shadow-soft transition duration-300 hover:shadow-pop lg:p-5">
@@ -61,13 +65,15 @@ export function OrdersView() {
         </div>
 
         <div className="mt-4 flex items-start gap-3.5">
-          <div className="relative size-20 shrink-0 overflow-hidden rounded-2xl bg-peach">
-            <Image src={order.image} alt={t(order.title)} fill sizes="96px" className="object-cover" />
-          </div>
+          <ItemMedia
+            name={firstItem?.nameAr ?? title}
+            className="size-20 shrink-0 rounded-2xl"
+            textClassName="text-[8px]"
+          />
           <div className="min-w-0 flex-1 pt-1">
-            <h3 className="text-[15px] font-extrabold leading-6">{t(order.title)}</h3>
+            <h3 className="text-[15px] font-extrabold leading-6">{title}</h3>
             <p className="mt-1 text-[11px] leading-5 text-muted">{display(t(order.date))}</p>
-            <p className="mt-0.5 line-2 text-[11px] leading-5 text-muted">{t(order.description)}</p>
+            <p className="mt-0.5 line-2 text-[11px] leading-5 text-muted">{description}</p>
           </div>
         </div>
 
@@ -82,8 +88,8 @@ export function OrdersView() {
             <p>
               <span className="font-bold text-ink">{t("الأصناف: ")}</span>
               {order.items?.length
-                ? order.items.map((item) => `${item.qty} × ${t(item.name)}`).join(lang === "ar" ? "، " : ", ")
-                : t(order.description)}
+                ? order.items.map((item) => `${item.qty} × ${nameOf(item)}`).join(separator)
+                : t("مفيش أصناف محفوظة للطلب ده")}
             </p>
             <p>
               <span className="font-bold text-ink">{t("طريقة الدفع: ")}</span>

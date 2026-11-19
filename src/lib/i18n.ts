@@ -903,6 +903,16 @@ const en: Record<string, string> = {
   "التطبيق هيكون متاح على المتجر قريباً": "The app will be available on the store soon",
   "الطلب غير موجود": "Order not found",
   "مفيش طلب بالرقم ده، يمكن يكون اتحذف أو الرابط غلط.": "There is no order with this number; it may have been removed or the link is wrong.",
+  "كل الأصناف": "All items",
+  "من المنيو": "From the menu",
+  "منيو المطعم فاضي حالياً.": "The restaurant menu is empty right now.",
+  "هذا القسم مش متاح في منيو المطعم دلوقتي.": "This section is not on the restaurant menu right now.",
+  "هذا الصنف مش متاح في منيو المطعم دلوقتي.": "This item is not on the restaurant menu right now.",
+  "الصنف مش موجود": "Item not found",
+  "اختار الحجم": "Choose a size",
+  "الترتيب الافتراضي": "Default order",
+  "المنيو": "Menu",
+  "طلب": "Order",
 
   // misc
   "الطبق غير موجود": "Dish not found",

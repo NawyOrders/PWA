@@ -11,7 +11,8 @@ import { AppError, type AuthErrorCode } from "@/lib/api";
 import { useCustomerSession } from "@/hooks/use-customer-session";
 import { localAccount, rememberLocalAccount } from "@/lib/local-accounts";
 import { renderAppHook } from "@/test/render";
-import { seedCart, seedFavorites, productsById, orders as seedOrders, branches, user, type Order } from "@/lib/data";
+import { seedCart, seedFavorites, seedOrders, testItemsById } from "@/test/menu";
+import { branches, user, type Order } from "@/lib/data";
 import { savedAddresses } from "@/lib/account-data";
 import { brandingVarNames } from "@/lib/branding";
 import { storageKeys } from "@/lib/storage";
@@ -170,8 +171,9 @@ describe("AppProvider — cart flow", () => {
       storageKeys.cart,
       JSON.stringify([
         { key: "beef-burger|", productId: "beef-burger", qty: 2, price: 120 },
-        // A stored line can carry anything a previous version wrote: extras
-        // that are not text are dropped rather than rendered.
+        // Storage written by an older build can carry fields the menu no longer
+        // has; they are dropped rather than rendered, and the price is the
+        // menu's, not the stored one.
         { key: "veggie-burger|", productId: "veggie-burger", qty: 1, price: 90, extras: ["جبن", 42, null] },
         { key: 12, productId: null, qty: "many" },
         null,
@@ -181,38 +183,66 @@ describe("AppProvider — cart flow", () => {
     expect(result.current.lines).toHaveLength(2);
     expect(result.current.count).toBe(3);
     expect(result.current.subtotal).toBe(330);
-    expect(result.current.lines[1]?.extras).toEqual(["جبن"]);
+    expect(result.current.lines[1]).toEqual({
+      key: "veggie-burger",
+      productId: "veggie-burger",
+      qty: 1,
+      price: 90,
+      variant: undefined,
+      note: undefined,
+    });
   });
 
-  it("merges identical configurations and keeps notes separate", async () => {
+  it("merges identical lines and keeps different notes separate", async () => {
     const { result } = await app();
-    act(() => result.current.addItem("beef-burger", { price: 120, size: "ساندوتش فقط" }));
-    expect(result.current.lines.find((line) => line.key === "beef-burger|ساندوتش فقط")?.qty).toBe(2);
+    act(() => result.current.clearCart(true));
 
-    act(() => result.current.addItem("beef-burger", { price: 120, extras: ["جبن", "بصل"] }));
-    act(() => result.current.addItem("beef-burger", { price: 120, extras: ["بصل", "جبن"] }));
-    const extraLines = result.current.lines.filter((line) => line.extras?.length);
-    expect(extraLines).toHaveLength(1);
-    expect(extraLines[0].qty).toBe(2);
-    expect(extraLines[0].extras).toEqual(["بصل", "جبن"]);
+    act(() => result.current.addItem("beef-burger", { note: "بدون بصل" }));
+    act(() => result.current.addItem("beef-burger", { note: "بدون بصل" }));
+    const noted = result.current.lines.filter((line) => line.note === "بدون بصل");
+    expect(noted).toHaveLength(1);
+    expect(noted[0].qty).toBe(2);
 
-    act(() => result.current.addItem("beef-burger", { price: 120, note: "بدون بصل" }));
-    expect(result.current.lines.filter((line) => line.note === "بدون بصل")).toHaveLength(1);
+    act(() => result.current.addItem("beef-burger", { note: "صوص زيادة" }));
+    expect(result.current.lines.filter((line) => line.productId === "beef-burger")).toHaveLength(2);
+
+    act(() => result.current.addItem("strips-meal", { variant: "8 قطع" }));
+    expect(result.current.lines.find((line) => line.productId === "strips-meal")).toMatchObject({
+      qty: 1,
+      price: 200,
+      variant: "8 قطع",
+    });
+  });
+
+  it("refuses a variant item without a valid variant", async () => {
+    const { result } = await app();
+    act(() => result.current.clearCart(true));
+
+    act(() => result.current.addItem("strips-meal", {}));
+    act(() => result.current.addItem("strips-meal", { variant: "غير موجود" }));
+    expect(result.current.lines).toHaveLength(0);
+
+    act(() => result.current.quickAdd("strips-meal"));
+    expect(result.current.lines).toHaveLength(0);
   });
 
   it("ignores unknown products", async () => {
     const { result } = await app();
     const before = result.current.lines.length;
-    act(() => result.current.addItem("does-not-exist", { price: 10 }));
+    act(() => result.current.addItem("does-not-exist", {}));
     expect(result.current.lines).toHaveLength(before);
   });
 
   it("supports quick add, quantity changes and removal", async () => {
     const { result } = await app();
+    act(() => result.current.clearCart(true));
     act(() => result.current.quickAdd("veggie-burger"));
     const created = result.current.lines.find((line) => line.productId === "veggie-burger")!.key;
-    expect(productsById["veggie-burger"].category).toBe("burger");
-    expect(result.current.lines.find((line) => line.key === created)?.size).toBe("ساندوتش فقط");
+    expect(testItemsById.get("veggie-burger")?.categoryId).toBe("burger");
+    expect(result.current.lines.find((line) => line.key === created)).toMatchObject({
+      qty: 1,
+      price: 90,
+    });
 
     act(() => result.current.changeQty(created, 2));
     expect(result.current.lines.find((line) => line.key === created)?.qty).toBe(3);
@@ -454,23 +484,57 @@ describe("AppProvider — order lifecycle", () => {
     expect(result.current.orders).toHaveLength(seedOrders.length);
   });
 
-  it("drops malformed stored orders and repairs unsafe fields", async () => {
+  it("drops malformed stored orders and orders whose items left the menu", async () => {
     localStorage.setItem(
       storageKeys.orders,
       JSON.stringify([
-        { id: "9001", title: "طلب صالح", description: "وصف", total: 120, status: "delivered", image: "//evil.example/x.png" },
-        { id: "9002", title: "ناقص", description: "وصف", total: -1, status: "preparing" },
-        { id: "", title: "بدون رقم", description: "وصف", total: 10, status: "preparing" },
-        { id: "../settings", title: "مسار غريب", description: "وصف", total: 10, status: "preparing" },
-        { id: "9003", title: "حالة غلط", description: "وصف", total: 10, status: "flying" },
+        {
+          id: "9001",
+          total: 120,
+          status: "delivered",
+          items: [{ productId: "beef-burger", qty: 1, price: 120 }],
+        },
+        { id: "9002", total: -1, status: "preparing", items: [] },
+        { id: "", total: 10, status: "preparing", items: [] },
+        // `items` whose every product has left the menu leave nothing to show.
+        {
+          id: "9004",
+          total: 10,
+          status: "delivered",
+          items: [{ productId: "removed-from-menu", qty: 1, price: 10 }],
+        },
+        // One valid line and one stale line keeps the order, minus the stale line.
+        {
+          id: "9005",
+          total: 120,
+          status: "delivered",
+          items: [
+            { productId: "beef-burger", qty: 1, price: 120 },
+            { productId: "removed-from-menu", qty: 2, price: 5 },
+          ],
+        },
+        { id: "../settings", total: 10, status: "preparing", items: [] },
+        { id: "9003", total: 10, status: "flying", items: [] },
         null,
         "order",
       ]),
     );
     const { result } = await app();
-    expect(result.current.orders).toHaveLength(1);
-    expect(result.current.orders[0]).toMatchObject({ id: "9001", status: "delivered" });
-    expect(result.current.orders[0].image).toBe("/images/burger.webp");
+    expect(result.current.orders.map((order) => order.id)).toEqual(["9001", "9005"]);
+    expect(result.current.orders[0].items).toEqual([
+      {
+        productId: "beef-burger",
+        nameAr: "برجر لحم",
+        nameEn: "Beef Burger",
+        qty: 1,
+        price: 120,
+        variant: undefined,
+        note: undefined,
+      },
+    ]);
+    expect(result.current.orders[1].items).toHaveLength(1);
+    expect(result.current.orders[0]).not.toHaveProperty("image");
+    expect(result.current.orders[0]).not.toHaveProperty("title");
   });
 });
 
@@ -531,15 +595,17 @@ describe("AppProvider — local account ownership", () => {
     act(() => result.current.logout());
 
     expect(result.current.loggedIn).toBe(false);
-    expect(result.current.favorites).toEqual(seedFavorites);
-    expect(result.current.orders).toHaveLength(seedOrders.length);
+    // The demo path has no neutral history to return to any more: a signed-out
+    // device shows an empty account rather than the previous customer's data.
+    expect(result.current.favorites).toEqual([]);
+    expect(result.current.orders).toEqual([]);
     expect(result.current.points).toBe(0);
     // The slot is that customer's copy: the sign-out does not erase it, and the
     // neutral view the device now shows is never written over it.
     expect(localAccount(NORMALIZED)?.favorites).toEqual(["beef-burger"]);
     expect(localAccount(NORMALIZED)?.orders).toHaveLength(1);
     await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.accountPhone)))).toBeNull());
-    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.favorites)))).toEqual(seedFavorites));
+    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.favorites)))).toEqual([]));
   });
 
   it("restores the saved slot — balance included — on the next sign-in", async () => {
@@ -699,7 +765,7 @@ describe("AppProvider — untrusted storage", () => {
     );
     const { result } = await app();
     expect(result.current.lines[0].qty).toBe(99);
-    expect(result.current.lines[0].price).toBe(productsById["beef-burger"].price);
+    expect(result.current.lines[0].price).toBe(testItemsById.get("beef-burger")?.price);
     expect(result.current.lines[1].qty).toBe(1);
   });
 });

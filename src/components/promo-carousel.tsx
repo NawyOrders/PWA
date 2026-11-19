@@ -14,7 +14,7 @@ const slides = [
     title: "كومبو برجر ببلاش",
     text: "جرّب انهيارة عرض الشقاوة.. عرض برجر الشقاوة على الكومبو لآخر اليوم.",
     cta: "اطلب الان",
-    href: "/product/beef-burger",
+    href: "/categories",
     theme: "dark" as const,
   },
   {
@@ -23,7 +23,7 @@ const slides = [
     title: "بيتزا طازة من الفرن",
     text: "خصم 20% على كل أنواع البيتزا مع صوص الجبنة الإضافي.",
     cta: "اطلب بيتزا",
-    href: "/search?q=%D8%A8%D9%8A%D8%AA%D8%B2%D8%A7",
+    href: "/categories",
     theme: "light" as const,
   },
   {
@@ -32,7 +32,7 @@ const slides = [
     title: "فرايد تشيكن مقرمش",
     text: "وجبة العائلة بـ 4 قطع دجاج وبطاطس وكول سلو بسعر مميز.",
     cta: "اطلب دلوقتي",
-    href: "/product/chicken-bucket",
+    href: "/categories",
     theme: "light" as const,
   },
   {

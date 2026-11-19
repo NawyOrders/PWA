@@ -4,11 +4,10 @@ import { Heart } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { ProductCard } from "@/components/product-card";
 import { EmptyState, MobilePageHeader } from "@/components/ui";
-import { products } from "@/lib/data";
 
 export function FavoritesView() {
-  const { favorites, t } = useApp();
-  const favoriteProducts = products.filter((product) => favorites.includes(product.id));
+  const { favorites, items, t } = useApp();
+  const favoriteItems = items.filter((item) => favorites.includes(item.id));
 
   return (
     <div className="pb-10">
@@ -29,11 +28,11 @@ export function FavoritesView() {
           </p>
           <div className="mt-3 flex items-center justify-between lg:mt-5">
             <h2 className="text-lg font-extrabold lg:text-xl">{t("أطباقك المفضلة")}</h2>
-            <span className="text-xs text-muted">{t("{count} طبق", { count: favoriteProducts.length })}</span>
+            <span className="text-xs text-muted">{t("{count} طبق", { count: favoriteItems.length })}</span>
           </div>
         </div>
 
-        {favoriteProducts.length === 0 ? (
+        {favoriteItems.length === 0 ? (
           <div className="mt-5 px-4 lg:px-0">
             <EmptyState
               title="مفيش أطباق في المفضلة"
@@ -44,8 +43,8 @@ export function FavoritesView() {
           </div>
         ) : (
           <div className="motion-stagger mt-4 grid grid-cols-2 gap-3 px-4 lg:mt-6 lg:grid-cols-4 lg:gap-5 lg:px-0">
-            {favoriteProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {favoriteItems.map((item) => (
+              <ProductCard key={item.id} item={item} />
             ))}
           </div>
         )}

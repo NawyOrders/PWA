@@ -3,8 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { MenuRow } from "@/components/menu-row";
 import { useApp } from "@/components/providers";
-import { productsById } from "@/lib/data";
 import { renderApp } from "@/test/render";
+import { testItemsById } from "@/test/menu";
 
 function ClearCartButton() {
   const { clearCart } = useApp();
@@ -22,7 +22,7 @@ vi.mock("next/link", () => ({
 describe("MenuRow cart quantity controls", () => {
   it("replaces add with quantity controls in the add button position", async () => {
     const user = userEvent.setup();
-    renderApp(<MenuRow product={productsById["veggie-burger"]} />);
+    renderApp(<MenuRow item={testItemsById.get("veggie-burger")!} />);
 
     await user.click(await screen.findByRole("button", { name: "أضف إلى السلة" }));
     const quantity = await screen.findByRole("group", { name: "الكمية" });
@@ -43,7 +43,7 @@ describe("MenuRow cart quantity controls", () => {
     const user = userEvent.setup();
     renderApp(
       <>
-        <MenuRow product={productsById["beef-burger"]} />
+        <MenuRow item={testItemsById.get("beef-burger")!} />
         <ClearCartButton />
       </>,
     );
@@ -55,5 +55,18 @@ describe("MenuRow cart quantity controls", () => {
     await user.click(await screen.findByRole("button", { name: "أضف إلى السلة" }));
     const quantity = await screen.findByRole("group", { name: "الكمية" });
     expect(quantity.className).toContain("max-[375px]:[&_button]:size-7");
+  });
+
+  it("shows the lowest variant price behind 'من' and routes to the variant picker", () => {
+    renderApp(<MenuRow item={testItemsById.get("strips-meal")!} />);
+
+    expect(screen.getByText("من")).toBeInTheDocument();
+    expect(screen.getByText("155")).toBeInTheDocument();
+    expect(screen.queryByText("200")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "اختار الحجم" })).toHaveAttribute(
+      "href",
+      "/product/strips-meal",
+    );
+    expect(screen.queryByRole("button", { name: "أضف إلى السلة" })).not.toBeInTheDocument();
   });
 });

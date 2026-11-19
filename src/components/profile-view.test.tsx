@@ -1,9 +1,9 @@
 import { screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ProfileView } from "@/components/profile-view";
-import { orders as seedOrders } from "@/lib/data";
 import { storageKeys } from "@/lib/storage";
 import { renderApp } from "@/test/render";
+import { seedOrders } from "@/test/menu";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({

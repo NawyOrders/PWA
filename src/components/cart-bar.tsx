@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { ArrowLeft, Bike, Store } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { deliveryFee, formatPrice, productsById } from "@/lib/data";
+import { deliveryFee, formatPrice } from "@/lib/data";
 
 /**
  * Persistent cart summary. The site chrome mounts it instead of a single
  * screen so it stays pinned to the viewport for the whole scroll on desktop.
  */
 export function CartBar({ aboveBottomNav = true }: { aboveBottomNav?: boolean }) {
-  const { count, subtotal, lines, t, lang, loggedIn, openLoginPrompt, fulfilment, coupon } = useApp();
+  const { count, subtotal, lines, t, lang, loggedIn, openLoginPrompt, fulfilment, coupon, itemsById, nameOf } = useApp();
   if (count === 0) return null;
 
   const discount = coupon ? Math.min(Math.round(subtotal * 0.2), 50) : 0;
@@ -20,8 +20,10 @@ export function CartBar({ aboveBottomNav = true }: { aboveBottomNav?: boolean })
   const names = lines
     .slice(0, 2)
     .map((line) => {
-      const product = productsById[line.productId];
-      return product ? `${t(product.name)} (×${line.qty})` : "";
+      const item = itemsById.get(line.productId);
+      if (!item) return "";
+      const name = line.variant ? `${nameOf(item)} (${line.variant})` : nameOf(item);
+      return `${name} (×${line.qty})`;
     })
     .filter(Boolean)
     .join(lang === "ar" ? "، " : ", ");

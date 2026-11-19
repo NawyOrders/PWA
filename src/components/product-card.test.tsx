@@ -3,8 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ProductCard } from "@/components/product-card";
 import { useApp } from "@/components/providers";
-import { productsById } from "@/lib/data";
 import { renderApp } from "@/test/render";
+import { testItemsById } from "@/test/menu";
 
 function ClearCartButton() {
   const { clearCart } = useApp();
@@ -22,7 +22,7 @@ vi.mock("next/link", () => ({
 describe("ProductCard cart quantity controls", () => {
   it("adds a product, increments and decrements its quantity, then restores add", async () => {
     const user = userEvent.setup();
-    renderApp(<ProductCard product={productsById["veggie-burger"]} />);
+    renderApp(<ProductCard item={testItemsById.get("veggie-burger")!} />);
 
     await user.click(await screen.findByRole("button", { name: "أضف إلى السلة" }));
     const quantity = await screen.findByRole("group", { name: "الكمية" });
@@ -43,8 +43,8 @@ describe("ProductCard cart quantity controls", () => {
     const user = userEvent.setup();
     renderApp(
       <>
-        <ProductCard product={productsById["veggie-burger"]} />
-        <ProductCard product={productsById["beef-burger"]} />
+        <ProductCard item={testItemsById.get("veggie-burger")!} />
+        <ProductCard item={testItemsById.get("beef-burger")!} />
         <ClearCartButton />
       </>,
     );
@@ -67,11 +67,23 @@ describe("ProductCard cart quantity controls", () => {
   });
 
   it("shows only the item price, with no crossed-out campaign price", () => {
-    renderApp(<ProductCard product={productsById["beef-burger"]} />);
+    renderApp(<ProductCard item={testItemsById.get("beef-burger")!} />);
 
     const card = document.querySelector("article");
     expect(card).toHaveTextContent("120");
     expect(card?.textContent).not.toContain("150");
     expect(screen.queryByLabelText("السعر قبل الخصم 150")).not.toBeInTheDocument();
+  });
+
+  it("labels a variant-only item with 'من' and its lowest variant price", () => {
+    renderApp(<ProductCard item={testItemsById.get("strips-meal")!} />);
+
+    expect(screen.getByText("من")).toBeInTheDocument();
+    expect(screen.getByText("155")).toBeInTheDocument();
+    expect(screen.queryByText("200")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "اختار الحجم" })).toHaveAttribute(
+      "href",
+      "/product/strips-meal",
+    );
   });
 });

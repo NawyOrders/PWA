@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { orders as seedOrders } from "@/lib/data";
+import { seedOrders } from "@/test/menu";
 import {
   clearLocalAccounts,
   localAccount,

@@ -1,21 +1,15 @@
 import { describe, expect, it } from "vitest";
+import { formatPrice, toArabicDigits } from "@/lib/data";
 import {
-  categories,
-  categoriesById,
-  categoryCounts,
-  desktopCategoryOrder,
-  filterMenu,
-  formatPrice,
-  homeCategoryOrder,
-  menuFilters,
-  products,
-  productsById,
-  seedCart,
-  seedFavorites,
-  toArabicDigits,
-} from "@/lib/data";
+  hasVariants,
+  indexMenu,
+  isValidSelection,
+  resolveVariantPrice,
+  startingPrice,
+} from "@/lib/menu";
+import { testMenu } from "@/test/menu";
 
-describe("catalog domain", () => {
+describe("money and digit formatting", () => {
   it("formats prices without currency symbols", () => {
     expect(formatPrice(0)).toBe("0");
     expect(formatPrice(1250)).toBe("1,250");
@@ -27,57 +21,35 @@ describe("catalog domain", () => {
     expect(toArabicDigits(19885)).toBe("١٩٨٨٥");
     expect(toArabicDigits("EGP 30")).toBe("EGP ٣٠");
   });
+});
 
-  it("filters the menu by tag", () => {
-    const family = filterMenu("وجبات العائلة");
-    expect(family.length).toBeGreaterThan(0);
-    family.forEach((product) => expect(product.tags).toContain("وجبات العائلة"));
+describe("menu helpers", () => {
+  const index = indexMenu(testMenu);
+
+  it("indexes categories and items by their ids", () => {
+    expect(index.categories).toHaveLength(testMenu.categories.length);
+    expect(index.items).toHaveLength(
+      testMenu.categories.reduce((total, category) => total + category.items.length, 0),
+    );
+    for (const entry of index.items) {
+      expect(index.itemsById.get(entry.id)).toBe(entry);
+      expect(index.categoriesById.get(entry.categoryId)?.items).toContain(entry);
+    }
   });
 
-  it("treats the default filter as the burger category", () => {
-    const burgers = filterMenu("الكل");
-    expect(burgers.length).toBe(categoryCounts.burger);
-    burgers.forEach((product) => expect(product.category).toBe("burger"));
-  });
+  it("prices a fixed item from its own price and a variant item from its lowest variant", () => {
+    const fixed = index.itemsById.get("beef-burger");
+    const variant = index.itemsById.get("strips-meal");
+    if (!fixed || !variant) throw new Error("the test menu is missing its fixtures");
 
-  it("returns an empty list for unknown filters", () => {
-    expect(filterMenu("تصنيف غير موجود")).toEqual([]);
-  });
+    expect(hasVariants(fixed)).toBe(false);
+    expect(startingPrice(fixed)).toBe(120);
 
-  it("keeps product identifiers unique and resolvable", () => {
-    const ids = products.map((product) => product.id);
-    expect(new Set(ids).size).toBe(ids.length);
-    ids.forEach((id) => expect(productsById[id]?.id).toBe(id));
-  });
-
-  it("keeps every product inside a known category and valid price", () => {
-    products.forEach((product) => {
-      expect(categoriesById[product.category]).toBeDefined();
-      expect(product.price).toBeGreaterThan(0);
-      expect(product.image).toMatch(/^\/images\/.+\.webp$/);
-      if (product.oldPrice) expect(product.oldPrice).toBeGreaterThan(product.price);
-    });
-  });
-
-  it("only exposes categories that are configured in the navigation orders", () => {
-    const configured = new Set([...homeCategoryOrder, ...desktopCategoryOrder]);
-    configured.forEach((id) => expect(categoriesById[id]).toBeDefined());
-    expect(categories).toHaveLength(desktopCategoryOrder.length);
-  });
-
-  it("keeps menu filters discoverable", () => {
-    expect(menuFilters[0]).toBe("الكل");
-    menuFilters.slice(1).forEach((filter) => {
-      expect(filterMenu(filter).length).toBeGreaterThan(0);
-    });
-  });
-
-  it("keeps cart and favorite seeds pointing at real products", () => {
-    seedCart.forEach((line) => {
-      expect(productsById[line.productId]).toBeDefined();
-      expect(line.qty).toBeGreaterThan(0);
-      expect(line.price).toBeGreaterThan(0);
-    });
-    seedFavorites.forEach((id) => expect(productsById[id]).toBeDefined());
+    expect(hasVariants(variant)).toBe(true);
+    expect(startingPrice(variant)).toBe(155);
+    expect(resolveVariantPrice(variant, "8 قطع")).toBe(200);
+    expect(resolveVariantPrice(variant, "غير موجود")).toBeNull();
+    expect(isValidSelection(variant, null)).toBe(false);
+    expect(isValidSelection(variant, "5 قطع")).toBe(true);
   });
 });

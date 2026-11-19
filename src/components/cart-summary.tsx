@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { ArrowLeft, Tag } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { deliveryFee as baseDeliveryFee, formatPrice, productsById } from "@/lib/data";
+import { deliveryFee as baseDeliveryFee, formatPrice } from "@/lib/data";
+import { ItemMedia } from "@/components/ui";
 
 export function CartSummary({
   ctaLabel,
@@ -30,7 +30,7 @@ export function CartSummary({
   children?: ReactNode;
   className?: string;
 }) {
-  const { lines, count, subtotal, t, coupon, applyCoupon, orderNote } = useApp();
+  const { lines, count, subtotal, t, coupon, applyCoupon, orderNote, itemsById, nameOf } = useApp();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
 
@@ -63,15 +63,16 @@ export function CartSummary({
       {showItems ? (
         <ul className="mt-4 space-y-3.5">
           {lines.map((line) => {
-            const product = productsById[line.productId];
-            if (!product) return null;
+            const item = itemsById.get(line.productId);
+            if (!item) return null;
             return (
               <li key={line.key} className="flex items-center gap-3">
-                <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-peach">
-                  <Image src={product.image} alt={t(product.name)} fill sizes="56px" className="object-cover" />
-                </div>
+                <ItemMedia name={item.nameAr} className="size-14 shrink-0 rounded-xl" textClassName="text-[8px]" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold">{t(product.name)}</p>
+                  <p className="truncate text-sm font-bold">{nameOf(item)}</p>
+                  {line.variant ? (
+                    <p className="text-[11px] text-muted">{line.variant}</p>
+                  ) : null}
                   <p className="text-[11px] text-muted">{t("الكمية: {qty}", { qty: line.qty })}</p>
                 </div>
                 <span className="whitespace-nowrap text-sm font-extrabold text-brand">

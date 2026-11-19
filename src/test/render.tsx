@@ -1,9 +1,11 @@
 import { render, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { AppProvider } from "@/components/providers";
+import { seedTestStorage, testMenu } from "@/test/menu";
 
 export function AppTestProvider({ children }: { children: ReactNode }) {
-  return <AppProvider>{children}</AppProvider>;
+  seedTestStorage();
+  return <AppProvider initialMenu={testMenu}>{children}</AppProvider>;
 }
 
 export function renderApp(ui: ReactNode) {

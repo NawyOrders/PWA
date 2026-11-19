@@ -122,8 +122,27 @@ export function Price({
   );
 }
 
-export function HotBadge({ label = "الأكثر طلباً" }: { label?: string }) {
-  const { t } = useApp();
+/**
+ * Neutral stand-in for a menu item that has no artwork in `menu.json`. It shows
+ * the item's Arabic name instead of inventing a food photo.
+ */
+export function ItemMedia({
+  name,
+  className = "",
+  textClassName = "text-[10px]",
+}: {
+  name: string;
+  className?: string;
+  textClassName?: string;
+}) {
+  return (
+    <span className={`grid place-items-center overflow-hidden bg-peach px-1.5 text-center ${className}`}>
+      <span className={`line-2 font-bold leading-tight text-ink/55 ${textClassName}`}>{name}</span>
+    </span>
+  );
+}
+
+export function HotBadge({ label = "الأكثر طلباً" }: { label?: string }) {  const { t } = useApp();
   return (
     <span
       className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold text-white shadow-[0_8px_18px_-10px_color-mix(in_srgb,var(--color-brand)_90%,transparent)]"
