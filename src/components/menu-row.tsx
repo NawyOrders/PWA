@@ -7,7 +7,7 @@ import { useApp } from "@/components/providers";
 import { AddButton, FavoriteButton, Price, QtyStepper } from "@/components/ui";
 
 export function MenuRow({ product, className = "" }: { product: Product; className?: string }) {
-  const { changeQty, lines, quickAdd, t } = useApp();
+  const { changeQty, lines, quickAdd, t, toast } = useApp();
   const defaultSize = product.category === "burger" ? "ساندوتش فقط" : undefined;
   const cartLine = lines.find(
     (line) =>
@@ -53,7 +53,7 @@ export function MenuRow({ product, className = "" }: { product: Product; classNa
       <FavoriteButton productId={product.id} className="absolute end-3 top-3 z-20 size-9 lg:size-10" />
       <div className="absolute bottom-3 end-3 z-20">
         {!cartLine ? (
-          <AddButton onClick={() => quickAdd(product.id)} className="size-10 lg:size-11" />
+          <AddButton onClick={() => product.isAvailable === false ? toast(t("هذا الصنف غير متاح في الفرع المحدد"), "info") : quickAdd(product.id)} className="size-10 lg:size-11" />
         ) : (
           <QtyStepper
             value={cartLine.qty}

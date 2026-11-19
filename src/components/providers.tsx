@@ -70,6 +70,7 @@ import {
 import { setRuntimeTenantApiBaseUrl } from "@/lib/runtime-tenant";
 import { usePersistentState } from "@/hooks/use-persistent-state";
 import { LoadingIndicator } from "@/components/loading-indicator";
+import { addressApi } from "@/lib/tenant-addresses";
 
 export type CartLine = {
   key: string;
@@ -1003,6 +1004,22 @@ export function AppProvider({
     [refreshNow, expireSession, tenantApiBaseUrl],
   );
 
+  // Customer addresses belong to the API, not to this device. Demo mode keeps
+  // its seeded values; a live signed-in customer replaces them as soon as a
+  // bearer token is available.
+  useEffect(() => {
+    if (!ready || authTransport() !== "live" || !customer || sessionStatus !== "active") return;
+    let cancelled = false;
+    Promise.all([addressApi.list(authFetch), addressApi.default(authFetch).catch(() => null)]).then(([remote, defaultAddress]) => {
+      if (!cancelled) {
+        setAddresses(remote);
+        const selected = defaultAddress ?? remote.find((item) => item.isDefault) ?? null;
+        setSelectedAddressId(selected?.id ?? null);
+      }
+    }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [ready, customer, sessionStatus, authFetch, setAddresses, setSelectedAddressId]);
+
   /*
    * An older build kept the refresh token in `localStorage`. Hand it to the app
    * server once — it goes into the httpOnly jar and is never sent back — and
@@ -1304,6 +1321,20 @@ export function AppProvider({
 
   const addAddress = useCallback(
     (address: SavedAddress) => {
+      if (authTransport() === "live" && customer) {
+        void addressApi.create(authFetch, {
+          placeType: address.kind === "work" ? "Office" : "Apartment",
+          label: address.title.slice(0, 50),
+          street: address.detail.slice(0, 200),
+          latitude: address.lat,
+          longitude: address.lng,
+          isDefault: addresses.length === 0,
+        }).then((created) => {
+          setAddresses((current) => [created, ...current.filter((item) => item.id !== created.id)]);
+          setSelectedAddressId(created.id);
+        }).catch(() => toast(t("تعذر حفظ العنوان. تحقق من البيانات وحاول مرة أخرى"), "info"));
+        return;
+      }
       setAddresses((current) => {
         const withoutDuplicate = current.filter((item) => item.id !== address.id);
         return [...withoutDuplicate, address];
@@ -1311,7 +1342,7 @@ export function AppProvider({
       setSelectedAddressId(address.id);
       toast(t("تم حفظ العنوان بنجاح"), "info");
     },
-    [toast, t, setAddresses, setSelectedAddressId],
+    [toast, t, setAddresses, setSelectedAddressId, addresses.length, authFetch, customer],
   );
 
   const removeAddress = useCallback(
@@ -1323,7 +1354,16 @@ export function AppProvider({
     [toast, t, setAddresses, setSelectedAddressId],
   );
 
-  const selectAddress = useCallback((id: string | null) => setSelectedAddressId(id), [setSelectedAddressId]);
+  const selectAddress = useCallback((id: string | null) => {
+    if (id && authTransport() === "live" && customer) {
+      void addressApi.setDefault(authFetch, id).then((updated) => {
+        setAddresses((current) => current.map((item) => ({ ...item, isDefault: item.id === updated.id })));
+        setSelectedAddressId(updated.id);
+      }).catch(() => toast(t("تعذر تعيين العنوان الافتراضي"), "info"));
+      return;
+    }
+    setSelectedAddressId(id);
+  }, [authFetch, customer, setAddresses, setSelectedAddressId, t, toast]);
 
   const selectBranch = useCallback(
     (id: string) => {
