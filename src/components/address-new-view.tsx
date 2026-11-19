@@ -235,7 +235,7 @@ export function AddressNewView() {
 
             {pin && mode === "list" ? (
               <span className="nawy-center-pin" aria-hidden>
-                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 2v6a2 2 0 0 0 4 0V2M6 2v20M14 2c-1.7 0-3 2-3 5s1.3 4 3 4v11" />
                 </svg>
               </span>
@@ -361,7 +361,7 @@ export function AddressNewView() {
 
                   {addresses.length === 0 ? (
                     <div className="flex flex-col items-center px-2 py-8 text-center">
-                      <MapPinOff className="size-24 text-[#c2b4a9]" strokeWidth={1.2} />
+                      <MapPinOff className="size-24 text-line-soft" strokeWidth={1.2} />
                       <p className="mt-4 text-xl font-extrabold text-ink/80">{t("لا يوجد عناوين سابقة")}</p>
                       <p className="mt-1 text-sm text-muted">{t("اضف الان")}</p>
                     </div>
@@ -384,7 +384,7 @@ export function AddressNewView() {
                             >
                               <span
                                 className={`grid size-5 shrink-0 place-items-center rounded-full border-2 ${
-                                  active ? "border-brand" : "border-[#c9b8a9]"
+                                  active ? "border-brand" : "border-line-soft"
                                 }`}
                               >
                                 {active ? <span className="size-2.5 rounded-full bg-brand" /> : null}
@@ -412,7 +412,7 @@ export function AddressNewView() {
                   <button
                     type="button"
                     onClick={listCta.onClick}
-                    className="btn-gradient mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_rgba(232,69,44,0.95)]"
+                    className="btn-gradient mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_color-mix(in_srgb,var(--color-brand)_95%,transparent)]"
                   >
                     {CtaIcon ? <CtaIcon className="size-5" strokeWidth={2.3} /> : null}
                     {t(listCta.label)}
@@ -462,7 +462,7 @@ export function AddressNewView() {
                         <div
                           key={item.id}
                           className={`rounded-2xl border-2 bg-white transition ${
-                            active ? "border-brand shadow-[0_0_0_4px_rgba(232,69,44,0.07)]" : "border-line hover:border-brand/30"
+                            active ? "border-brand shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-brand)_7%,transparent)]" : "border-line hover:border-brand/30"
                           }`}
                         >
                           <button
@@ -484,7 +484,7 @@ export function AddressNewView() {
                             {item.id !== "other" ? (
                               <span
                                 className={`grid size-6 place-items-center rounded-full border-2 ${
-                                  active ? "border-brand" : "border-[#c9b8a9]"
+                                  active ? "border-brand" : "border-line-soft"
                                 }`}
                                 aria-hidden="true"
                               >
@@ -519,7 +519,7 @@ export function AddressNewView() {
                   <button
                     type="button"
                     onClick={confirmPickedAddress}
-                    className="btn-gradient mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_rgba(232,69,44,0.95)]"
+                    className="btn-gradient mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_color-mix(in_srgb,var(--color-brand)_95%,transparent)]"
                   >
                     <ArrowRight className="size-5 ltr:rotate-180" strokeWidth={2.3} />
                     {t("تأكيد العنوان")}

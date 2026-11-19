@@ -76,7 +76,7 @@ export function PickupView() {
                     key={option.id}
                     className={`rounded-[20px] border-2 p-3 transition sm:p-4 ${
                       active
-                        ? "border-brand shadow-[0_0_0_4px_rgba(232,69,44,0.06)]"
+                        ? "border-brand shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-brand)_6%,transparent)]"
                         : "border-line hover:border-brand/30"
                     }`}
                   >
@@ -89,7 +89,7 @@ export function PickupView() {
                     >
                       <span
                         className={`mt-1.5 grid size-5 shrink-0 place-items-center rounded-full border-2 ${
-                          active ? "border-brand" : "border-[#9b8d82]"
+                          active ? "border-brand" : "border-muted"
                         }`}
                       >
                         {active ? <span className="size-2.5 rounded-full bg-brand" /> : null}

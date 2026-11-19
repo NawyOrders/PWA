@@ -108,7 +108,7 @@ export function AddressesView() {
               <button
                 type="button"
                 onClick={() => setPickerOpen(true)}
-                className="mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#d9c8b8] text-sm font-extrabold text-ink/80 transition hover:border-brand/60 hover:text-brand"
+                className="mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-line-soft text-sm font-extrabold text-ink/80 transition hover:border-brand/60 hover:text-brand"
               >
                 <Plus className="size-5" strokeWidth={2.3} />
                 {t("اضافة عنوان جديد")}
@@ -174,7 +174,7 @@ export function AddressesView() {
               <button
                 type="button"
                 onClick={saveChanges}
-                className="btn-gradient mt-4 flex h-14 w-full items-center justify-center rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_rgba(232,69,44,0.95)]"
+                className="btn-gradient mt-4 flex h-14 w-full items-center justify-center rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_color-mix(in_srgb,var(--color-brand)_95%,transparent)]"
               >
                 {t("حفظ التغييرات")}
               </button>

@@ -56,7 +56,7 @@ export function BranchView() {
                 >
                   <span
                     className={`grid size-5 shrink-0 place-items-center rounded-full border-2 ${
-                      active ? "border-brand" : "border-[#d8c9bc]"
+                      active ? "border-brand" : "border-line-soft"
                     }`}
                   >
                     {active ? <span className="size-2.5 rounded-full bg-brand" /> : null}

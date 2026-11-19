@@ -329,16 +329,16 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
             />
 
             <span className="nawy-center-pin" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 2v6a2 2 0 0 0 4 0V2M6 2v20M14 2c-1.7 0-3 2-3 5s1.3 4 3 4v11" />
               </svg>
             </span>
             <span
-              className="pointer-events-none absolute left-1/2 top-1/2 z-[500] whitespace-nowrap rounded-xl bg-[#201713] px-3.5 py-2 text-xs font-bold text-white shadow-pop"
+              className="pointer-events-none absolute left-1/2 top-1/2 z-[500] whitespace-nowrap rounded-xl bg-ink px-3.5 py-2 text-xs font-bold text-white shadow-pop"
               style={{ transform: "translate(-50%, calc(-100% - 34px))" }}
             >
               {t("طلبك هيوصل هنا")}
-              <span className="absolute -bottom-1 left-1/2 size-2.5 -translate-x-1/2 rotate-45 rounded-[2px] bg-[#201713]" aria-hidden="true" />
+              <span className="absolute -bottom-1 left-1/2 size-2.5 -translate-x-1/2 rotate-45 rounded-[2px] bg-ink" aria-hidden="true" />
             </span>
 
             <div className="absolute inset-x-0 top-0 z-[600] flex items-center gap-3 p-4">
@@ -406,7 +406,7 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
               <button
                 type="button"
                 onClick={confirmMap}
-                className="btn-gradient motion-press mt-4 flex h-14 w-full items-center justify-center rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_rgba(232,69,44,0.95)]"
+                className="btn-gradient motion-press mt-4 flex h-14 w-full items-center justify-center rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_color-mix(in_srgb,var(--color-brand)_95%,transparent)]"
               >
                 {t("تأكيد العنوان")}
               </button>
@@ -456,7 +456,7 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
                   className="absolute inset-0"
                 />
                 <span className="nawy-center-pin" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 2v6a2 2 0 0 0 4 0V2M6 2v20M14 2c-1.7 0-3 2-3 5s1.3 4 3 4v11" />
                   </svg>
                 </span>
@@ -544,7 +544,7 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
               <button
                 type="button"
                 onClick={save}
-                className="btn-gradient motion-press mt-5 flex h-14 w-full items-center justify-center rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_rgba(232,69,44,0.95)]"
+                className="btn-gradient motion-press mt-5 flex h-14 w-full items-center justify-center rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_color-mix(in_srgb,var(--color-brand)_95%,transparent)]"
               >
                 {t("حفظ العنوان")}
               </button>

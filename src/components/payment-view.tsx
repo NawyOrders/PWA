@@ -49,7 +49,7 @@ const methods: {
     id: "wallet",
     title: "محفظة إلكترونية",
     subtitle: "فودافون كاش وغيرها",
-    tile: "bg-[#fff2d6] text-[#c98a04]",
+    tile: "bg-gold-100 text-gold-600",
     icon: <Wallet className="size-5" />,
   },
 ];
@@ -181,7 +181,7 @@ export function PaymentView() {
                       </span>
                       <span
                         className={`grid size-5 shrink-0 place-items-center rounded-full border-2 ${
-                          active ? "border-brand" : "border-[#d8c9bc]"
+                          active ? "border-brand" : "border-line-soft"
                         }`}
                       >
                         {active ? <span className="size-2.5 rounded-full bg-brand" /> : null}
@@ -244,7 +244,7 @@ export function PaymentView() {
                       </>
                     ) : (
                       <>
-                        <span className="grid size-14 place-items-center rounded-full bg-brand text-white shadow-[0_16px_30px_-16px_rgba(232,69,44,0.9)]">
+                        <span className="grid size-14 place-items-center rounded-full bg-brand text-white shadow-[0_16px_30px_-16px_color-mix(in_srgb,var(--color-brand)_90%,transparent)]">
                           <UploadCloud className="size-7" />
                         </span>
                         <span className="text-sm font-extrabold">{t("ارفع إيصال الدفع")}</span>
@@ -263,14 +263,14 @@ export function PaymentView() {
               ) : null}
 
               {method === "wallet" ? (
-                <p className="mt-4 flex items-start gap-2 rounded-xl bg-[#fff6e2] px-3 py-2.5 text-[11px] leading-5 text-[#a2700a]">
+                <p className="mt-4 flex items-start gap-2 rounded-xl bg-gold-50 px-3 py-2.5 text-[11px] leading-5 text-gold-700">
                   <Info className="mt-0.5 size-4 shrink-0" />
                   {t("هيتواصل معاك مندوب الدفع لتأكيد تحويل المحفظة قبل تجهيز الطلب.")}
                 </p>
               ) : null}
 
               {error ? (
-                <p className="mt-3 rounded-xl bg-pink-soft px-3 py-2 text-[11px] font-semibold text-[#c92e4d]">
+                <p className="mt-3 rounded-xl bg-pink-soft px-3 py-2 text-[11px] font-semibold text-danger-strong">
                   {t(error)}
                 </p>
               ) : null}
@@ -310,7 +310,7 @@ export function PaymentView() {
           <div
             ref={dialogRef}
             tabIndex={-1}
-            className="animate-float-in relative w-full max-w-md rounded-[28px] bg-cream p-6 shadow-[0_40px_90px_-30px_rgba(0,0,0,0.45)]"
+            className="animate-float-in relative w-full max-w-md rounded-[28px] bg-cream p-6 shadow-[0_40px_90px_-30px_color-mix(in_srgb,black_45%,transparent)]"
           >
             <button
               type="button"
@@ -354,7 +354,7 @@ export function PaymentView() {
             </div>
 
             <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-cream-100">
-              <div className="h-full w-full rounded-full" style={{ backgroundImage: "linear-gradient(90deg,#f6a723,#38a475)" }} />
+              <div className="h-full w-full rounded-full" style={{ backgroundImage: "linear-gradient(90deg,var(--color-gold),var(--color-success))" }} />
             </div>
 
             <p className="mt-4 flex items-start gap-2 rounded-xl bg-brand-soft/45 px-3 py-2.5 text-[10px] leading-5 text-ink/60">

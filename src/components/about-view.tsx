@@ -58,7 +58,7 @@ export function AboutView() {
                   href={`/help/policies?tab=${link.id}`}
                   className="card flex items-center gap-3 px-4 py-3.5 transition hover:bg-cream-50"
                 >
-                  <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-b from-[#f9b234] to-[#f6891f] text-[#3a2408] shadow-[0_12px_22px_-14px_rgba(246,137,31,0.95)]">
+                  <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-b from-gold-400 to-gold-600 text-gold-contrast shadow-[0_12px_22px_-14px_color-mix(in_srgb,var(--color-gold)_95%,transparent)]">
                     <Icon className="size-5" strokeWidth={1.9} />
                   </span>
                   <span className="flex-1 text-sm font-extrabold">{t(link.label)}</span>
@@ -96,9 +96,9 @@ function PlatformCard({ platform }: { platform: (typeof platforms)[number] }) {
   const { t } = useApp();
   const isBrand = platform.tone === "brand";
   return (
-    <div className="flex items-center gap-3 rounded-[22px] bg-[#2b1a12] p-4 shadow-soft">
+    <div className="flex items-center gap-3 rounded-[22px] bg-cocoa p-4 shadow-soft">
       <div className="min-w-0 flex-1 text-start">
-        <p className={`text-xs font-bold ${isBrand ? "text-gold" : "text-[#c07bff]"}`}>{t(platform.role)}</p>
+        <p className={`text-xs font-bold ${isBrand ? "text-gold" : "text-violet"}`}>{t(platform.role)}</p>
         <p className="mt-1 truncate text-lg font-extrabold text-white" dir="ltr">
           {platform.name}
         </p>
@@ -106,7 +106,7 @@ function PlatformCard({ platform }: { platform: (typeof platforms)[number] }) {
       {isBrand ? (
         <LogoMark className="size-12 shrink-0" />
       ) : (
-        <span className="grid size-12 shrink-0 place-items-center rounded-2xl border border-[#c07bff]/70 bg-[#1a1016] text-[13px] font-extrabold text-[#c07bff]">
+        <span className="grid size-12 shrink-0 place-items-center rounded-2xl border border-violet/70 bg-violet-deep text-[13px] font-extrabold text-violet">
           {platform.initials}
         </span>
       )}

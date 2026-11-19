@@ -75,7 +75,7 @@ export function MobileOrderTrackingBanner({ order, onClose }: { order: Order; on
     <aside
       aria-label={t("تتبع الطلب")}
       dir="ltr"
-      className={`motion-nav-in fixed inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-30 min-h-[88px] rounded-t-[18px] bg-gradient-to-r from-[#f04b27] via-[#fa5c27] to-[#e9361d] px-4 py-3 shadow-[0_-12px_38px_-18px_rgba(232,69,44,0.65)] sm:px-6 md:px-8 lg:hidden ${
+      className={`motion-nav-in fixed inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-30 min-h-[88px] rounded-t-[18px] bg-gradient-to-r from-brand-500 via-brand-400 to-brand-600 px-4 py-3 shadow-[0_-12px_38px_-18px_color-mix(in_srgb,var(--color-brand)_65%,transparent)] sm:px-6 md:px-8 lg:hidden ${
         isEnglish
           ? "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 pr-9"
           : "grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 pl-9"
@@ -98,7 +98,7 @@ export function DesktopOrderTrackingCard({ order, onClose }: { order: Order; onC
   return (
     <aside
       aria-label={t("تتبع الطلب")}
-      className="motion-fade pointer-events-auto fixed right-5 top-1/2 z-50 hidden w-[220px] max-w-[calc(100vw-2.5rem)] -translate-y-1/2 flex-col items-center gap-3 rounded-[24px] bg-gradient-to-r from-[#f04b27] via-[#fa5c27] to-[#e9361d] px-4 pb-4 pt-9 text-white shadow-[0_18px_38px_-18px_rgba(232,69,44,0.65)] lg:flex"
+      className="motion-fade pointer-events-auto fixed right-5 top-1/2 z-50 hidden w-[220px] max-w-[calc(100vw-2.5rem)] -translate-y-1/2 flex-col items-center gap-3 rounded-[24px] bg-gradient-to-r from-brand-500 via-brand-400 to-brand-600 px-4 pb-4 pt-9 text-white shadow-[0_18px_38px_-18px_color-mix(in_srgb,var(--color-brand)_65%,transparent)] lg:flex"
     >
       <button
         type="button"

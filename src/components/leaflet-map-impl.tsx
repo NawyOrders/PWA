@@ -83,14 +83,14 @@ function markerHtml(marker: MapMarker) {
   }
 
   if (variant === "courier") {
-    return `<span class="nawy-map-courier">${label}${glyphSvg("bike", 18, "#fff")}</span>`;
+    return `<span class="nawy-map-courier">${label}${glyphSvg("bike", 18, "white")}</span>`;
   }
 
   if (variant === "store") {
     return `<span class="nawy-map-badge${marker.active ? " is-active" : ""}">${label}${glyphSvg(
       glyph === "none" ? "store" : glyph,
       18,
-      marker.active ? "#fff" : "#e8452c",
+      marker.active ? "white" : "var(--color-brand)",
     )}</span>`;
   }
 
@@ -98,11 +98,20 @@ function markerHtml(marker: MapMarker) {
     return `<span class="nawy-map-drop${marker.active ? " is-active" : ""}">${label}${glyphSvg(
       glyph,
       15,
-      marker.active ? "#fff" : "#8b7a6d",
+      marker.active ? "white" : "var(--color-line-strong)",
     )}</span>`;
   }
 
-  return `<span class="nawy-map-pin${marker.active ? " is-active" : ""}">${label}${glyphSvg(glyph, 16, "#fff")}</span>`;
+  return `<span class="nawy-map-pin${marker.active ? " is-active" : ""}">${label}${glyphSvg(glyph, 16, "white")}</span>`;
+}
+
+/** Leaflet canvas paths need a resolved colour, not a CSS custom property. */
+function routeBrandColor(): string {
+  if (typeof window === "undefined") return "#e8452c";
+  return (
+    getComputedStyle(document.documentElement).getPropertyValue("--color-brand").trim() ||
+    "#e8452c"
+  );
 }
 
 function iconFor(marker: MapMarker) {
@@ -267,7 +276,7 @@ export function LeafletMap({
     layer.clearLayers();
     for (const route of routes) {
       L.polyline(route.positions, {
-        color: route.color ?? "#e8452c",
+        color: route.color ?? routeBrandColor(),
         weight: route.width ?? 5,
         opacity: 0.95,
         lineCap: "round",

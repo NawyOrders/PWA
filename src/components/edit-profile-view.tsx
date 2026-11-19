@@ -53,7 +53,7 @@ export function EditProfileView() {
           setPreview(reader.result as string);
           return;
         }
-        context.fillStyle = "#ffffff";
+        context.fillStyle = "white";
         context.fillRect(0, 0, size, size);
         const scale = Math.max(size / image.naturalWidth, size / image.naturalHeight);
         const width = image.naturalWidth * scale;
@@ -140,7 +140,7 @@ export function EditProfileView() {
                 type="button"
                 aria-label={avatarLabel}
                 onClick={() => fileInput.current?.click()}
-                className="absolute -bottom-0.5 start-0 grid size-10 place-items-center rounded-full bg-[#f0683f] text-white ring-4 ring-white transition hover:bg-brand-dark active:scale-95"
+                className="absolute -bottom-0.5 start-0 grid size-10 place-items-center rounded-full bg-brand-400 text-white ring-4 ring-white transition hover:bg-brand-dark active:scale-95"
               >
                 <Camera className="size-[18px]" strokeWidth={2} />
               </button>
@@ -215,7 +215,7 @@ export function EditProfileView() {
           <button
             type="submit"
             disabled={saving}
-            className="btn-gradient mt-6 flex h-14 w-full items-center justify-center rounded-full text-sm font-extrabold text-white shadow-[0_20px_36px_-20px_rgba(232,69,44,0.95)] transition hover:brightness-105 disabled:opacity-70"
+            className="btn-gradient mt-6 flex h-14 w-full items-center justify-center rounded-full text-sm font-extrabold text-white shadow-[0_20px_36px_-20px_color-mix(in_srgb,var(--color-brand)_95%,transparent)] transition hover:brightness-105 disabled:opacity-70"
           >
             {saving ? t("جاري الحفظ...") : t("حفظ التغييرات")}
           </button>

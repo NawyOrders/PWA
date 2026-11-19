@@ -27,7 +27,7 @@ export default function NotFound() {
         </p>
         <Link
           href="/"
-          className="mt-6 inline-flex h-12 items-center justify-center rounded-full bg-brand px-5 text-sm font-bold text-white shadow-[0_14px_26px_-16px_rgba(232,69,44,0.9)] transition hover:bg-brand-dark"
+          className="mt-6 inline-flex h-12 items-center justify-center rounded-full bg-brand px-5 text-sm font-bold text-white shadow-[0_14px_26px_-16px_color-mix(in_srgb,var(--color-brand)_90%,transparent)] transition hover:bg-brand-dark"
         >
           ناوي أوردرز · Nawy Orders
         </Link>

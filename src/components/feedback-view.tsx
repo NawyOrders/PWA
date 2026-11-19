@@ -123,7 +123,7 @@ export function FeedbackView() {
                           id="feedback-type"
                           value={type}
                           onChange={(event) => setType(event.target.value)}
-                          className="field appearance-none border-[#8a7466] bg-white pe-12 text-sm font-bold"
+                          className="field appearance-none border-line-strong bg-white pe-12 text-sm font-bold"
                         >
                           {feedbackTypes.map((option) => (
                             <option key={option} value={option}>
@@ -145,7 +145,7 @@ export function FeedbackView() {
                         maxLength={500}
                         onChange={(event) => setDetail(event.target.value)}
                         placeholder={t("شاركنا رأيك بالتفصيل حتى نستطيع تحسين تجربتك معنا...")}
-                        className="field mt-2.5 min-h-32 resize-none border-[#8a7466] bg-white text-sm leading-7"
+                        className="field mt-2.5 min-h-32 resize-none border-line-strong bg-white text-sm leading-7"
                       />
                       <p className="mt-2 text-xs text-muted">{detail.length}/500</p>
                     </div>
@@ -153,14 +153,14 @@ export function FeedbackView() {
 
                   <div>
                     <p className="text-sm font-extrabold">{t("اضف صورة (اختياري)")}</p>
-                    <label className="mt-2.5 flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-[#8a7466]/60 bg-peach px-4 py-8 text-center transition hover:border-brand/50">
+                    <label className="mt-2.5 flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-line-strong/60 bg-peach px-4 py-8 text-center transition hover:border-brand/50">
                       <input
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
                         className="hidden"
                         onChange={(event) => pickImage(event.target.files?.[0])}
                       />
-                      <span className="grid size-14 place-items-center rounded-2xl bg-brand text-white shadow-[0_16px_28px_-16px_rgba(232,69,44,0.9)]">
+                      <span className="grid size-14 place-items-center rounded-2xl bg-brand text-white shadow-[0_16px_28px_-16px_color-mix(in_srgb,var(--color-brand)_90%,transparent)]">
                         <UploadCloud className="size-7" strokeWidth={1.9} />
                       </span>
                       {image ? (

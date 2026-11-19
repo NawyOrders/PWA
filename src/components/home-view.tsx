@@ -42,7 +42,7 @@ function PhoneMockup() {
     : { width: 740, height: 1360 };
 
   return (
-    <div className="relative h-[288px] w-[155px] shrink-0 rounded-t-[32px] bg-gradient-to-br from-[#f58b78] via-[#ed604a] to-[#ffd2c3] p-[5px] shadow-[0_32px_70px_-30px_rgba(115,43,27,0.6)] max-[750px]:rounded-b-[32px] sm:h-[360px] sm:w-[194px] sm:rounded-t-[42px] sm:p-[6px] sm:max-[750px]:rounded-b-[42px] lg:h-[480px] lg:w-[258px] lg:rounded-t-[52px]">
+    <div className="relative h-[288px] w-[155px] shrink-0 rounded-t-[32px] bg-gradient-to-br from-brand-300 via-brand-400 to-brand-100 p-[5px] shadow-[0_32px_70px_-30px_color-mix(in_srgb,var(--color-cocoa)_60%,transparent)] max-[750px]:rounded-b-[32px] sm:h-[360px] sm:w-[194px] sm:rounded-t-[42px] sm:p-[6px] sm:max-[750px]:rounded-b-[42px] lg:h-[480px] lg:w-[258px] lg:rounded-t-[52px]">
       <div className="relative h-full w-full overflow-hidden rounded-t-[27px] bg-cream max-[750px]:rounded-b-[27px] sm:rounded-t-[37px] sm:max-[750px]:rounded-b-[37px] lg:rounded-t-[46px]">
         <Image
           src={mockup}
@@ -114,8 +114,8 @@ export function HomeView() {
                 <span
                   className={`grid size-[60px] place-items-center rounded-full border-2 bg-white transition duration-300 group-hover:-translate-y-1 group-hover:border-brand/60 ${
                     active
-                      ? "border-brand shadow-[0_10px_24px_-14px_rgba(232,69,44,0.7)]"
-                      : "border-[#ece0d4]"
+                      ? "border-brand shadow-[0_10px_24px_-14px_color-mix(in_srgb,var(--color-brand)_70%,transparent)]"
+                      : "border-line"
                   }`}
                 >
                   <span className="relative size-12 overflow-hidden rounded-full">
@@ -198,10 +198,10 @@ export function HomeView() {
               <ProductCard key={product.id} product={product} />
             ))}
 
-          <div className="motion-lift relative hidden overflow-hidden rounded-[26px] bg-[#e8452c] p-5 text-white shadow-soft lg:block">
+          <div className="motion-lift relative hidden overflow-hidden rounded-[26px] bg-brand p-5 text-white shadow-soft lg:block">
             <div className="motion-float absolute -right-10 -top-10 size-40 rounded-full bg-white/10" />
             <div
-              className="motion-float absolute -bottom-14 -left-8 size-40 rounded-full bg-[#f6a723]/25"
+              className="motion-float absolute -bottom-14 -left-8 size-40 rounded-full bg-gold-500/25"
               style={{ animationDelay: "1.4s" }}
             />
             <div className="relative flex h-full flex-col justify-between">
@@ -273,10 +273,10 @@ export function HomeView() {
       </section>
 
       <section className="shell mt-10 lg:mt-12">
-        <div className="relative overflow-hidden rounded-[28px] bg-[linear-gradient(110deg,#f9d6ce_0%,#f8c1b2_48%,#f25b43_100%)] px-5 py-7 sm:px-8 min-[750px]:h-[448px] min-[750px]:px-11 min-[750px]:py-8 lg:h-[448px] lg:px-11 lg:py-8">
-          <div className="absolute -right-16 -top-40 size-[410px] rounded-full bg-[#ff9b73]/35" />
-          <div className="absolute -bottom-48 left-[8%] size-[390px] rounded-full bg-[#f47b55]/45" />
-          <div className="absolute -bottom-64 right-[28%] size-[360px] rounded-full bg-[#ffad8b]/35" />
+        <div className="relative overflow-hidden rounded-[28px] bg-[linear-gradient(110deg,var(--color-brand-100)_0%,var(--color-brand-200)_48%,var(--color-brand-500)_100%)] px-5 py-7 sm:px-8 min-[750px]:h-[448px] min-[750px]:px-11 min-[750px]:py-8 lg:h-[448px] lg:px-11 lg:py-8">
+          <div className="absolute -right-16 -top-40 size-[410px] rounded-full bg-brand-300/35" />
+          <div className="absolute -bottom-48 left-[8%] size-[390px] rounded-full bg-brand-400/45" />
+          <div className="absolute -bottom-64 right-[28%] size-[360px] rounded-full bg-brand-200/35" />
           <div className="relative grid grid-cols-1 items-center min-[750px]:h-full lg:h-full">
             <div className="max-w-xl min-[750px]:max-w-[calc(100%-300px)]">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/60 px-3.5 py-1.5 text-[11px] font-bold text-ink/70">
@@ -299,7 +299,7 @@ export function HomeView() {
                   onClick={() =>
                     toast(t("التطبيق هيكون متاح على المتجر قريباً"), "info")
                   }
-                  className="flex h-14 w-32 items-center justify-center gap-2 rounded-xl bg-[#1f1a16] px-3 text-white transition hover:bg-black"
+                  className="flex h-14 w-32 items-center justify-center gap-2 rounded-xl bg-ink px-3 text-white transition hover:bg-black"
                 >
                   <span className="text-start leading-tight">
                     <span className="block text-[9px] text-white/70">
@@ -320,7 +320,7 @@ export function HomeView() {
                   onClick={() =>
                     toast(t("التطبيق هيكون متاح على المتجر قريباً"), "info")
                   }
-                  className="flex h-14 w-36 items-center justify-center gap-2 rounded-xl bg-[#1f1a16] px-3 text-white transition hover:bg-black"
+                  className="flex h-14 w-36 items-center justify-center gap-2 rounded-xl bg-ink px-3 text-white transition hover:bg-black"
                 >
                   <span className="text-start leading-tight">
                     <span className="block text-[9px] text-white/70">

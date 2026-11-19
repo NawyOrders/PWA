@@ -141,7 +141,7 @@ export function PromoCarousel() {
                 tabIndex={slideIndex === index ? 0 : -1}
                 className={`mt-1 inline-flex h-9 w-fit items-center gap-2 rounded-full px-4 text-[11px] font-bold transition lg:h-11 lg:px-6 lg:text-sm ${
                   item.theme === "dark"
-                    ? "bg-[#cb2f19] text-white hover:bg-[#b32612]"
+                    ? "bg-brand-600 text-white hover:bg-brand-700"
                     : "bg-brand text-white hover:bg-brand-dark"
                 }`}
               >
@@ -164,7 +164,7 @@ export function PromoCarousel() {
             aria-label={t("العرض {n}", { n: dotIndex + 1 })}
             onClick={() => setIndex(dotIndex)}
             className={`h-1.5 rounded-full transition-all duration-300 ${
-              dotIndex === index ? "w-4 bg-brand" : "w-1.5 bg-[#d9ccc0] hover:w-2.5 hover:bg-brand/50"
+              dotIndex === index ? "w-4 bg-brand" : "w-1.5 bg-line-soft hover:w-2.5 hover:bg-brand/50"
             }`}
           />
         ))}

@@ -13,7 +13,7 @@ type ButtonSize = "xs" | "sm" | "md" | "lg";
 
 const buttonVariants: Record<ButtonVariant, string> = {
   brand:
-    "bg-brand text-white shadow-[0_14px_26px_-16px_rgba(232,69,44,0.9)] hover:bg-brand-dark",
+    "bg-brand text-white shadow-[0_14px_26px_-16px_color-mix(in_srgb,var(--color-brand)_90%,transparent)] hover:bg-brand-dark",
   soft: "bg-brand-soft text-brand hover:bg-brand/15",
   outline: "border border-line bg-white text-ink shadow-soft hover:border-brand/40",
   ghost: "text-ink hover:bg-cream-100",
@@ -74,7 +74,7 @@ export function chipStyles(selected: boolean, className = ""): string {
   return [
     "motion-press inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-extrabold transition",
     selected
-      ? "border border-brand bg-brand text-white shadow-[0_16px_30px_-18px_rgba(232,69,44,0.9)]"
+      ? "border border-brand bg-brand text-white shadow-[0_16px_30px_-18px_color-mix(in_srgb,var(--color-brand)_90%,transparent)]"
       : "border border-line bg-white text-ink shadow-soft hover:border-brand/40 hover:bg-cream-50",
     className,
   ]
@@ -126,8 +126,8 @@ export function HotBadge({ label = "الأكثر طلباً" }: { label?: string
   const { t } = useApp();
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold text-white shadow-[0_8px_18px_-10px_rgba(232,69,44,0.9)]"
-      style={{ backgroundImage: "linear-gradient(270deg, #f79a4b 0%, #e8452c 100%)" }}
+      className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold text-white shadow-[0_8px_18px_-10px_color-mix(in_srgb,var(--color-brand)_90%,transparent)]"
+      style={{ backgroundImage: "linear-gradient(270deg, var(--color-brand-400) 0%, var(--color-brand) 100%)" }}
     >
       <Flame className="size-3 fill-white/30" />
       {t(label)}
@@ -157,12 +157,12 @@ export function FavoriteButton({
         toggleFavorite(productId);
       }}
       className={`motion-press grid place-items-center rounded-full transition active:scale-90 ${
-        alwaysWhite || active ? "bg-white shadow-[0_8px_20px_-12px_rgba(60,30,15,0.5)]" : "bg-white/90"
+        alwaysWhite || active ? "bg-white shadow-[0_8px_20px_-12px_color-mix(in_srgb,var(--color-cocoa)_50%,transparent)]" : "bg-white/90"
       } ${className}`}
     >
       <Heart
         key={active ? "active" : "idle"}
-        className={`size-[46%] transition ${active ? "motion-heart-pop fill-brand text-brand" : "text-[#7f746c]"}`}
+        className={`size-[46%] transition ${active ? "motion-heart-pop fill-brand text-brand" : "text-muted"}`}
         strokeWidth={1.8}
       />
     </button>
@@ -188,7 +188,7 @@ export function AddButton({
         event.stopPropagation();
         onClick();
       }}
-      className={`motion-press grid place-items-center rounded-full bg-brand text-white shadow-[0_12px_24px_-12px_rgba(232,69,44,0.9)] transition hover:scale-105 hover:bg-brand-dark active:scale-90 ${className}`}
+      className={`motion-press grid place-items-center rounded-full bg-brand text-white shadow-[0_12px_24px_-12px_color-mix(in_srgb,var(--color-brand)_90%,transparent)] transition hover:scale-105 hover:bg-brand-dark active:scale-90 ${className}`}
     >
       <Plus className="size-[50%]" strokeWidth={2.4} />
     </button>

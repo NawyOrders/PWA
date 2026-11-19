@@ -22,6 +22,16 @@
   --color-brand-800: var(--brand-800);
   --color-brand-900: var(--brand-900);
   --color-pink-soft: #fdecef;
+  /* Semantic action and surface colours; never derived from the tenant brand. */
+  --color-danger: #e24467;
+  --color-danger-soft: #fde3e8;
+  --color-danger-strong: #c92e4d;
+  --color-gold-contrast: #3a2408;
+  --color-line-soft: #d8c9bc;
+  --color-surface-muted: #fbf4ec;
+  --color-surface-hover: #f7ece1;
+  --color-surface-warm: #fdf1e9;
+  --color-peach-soft: #f8e8da;
   --color-ink: #201a16;
   --color-muted: #9b8d82;
   --color-line: #f1e5d9;
@@ -108,11 +118,11 @@
   }
 
   ::selection {
-    background: rgba(232, 69, 44, 0.18);
+    background: color-mix(in srgb, var(--color-brand) 18%, transparent);
   }
 
   :where(a, button, [role="button"], [role="tab"]):focus-visible {
-    outline: 2px solid rgba(232, 69, 44, 0.72);
+    outline: 2px solid color-mix(in srgb, var(--color-brand) 72%, transparent);
     outline-offset: 2px;
     border-radius: 0.5rem;
   }
@@ -169,7 +179,7 @@
 
   .card {
     border-radius: 1.5rem;
-    background-color: #fff;
+    background-color: white;
     box-shadow: var(--shadow-soft);
     transition:
       transform var(--motion-slow) var(--ease-soft),
@@ -184,7 +194,7 @@
     gap: 0.5rem;
     border-radius: 9999px;
     background-color: var(--color-brand);
-    color: #fff;
+    color: var(--color-brand-contrast);
     font-weight: 700;
     transition:
       background-color 0.2s ease,
@@ -194,7 +204,7 @@
 
   .btn-brand:hover {
     background-color: var(--color-brand-dark);
-    box-shadow: 0 16px 30px -18px rgba(232, 69, 44, 0.8);
+    box-shadow: 0 16px 30px -18px color-mix(in srgb, var(--color-brand) 80%, transparent);
   }
 
   .btn-brand:active {
@@ -209,7 +219,7 @@
   }
 
   .btn-gradient {
-    background-image: linear-gradient(270deg, #f0683f 0%, #e8452c 100%);
+    background-image: linear-gradient(270deg, var(--color-brand-400) 0%, var(--color-brand) 100%);
   }
 
   .field {
@@ -226,15 +236,15 @@
   }
 
   .field:focus {
-    border-color: rgba(232, 69, 44, 0.55);
-    box-shadow: 0 0 0 4px rgba(232, 69, 44, 0.08);
+    border-color: color-mix(in srgb, var(--color-brand) 55%, transparent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-brand) 8%, transparent);
   }
 
   .icon-btn {
     display: inline-grid;
     place-items: center;
     border-radius: 9999px;
-    background-color: #fff;
+    background-color: white;
     color: var(--color-ink);
     box-shadow: 0 10px 24px -18px rgba(70, 38, 20, 0.45);
     transition:
@@ -255,7 +265,7 @@
   }
 
   .location-picker-scrollbar {
-    scrollbar-color: #e5d6c9 transparent;
+    scrollbar-color: var(--color-line) transparent;
     scrollbar-width: thin;
   }
 
@@ -268,9 +278,9 @@
   }
 
   .location-picker-scrollbar::-webkit-scrollbar-thumb {
-    border: 1.5px solid #fff;
+    border: 1.5px solid white;
     border-radius: 9999px;
-    background-color: #e5d6c9;
+    background-color: var(--color-line);
   }
 
   .location-picker-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -519,10 +529,10 @@
     place-items: center;
     width: 44px;
     height: 44px;
-    border: 3px solid #fff;
+    border: 3px solid white;
     border-radius: 50% 50% 50% 4px;
-    background: #e8452c;
-    box-shadow: 0 12px 22px -12px rgba(232, 69, 44, 0.95);
+    background: var(--color-brand);
+    box-shadow: 0 12px 22px -12px color-mix(in srgb, var(--color-brand) 95%, transparent);
     transform: rotate(-45deg);
   }
 
@@ -532,14 +542,14 @@
   }
 
   .nawy-map-drop {
-    background: #fdf8f2;
-    border-color: #fff;
-    box-shadow: 0 10px 20px -12px rgba(60, 40, 25, 0.6);
+    background: var(--color-cream-50);
+    border-color: white;
+    box-shadow: 0 10px 20px -12px color-mix(in srgb, var(--color-cocoa) 60%, transparent);
   }
 
   .nawy-map-drop.is-active {
-    background: #e8452c;
-    box-shadow: 0 12px 22px -12px rgba(232, 69, 44, 0.95);
+    background: var(--color-brand);
+    box-shadow: 0 12px 22px -12px color-mix(in srgb, var(--color-brand) 95%, transparent);
   }
 
   .nawy-map-pin::after,
@@ -549,7 +559,7 @@
     inset: -14px;
     z-index: -1;
     border-radius: 50%;
-    background: rgba(232, 69, 44, 0.16);
+    background: color-mix(in srgb, var(--color-brand) 16%, transparent);
     opacity: 0;
     transition: opacity 0.2s ease;
   }
@@ -566,12 +576,12 @@
     width: 42px;
     height: 42px;
     border-radius: 14px;
-    background: #fdf8f2;
-    box-shadow: 0 12px 24px -14px rgba(60, 40, 25, 0.75);
+    background: var(--color-cream-50);
+    box-shadow: 0 12px 24px -14px color-mix(in srgb, var(--color-cocoa) 75%, transparent);
   }
 
   .nawy-map-badge.is-active {
-    background: #e8452c;
+    background: var(--color-brand);
   }
 
   .nawy-map-courier {
@@ -580,22 +590,22 @@
     place-items: center;
     width: 40px;
     height: 40px;
-    border: 3px solid #fff;
+    border: 3px solid white;
     border-radius: 50%;
-    background: #f0683f;
-    box-shadow: 0 14px 26px -14px rgba(232, 69, 44, 0.95);
+    background: var(--color-brand-400);
+    box-shadow: 0 14px 26px -14px color-mix(in srgb, var(--color-brand) 95%, transparent);
   }
 
   .nawy-map-dot {
     display: block;
-    border: 3px solid #fff;
+    border: 3px solid white;
     border-radius: 9999px;
-    background: #b7a69a;
-    box-shadow: 0 8px 16px -10px rgba(60, 40, 25, 0.8);
+    background: var(--color-line-strong);
+    box-shadow: 0 8px 16px -10px color-mix(in srgb, var(--color-cocoa) 80%, transparent);
   }
 
   .nawy-map-dot.is-active {
-    background: #e8452c;
+    background: var(--color-brand);
   }
 
   .nawy-map-label {
@@ -607,14 +617,14 @@
     max-width: 190px;
     padding: 5px 11px;
     border-radius: 11px;
-    background: #e8452c;
-    color: #fff;
+    background: var(--color-brand);
+    color: var(--color-brand-contrast);
     font-size: 11px;
     font-weight: 700;
     line-height: 1.5;
     white-space: nowrap;
     text-align: center;
-    box-shadow: 0 12px 24px -14px rgba(232, 69, 44, 0.9);
+    box-shadow: 0 12px 24px -14px color-mix(in srgb, var(--color-brand) 90%, transparent);
     transform: translateX(-50%) rotate(45deg);
     transform-origin: bottom center;
   }
@@ -625,9 +635,9 @@
   }
 
   .nawy-map-label.is-muted {
-    background: #fdf8f2;
-    color: #201a16;
-    box-shadow: 0 12px 24px -16px rgba(60, 40, 25, 0.7);
+    background: var(--color-cream-50);
+    color: var(--color-ink);
+    box-shadow: 0 12px 24px -16px color-mix(in srgb, var(--color-cocoa) 70%, transparent);
   }
 
   .nawy-map-label::after {
@@ -651,10 +661,10 @@
     place-items: center;
     width: 46px;
     height: 46px;
-    border: 3px solid #fff;
+    border: 3px solid white;
     border-radius: 50% 50% 50% 6px;
-    background: #e8452c;
-    box-shadow: 0 16px 28px -14px rgba(232, 69, 44, 0.95);
+    background: var(--color-brand);
+    box-shadow: 0 16px 28px -14px color-mix(in srgb, var(--color-brand) 95%, transparent);
     transform: translate(-50%, -88%) rotate(-45deg);
     pointer-events: none;
   }
@@ -844,7 +854,7 @@
 }
 
 .skeleton {
-  background-image: linear-gradient(90deg, #f4e8dc 25%, #fbf3ea 50%, #f4e8dc 75%);
+  background-image: linear-gradient(90deg, var(--color-cream-100) 25%, var(--color-cream) 50%, var(--color-cream-100) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s linear infinite;
 }

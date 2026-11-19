@@ -26,7 +26,7 @@ export function StoreHeader({
 
   const locationControl: ReactNode = (
     <>
-      <span className="grid size-11 place-items-center rounded-full bg-[#f6a723] text-white shadow-[0_12px_24px_-14px_rgba(246,167,35,0.9)] transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105 lg:size-[52px]">
+      <span className="grid size-11 place-items-center rounded-full bg-gold-500 text-white shadow-[0_12px_24px_-14px_color-mix(in_srgb,var(--color-gold)_90%,transparent)] transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105 lg:size-[52px]">
         <MapPin className="size-5 fill-white/30 lg:size-6" />
       </span>
       <div className="text-start">

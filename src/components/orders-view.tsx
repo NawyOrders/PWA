@@ -72,13 +72,13 @@ export function OrdersView() {
         </div>
 
         {isCurrent && order.eta ? (
-          <p className="mt-3 rounded-xl bg-[#fbf4ec] px-3 py-2.5 text-center text-[11px] font-semibold text-muted">
+          <p className="mt-3 rounded-xl bg-surface-muted px-3 py-2.5 text-center text-[11px] font-semibold text-muted">
             {t("وقت الوصول المتوقع")}: {display(t(order.eta))}
           </p>
         ) : null}
 
         {expanded ? (
-          <div className="motion-rise mt-3 space-y-1.5 rounded-2xl bg-[#fbf4ec] px-4 py-3.5 text-[11px] leading-6 text-muted">
+          <div className="motion-rise mt-3 space-y-1.5 rounded-2xl bg-surface-muted px-4 py-3.5 text-[11px] leading-6 text-muted">
             <p>
               <span className="font-bold text-ink">{t("الأصناف: ")}</span>
               {order.items?.length

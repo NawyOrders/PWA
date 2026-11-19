@@ -60,7 +60,7 @@ export function OtpCodeDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="otp-code-title"
-        className="motion-pop relative w-full max-w-[380px] rounded-[28px] bg-cream-50 px-5 pb-6 pt-11 text-center shadow-[0_30px_80px_-28px_rgba(32,26,22,0.6)] sm:px-8"
+        className="motion-pop relative w-full max-w-[380px] rounded-[28px] bg-cream-50 px-5 pb-6 pt-11 text-center shadow-[0_30px_80px_-28px_color-mix(in_srgb,var(--color-ink)_60%,transparent)] sm:px-8"
       >
         <button
           type="button"

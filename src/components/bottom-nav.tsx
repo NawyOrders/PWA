@@ -19,7 +19,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="motion-nav-in fixed inset-x-0 bottom-0 z-40 border-t border-line/70 bg-white/97 pb-[env(safe-area-inset-bottom)] shadow-[0_-14px_40px_-28px_rgba(80,40,20,0.5)] backdrop-blur lg:hidden"
+      className="motion-nav-in fixed inset-x-0 bottom-0 z-40 border-t border-line/70 bg-white/97 pb-[env(safe-area-inset-bottom)] shadow-[0_-14px_40px_-28px_color-mix(in_srgb,var(--color-cocoa)_50%,transparent)] backdrop-blur lg:hidden"
       aria-label={t("التنقل السفلي")}
     >
       <div className="mx-auto grid max-w-lg grid-cols-4 px-2 pb-1 pt-2.5">
@@ -40,7 +40,7 @@ export function BottomNav() {
               }}
               aria-current={active ? "page" : undefined}
               className={`group relative flex flex-col items-center gap-1.5 rounded-2xl py-1.5 text-[11px] font-semibold transition-colors ${
-                active ? "text-brand" : "text-[#8b847e]"
+                active ? "text-brand" : "text-muted"
               }`}
             >
               <span className="relative">

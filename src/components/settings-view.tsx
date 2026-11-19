@@ -119,8 +119,8 @@ export function SettingsView() {
           </div>
 
           <div className="card mt-6 p-3.5 lg:mt-8 lg:p-4">
-            <div className="flex items-center gap-3 rounded-2xl bg-[#fbf4ec] px-3.5 py-3">
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white text-brand shadow-[3px_3px_0_0_rgba(32,26,22,0.9)]">
+            <div className="flex items-center gap-3 rounded-2xl bg-surface-muted px-3.5 py-3">
+              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white text-brand shadow-[3px_3px_0_0_color-mix(in_srgb,var(--color-ink)_90%,transparent)]">
                 <Bell className="size-5" strokeWidth={1.8} />
               </span>
               <span className="flex-1 text-sm font-extrabold">{t("الاشعارات")}</span>
@@ -149,9 +149,9 @@ export function SettingsView() {
                   <Link
                     key={row.id}
                     href={row.href}
-                    className="flex w-full items-center gap-3 rounded-2xl bg-[#fbf4ec] px-3.5 py-3 text-start transition hover:bg-[#f7ece1]"
+                    className="flex w-full items-center gap-3 rounded-2xl bg-surface-muted px-3.5 py-3 text-start transition hover:bg-surface-hover"
                   >
-                    <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white text-brand shadow-[3px_3px_0_0_rgba(32,26,22,0.9)]">
+                    <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white text-brand shadow-[3px_3px_0_0_color-mix(in_srgb,var(--color-ink)_90%,transparent)]">
                       <Icon className="size-5" strokeWidth={1.8} />
                     </span>
                     <span className="flex-1 text-sm font-extrabold">{t(row.label)}</span>
@@ -165,7 +165,7 @@ export function SettingsView() {
           <button
             type="button"
             onClick={() => setLogoutOpen(true)}
-            className="mt-8 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#fdecef] text-sm font-extrabold text-[#d81b45] transition hover:bg-[#fbdfe5]"
+            className="mt-8 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-pink-soft text-sm font-extrabold text-danger-strong transition hover:bg-danger-soft"
           >
             <LogOut className="size-5" strokeWidth={2} />
             {t("تسجيل الخروج")}
@@ -187,7 +187,7 @@ export function SettingsView() {
             onClick={(event) => event.stopPropagation()}
             className="animate-float-in relative w-full max-w-[430px] rounded-[28px] bg-cream px-6 pb-7 pt-[70px] shadow-pop"
           >
-            <span className="absolute -top-10 left-1/2 grid size-[80px] -translate-x-1/2 place-items-center rounded-[22px] border border-white/70 bg-gradient-to-b from-white via-[#f0e8e2] to-[#d9cfc8] text-[#cc1f3f] shadow-[0_20px_34px_-18px_rgba(40,25,15,0.7)]">
+            <span className="absolute -top-10 left-1/2 grid size-[80px] -translate-x-1/2 place-items-center rounded-[22px] border border-white/70 bg-gradient-to-b from-white via-cream-100 to-line-soft text-danger-strong shadow-[0_20px_34px_-18px_color-mix(in_srgb,var(--color-cocoa)_70%,transparent)]">
               <LogOut className="size-9" strokeWidth={1.9} />
             </span>
 
@@ -208,7 +208,7 @@ export function SettingsView() {
               <button
                 type="button"
                 onClick={confirmLogout}
-                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#c81e43] text-sm font-extrabold text-white shadow-[0_16px_30px_-18px_rgba(200,30,67,0.9)] transition hover:bg-[#b01839]"
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-danger-strong text-sm font-extrabold text-white shadow-[0_16px_30px_-18px_color-mix(in_srgb,var(--color-danger-strong)_90%,transparent)] transition hover:brightness-90"
               >
                 {t("تأكيد")}
                 <Check className="size-4" strokeWidth={2.6} />

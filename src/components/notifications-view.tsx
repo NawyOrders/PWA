@@ -21,7 +21,7 @@ function decodeReadIds(stored: unknown, fallback: string[]): string[] {
 }
 
 const iconMeta = {
-  delivery: { icon: Truck, tile: "bg-[#f8e8da] text-ink" },
+  delivery: { icon: Truck, tile: "bg-peach-soft text-ink" },
   free: { icon: MailCheck, tile: "bg-cream-100 text-ink" },
   done: { icon: CircleCheck, tile: "bg-success-soft text-success" },
   offer: { icon: null, tile: "" },
@@ -98,7 +98,7 @@ export function NotificationsView() {
               className={`h-10 rounded-full px-5 text-xs font-bold transition ${
                 onlyUnread
                   ? "bg-brand-soft text-brand hover:bg-brand/15"
-                  : "bg-brand text-white shadow-[0_14px_26px_-16px_rgba(232,69,44,0.9)] hover:bg-brand-dark"
+                  : "bg-brand text-white shadow-[0_14px_26px_-16px_color-mix(in_srgb,var(--color-brand)_90%,transparent)] hover:bg-brand-dark"
               }`}
             >
               {t(onlyUnread ? "عرض كل الإشعارات" : "كل الإشعارات")}
@@ -129,7 +129,7 @@ export function NotificationsView() {
                         <article
                           key={notification.id}
                           className={`relative rounded-[24px] px-4 py-4 shadow-soft transition lg:px-5 ${
-                            unread ? "bg-[#fdf1e9]" : "bg-white"
+                            unread ? "bg-surface-warm" : "bg-white"
                           }`}
                         >
                           {unread ? (

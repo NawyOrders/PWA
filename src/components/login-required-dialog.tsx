@@ -24,7 +24,7 @@ export function LoginRequiredDialog({ onClose }: { onClose: () => void }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="login-required-title"
-        className="motion-pop relative w-full max-w-[390px] rounded-[32px] bg-cream-50 px-6 pb-5 pt-12 text-center shadow-[0_30px_80px_-28px_rgba(32,26,22,0.6)] sm:px-9 sm:pb-7 sm:pt-14"
+        className="motion-pop relative w-full max-w-[390px] rounded-[32px] bg-cream-50 px-6 pb-5 pt-12 text-center shadow-[0_30px_80px_-28px_color-mix(in_srgb,var(--color-ink)_60%,transparent)] sm:px-9 sm:pb-7 sm:pt-14"
       >
         <button
           type="button"
@@ -52,7 +52,7 @@ export function LoginRequiredDialog({ onClose }: { onClose: () => void }) {
         <Link
           href={loginHref(next)}
           onClick={onClose}
-          className="motion-press mt-6 flex h-12 w-full items-center justify-center rounded-full bg-brand text-sm font-extrabold text-white shadow-[0_16px_32px_-18px_rgba(232,69,44,0.9)] transition hover:-translate-y-0.5 hover:bg-brand-dark"
+          className="motion-press mt-6 flex h-12 w-full items-center justify-center rounded-full bg-brand text-sm font-extrabold text-white shadow-[0_16px_32px_-18px_color-mix(in_srgb,var(--color-brand)_90%,transparent)] transition hover:-translate-y-0.5 hover:bg-brand-dark"
         >
           {t("سجل الآن")}
         </Link>

@@ -158,7 +158,7 @@ export function ProductDetail({ product }: { product: Product }) {
                             <span className="flex items-center gap-2 text-sm font-bold">
                               <span
                                 className={`grid size-4 place-items-center rounded-full border-2 ${
-                                  active ? "border-brand" : "border-[#d8c9bc]"
+                                  active ? "border-brand" : "border-line-soft"
                                 }`}
                               >
                                 {active ? <span className="size-2 rounded-full bg-brand" /> : null}
@@ -205,7 +205,7 @@ export function ProductDetail({ product }: { product: Product }) {
                           <span className="flex items-center gap-2 text-sm">
                             <span
                               className={`grid size-4 place-items-center rounded border ${
-                                active ? "border-brand bg-brand text-white" : "border-[#d8c9bc] bg-white"
+                                active ? "border-brand bg-brand text-white" : "border-line-soft bg-white"
                               }`}
                             >
                               {active ? <Check className="size-3" strokeWidth={3} /> : null}
@@ -305,7 +305,7 @@ export function ProductDetail({ product }: { product: Product }) {
         </div>
       </div>
 
-      <div className="motion-nav-in fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/97 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-12px_30px_-22px_rgba(80,40,20,0.5)] backdrop-blur lg:hidden">
+      <div className="motion-nav-in fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/97 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-12px_30px_-22px_color-mix(in_srgb,var(--color-cocoa)_50%,transparent)] backdrop-blur lg:hidden">
         <div className="mx-auto max-w-lg">
           <div className="flex items-center justify-between">
             <span className="text-sm font-extrabold">{t("الكمية")}</span>

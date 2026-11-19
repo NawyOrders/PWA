@@ -109,7 +109,7 @@ export function SearchView({ query }: { query: string }) {
               >
                 <span
                   className={`grid size-[60px] place-items-center rounded-full border-2 bg-white transition ${
-                    active ? "border-brand shadow-[0_10px_24px_-14px_rgba(232,69,44,0.7)]" : "border-[#ece0d4]"
+                    active ? "border-brand shadow-[0_10px_24px_-14px_color-mix(in_srgb,var(--color-brand)_70%,transparent)]" : "border-line"
                   }`}
                 >
                   <span className="relative size-12 overflow-hidden rounded-full">
@@ -182,7 +182,7 @@ export function SearchView({ query }: { query: string }) {
                       <span className="flex items-center gap-2 text-ink/80">
                         <span
                           className={`grid size-4 place-items-center rounded border transition ${
-                            checked ? "border-brand bg-brand text-white" : "border-[#d8c9bc] bg-white"
+                            checked ? "border-brand bg-brand text-white" : "border-line-soft bg-white"
                           }`}
                         >
                           {checked ? <Check className="size-3" strokeWidth={3} /> : null}
@@ -240,7 +240,7 @@ export function SearchView({ query }: { query: string }) {
                 <span className="flex items-center gap-2">
                   <span
                     className={`grid size-4 place-items-center rounded border transition ${
-                      offersOnly ? "border-brand bg-brand text-white" : "border-[#d8c9bc] bg-white"
+                      offersOnly ? "border-brand bg-brand text-white" : "border-line-soft bg-white"
                     }`}
                   >
                     {offersOnly ? <Check className="size-3" strokeWidth={3} /> : null}
