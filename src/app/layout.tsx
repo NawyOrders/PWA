@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Baloo_Bhaijaan_2, Cairo } from "next/font/google";
 import "./globals.css";
-import { AppProvider } from "@/components/providers";
+import { TenantProvider } from "@/components/tenant-provider";
 import { SiteChrome } from "@/components/site-chrome";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { storageKeys } from "@/lib/storage";
@@ -17,6 +17,13 @@ const baloo = Baloo_Bhaijaan_2({
   variable: "--font-baloo",
   display: "swap",
 });
+
+/*
+ * Tenant resolution reads the request host, so every storefront route is
+ * dynamic by definition. Blocking the prerender is intentional: the alternative
+ * is a static shell that streams the wrong store's branding first.
+ */
+export const instant = false;
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
@@ -71,9 +78,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body suppressHydrationWarning>
-        <AppProvider>
+        <TenantProvider>
           <SiteChrome>{children}</SiteChrome>
-        </AppProvider>
+        </TenantProvider>
         <ServiceWorkerRegister />
       </body>
     </html>

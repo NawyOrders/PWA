@@ -21,6 +21,7 @@ import { useDialogFocus } from "@/hooks/use-dialog-focus";
 import { useMapPlaces, useReversePlaceName } from "@/hooks/use-map-places";
 import type { AddressKind } from "@/lib/account-data";
 import { areaName } from "@/lib/geo";
+import { authTransport } from "@/lib/api";
 
 const ALEXANDRIA: [number, number] = [31.1861, 29.9336];
 
@@ -206,8 +207,14 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
       kind: type.kind,
       lat: point.lat,
       lng: point.lng,
+      placeType: type.id === "villa" ? "Villa" : type.id === "office" ? "Office" : "Apartment",
+      street: draft.street.trim().slice(0, 200) || regionLabel,
+      buildingName: draft.building.trim() ? draft.building.trim().slice(0, 50) : null,
+      floor: type.id === "apartment" ? draft.floor.trim().slice(0, 20) : null,
+      apartmentNumber: type.id === "apartment" ? draft.apartment.trim().slice(0, 20) : null,
+      landmark: draft.landmark.trim() ? draft.landmark.trim().slice(0, 500) : null,
     });
-    selectAddress(id);
+    if (authTransport() !== "live") selectAddress(id);
     close();
   };
 

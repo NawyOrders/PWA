@@ -16,9 +16,24 @@
  * a `#rgb`/`#rrggbb` literal is dropped rather than injected into a style.
  */
 
-import type { RestaurantBranding } from "@/lib/api";
+import type {
+  RestaurantBranch,
+  RestaurantBranchDeliveryArea,
+  RestaurantBranchWorkingHour,
+  RestaurantBranding,
+} from "@/lib/api";
 
 const COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+const TIME = /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
+const DAYS = new Set([
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+]);
 
 /**
  * Read on every call rather than once at import so a test can flip it, and so
@@ -42,6 +57,33 @@ export function safeColor(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   return COLOR.test(trimmed) ? trimmed.toUpperCase() : null;
+}
+
+/** Tenant assets and contact links may only be absolute HTTPS URLs. */
+export function safeUrl(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 1200) return null;
+  try {
+    const url = new URL(trimmed);
+    return url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+function safeText(value: unknown, limit = 300): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed.slice(0, limit) : null;
+}
+
+function safeCoordinate(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function safeTime(value: unknown): string | null {
+  return typeof value === "string" && TIME.test(value.trim()) ? value.trim().slice(0, 8) : null;
 }
 
 function toRgb(hex: string): [number, number, number] {
@@ -151,35 +193,104 @@ export function applyBranding(branding: RestaurantBranding | null): void {
   setThemeColor(branding ? safeColor(branding.primaryColor) : null);
 }
 
-export function brandingName(branding: RestaurantBranding | null, lang: "ar" | "en"): string | null {
+export function brandingName(
+  branding: RestaurantBranding | null,
+  lang: "ar" | "en",
+  max = 80,
+): string | null {
   if (!branding) return null;
   const value = lang === "ar" ? branding.nameAr : branding.nameEn;
   const fallback = lang === "ar" ? branding.nameEn : branding.nameAr;
   const name = (value ?? fallback ?? "").trim();
-  return name ? name.slice(0, 80) : null;
+  return name ? name.slice(0, max) : null;
 }
 
 export type BrandingCache = { etag: string | null; branding: RestaurantBranding };
 
-/** Cached branding is untrusted storage, so it is re-validated on read. */
-export function decodeBrandingCache(value: unknown): BrandingCache | null {
-  if (!value || typeof value !== "object") return null;
-  const stored = value as Record<string, unknown>;
-  if (!stored.branding || typeof stored.branding !== "object") return null;
-  const branding = stored.branding as Record<string, unknown>;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function sanitizeWorkingHours(value: unknown): RestaurantBranchWorkingHour[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry) => {
+    if (!isRecord(entry)) return [];
+    const dayOfWeek = safeText(entry.dayOfWeek, 20);
+    if (!dayOfWeek || !DAYS.has(dayOfWeek)) return [];
+    return [
+      {
+        dayOfWeek,
+        isClosed: entry.isClosed === true,
+        openTime: safeTime(entry.openTime),
+        closeTime: safeTime(entry.closeTime),
+        closesNextDay: entry.closesNextDay === true,
+      },
+    ];
+  });
+}
+
+function sanitizeDeliveryAreas(value: unknown): RestaurantBranchDeliveryArea[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry) => {
+    if (!isRecord(entry)) return [];
+    const deliveryAreaId = safeText(entry.deliveryAreaId, 80);
+    if (!deliveryAreaId) return [];
+    return [
+      {
+        deliveryAreaId,
+        nameAr: safeText(entry.nameAr),
+        nameEn: safeText(entry.nameEn),
+        deliveryFee:
+          typeof entry.deliveryFee === "number" && Number.isFinite(entry.deliveryFee) && entry.deliveryFee >= 0
+            ? entry.deliveryFee
+            : null,
+      },
+    ];
+  });
+}
+
+function sanitizeBranch(value: unknown): RestaurantBranch | null {
+  if (!isRecord(value)) return null;
+  const branchId = safeText(value.branchId, 80);
+  if (!branchId) return null;
+  return {
+    branchId,
+    nameAr: safeText(value.nameAr),
+    nameEn: safeText(value.nameEn),
+    address: safeText(value.address, 500),
+    latitude: safeCoordinate(value.latitude),
+    longitude: safeCoordinate(value.longitude),
+    phone: safeText(value.phone, 40),
+    status: safeText(value.status, 40),
+    isPrimary: value.isPrimary === true,
+    sortOrder:
+      typeof value.sortOrder === "number" && Number.isFinite(value.sortOrder)
+        ? Math.trunc(value.sortOrder)
+        : null,
+    workingHours: sanitizeWorkingHours(value.workingHours),
+    deliveryAreas: sanitizeDeliveryAreas(value.deliveryAreas),
+  };
+}
+
+/**
+ * Rebuilds a branding payload from untrusted input (an API response or cached
+ * storage). Colours are validated, asset and social URLs must be HTTPS, and
+ * every branch keeps only the fields the storefront renders.
+ */
+export function sanitizeBranding(value: unknown): RestaurantBranding | null {
+  if (!isRecord(value)) return null;
   const clean: RestaurantBranding = {};
-  for (const key of [
-    "tenantId",
-    "nameAr",
-    "nameEn",
-    "logoUrl",
-    "faviconUrl",
-    "contactPhone",
-    "contactEmail",
-    "whatsAppUrl",
-    "messengerUrl",
-  ] as const) {
-    if (typeof branding[key] === "string") clean[key] = (branding[key] as string).slice(0, 300);
+  for (const key of ["tenantId", "nameAr", "nameEn"] as const) {
+    const text = safeText(value[key]);
+    if (text) clean[key] = text;
+  }
+  for (const key of ["logoUrl", "faviconUrl", "whatsAppUrl", "messengerUrl"] as const) {
+    const url = safeUrl(value[key]);
+    if (url) clean[key] = url;
+  }
+  for (const key of ["contactPhone", "contactEmail"] as const) {
+    const text = safeText(value[key], 200);
+    if (text) clean[key] = text;
   }
   for (const key of [
     "primaryColor",
@@ -189,18 +300,143 @@ export function decodeBrandingCache(value: unknown): BrandingCache | null {
     "surfaceColor",
     "textOnPrimaryColor",
   ] as const) {
-    const color = safeColor(branding[key]);
+    const color = safeColor(value[key]);
     if (color) clean[key] = color;
   }
-  if (branding.socialLinks && typeof branding.socialLinks === "object") {
+  const eTag = safeText(value.eTag, 120);
+  if (eTag) clean.eTag = eTag;
+
+  if (isRecord(value.socialLinks)) {
     const links: Record<string, string> = {};
-    for (const [network, url] of Object.entries(branding.socialLinks as Record<string, unknown>)) {
-      if (typeof url === "string" && /^https:\/\//.test(url)) links[network.slice(0, 40)] = url.slice(0, 300);
+    for (const [network, url] of Object.entries(value.socialLinks)) {
+      const cleanUrl = safeUrl(url);
+      if (cleanUrl) links[network.slice(0, 40)] = cleanUrl.slice(0, 300);
     }
     clean.socialLinks = links;
   }
+
+  if (Array.isArray(value.branches)) {
+    clean.branches = value.branches
+      .map(sanitizeBranch)
+      .filter((branch): branch is RestaurantBranch => branch !== null)
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  }
+
+  return clean;
+}
+
+/** Cached branding is untrusted storage, so it is re-validated on read. */
+export function decodeBrandingCache(value: unknown): BrandingCache | null {
+  if (!isRecord(value) || !isRecord(value.branding)) return null;
   return {
-    etag: typeof stored.etag === "string" ? stored.etag.slice(0, 120) : null,
-    branding: clean,
+    etag: typeof value.etag === "string" ? value.etag.slice(0, 120) : null,
+    branding: sanitizeBranding(value.branding) ?? {},
   };
+}
+
+/** A branch rendered by the storefront, in the language the app is showing. */
+export type StoreBranch = {
+  id: string;
+  name: string;
+  nameAr: string;
+  nameEn: string;
+  address: string;
+  open: boolean;
+  phone: string | null;
+  isPrimary: boolean;
+  /** Demo-only straight-line distance; tenant branches do not send one. */
+  distance?: number;
+  latitude: number | null;
+  longitude: number | null;
+  workingHours: Required<RestaurantBranchWorkingHour>[];
+  deliveryAreas: { id: string; name: string; fee: number }[];
+};
+
+function localizedName(
+  value: { nameAr?: string | null; nameEn?: string | null },
+  lang: "ar" | "en",
+): string {
+  const preferred = lang === "ar" ? value.nameAr : value.nameEn;
+  const fallback = lang === "ar" ? value.nameEn : value.nameAr;
+  return (preferred ?? fallback ?? "").trim();
+}
+
+/**
+ * The tenant's branches ready for the pickup screen. Empty when the branding
+ * payload has none, which is the caller's signal to keep the demo branches.
+ */
+export function brandingBranches(branding: RestaurantBranding | null, lang: "ar" | "en"): StoreBranch[] {
+  const list = branding?.branches ?? [];
+  return list.flatMap((branch) => {
+    const id = branch.branchId?.trim();
+    if (!id) return [];
+    const nameAr = (branch.nameAr ?? "").trim();
+    const nameEn = (branch.nameEn ?? "").trim();
+    return [
+      {
+        id,
+        name: localizedName(branch, lang) || nameAr || nameEn || id,
+        nameAr,
+        nameEn,
+        address: (branch.address ?? "").trim(),
+        open: (branch.status ?? "Open").toLowerCase() !== "temporarilyclosed",
+        phone: branch.phone ?? null,
+        isPrimary: branch.isPrimary === true,
+        latitude: branch.latitude ?? null,
+        longitude: branch.longitude ?? null,
+        workingHours: (branch.workingHours ?? []).map((hours) => ({
+          dayOfWeek: hours.dayOfWeek ?? "",
+          isClosed: hours.isClosed === true,
+          openTime: hours.openTime ?? null,
+          closeTime: hours.closeTime ?? null,
+          closesNextDay: hours.closesNextDay === true,
+        })),
+        deliveryAreas: (branch.deliveryAreas ?? []).map((area) => ({
+          id: area.deliveryAreaId ?? "",
+          name: localizedName(area, lang),
+          fee: area.deliveryFee ?? 0,
+        })),
+      },
+    ];
+  });
+}
+
+/** The first open range, used for a compact “10:00 – 23:00” line. */
+export function branchHoursLabel(branch: StoreBranch): string | null {
+  const range = branch.workingHours.find(
+    (hours) => !hours.isClosed && hours.openTime && hours.closeTime,
+  );
+  if (!range?.openTime || !range.closeTime) return null;
+  const open = range.openTime.slice(0, 5);
+  const close = range.closeTime.slice(0, 5);
+  return `${open} – ${close}${range.closesNextDay ? " (+1)" : ""}`;
+}
+
+export function brandingLogoUrl(branding: RestaurantBranding | null): string | null {
+  return branding ? safeUrl(branding.logoUrl) : null;
+}
+
+export function brandingFaviconUrl(branding: RestaurantBranding | null): string | null {
+  return branding ? safeUrl(branding.faviconUrl) ?? safeUrl(branding.logoUrl) : null;
+}
+
+/**
+ * Points the document's icon links at the tenant's uploaded icons. The default
+ * icons stay in the document; this only overrides their `href` while a tenant
+ * asset is present, and restores the originals when branding is cleared.
+ */
+const ICON_SELECTOR = 'link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]';
+
+export function applyBrandingAssets(branding: RestaurantBranding | null): void {
+  if (typeof document === "undefined") return;
+  const icon = brandingFaviconUrl(branding);
+  for (const link of document.querySelectorAll<HTMLLinkElement>(ICON_SELECTOR)) {
+    if (icon) {
+      if (!link.dataset.defaultHref) link.dataset.defaultHref = link.getAttribute("href") ?? "";
+      link.setAttribute("href", icon);
+    } else if (link.dataset.defaultHref) {
+      link.setAttribute("href", link.dataset.defaultHref);
+      delete link.dataset.defaultHref;
+    }
+  }
 }

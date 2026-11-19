@@ -704,6 +704,40 @@ describe("AppProvider — untrusted storage", () => {
 });
 
 describe("AppProvider — auth and addresses", () => {
+  it("clears live addresses on logout and between customers", async () => {
+    apiMode.transport = "live";
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    api.refreshSession.mockResolvedValue(tokenPair());
+    api.revokeSession.mockResolvedValue(undefined);
+    api.attachStoredRefresh.mockResolvedValue(undefined);
+    localStorage.setItem(storageKeys.addresses, JSON.stringify([
+      {
+        id: "customer-1-address",
+        title: "Customer 1 address",
+        detail: "Customer 1 street",
+        area: "Customer 1 area",
+        kind: "home",
+        lat: 31.2,
+        lng: 29.9,
+      },
+    ]));
+    stubFetch(() => 200);
+
+    const { result } = await app();
+    act(() => result.current.login(sessionPayload()));
+    await waitFor(() => expect(result.current.addresses).toEqual([]));
+
+    act(() => result.current.logout());
+    expect(result.current.addresses).toEqual([]);
+
+    act(() => result.current.login(sessionPayload({
+      customerId: "customer-2",
+      phoneNumber: "+201098765432",
+      accessToken: "customer-2-access",
+    })));
+    await waitFor(() => expect(result.current.addresses).toEqual([]));
+  });
+
   it("restores a session from storage", async () => {
     localStorage.setItem(storageKeys.auth, "true");
     const { result } = await app();
@@ -855,10 +889,11 @@ describe("AppProvider — tenant API session and branding", () => {
       await authFetch("/api/v1/orders");
     });
 
-    expect(calls).toHaveLength(1);
-    expect(calls[0]!.url).toBe("https://api.test/api/v1/orders");
-    expect(bearer(calls[0]!)).toBe("Bearer rotated-access");
-    expect(calls[0]!.init.credentials).toBe("omit");
+    const orderCalls = calls.filter((call) => call.url.endsWith("/api/v1/orders"));
+    expect(orderCalls).toHaveLength(1);
+    expect(orderCalls[0]!.url).toBe("https://api.test/api/v1/orders");
+    expect(bearer(orderCalls[0]!)).toBe("Bearer rotated-access");
+    expect(orderCalls[0]!.init.credentials).toBe("omit");
     // One refresh for the whole life of the page: the request reused the boot grant.
     expect(api.refreshSession).toHaveBeenCalledTimes(1);
     expect(localStorage.getItem(storageKeys.session)).not.toContain("rotated-access");
@@ -1012,8 +1047,9 @@ describe("AppProvider — tenant API session and branding", () => {
       await authFetch("/api/v1/orders");
     });
 
-    expect(calls.map(bearer)).toEqual(["Bearer second-access"]);
-    expect(calls.map(bearer)).not.toContain("Bearer first-access");
+    const orderCalls = calls.filter((call) => call.url.endsWith("/api/v1/orders"));
+    expect(orderCalls.map(bearer)).toEqual(["Bearer second-access"]);
+    expect(orderCalls.map(bearer)).not.toContain("Bearer first-access");
   });
 
   it("signs the customer out when the refresh is refused", async () => {
@@ -1152,6 +1188,41 @@ describe("AppProvider — tenant API session and branding", () => {
     await waitFor(() =>
       expect(JSON.parse(localStorage.getItem(storageKeys.branding)!)).toMatchObject({ etag: '"b1"' }),
     );
+  });
+
+  it("switches the pickup branches to the tenant's when branding has them", async () => {
+    api.fetchBranding.mockResolvedValue({
+      notModified: false,
+      branding: {
+        tenantId: "t-1",
+        nameAr: "ميرزي",
+        branches: [
+          {
+            branchId: "brand-branch",
+            nameAr: "سموحة",
+            nameEn: "Smouha",
+            status: "Open",
+            isPrimary: true,
+            workingHours: [
+              {
+                dayOfWeek: "Sunday",
+                isClosed: false,
+                openTime: "10:00:00",
+                closeTime: "23:00:00",
+                closesNextDay: false,
+              },
+            ],
+          },
+        ],
+      },
+      etag: '"b1"',
+    });
+
+    const { result } = await app();
+    await waitFor(() => expect(result.current.branches).toHaveLength(1));
+
+    expect(result.current.branches[0]).toMatchObject({ id: "brand-branch", name: "سموحة", open: true });
+    expect(result.current.selectedBranchId).toBe("brand-branch");
   });
 
   it("paints the tenant palette only when the deploy opts in", async () => {
@@ -1458,7 +1529,8 @@ describe("AppProvider — session status and the customer view", () => {
       await authFetch("/api/v1/orders");
     });
     expect(api.refreshSession).toHaveBeenCalledTimes(1);
-    expect(calls.map(bearer)).toEqual(["Bearer rotated-access", "Bearer rotated-access"]);
+    const orderCalls = calls.filter((call) => call.url.endsWith("/api/v1/orders"));
+    expect(orderCalls.map(bearer)).toEqual(["Bearer rotated-access", "Bearer rotated-access"]);
   });
 
   it("refuses the app context outside the provider and offers it optionally", async () => {

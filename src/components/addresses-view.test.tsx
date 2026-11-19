@@ -79,19 +79,11 @@ describe("AddressesView", () => {
     expect(await screen.findByRole("heading", { name: "اختر مكان التوصيل" })).toBeInTheDocument();
   });
 
-  it("drops an address from the saved list", async () => {
-    const user = userEvent.setup();
+  it("does not offer address deletion because the API contract has no delete endpoint", async () => {
     renderApp(<AddressesView />);
 
     await screen.findByRole("heading", { name: "عناوينك المحفوظة" });
-    const before = JSON.parse(window.localStorage.getItem("nawy-addresses-v1") ?? "[]").length;
-
-    await user.click(screen.getAllByRole("button", { name: "حذف العمل" })[0]);
-
-    await waitFor(() => {
-      const after = JSON.parse(window.localStorage.getItem("nawy-addresses-v1") ?? "[]").length;
-      expect(after).toBe(before - 1);
-    });
+    expect(screen.queryByRole("button", { name: /حذف/ })).not.toBeInTheDocument();
   });
 
   it("returns to the profile after saving address changes", async () => {

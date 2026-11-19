@@ -7,7 +7,7 @@ import {
   CalendarDays,
   ChevronLeft,
   Plus,
-  Trash2,
+  Info,
 } from "lucide-react";
 import { AccountSidebar } from "@/components/account-sidebar";
 import { AddressKindIcon } from "@/components/address-icon";
@@ -17,7 +17,7 @@ import { Breadcrumbs, DisplayPageHeader } from "@/components/ui";
 
 export function AddressesView() {
   const router = useRouter();
-  const { addresses, removeAddress, selectedAddressId, selectAddress, toast, t, lang } = useApp();
+  const { addresses, selectedAddressId, selectAddress, toast, t, lang } = useApp();
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const saveChanges = () => {
@@ -70,14 +70,6 @@ export function AddressesView() {
                     >
                       <button
                         type="button"
-                        onClick={() => removeAddress(item.id)}
-                        aria-label={t("حذف {name}", { name: t(item.title) })}
-                        className="grid size-9 shrink-0 place-items-center rounded-xl text-brand transition hover:bg-brand-soft"
-                      >
-                        <Trash2 className="size-[17px]" strokeWidth={1.9} />
-                      </button>
-                      <button
-                        type="button"
                         onClick={() => selectAddress(item.id)}
                         className="min-w-0 flex-1 text-start"
                       >
@@ -87,6 +79,7 @@ export function AddressesView() {
                           {lang === "ar" ? "، " : ", "}
                           {t(item.detail)}
                         </span>
+                        {item.isDefault ? <span className="mt-1 block text-[10px] font-bold text-brand">{t("العنوان الافتراضي")}</span> : null}
                         {item.lastUsed ? (
                           <span className="mt-1.5 flex items-center gap-1 text-[10px] text-muted">
                             <CalendarDays className="size-3" />
@@ -131,14 +124,6 @@ export function AddressesView() {
                       >
                         <button
                           type="button"
-                          onClick={() => removeAddress(item.id)}
-                          aria-label={t("حذف {name}", { name: t(item.title) })}
-                          className="grid size-10 shrink-0 place-items-center rounded-xl text-brand transition hover:bg-brand-soft"
-                        >
-                          <Trash2 className="size-[18px]" strokeWidth={1.9} />
-                        </button>
-                        <button
-                          type="button"
                           onClick={() => selectAddress(item.id)}
                           className="min-w-0 flex-1 text-start"
                         >
@@ -156,6 +141,7 @@ export function AddressesView() {
                         >
                           <AddressKindIcon kind={item.kind} />
                         </span>
+                        {item.isDefault ? <span className="mt-1 block text-[10px] font-bold text-brand">{t("العنوان الافتراضي")}</span> : null}
                       </div>
                     );
                   })
@@ -195,6 +181,8 @@ export function AddressesView() {
             </button>
           </p>
         ) : null}
+
+        <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[11px] text-muted"><Info className="size-3.5" />{t("لا تتوفر إزالة العناوين من الخادم حالياً.")}</p>
 
         <LocationPicker open={pickerOpen} onClose={() => setPickerOpen(false)} />
       </div>

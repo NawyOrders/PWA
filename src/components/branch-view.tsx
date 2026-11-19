@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import { ArrowLeft, Clock3, MapPin, Store } from "lucide-react";
-import { branches } from "@/lib/data";
+import { ArrowLeft, Clock3, MapPin, Phone, Store } from "lucide-react";
+import { branchHoursLabel } from "@/lib/branding";
 import { CartSummary } from "@/components/cart-summary";
 import { CheckoutShell, buttonStyles } from "@/components/ui";
 import { useApp } from "@/components/providers";
 
 export function BranchView() {
-  const { t, setFulfilment, selectedBranchId, selectBranch } = useApp();
+  const { t, setFulfilment, selectedBranchId, selectBranch, branches } = useApp();
   const branch = branches.find((item) => item.id === selectedBranchId) ?? branches[0];
 
   useEffect(() => {
@@ -64,14 +64,34 @@ export function BranchView() {
                   <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-extrabold">{t(item.name)}</span>
-                      <span className="rounded-full bg-success-soft px-2 py-0.5 text-[9px] font-bold text-success">
-                        {t("مفتوح الآن")}
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
+                          item.open ? "bg-success-soft text-success" : "bg-brand-soft text-brand"
+                        }`}
+                      >
+                        {item.open ? t("مفتوح الآن") : t("مغلق مؤقتاً")}
                       </span>
                     </span>
                     <span className="mt-1 block text-[11px] leading-5 text-muted">{t(item.address)}</span>
-                    <span className="mt-1.5 flex items-center gap-1 text-[10px] font-semibold text-ink/70">
-                      <MapPin className="size-3.5 text-brand" />
-                      {item.distance} {t("كم")}
+                    <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold text-ink/70">
+                      {typeof item.distance === "number" ? (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="size-3.5 text-brand" />
+                          {item.distance} {t("كم")}
+                        </span>
+                      ) : null}
+                      {branchHoursLabel(item) ? (
+                        <span className="flex items-center gap-1">
+                          <Clock3 className="size-3.5 text-brand" />
+                          {branchHoursLabel(item)}
+                        </span>
+                      ) : null}
+                      {item.phone ? (
+                        <span className="flex items-center gap-1" dir="ltr">
+                          <Phone className="size-3.5 text-brand" />
+                          {item.phone}
+                        </span>
+                      ) : null}
                     </span>
                   </span>
                 </button>

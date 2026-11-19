@@ -13,7 +13,7 @@ import {
 import Link from "next/link";
 import { Check, ShoppingCart } from "lucide-react";
 import {
-  branches,
+  branches as demoBranches,
   deliveryFee,
   orders as seedOrders,
   productsById,
@@ -31,6 +31,7 @@ import {
   apiConfigured,
   apiUrl,
   attachStoredRefresh,
+  joinApiUrl,
   authTransport,
   completeProfile as completeProfileRequest,
   fetchBranding,
@@ -57,9 +58,19 @@ import {
   type CustomerSession,
   type RefreshCoordinator,
 } from "@/lib/session";
-import { applyBranding, decodeBrandingCache, type BrandingCache } from "@/lib/branding";
+import {
+  applyBranding,
+  applyBrandingAssets,
+  brandingBranches,
+  decodeBrandingCache,
+  sanitizeBranding,
+  type BrandingCache,
+  type StoreBranch,
+} from "@/lib/branding";
+import { setRuntimeTenantApiBaseUrl } from "@/lib/runtime-tenant";
 import { usePersistentState } from "@/hooks/use-persistent-state";
 import { LoadingIndicator } from "@/components/loading-indicator";
+import { addressApi } from "@/lib/tenant-addresses";
 
 export type CartLine = {
   key: string;
@@ -181,6 +192,11 @@ type AppContextValue = {
   authFetch: AuthFetch;
   /** Tenant identity and palette, or `null` while running on built-in defaults. */
   branding: RestaurantBranding | null;
+  /**
+   * Branches the pickup flow can choose between: the tenant's active branches
+   * when `/api/v1/Branding` returned any, otherwise the local demo branches.
+   */
+  branches: StoreBranch[];
   addresses: SavedAddress[];
   addAddress: (address: SavedAddress) => void;
   removeAddress: (id: string) => void;
@@ -256,6 +272,23 @@ const seedDeliveryDetails: DeliveryDetails = {
 const ADDRESS_KINDS = new Set<AddressKind>(["home", "work", "family", "cafe", "other"]);
 const PAYMENT_METHODS = new Set<PaymentMethodId>(["cash", "instapay", "wallet"]);
 const SAFE_ID = /^[A-Za-z0-9_-]{1,40}$/;
+
+/** The demo branch list, shaped like the branding branches the screens accept. */
+const DEMO_BRANCHES: StoreBranch[] = demoBranches.map((branch, index) => ({
+  id: branch.id,
+  name: branch.name,
+  nameAr: branch.name,
+  nameEn: branch.name,
+  address: branch.address,
+  open: branch.open,
+  phone: null,
+  isPrimary: index === 0,
+  distance: branch.distance,
+  latitude: null,
+  longitude: null,
+  workingHours: [],
+  deliveryAreas: [],
+}));
 
 function limited(value: unknown, max: number): string | undefined {
   return typeof value === "string" ? value.slice(0, max) : undefined;
@@ -364,6 +397,14 @@ function decodeAddresses(stored: unknown, fallback: SavedAddress[]): SavedAddres
         lastUsed: limited(value.lastUsed, 80),
         lat: value.lat,
         lng: value.lng,
+        placeType: value.placeType === "Apartment" || value.placeType === "Villa" || value.placeType === "Office" ? value.placeType : undefined,
+        street: typeof value.street === "string" ? value.street.slice(0, 200) : undefined,
+        buildingName: typeof value.buildingName === "string" ? value.buildingName.slice(0, 50) : null,
+        floor: typeof value.floor === "string" ? value.floor.slice(0, 20) : null,
+        apartmentNumber: typeof value.apartmentNumber === "string" ? value.apartmentNumber.slice(0, 20) : null,
+        landmark: typeof value.landmark === "string" ? value.landmark.slice(0, 500) : null,
+        branchId: typeof value.branchId === "string" ? value.branchId : null,
+        isDefault: typeof value.isDefault === "boolean" ? value.isDefault : undefined,
       },
     ];
   });
@@ -374,9 +415,10 @@ function decodeSelectedAddress(stored: unknown, fallback: string | null): string
 }
 
 function decodeSelectedBranch(stored: unknown, fallback: string): string {
-  return typeof stored === "string" && branches.some((branch) => branch.id === stored)
-    ? stored
-    : fallback;
+  // Tenant branch ids are UUIDs, so the demo list cannot validate this. The
+  // provider resolves the selection against the branches that actually exist
+  // after branding loads.
+  return typeof stored === "string" && stored.trim() ? stored.trim().slice(0, 80) : fallback;
 }
 
 function decodeDeliveryDetails(stored: unknown, fallback: DeliveryDetails): DeliveryDetails {
@@ -454,7 +496,7 @@ function decodeOrders(stored: unknown, fallback: Order[]): Order[] {
             ? order.fulfilment
             : undefined,
         branchId:
-          typeof order.branchId === "string" && branches.some((branch) => branch.id === order.branchId)
+          typeof order.branchId === "string" && SAFE_ID.test(order.branchId)
             ? order.branchId
             : undefined,
         address: limited(order.address, 200),
@@ -513,7 +555,23 @@ function decodeProfile(stored: unknown, fallback: Profile): Profile {
   return { ...stored, avatar: usableAvatar(stored.avatar) };
 }
 
-export function AppProvider({ children }: { children: ReactNode }) {
+export function AppProvider({
+  children,
+  initialBranding = null,
+  initialBrandingEtag = null,
+  tenantApiBaseUrl = "",
+}: {
+  children: ReactNode;
+  /** Branding the server fetched for this request's tenant, before first paint. */
+  initialBranding?: RestaurantBranding | null;
+  initialBrandingEtag?: string | null;
+  /** Tenant API host resolved from the request, for direct browser calls. */
+  tenantApiBaseUrl?: string;
+}) {
+  // Client components below render after this line, so the runtime value is in
+  // place before `authTransport()` or `apiConfigured()` is asked. The server
+  // keeps its own per-request resolution and never writes this module value.
+  if (typeof window !== "undefined") setRuntimeTenantApiBaseUrl(tenantApiBaseUrl);
   const [lines, setLines, cartReady] = usePersistentState<CartLine[]>(storageKeys.cart, seedCart, decodeCart);
   const [favorites, setFavorites, favoritesReady] = usePersistentState<string[]>(
     storageKeys.favorites,
@@ -547,7 +605,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [refreshRetryAt, setRefreshRetryAt] = useState<number | null>(null);
   const [brandingCache, setBrandingCache, brandingReady] = usePersistentState<BrandingCache | null>(
     storageKeys.branding,
-    null,
+    initialBranding ? { etag: initialBrandingEtag, branding: initialBranding } : null,
     decodeBrandingCache,
   );
   const [addresses, setAddresses, addressesReady] = usePersistentState<SavedAddress[]>(
@@ -560,7 +618,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   >(storageKeys.selectedAddress, savedAddresses[0].id, decodeSelectedAddress);
   const [storedBranchId, setSelectedBranchId, branchReady] = usePersistentState<string>(
     storageKeys.selectedBranch,
-    branches[0].id,
+    DEMO_BRANCHES[0].id,
     decodeSelectedBranch,
   );
   const [deliveryDetails, setDeliveryDetails, deliveryDetailsReady] =
@@ -613,6 +671,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [toastState, setToastState] = useState<ToastState>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const brandingFetched = useRef(false);
+  /** The server already fetched this tenant's branding; do not overwrite it with a stale browser cache. */
+  const serverBrandingApplied = useRef(false);
   /** Mirror of `grant` for callbacks that must read the token without re-subscribing. */
   const grantRef = useRef<AccessGrant | null>(null);
   /** The recovery refresh runs once per load, not once per render. */
@@ -660,9 +720,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const selectedAddressId = addresses.some((address) => address.id === storedSelectedAddressId)
     ? storedSelectedAddressId
     : null;
-  const selectedBranchId = branches.some((branch) => branch.id === storedBranchId)
+  const branding = brandingCache?.branding ?? null;
+  /*
+   * `/api/v1/Branding` owns the pickup branches. The demo list only survives
+   * when the payload has no branches, which is exactly when the app is running
+   * without a tenant (or against a backend that has not configured any).
+   */
+  const storeBranches = useMemo(() => {
+    const tenantBranches = brandingBranches(branding, lang);
+    return tenantBranches.length > 0 ? tenantBranches : DEMO_BRANCHES;
+  }, [branding, lang]);
+  const selectedBranchId = storeBranches.some((branch) => branch.id === storedBranchId)
     ? storedBranchId
-    : branches[0].id;
+    : storeBranches[0].id;
 
   const loginPromptOpen = loginPromptNext !== null;
   // Two ways in: the local demo flag, or a session issued by the tenant API.
@@ -679,7 +749,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       : refreshRetryAt !== null
         ? "recovering"
         : "signed-out";
-  const branding = brandingCache?.branding ?? null;
   const dir = lang === "ar" ? "rtl" : "ltr";
   const t = useCallback((text: string, vars?: Vars) => translate(lang, text, vars), [lang]);
 
@@ -732,7 +801,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
      the colours from globals.css and a tenant payload repaints nothing. */
   useEffect(() => {
     applyBranding(branding);
+    applyBrandingAssets(branding);
   }, [branding]);
+
+  /*
+   * The server's branding is this request's truth. localStorage is per-origin,
+   * so it cannot cross tenants, but it can be older than the payload the server
+   * just fetched. Applying it once after hydration keeps a returning visitor
+   * from seeing a renamed restaurant until the next conditional GET.
+   */
+  useEffect(() => {
+    if (!brandingReady || serverBrandingApplied.current) return;
+    serverBrandingApplied.current = true;
+    if (initialBranding) {
+      setBrandingCache({ etag: initialBrandingEtag, branding: initialBranding });
+    }
+  }, [brandingReady, initialBranding, initialBrandingEtag, setBrandingCache]);
 
   /* A session is the source of truth for who the customer is, so the account
      screens stop showing the seeded demo identity as soon as somebody signs in
@@ -798,17 +882,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   /* One conditional GET per load: the stored ETag turns a fresh branding into
      a 304, and any failure simply leaves the palette that is already applied. */
   useEffect(() => {
-    if (!apiConfigured() || !brandingReady || brandingFetched.current) return;
+    if (!apiConfigured() || !brandingReady || brandingFetched.current || initialBranding) return;
     brandingFetched.current = true;
     fetchBranding({ etag: brandingCache?.etag ?? null })
       .then((result) => {
-        if (!result.notModified) setBrandingCache({ etag: result.etag, branding: result.branding });
+        if (result.notModified) return;
+        const safe = sanitizeBranding(result.branding);
+        if (safe) setBrandingCache({ etag: result.etag, branding: safe });
       })
       .catch(() => {
         // Branding is cosmetic and the backend may be unreachable offline: the
         // built-in palette (or the cached one) stays and the next load retries.
       });
-  }, [brandingReady, brandingCache?.etag, setBrandingCache]);
+  }, [brandingReady, brandingCache?.etag, initialBranding, setBrandingCache]);
 
   /* ------------------------------------------------------------------------ */
   /* Session: one refresh at a time, one token in memory, none in storage.     */
@@ -866,6 +952,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     applyGrant(null);
     setCustomer(null);
     setAuthFlag(false);
+    if (authTransport() === "live") {
+      setAddresses([]);
+      setSelectedAddressId(null);
+    }
     // An expired session is a sign-out: the account data goes back to the
     // neutral view rather than staying on screen for the next person.
     releaseLocalAccount();
@@ -875,7 +965,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     retryDeadline.current = null;
     setRefreshRetryAt(null);
     toast(t("انتهت الجلسة، سجّل الدخول تاني"), "info");
-  }, [applyGrant, setCustomer, setAuthFlag, releaseLocalAccount, toast, t]);
+  }, [applyGrant, setCustomer, setAuthFlag, setAddresses, setSelectedAddressId, releaseLocalAccount, toast, t]);
 
   /*
    * Which refresh failures end the session, and which only cost a retry.
@@ -921,10 +1011,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
         getGrant: () => grantRef.current,
         refresh: refreshNow,
         onSignedOut: expireSession,
-        join: (path) => apiUrl(path),
+        join: (path) => (tenantApiBaseUrl ? joinApiUrl(tenantApiBaseUrl, path) : apiUrl(path)),
       }),
-    [refreshNow, expireSession],
+    [refreshNow, expireSession, tenantApiBaseUrl],
   );
+
+  // Customer addresses belong to the API, not to this device. Demo mode keeps
+  // its seeded values; a live signed-in customer replaces them as soon as a
+  // bearer token is available.
+  useEffect(() => {
+    if (!ready || authTransport() !== "live" || !customer || sessionStatus !== "active") return;
+    const customerId = customer.customerId;
+    let cancelled = false;
+    setAddresses([]);
+    setSelectedAddressId(null);
+    Promise.all([addressApi.list(authFetch), addressApi.default(authFetch).catch(() => null)]).then(([remote, defaultAddress]) => {
+      if (!cancelled && grantRef.current && customer?.customerId === customerId) {
+        setAddresses(remote);
+        const selected = defaultAddress ?? remote.find((item) => item.isDefault) ?? null;
+        setSelectedAddressId(selected?.id ?? null);
+      }
+    }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [ready, customer, sessionStatus, authFetch, setAddresses, setSelectedAddressId]);
 
   /*
    * An older build kept the refresh token in `localStorage`. Hand it to the app
@@ -1178,6 +1287,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         applyGrant(grantFromPayload(payload));
         setCustomer(next);
         setAuthFlag(false);
+        if (authTransport() === "live") {
+          setAddresses([]);
+          setSelectedAddressId(null);
+        }
         // The number that just verified owns the history: against the simulator
         // the saved slot is the answer, and against the live API this does
         // nothing at all.
@@ -1195,7 +1308,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setLoginPromptNext(null);
       toast(t("تم تسجيل الدخول بنجاح"), "info");
     },
-    [toast, t, applyGrant, setCustomer, setAuthFlag, adoptLocalAccount],
+    [toast, t, applyGrant, setCustomer, setAuthFlag, setAddresses, setSelectedAddressId, adoptLocalAccount],
   );
 
   const logout = useCallback(() => {
@@ -1210,6 +1323,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     applyGrant(null);
     setCustomer(null);
     setAuthFlag(false);
+    if (authTransport() === "live") {
+      setAddresses([]);
+      setSelectedAddressId(null);
+    }
     // The account belonged to that customer, so a shared device is left with
     // the neutral seeded profile rather than someone else's name and phone.
     setProfile(seedProfile);
@@ -1223,10 +1340,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     adoptionPending.current = null;
     setRefreshRetryAt(null);
     toast(t("تم تسجيل الخروج"), "info");
-  }, [toast, t, applyGrant, setCustomer, setAuthFlag, setProfile, releaseLocalAccount]);
+  }, [toast, t, applyGrant, setCustomer, setAuthFlag, setAddresses, setSelectedAddressId, setProfile, releaseLocalAccount]);
 
   const addAddress = useCallback(
     (address: SavedAddress) => {
+      if (authTransport() === "live" && customer) {
+        void addressApi.create(authFetch, {
+          placeType: address.placeType ?? (address.kind === "work" ? "Office" : address.kind === "family" ? "Villa" : "Apartment"),
+          label: address.title.slice(0, 50),
+          street: (address.street ?? address.detail).slice(0, 200),
+          latitude: address.lat,
+          longitude: address.lng,
+          buildingName: address.buildingName?.slice(0, 50),
+          floor: address.placeType === "Apartment" || (!address.placeType && address.kind !== "family" && address.kind !== "work") ? address.floor?.slice(0, 20) : undefined,
+          apartmentNumber: address.placeType === "Apartment" || (!address.placeType && address.kind !== "family" && address.kind !== "work") ? address.apartmentNumber?.slice(0, 20) : undefined,
+          landmark: address.landmark?.slice(0, 500),
+          isDefault: addresses.length === 0,
+        }).then((created) => {
+          setAddresses((current) => [created, ...current.filter((item) => item.id !== created.id)]);
+          setSelectedAddressId(created.id);
+        }).catch(() => toast(t("تعذر حفظ العنوان. تحقق من البيانات وحاول مرة أخرى"), "info"));
+        return;
+      }
       setAddresses((current) => {
         const withoutDuplicate = current.filter((item) => item.id !== address.id);
         return [...withoutDuplicate, address];
@@ -1234,7 +1369,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSelectedAddressId(address.id);
       toast(t("تم حفظ العنوان بنجاح"), "info");
     },
-    [toast, t, setAddresses, setSelectedAddressId],
+    [toast, t, setAddresses, setSelectedAddressId, addresses.length, authFetch, customer],
   );
 
   const removeAddress = useCallback(
@@ -1246,13 +1381,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [toast, t, setAddresses, setSelectedAddressId],
   );
 
-  const selectAddress = useCallback((id: string | null) => setSelectedAddressId(id), [setSelectedAddressId]);
+  const selectAddress = useCallback((id: string | null) => {
+    if (id && authTransport() === "live" && customer) {
+      void addressApi.setDefault(authFetch, id).then((updated) => {
+        setAddresses((current) => current.map((item) => ({ ...item, isDefault: item.id === updated.id })));
+        setSelectedAddressId(updated.id);
+      }).catch(() => toast(t("تعذر تعيين العنوان الافتراضي"), "info"));
+      return;
+    }
+    setSelectedAddressId(id);
+  }, [authFetch, customer, setAddresses, setSelectedAddressId, t, toast]);
 
   const selectBranch = useCallback(
     (id: string) => {
-      if (branches.some((branch) => branch.id === id)) setSelectedBranchId(id);
+      if (storeBranches.some((branch) => branch.id === id)) setSelectedBranchId(id);
     },
-    [setSelectedBranchId],
+    [setSelectedBranchId, storeBranches],
   );
 
   const updateDeliveryDetails = useCallback(
@@ -1292,7 +1436,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         note: line.note,
       }));
       const address = addresses.find((item) => item.id === selectedAddressId) ?? null;
-      const branch = branches.find((item) => item.id === selectedBranchId) ?? branches[0];
+      const branch = storeBranches.find((item) => item.id === selectedBranchId) ?? storeBranches[0];
       const separator = lang === "ar" ? "، " : ", ";
       const deliveryAddress = address
         ? `${t(address.area)}${separator}${t(address.detail)}`
@@ -1341,6 +1485,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       selectedAddressId,
       selectedBranchId,
       setOrders,
+      storeBranches,
       subtotal,
       t,
     ],
@@ -1373,6 +1518,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       sessionStatus,
       authFetch,
       branding,
+      branches: storeBranches,
       loginPromptOpen,
       loginPromptNext,
       openLoginPrompt,
@@ -1425,6 +1571,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       sessionStatus,
       authFetch,
       branding,
+      storeBranches,
       loginPromptOpen,
       loginPromptNext,
       openLoginPrompt,

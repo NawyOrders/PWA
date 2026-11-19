@@ -23,12 +23,16 @@ export type Product = {
   price: number;
   oldPrice?: number;
   image: string;
-  category: CategoryId;
+  category: string;
   type?: ProductType;
   tags: string[];
   popular?: boolean;
   offer?: boolean;
   calories?: number;
+  /** Availability is branch-aware when the product came from the tenant menu API. */
+  isAvailable?: boolean;
+  sizes?: Array<{ id: string; label: string; price: number; isDefault?: boolean }>;
+  addOns?: Array<{ id: string; label: string; price: number }>;
 };
 
 export type OrderLine = {
@@ -96,7 +100,7 @@ export const categories: Category[] = [
 
 export const categoriesById = Object.fromEntries(
   categories.map((category) => [category.id, category]),
-) as Record<CategoryId, Category>;
+) as Record<string, Category>;
 
 export const products: Product[] = [
   {
