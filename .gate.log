@@ -1,0 +1,266 @@
+npm notice run nawy-orders@0.1.0 npx
+npm notice run vitest run --coverage
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mE:/Nawy/PWA[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+ [32m✓[39m src/components/addresses-view.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 6162[2mms[22m[39m
+   [33m[2m✓[22m[39m AddressesView[2m > [22mshows saved addresses without rendering the map [33m 2049[2mms[22m[39m
+   [33m[2m✓[22m[39m AddressesView[2m > [22mselects a saved address from the list [33m 1067[2mms[22m[39m
+   [33m[2m✓[22m[39m AddressesView[2m > [22mopens the delivery picker when adding a new address [33m 1200[2mms[22m[39m
+   [33m[2m✓[22m[39m AddressesView[2m > [22mdrops an address from the saved list [33m 1079[2mms[22m[39m
+   [33m[2m✓[22m[39m AddressesView[2m > [22mreturns to the profile after saving address changes [33m 762[2mms[22m[39m
+ [32m✓[39m src/components/auth-flow.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 15823[2mms[22m[39m
+   [33m[2m✓[22m[39m the OTP login journey, in mock mode[2m > [22mregisters, lands on the protected page, refreshes silently and logs out [33m 8239[2mms[22m[39m
+   [33m[2m✓[22m[39m the OTP login journey, in mock mode[2m > [22msigns a returning customer in with a phone number alone [33m 4134[2mms[22m[39m
+   [33m[2m✓[22m[39m the OTP login journey, in mock mode[2m > [22mwalks an unknown number over to registration with the phone kept [33m 3445[2mms[22m[39m
+ [32m✓[39m src/components/location-picker.test.tsx [2m([22m[2m13 tests[22m[2m)[22m[33m 20924[2mms[22m[39m
+   [33m[2m✓[22m[39m LocationPicker[2m > [22mlists saved addresses and selects one from the sheet [33m 3400[2mms[22m[39m
+   [33m[2m✓[22m[39m LocationPicker[2m > [22mkeeps only the map and current-location actions when nothing is saved [33m 826[2mms[22m[39m
+   [33m[2m✓[22m[39m LocationPicker[2m > [22mwalks map → details form → save and stores the new address [33m 3710[2mms[22m[39m
+   [33m[2m✓[22m[39m LocationPicker[2m > [22mreturns from the form to the map and discards the draft with remove [33m 1343[2mms[22m[39m
+   [33m[2m✓[22m[39m LocationPicker[2m > [22mcloses from the sheet close control [33m 478[2mms[22m[39m
+   [33m[2m✓[22m[39m LocationPicker[2m > [22mkeeps modal semantics while the map stage is showing [33m 1015[2mms[22m[39m
+   [33m[2m✓[22m[39m LocationPicker[2m > [22mstores the place type picked from the chips [33m 2004[2mms[22m[39m
+   [33m[2m✓[22m[39m LocationPicker[2m > [22msaves the geocoded area shown on the map instead of the offline guess [33m 2951[2mms[22m[39m
+   [33m[2m✓[22m[39m LocationPicker[2m > [22mcenters the map on the browser location when it is available [33m 391[2mms[22m[39m
+   [33m[2m✓[22m[39m LocationPicker[2m > [22mstays on the sheet when the browser cannot locate the device [33m 352[2mms[22m[39m
+   [33m[2m✓[22m[39m LocationPicker[2m > [22msearches saved places on the map and recenters on the match [33m 1520[2mms[22m[39m
+   [33m[2m✓[22m[39m LocationPicker[2m > [22msuggests delivery districts, not only saved addresses [33m 1285[2mms[22m[39m
+   [33m[2m✓[22m[39m LocationPicker[2m > [22msays so when a search matches nothing [33m 1637[2mms[22m[39m
+ [32m✓[39m src/components/home-view.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 14971[2mms[22m[39m
+   [33m[2m✓[22m[39m HomeView app install section[2m > [22mrenders on phones and tablets instead of staying desktop only [33m 3755[2mms[22m[39m
+   [33m[2m✓[22m[39m HomeView app install section[2m > [22msizes the phone preview per breakpoint and pins it only from desktop up [33m 1593[2mms[22m[39m
+   [33m[2m✓[22m[39m HomeView categories section[2m > [22moffers every category on the phone rail instead of a truncated five [33m 2904[2mms[22m[39m
+   [33m[2m✓[22m[39m HomeView categories section[2m > [22mlets the rail scroll edge to edge on phones and stops there [33m 2459[2mms[22m[39m
+   [33m[2m✓[22m[39m HomeView categories section[2m > [22mspreads the same categories across the shell from the tablet breakpoint [33m 1979[2mms[22m[39m
+   [33m[2m✓[22m[39m HomeView categories section[2m > [22mkeeps both layouts in sync when a tablet card is picked [33m 2274[2mms[22m[39m
+ [32m✓[39m src/components/site-chrome.test.tsx [2m([22m[2m22 tests[22m[2m)[22m[33m 14135[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome route guard[2m > [22mredirects signed-out visitors from /profile to login with a return path [33m 1433[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome route guard[2m > [22mredirects signed-out visitors from /checkout/payment to login with a return path [33m 349[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome route guard[2m > [22mredirects signed-out visitors from /orders to login with a return path [33m 497[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome route guard[2m > [22mrenders protected content for a restored session without redirecting [33m 445[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome route guard[2m > [22mopens the login prompt on the cart instead of redirecting [33m 2664[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome route guard[2m > [22mkeeps the cart prompt closed for signed-in visitors [33m 355[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome route guard[2m > [22mcloses the login prompt from the close button [33m 891[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome route guard[2m > [22mhides the footer and bottom navigation on focused checkout screens [33m 477[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome route guard[2m > [22mkeeps the bottom navigation on the orders tab root [33m 734[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome route guard[2m > [22mhides the bottom navigation on order tracking [33m 345[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome route guard[2m > [22mkeeps the public shell chrome on an open route [33m 798[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome pinned cart bar[2m > [22mshows the cart bar only on desktop and clears the main flow without mobile cart spacing [33m 996[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome pinned cart bar[2m > [22mkeeps the desktop bar at the page edge on screens with no tab bar [33m 624[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome pinned cart bar[2m > [22mleaves /cart to its own cart call to action [33m 612[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome pinned cart bar[2m > [22mleaves /checkout/payment to its own cart call to action [33m 517[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome pinned cart bar[2m > [22mleaves /product/beef-burger to its own cart call to action [33m 605[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome pinned cart bar[2m > [22mleaves /login to its own cart call to action [33m 496[2mms[22m[39m
+   [33m[2m✓[22m[39m SiteChrome pinned cart bar[2m > [22mhides the bar and restores the plain padding once the basket is empty [33m 465[2mms[22m[39m
+ [32m✓[39m src/components/payment-view.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 17494[2mms[22m[39m
+   [33m[2m✓[22m[39m PaymentView[2m > [22mrequires a receipt before confirming an InstaPay order [33m 4507[2mms[22m[39m
+   [33m[2m✓[22m[39m PaymentView[2m > [22mrejects a receipt that is not an image [33m 603[2mms[22m[39m
+   [33m[2m✓[22m[39m PaymentView[2m > [22mrejects a receipt larger than five megabytes [33m 583[2mms[22m[39m
+   [33m[2m✓[22m[39m PaymentView[2m > [22maccepts a valid receipt, asks for confirmation and completes the order [33m 3780[2mms[22m[39m
+   [33m[2m✓[22m[39m PaymentView[2m > [22mleaves the cart untouched when the receipt review is dismissed [33m 3237[2mms[22m[39m
+   [33m[2m✓[22m[39m PaymentView[2m > [22mfinalizes a cash order without a receipt [33m 1897[2mms[22m[39m
+   [33m[2m✓[22m[39m PaymentView[2m > [22mfinalizes an e-wallet order and shows the wallet instructions [33m 1348[2mms[22m[39m
+   [33m[2m✓[22m[39m PaymentView[2m > [22mcopies the InstaPay number and confirms visually [33m 760[2mms[22m[39m
+   [33m[2m✓[22m[39m PaymentView[2m > [22mshows the number as a fallback when the clipboard is blocked [33m 772[2mms[22m[39m
+ [32m✓[39m src/components/policies-view.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 5000[2mms[22m[39m
+   [33m[2m✓[22m[39m PoliciesView[2m > [22mopens on the privacy policy by default [33m 1515[2mms[22m[39m
+   [33m[2m✓[22m[39m PoliciesView[2m > [22mhonours a ?tab= deep link after mount [33m 345[2mms[22m[39m
+   [33m[2m✓[22m[39m PoliciesView[2m > [22mswitches policies on click and moves the roving tab index [33m 528[2mms[22m[39m
+   [33m[2m✓[22m[39m PoliciesView[2m > [22msupports arrow key navigation, wrapping at both ends [33m 1338[2mms[22m[39m
+   [33m[2m✓[22m[39m PoliciesView[2m > [22msupports Home and End jumps [33m 594[2mms[22m[39m
+ [32m✓[39m src/components/providers.test.tsx [2m([22m[2m70 tests[22m[2m)[22m[33m 9719[2mms[22m[39m
+   [33m[2m✓[22m[39m AppProvider — cart flow[2m > [22mhydrates the seeded cart and derives totals [33m 669[2mms[22m[39m
+   [33m[2m✓[22m[39m AppProvider — order lifecycle[2m > [22mrecords a delivery order from the current cart and persists it [33m 364[2mms[22m[39m
+   [33m[2m✓[22m[39m AppProvider — tenant API session and branding[2m > [22mgives up after one retry instead of looping on a 401 [33m 520[2mms[22m[39m
+   [33m[2m✓[22m[39m AppProvider — signing out[2m > [22mrevokes the cookie session when the customer signs out [33m 330[2mms[22m[39m
+ [32m✓[39m src/components/login-view.test.tsx [2m([22m[2m73 tests[22m[2m)[22m[33m 215949[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView[2m > [22mkeeps the OTP fields and submit locked before a code is requested [33m 1713[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView[2m > [22mnames every part of the form the customer has to work out [33m 770[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView[2m > [22mrefuses to ask for a code before there is a usable phone number [33m 1239[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView[2m > [22msays the code step needs a code before it needs a submit [33m 556[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView[2m > [22munlocks the OTP, reveals the demo hint and starts both countdowns [33m 2003[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView[2m > [22mreports a wrong demo code, clears the fields and does not authenticate [33m 2915[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView[2m > [22mauthenticates with the demo code and redirects to the requested next path [33m 2431[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView[2m > [22mdefaults the redirect to the profile page [33m 2202[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView[2m > [22mpops the demo code into a copyable dialog the moment it is sent [33m 2233[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView[2m > [22mlets the customer reopen the code dialog after dismissing it [33m 2602[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView typing the code[2m > [22mtakes one digit per box and moves on by itself [33m 2717[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView typing the code[2m > [22msubmits a typed code exactly once [33m 1355[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView typing the code[2m > [22mnever re-sends a code the backend already accepted [33m 2491[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView typing the code[2m > [22mkeeps verify disabled until all six digits are in [33m 1878[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView typing the code[2m > [22mretires the challenge when the server's code lifetime runs out [33m 3840[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView typing the code[2m > [22mcounts the code down from the server's timestamp when it sends one [33m 523[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView typing the code[2m > [22mfills every box from one paste and submits it once [33m 1384[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView typing the code[2m > [22mstrips the spaces and dashes a text message brings with it [33m 1536[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView typing the code[2m > [22mtruncates a paste that is longer than the code instead of splitting it [33m 1029[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView typing the code[2m > [22mignores a paste with no digits in it [33m 604[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView typing the code[2m > [22mmoves back a box on backspace and clears the one it lands on [33m 2343[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView typing the code[2m > [22mdoes not walk out of the first box when backspace has nothing left [33m 1077[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22masks for the name the backend needs for a first-time customer [33m 319[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22moffers the two doors and the two channels the contract documents [33m 1701[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mrequests a challenge with the number, the purpose and the channel [33m 2920[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mnormalises every Egyptian phone shape the contract accepts [33m 3636[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mkeeps the popup shut when the backend returns no test code [33m 1738[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22msends the channel the customer picked and names it everywhere [33m 1801[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mtells the customer which channel the code is on while they type it [33m 2662[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mverifies the typed code and keeps the session without a token in storage [33m 3036[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mapplies the typed name when the backend returns none [33m 3269[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mkeeps the name the backend already has for a returning customer [33m 4882[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22msends no name at all when the field is left blank [33m 3460[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mlocks the send button while the request is in flight [33m 2604[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mnever offers a resend earlier than the code itself expires [33m 1298[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mhands the resend link back when the cooldown ends and locks it mid-request [33m 4987[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mcounts the server's Retry-After down instead of a silent dead button [33m 4392[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mgives the send button back when the Retry-After window ends [33m 2491[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mfalls back to the app's own cooldown when a 429 gives no Retry-After [33m 979[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mlocks resend for the Retry-After window a refused code brings with it [33m 3318[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mkeeps the challenge alive for a wrong code and lets the customer retry [33m 5127[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mforces a new code when the lifetime ran out on the server [33m 4467[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mforces a new code when the code was already spent [33m 5458[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mforces a new code when the attempts ran out [33m 4701[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mforces a new code when the challenge itself is gone [33m 4704[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mroutes a phone with no account to registration, keeping the number [33m 3567[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22msends a blocked account to support instead of another code [33m 3049[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22msends an inactive customer to support instead of another code [33m 4808[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22msends an account the auth layer stopped to the same place [33m 3968[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mshows the field message the backend sent for the phone number [33m 2930[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mputs a rejected name back on the name field [33m 2509[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mkeeps a server outage wording instead of leaking the raw error [33m 3837[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mkeeps the offline wording when the network never answered [33m 3237[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mshows the mapped message for a failure no code explains [33m 6546[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mrefuses to sign the customer in on a challenge a resend replaced [33m 10162[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView against the tenant API[2m > [22mdrops an answer for a challenge the countdown already retired [33m 10230[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView registering a first-time customer[2m > [22mwill not spend a code on a name it does not have yet [33m 3244[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView registering a first-time customer[2m > [22mtreats a name that is only spaces as no name [33m 2692[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView registering a first-time customer[2m > [22mopens on the registration door with the name it needs [33m 1144[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView registering a first-time customer[2m > [22masks for a registration challenge and names the new account with it [33m 2899[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView registering a first-time customer[2m > [22mcuts a name down to the 200 characters the contract allows [33m 1951[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView in a production bundle (no backend configured)[2m > [22mstill shows the demo code in the copyable popup [33m 1384[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView in a production bundle (no backend configured)[2m > [22mbuilds the account from the name and mobile the customer typed [33m 2607[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView in a production bundle (no backend configured)[2m > [22mkeeps the seeded name when a returning customer signs in without one [33m 2222[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView in a production bundle against the tenant API[2m > [22mkeeps the backend's test code out of the popup [33m 1779[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView in a production bundle against the tenant API[2m > [22mshows it again when the deploy opts in with NEXT_PUBLIC_SHOW_DEV_OTP [33m 1203[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView mints a fresh demo code[2m > [22mshows the newest code and refuses the previous one [33m 4908[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView mints a fresh demo code[2m > [22mburns the code after five wrong tries and puts a cooldown on sending [33m 6841[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView mints a fresh demo code[2m > [22msays so instead of inventing a guessable code when the browser has no CSPRNG [33m 3372[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginView mints a fresh demo code[2m > [22mretires the code the moment its countdown ends [33m 10892[2mms[22m[39m
+ [32m✓[39m src/components/pickup-view.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 2789[2mms[22m[39m
+   [33m[2m✓[22m[39m PickupView[2m > [22mstarts on delivery with the delivery fee included [33m 1587[2mms[22m[39m
+   [33m[2m✓[22m[39m PickupView[2m > [22mroutes a delivery order to the delivery details step [33m 306[2mms[22m[39m
+   [33m[2m✓[22m[39m PickupView[2m > [22mswitches to pickup, drops the fee and routes to branch selection [33m 743[2mms[22m[39m
+ [32m✓[39m src/components/product-card.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 3228[2mms[22m[39m
+   [33m[2m✓[22m[39m ProductCard cart quantity controls[2m > [22madds a product, increments and decrements its quantity, then restores add [33m 2422[2mms[22m[39m
+   [33m[2m✓[22m[39m ProductCard cart quantity controls[2m > [22mkeeps the quantity controls on the same row as the price without an extra spacer [33m 695[2mms[22m[39m
+ [32m✓[39m src/components/product-detail.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 3216[2mms[22m[39m
+   [33m[2m✓[22m[39m ProductDetail cart quantity controls[2m > [22mstarts at zero, updates the cart directly, and links to the cart [33m 3211[2mms[22m[39m
+ [32m✓[39m src/components/category-detail-view.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 2358[2mms[22m[39m
+   [33m[2m✓[22m[39m CategoryDetailView[2m > [22mrenders the category heading, count and popular dishes [33m 1915[2mms[22m[39m
+   [33m[2m✓[22m[39m CategoryDetailView[2m > [22mlists every dish in the category exactly once [33m 439[2mms[22m[39m
+ [32m✓[39m src/components/otp-code-dialog.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 3311[2mms[22m[39m
+   [33m[2m✓[22m[39m OtpCodeDialog[2m > [22mshows the code as real, selectable text in an accessible dialog [33m 970[2mms[22m[39m
+   [33m[2m✓[22m[39m OtpCodeDialog[2m > [22mcopies the code and confirms it [33m 396[2mms[22m[39m
+   [33m[2m✓[22m[39m OtpCodeDialog[2m > [22mcounts the code down when the backend gave a lifetime [33m 1095[2mms[22m[39m
+ [32m✓[39m src/components/ui.test.tsx [2m([22m[2m29 tests[22m[2m)[22m[33m 3059[2mms[22m[39m
+   [33m[2m✓[22m[39m Button[2m > [22mdefaults to type=button and forwards native props [33m 888[2mms[22m[39m
+ [32m✓[39m src/components/cart-bar.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 1173[2mms[22m[39m
+   [33m[2m✓[22m[39m CartBar[2m > [22mopens the basket instead of pushing straight to checkout [33m 838[2mms[22m[39m
+ [32m✓[39m src/components/categories-view.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 5098[2mms[22m[39m
+   [33m[2m✓[22m[39m CategoriesView[2m > [22mrenders the mobile category catalogue with a link per category [33m 5094[2mms[22m[39m
+ [32m✓[39m src/components/menu-row.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 8692[2mms[22m[39m
+   [33m[2m✓[22m[39m MenuRow cart quantity controls[2m > [22mreplaces add with quantity controls in the add button position [33m 7768[2mms[22m[39m
+   [33m[2m✓[22m[39m MenuRow cart quantity controls[2m > [22muses compact controls on narrow screens and shows no crossed-out old price [33m 909[2mms[22m[39m
+ [32m✓[39m src/components/orders-view.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 3989[2mms[22m[39m
+   [33m[2m✓[22m[39m OrdersView[2m > [22mrenders the orders tab as a root screen without a back control [33m 3264[2mms[22m[39m
+   [33m[2m✓[22m[39m OrdersView[2m > [22msends the desktop back link to home instead of the profile [33m 358[2mms[22m[39m
+   [33m[2m✓[22m[39m OrdersView[2m > [22mkeeps order tracking and reorder actions reachable [33m 362[2mms[22m[39m
+ [32m✓[39m src/components/store-header.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 3412[2mms[22m[39m
+   [33m[2m✓[22m[39m StoreHeader[2m > [22mopens the delivery-location sheet for a signed-in customer [33m 2183[2mms[22m[39m
+   [33m[2m✓[22m[39m StoreHeader[2m > [22msends a guest to login from the location control [33m 343[2mms[22m[39m
+   [33m[2m✓[22m[39m StoreHeader[2m > [22mkeeps the language switch next to the notifications bell on mobile [33m 881[2mms[22m[39m
+ [32m✓[39m src/components/navbar.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 2438[2mms[22m[39m
+   [33m[2m✓[22m[39m Navbar[2m > [22mlinks Orders where Categories used to be [33m 1698[2mms[22m[39m
+ [32m✓[39m src/hooks/use-dialog-focus.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 3373[2mms[22m[39m
+   [33m[2m✓[22m[39m useDialogFocus[2m > [22mfocuses the first control, locks scroll and restores focus on close [33m 2101[2mms[22m[39m
+   [33m[2m✓[22m[39m useDialogFocus[2m > [22mcloses on Escape and traps Tab at both ends [33m 553[2mms[22m[39m
+   [33m[2m✓[22m[39m useDialogFocus[2m > [22mtolerates a missing close handler and an unattached ref [33m 580[2mms[22m[39m
+ [32m✓[39m src/components/promo-carousel.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 2104[2mms[22m[39m
+   [33m[2m✓[22m[39m PromoCarousel[2m > [22madvances and goes back when swiped horizontally [33m 2099[2mms[22m[39m
+ [32m✓[39m src/components/language-toggle.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 3103[2mms[22m[39m
+   [33m[2m✓[22m[39m LanguageToggle[2m > [22moffers the language the app is not currently using [33m 2048[2mms[22m[39m
+   [33m[2m✓[22m[39m LanguageToggle[2m > [22mflips the whole app to English and back [33m 773[2mms[22m[39m
+ [32m✓[39m src/components/bottom-nav.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 2890[2mms[22m[39m
+   [33m[2m✓[22m[39m BottomNav[2m > [22moffers home, orders, cart and account tabs [33m 2551[2mms[22m[39m
+   [33m[2m✓[22m[39m BottomNav[2m > [22mmarks the current tab and sends signed-out visitors to login for orders [33m 335[2mms[22m[39m
+ [32m✓[39m src/lib/api.test.ts [2m([22m[2m91 tests[22m[2m)[22m[33m 541[2mms[22m[39m
+ [32m✓[39m src/lib/session.test.ts [2m([22m[2m46 tests[22m[2m)[22m[32m 199[2mms[22m[39m
+ [32m✓[39m src/lib/auth-mock.test.ts [2m([22m[2m39 tests[22m[2m)[22m[32m 175[2mms[22m[39m
+ [32m✓[39m src/lib/auth-bff.test.ts [2m([22m[2m36 tests[22m[2m)[22m[33m 342[2mms[22m[39m
+ [32m✓[39m src/hooks/use-map-places.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 450[2mms[22m[39m
+   [33m[2m✓[22m[39m useReversePlaceName[2m > [22mkeeps the geocoded label after the lookup is switched off [33m 305[2mms[22m[39m
+ [32m✓[39m src/hooks/use-persistent-state.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[32m 162[2mms[22m[39m
+ [32m✓[39m src/lib/data.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 234[2mms[22m[39m
+ [32m✓[39m src/lib/auth-cookie.test.ts [2m([22m[2m35 tests[22m[2m)[22m[32m 162[2mms[22m[39m
+ [32m✓[39m src/lib/otp.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 217[2mms[22m[39m
+ [32m✓[39m src/lib/branding.test.ts [2m([22m[2m33 tests[22m[2m)[22m[32m 278[2mms[22m[39m
+ [32m✓[39m src/lib/place-search.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 86[2mms[22m[39m
+ [32m✓[39m src/lib/clipboard.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 368[2mms[22m[39m
+ [32m✓[39m src/lib/otp-clock.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 130[2mms[22m[39m
+ [32m✓[39m src/lib/routes.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 197[2mms[22m[39m
+ [32m✓[39m src/lib/account-data.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 135[2mms[22m[39m
+ [32m✓[39m src/lib/i18n.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 111[2mms[22m[39m
+ [32m✓[39m src/lib/geo.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 63[2mms[22m[39m
+ [32m✓[39m src/lib/media.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 55[2mms[22m[39m
+ [32m✓[39m src/lib/storage.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 89[2mms[22m[39m
+ [32m✓[39m src/sw.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 216[2mms[22m[39m
+ [32m✓[39m src/lib/i18n-coverage.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 50[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m46 passed[39m[22m[90m (46)[39m
+[2m      Tests [22m [1m[32m700 passed[39m[22m[90m (700)[39m
+[2m   Start at [22m 00:46:02
+[2m   Duration [22m 766.02s[2m (transform 24.78s, setup 247.62s, collect 99.45s, tests 378.67s, environment 1364.64s, prepare 49.63s)[22m
+
+[34m % [39m[2mCoverage report from [22m[33mv8[39m
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   98.91 |    94.79 |   95.27 |   98.91 |                   
+ components        |   98.93 |    93.83 |   89.74 |   98.93 |                   
+  ...sses-view.tsx |   93.93 |    80.95 |      50 |   93.93 | 121,187-196       
+  ...ge-toggle.tsx |     100 |      100 |     100 |     100 |                   
+  ...on-picker.tsx |   98.23 |    86.66 |   76.66 |   98.23 | ...54,172-175,299 
+  login-view.tsx   |   98.68 |    96.72 |     100 |   98.68 | ...20-422,706-708 
+  ...cies-view.tsx |     100 |    96.66 |     100 |     100 | 39                
+  providers.tsx    |   99.63 |    91.75 |     100 |   99.63 | 228,558,962       
+  site-chrome.tsx  |     100 |      100 |     100 |     100 |                   
+  ui.tsx           |     100 |      100 |     100 |     100 |                   
+ hooks             |   96.15 |    79.76 |     100 |   96.15 |                   
+  ...er-session.ts |     100 |      100 |     100 |     100 |                   
+  ...alog-focus.ts |     100 |      100 |     100 |     100 |                   
+  ...map-places.ts |   93.89 |       66 |     100 |   93.89 | ...12-115,127-128 
+  ...tent-state.ts |     100 |      100 |     100 |     100 |                   
+ lib               |   99.17 |    97.31 |     100 |   99.17 |                   
+  api.ts           |     100 |    99.64 |     100 |     100 | 487               
+  auth-bff.ts      |     100 |      100 |     100 |     100 |                   
+  auth-cookie.ts   |     100 |      100 |     100 |     100 |                   
+  auth-mock.ts     |   96.37 |    93.75 |     100 |   96.37 | 213-222           
+  branding.ts      |     100 |      100 |     100 |     100 |                   
+  clipboard.ts     |     100 |      100 |     100 |     100 |                   
+  data.ts          |     100 |      100 |     100 |     100 |                   
+  geo.ts           |     100 |      100 |     100 |     100 |                   
+  media.ts         |     100 |       90 |     100 |     100 | 13                
+  otp-clock.ts     |     100 |      100 |     100 |     100 |                   
+  otp.ts           |     100 |      100 |     100 |     100 |                   
+  place-search.ts  |     100 |    92.85 |     100 |     100 | 50                
+  routes.ts        |   92.85 |    85.71 |     100 |   92.85 | 50-51             
+  session.ts       |   97.96 |    93.07 |     100 |   97.96 | 167-168,192,229   
+  storage.ts       |     100 |      100 |     100 |     100 |                   
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 98.91% ( 4928/4982 )
+Branches     : 94.79% ( 1656/1747 )
+Functions    : 95.27% ( 242/254 )
+Lines        : 98.91% ( 4928/4982 )
+================================================================================

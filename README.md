@@ -1,52 +1,65 @@
-# NawyOrders PWA
+# ناوي أوردرز — Nawy Orders PWA
 
-The Progressive Web App frontend for the NawyOrders platform.
-
-## Stack
-
-- Next.js App Router
-- TypeScript
-- Tailwind CSS
-- Arabic-first RTL interface using Noto Kufi Arabic
-- NawyOrders navy, coral, and cream theme
-- Web App Manifest and service worker offline fallback
+Arabic-first (RTL) food-ordering **Progressive Web App** built with **Next.js 16 (App Router)**, **TypeScript**, and **Tailwind CSS v4** — a faithful mobile (390px) and desktop (1440px) recreation of the supplied "Nawy Orders" designs, with a complete English (LTR) mode.
 
 ## Getting started
 
-Use Node.js 20.9 or later, then install dependencies and start the development server:
-
 ```bash
 npm install
-npm run dev
+npm run dev      # http://localhost:3000
+npm run build    # production build
+npm run start    # serve the production build
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The service worker is registered in production builds only; use `npm run build` followed by `npm start` to try the offline fallback locally.
+## Features
+
+- Home feed with promo carousel, category chips, "الأكثر طلباً" and full menu sections
+- Categories browsing and Arabic/Latin search with filters
+- Product detail with size/extras options, quantity stepper, and favorites
+- Cart, checkout, delivery, payment and order confirmation flows
+- Account area: profile, addresses, orders, notifications, settings, login
+- Client state persisted to `localStorage` (cart, favorites, session) via React Context
+- Arabic ↔ English switch with full UI, demo-data and RTL → LTR layout translation
+
+## Language (AR / EN)
+
+- Switch languages from **Settings → عربي / English**. The choice is saved in `localStorage` under `nawy-lang-v1`.
+- `src/components/providers.tsx` exposes `lang`, `dir`, `setLang` and `t()`; it also syncs `<html lang dir>`.
+- An inline script in `src/app/layout.tsx` applies the saved locale before hydration, so there is no RTL/LTR flash.
+- Arabic strings are the dictionary keys; English lives in `src/lib/i18n.ts`. Displayed demo data (orders, notifications, branch names, addresses) is translated at render time.
+- Layout uses logical utilities (`start/end`, `ps/pe`, `ms/me`), direction-aware gradients, and mirrored chevrons (`ltr:rotate-180`), so every screen works in both directions.
+
+## Hero artwork
+
+The home hero is configured in [`src/lib/media.ts`](src/lib/media.ts):
+
+```ts
+export const heroMedia = {
+  rtl: "/images/banner.webp",
+  ltr: null, // set to e.g. "/images/banner-en.webp" when you have LTR artwork
+};
+```
+
+- Replace `public/images/banner.webp` to change the Arabic/RTL hero.
+- If `ltr` is `null` (default), the RTL artwork is mirrored in English and the overlay gradient/text move to the opposite side automatically.
+- If you add dedicated English artwork, set `ltr` to its path; mirroring is skipped and that image is used as-is.
+
+## PWA
+
+- `src/app/manifest.ts` → `/manifest.webmanifest` (name, icons, shortcuts, `display: standalone`, `dir: rtl`, theme `#E8452C`)
+- `public/sw.js` → precaches the shell (`/`, `/offline`, manifest, icons, hero images). Navigation uses network-first with an offline fallback; static assets use cache-first.
+- `src/components/service-worker-register.tsx` → registers the worker in production builds
+- `/offline` → dedicated offline screen
 
 ## Project structure
 
-```text
-public/
-  icons/              PWA app icons
-  sw.js               Service worker and offline navigation fallback
-src/
-  app/                Localized routes, layouts, and web manifest
-    [locale]/         Arabic and English pages
-      (shell)/        Storefront pages and navigation shell
-      item/[slug]/    Item detail page
-      offline/        Offline fallback route
-  components/
-    item/             Reusable item detail and cart components
-  lib/                Shared utilities
-  styles/             Shared motion styles
-  types/              Shared TypeScript types
+```
+src/app/         App Router routes (home, categories, search, product, cart, checkout, profile, …)
+src/components/  UI and feature components
+src/lib/data.ts  Products, categories, orders and seeded demo data
+public/          Service worker, icons, generated imagery, OG cover
 ```
 
-The sample menu links to `/item/burger-baladi`. Item quantity, size, toppings, and notes are saved as a cart line in local storage when the add-to-cart button is pressed. Add routes under `src/app`, reusable components under `src/components`, and shared helpers under `src/lib`.
+## Design tokens
 
-## Branching
-
-- `master`: Stable code.
-- `dev`: Development and integration.
-- `feature/*`: Individual task branches.
-
-Create a separate branch for each task and open a Pull Request into `dev`.
+Cream `#FBF3EA` · Brand `#E8452C` · Peach `#F7E3D6` · Ink `#201A16` · Muted `#9B8D82` · Success `#38A475` · Gold `#F6A723`, with Cairo (body) and Baloo Bhaijaan 2 (display).

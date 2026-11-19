@@ -1,0 +1,200 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
+import { ChevronLeft, ReceiptText, RotateCcw, Truck } from "lucide-react";
+import { useApp } from "@/components/providers";
+import { formatPrice, paymentMethodLabels, productsById, toArabicDigits, user, type Order } from "@/lib/data";
+
+export function OrdersView() {
+  const { addItem, toast, t, lang, orders } = useApp();
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const current = orders.filter((order) => order.status === "preparing");
+  const previous = orders.filter((order) => order.status === "delivered");
+  const orderNumber = (id: string) => (lang === "en" ? id : toArabicDigits(id));
+  const display = (value: string | number) => (lang === "ar" ? toArabicDigits(value) : String(value));
+
+  const reorder = (order: Order) => {
+    const items = order.items ?? [];
+    if (items.length === 0) {
+      toast(t("مفيش أصناف محفوظة للطلب ده"), "info");
+      return;
+    }
+    items.forEach((item) => {
+      const product = productsById[item.productId];
+      if (!product) return;
+      addItem(item.productId, {
+        qty: item.qty,
+        price: item.price > 0 ? item.price : product.price,
+        size: item.size,
+        extras: item.extras,
+        note: item.note,
+      });
+    });
+    toast(t("تمت إضافة طلبك السابق إلى السلة"));
+  };
+
+  const renderOrder = (order: Order, index: number) => {
+    const key = `${order.id}-${index}`;
+    const isCurrent = order.status === "preparing";
+    const expanded = expandedId === key;
+
+    return (
+      <article key={key} className="rounded-[26px] bg-white p-4 shadow-soft transition duration-300 hover:shadow-pop lg:p-5">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm font-extrabold">
+            {t("طلب رقم")} {orderNumber(order.id)}
+          </span>
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[11px] font-bold ${
+              isCurrent ? "bg-brand-soft text-brand" : "bg-success-soft text-success"
+            }`}
+          >
+            <span
+              aria-hidden="true"
+              className={`size-1.5 rounded-full ${isCurrent ? "animate-pulse-soft bg-brand" : "bg-success"}`}
+            />
+            {t(isCurrent ? "قيد التحضير" : "تم التوصيل")}
+          </span>
+        </div>
+
+        <div className="mt-4 flex items-start gap-3.5">
+          <div className="relative size-20 shrink-0 overflow-hidden rounded-2xl bg-peach">
+            <Image src={order.image} alt={t(order.title)} fill sizes="96px" className="object-cover" />
+          </div>
+          <div className="min-w-0 flex-1 pt-1">
+            <h3 className="text-[15px] font-extrabold leading-6">{t(order.title)}</h3>
+            <p className="mt-1 text-[11px] leading-5 text-muted">{display(t(order.date))}</p>
+            <p className="mt-0.5 line-2 text-[11px] leading-5 text-muted">{t(order.description)}</p>
+          </div>
+        </div>
+
+        {isCurrent && order.eta ? (
+          <p className="mt-3 rounded-xl bg-[#fbf4ec] px-3 py-2.5 text-center text-[11px] font-semibold text-muted">
+            {t("وقت الوصول المتوقع")}: {display(t(order.eta))}
+          </p>
+        ) : null}
+
+        {expanded ? (
+          <div className="motion-rise mt-3 space-y-1.5 rounded-2xl bg-[#fbf4ec] px-4 py-3.5 text-[11px] leading-6 text-muted">
+            <p>
+              <span className="font-bold text-ink">{t("الأصناف: ")}</span>
+              {order.items?.length
+                ? order.items.map((item) => `${item.qty} × ${t(item.name)}`).join(lang === "ar" ? "، " : ", ")
+                : t(order.description)}
+            </p>
+            <p>
+              <span className="font-bold text-ink">{t("طريقة الدفع: ")}</span>
+              {order.paymentMethod ? t(paymentMethodLabels[order.paymentMethod]) : t("غير محدد")}
+            </p>
+            <p>
+              <span className="font-bold text-ink">
+                {t(order.fulfilment === "pickup" ? "الاستلام من: " : "العنوان: ")}
+              </span>
+              {order.address ? t(order.address) : t(user.address)}
+            </p>
+          </div>
+        ) : null}
+
+        <div className="mt-4 flex items-center justify-between gap-2 border-t border-line pt-4">
+          <span className="whitespace-nowrap text-base font-extrabold">
+            {display(formatPrice(order.total))} <span className="text-xs font-bold">{t("ج.م")}</span>
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setExpandedId(expanded ? null : key)}
+              aria-expanded={expanded}
+              className="flex h-9 items-center gap-1.5 rounded-full px-2 text-[11px] font-bold text-ink/70 transition hover:text-brand"
+            >
+              {t("التفاصيل")}
+              <ReceiptText className="size-4" strokeWidth={1.7} />
+            </button>
+            {isCurrent ? (
+              <Link
+                href={`/orders/${order.id}`}
+                className="flex h-9 items-center gap-1.5 rounded-full bg-brand px-4 text-[11px] font-bold text-white transition hover:bg-brand-dark"
+              >
+                <Truck className="size-3.5" />
+                {t("تتبع الطلب")}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => reorder(order)}
+                className="flex h-9 items-center gap-1.5 rounded-full bg-brand-soft px-4 text-[11px] font-bold text-brand transition hover:bg-brand/15"
+              >
+                <RotateCcw className="size-3.5" />
+                {t("اطلب تاني")}
+              </button>
+            )}
+          </div>
+        </div>
+      </article>
+    );
+  };
+
+  return (
+    <div className="pb-10">
+      <h1 className="motion-header px-4 pb-4 pt-6 text-center text-lg font-extrabold lg:hidden">{t("طلباتك")}</h1>
+
+      <div className="shell">
+        <div className="mx-auto max-w-3xl">
+          <div className="hidden items-center justify-between lg:flex lg:pt-8">
+            <div className="text-start">
+              <h1 className="text-[32px] font-extrabold">{t("سجل الطلبات")}</h1>
+              <p className="mt-2 text-sm text-muted">{t("تابع طلبك الحالي واطلب تاني أطباقك المفضلة.")}</p>
+            </div>
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 text-sm font-bold text-brand transition hover:text-brand-dark"
+            >
+              {t("العودة للرئيسية")}
+              <ChevronLeft className="size-4 ltr:rotate-180" />
+            </Link>
+          </div>
+
+          <div className="space-y-7 pt-2 lg:mt-7">
+            <section>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-extrabold">{t("طلبك الحالي")}</h2>
+                <span className="text-xs text-muted">
+                  {current.length === 1
+                    ? t("طلب واحد")
+                    : t("{count} طلبات", { count: display(current.length) })}
+                </span>
+              </div>
+              <div className="motion-stagger mt-3 space-y-3">
+                {current.length > 0 ? (
+                  current.map(renderOrder)
+                ) : (
+                  <p className="rounded-2xl bg-white px-4 py-6 text-center text-xs text-muted shadow-soft">
+                    {t("مفيش طلبات جارية حالياً")}
+                  </p>
+                )}
+              </div>
+            </section>
+
+            <section>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-extrabold">{t("الطلبات السابقة")}</h2>
+                <span className="text-xs text-muted">{t("آخر {count} طلبات", { count: display(previous.length) })}</span>
+              </div>
+              <div className="motion-stagger mt-3 space-y-3">
+                {previous.length > 0 ? (
+                  previous.map(renderOrder)
+                ) : (
+                  <p className="rounded-2xl bg-white px-4 py-6 text-center text-xs text-muted shadow-soft">
+                    {t("مفيش طلبات سابقة")}
+                  </p>
+                )}
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

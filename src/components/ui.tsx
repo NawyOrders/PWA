@@ -1,0 +1,580 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { ChevronLeft, ChevronRight, Flame, Heart, Minus, Plus, ShoppingBag, UserRound } from "lucide-react";
+import { formatPrice } from "@/lib/data";
+import { useApp } from "@/components/providers";
+
+type ButtonVariant = "brand" | "soft" | "outline" | "ghost" | "dark";
+type ButtonSize = "xs" | "sm" | "md" | "lg";
+
+const buttonVariants: Record<ButtonVariant, string> = {
+  brand:
+    "bg-brand text-white shadow-[0_14px_26px_-16px_rgba(232,69,44,0.9)] hover:bg-brand-dark",
+  soft: "bg-brand-soft text-brand hover:bg-brand/15",
+  outline: "border border-line bg-white text-ink shadow-soft hover:border-brand/40",
+  ghost: "text-ink hover:bg-cream-100",
+  dark: "bg-ink text-white hover:bg-ink/90",
+};
+
+const buttonSizes: Record<ButtonSize, string> = {
+  xs: "h-9 px-3 text-[11px]",
+  sm: "h-11 px-4 text-xs",
+  md: "h-12 px-5 text-sm",
+  lg: "h-14 px-7 text-base",
+};
+
+/**
+ * Shared call-to-action styling. Exported so links can look like buttons
+ * without nesting an anchor inside a button.
+ */
+export function buttonStyles({
+  variant = "brand",
+  size = "md",
+  block = false,
+  className = "",
+}: {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  block?: boolean;
+  className?: string;
+} = {}): string {
+  return [
+    "motion-press inline-flex items-center justify-center gap-2 rounded-full font-extrabold transition active:scale-[0.985]",
+    "disabled:pointer-events-none disabled:bg-cream-100 disabled:text-muted disabled:shadow-none",
+    buttonVariants[variant],
+    buttonSizes[size],
+    block ? "w-full" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+export function Button({
+  variant = "brand",
+  size = "md",
+  block = false,
+  className = "",
+  type = "button",
+  ...props
+}: ComponentPropsWithoutRef<"button"> & {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  block?: boolean;
+}) {
+  return <button type={type} className={buttonStyles({ variant, size, block, className })} {...props} />;
+}
+
+/** Selected/unselected pill used for tabs, filters and option pickers. */
+export function chipStyles(selected: boolean, className = ""): string {
+  return [
+    "motion-press inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-extrabold transition",
+    selected
+      ? "border border-brand bg-brand text-white shadow-[0_16px_30px_-18px_rgba(232,69,44,0.9)]"
+      : "border border-line bg-white text-ink shadow-soft hover:border-brand/40 hover:bg-cream-50",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+export function Chip({
+  selected = false,
+  className = "",
+  ...props
+}: ComponentPropsWithoutRef<"button"> & { selected?: boolean }) {
+  return <button type="button" aria-pressed={selected} className={chipStyles(selected, className)} {...props} />;
+}
+
+export function Price({
+  value,
+  oldValue,
+  className = "",
+  size = "md",
+  compact = false,
+}: {
+  value: number;
+  oldValue?: number;
+  className?: string;
+  size?: "sm" | "md" | "lg";
+  compact?: boolean;
+}) {
+  const { t } = useApp();
+  const valueSize = compact ? "text-lg" : size === "lg" ? "text-2xl" : size === "sm" ? "text-base" : "text-xl";
+  return (
+    <span className={`inline-flex items-baseline ${compact ? "gap-1" : "gap-1.5"} ${className}`}>
+      <span className={`${valueSize} font-extrabold text-brand`}>{formatPrice(value)}</span>
+      <span className={`${compact ? "text-[10px]" : "text-[11px]"} font-bold text-brand`}>{t("جنيه")}</span>
+      {oldValue ? (
+        <del
+          className={`inline-flex items-baseline gap-1 ${compact ? "text-[10px]" : "text-[11px]"} font-semibold text-muted`}
+          aria-label={t("السعر قبل الخصم {old}", { old: formatPrice(oldValue) })}
+        >
+          {formatPrice(oldValue)}
+          <span className={compact ? "text-[9px]" : "text-[10px]"}>{t("جنيه")}</span>
+        </del>
+      ) : null}
+    </span>
+  );
+}
+
+export function HotBadge({ label = "الأكثر طلباً" }: { label?: string }) {
+  const { t } = useApp();
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold text-white shadow-[0_8px_18px_-10px_rgba(232,69,44,0.9)]"
+      style={{ backgroundImage: "linear-gradient(270deg, #f79a4b 0%, #e8452c 100%)" }}
+    >
+      <Flame className="size-3 fill-white/30" />
+      {t(label)}
+    </span>
+  );
+}
+
+export function FavoriteButton({
+  productId,
+  className = "size-10",
+  alwaysWhite = false,
+}: {
+  productId: string;
+  className?: string;
+  alwaysWhite?: boolean;
+}) {
+  const { isFavorite, toggleFavorite, t } = useApp();
+  const active = isFavorite(productId);
+  return (
+    <button
+      type="button"
+      aria-label={t(active ? "إزالة من المفضلة" : "إضافة إلى المفضلة")}
+      aria-pressed={active}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleFavorite(productId);
+      }}
+      className={`motion-press grid place-items-center rounded-full transition active:scale-90 ${
+        alwaysWhite || active ? "bg-white shadow-[0_8px_20px_-12px_rgba(60,30,15,0.5)]" : "bg-white/90"
+      } ${className}`}
+    >
+      <Heart
+        key={active ? "active" : "idle"}
+        className={`size-[46%] transition ${active ? "motion-heart-pop fill-brand text-brand" : "text-[#7f746c]"}`}
+        strokeWidth={1.8}
+      />
+    </button>
+  );
+}
+
+export function AddButton({
+  onClick,
+  className = "size-11",
+  label = "أضف إلى السلة",
+}: {
+  onClick: () => void;
+  className?: string;
+  label?: string;
+}) {
+  const { t } = useApp();
+  return (
+    <button
+      type="button"
+      aria-label={t(label)}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onClick();
+      }}
+      className={`motion-press grid place-items-center rounded-full bg-brand text-white shadow-[0_12px_24px_-12px_rgba(232,69,44,0.9)] transition hover:scale-105 hover:bg-brand-dark active:scale-90 ${className}`}
+    >
+      <Plus className="size-[50%]" strokeWidth={2.4} />
+    </button>
+  );
+}
+
+export function QtyStepper({
+  value,
+  onChange,
+  min = 1,
+  max = 99,
+  className = "",
+}: {
+  value: number;
+  onChange: (value: number) => void;
+  min?: number;
+  max?: number;
+  className?: string;
+}) {
+  const { t } = useApp();
+  return (
+    <div
+      className={`inline-flex items-center gap-2 rounded-full border border-line bg-white p-1 ${className}`}
+      role="group"
+      aria-label={t("الكمية")}
+    >
+      <button
+        type="button"
+        aria-label={t("زيادة الكمية")}
+        disabled={value >= max}
+        onClick={() => onChange(Math.min(max, value + 1))}
+        className="grid size-8 place-items-center rounded-full border border-brand/35 bg-brand-soft/70 text-brand transition hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        <Plus className="size-4" strokeWidth={2.4} />
+      </button>
+      <span className="min-w-6 text-center text-base font-extrabold" aria-live="polite">
+        {value}
+      </span>
+      <button
+        type="button"
+        aria-label={t("إنقاص الكمية")}
+        disabled={value <= min}
+        onClick={() => onChange(Math.max(min, value - 1))}
+        className="grid size-8 place-items-center rounded-full text-ink transition hover:bg-cream disabled:cursor-not-allowed disabled:opacity-35"
+      >
+        <Minus className="size-4" />
+      </button>
+    </div>
+  );
+}
+
+export function SectionTitle({
+  title,
+  icon,
+  action,
+  className = "",
+}: {
+  title: string;
+  icon?: ReactNode;
+  action?: { label: string; href: string; icon?: ReactNode };
+  className?: string;
+}) {
+  const { t } = useApp();
+  return (
+    <div className={`motion-header flex items-center justify-between gap-3 ${className}`}>
+      <h2 className="flex items-center gap-2 text-lg font-extrabold lg:text-xl">
+        {icon}
+        {t(title)}
+      </h2>
+      {action ? (
+        <Link
+          href={action.href}
+          className="flex items-center gap-1.5 text-xs font-bold text-brand transition hover:text-brand-dark lg:text-sm"
+        >
+          {t(action.label)}
+          {action.icon}
+        </Link>
+      ) : null}
+    </div>
+  );
+}
+
+const backTones = {
+  surface: "rounded-2xl border border-line bg-white text-ink shadow-soft hover:text-brand",
+  overlay: "rounded-full bg-white/95 text-ink shadow-pop backdrop-blur hover:text-brand",
+  soft: "rounded-full bg-peach text-ink hover:bg-brand-soft hover:text-brand",
+} as const;
+
+type BackControlProps = {
+  href?: string;
+  label?: string;
+  tone?: keyof typeof backTones;
+  className?: string;
+};
+
+function backControlStyles(tone: keyof typeof backTones, className: string): string {
+  return ["motion-press grid size-11 shrink-0 place-items-center transition active:scale-95", backTones[tone], className]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function BackIcon() {
+  return <ChevronRight className="size-5 ltr:rotate-180" strokeWidth={2.2} />;
+}
+
+/**
+ * Mobile back control. It uses real history when the tab has somewhere to
+ * return to, and falls back to the screen's parent otherwise so a deep link
+ * never leaves the customer on a page with no way out.
+ */
+export function BackButton({ href = "/", label = "رجوع", tone = "surface", className = "" }: BackControlProps) {
+  const router = useRouter();
+  const { t } = useApp();
+  return (
+    <button
+      type="button"
+      aria-label={t(label)}
+      onClick={() => {
+        if (typeof window !== "undefined" && window.history.length > 1) router.back();
+        else router.push(href);
+      }}
+      className={backControlStyles(tone, className)}
+    >
+      <BackIcon />
+    </button>
+  );
+}
+
+/**
+ * Deterministic back link for screens where history would bounce straight
+ * back (for example the login screen reached from a protected route).
+ */
+export function BackLink({ href = "/", label = "رجوع", tone = "surface", className = "" }: BackControlProps) {
+  const { t } = useApp();
+  return (
+    <Link href={href} aria-label={t(label)} className={backControlStyles(tone, className)}>
+      <BackIcon />
+    </Link>
+  );
+}
+
+export function MobilePageHeader({
+  title,
+  backHref = "/",
+  action,
+  className = "",
+}: {
+  title: string;
+  backHref?: string;
+  action?: ReactNode;
+  className?: string;
+}) {
+  const { t } = useApp();
+  return (
+    <header className={`motion-header flex items-center justify-between px-4 pb-4 pt-6 lg:hidden ${className}`}>
+      <BackButton href={backHref} />
+      <h1 className="text-lg font-extrabold">{t(title)}</h1>
+      <div className="flex min-w-11 justify-end">{action}</div>
+    </header>
+  );
+}
+
+export function DisplayPageHeader({
+  title,
+  subtitle,
+  backHref = "/",
+  action,
+  className = "",
+}: {
+  title: string;
+  subtitle?: string;
+  backHref?: string;
+  action?: ReactNode;
+  className?: string;
+}) {
+  const { t } = useApp();
+  return (
+    <header className={`motion-header px-5 pb-6 pt-6 lg:hidden ${className}`}>
+      <div className="flex justify-start">{action ?? <BackButton href={backHref} tone="overlay" />}</div>
+      <h1 className="mt-6 text-start font-display text-[42px] font-extrabold leading-[1.15] lg:text-[46px]">
+        {t(title)}
+      </h1>
+      {subtitle ? (
+        <p className="mt-3 text-start text-sm leading-6 text-muted">{t(subtitle)}</p>
+      ) : null}
+    </header>
+  );
+}
+
+export function Breadcrumbs({ items }: { items: { label: string; href?: string }[] }) {
+  const { t } = useApp();
+  return (
+    <nav aria-label={t("مسار التنقل")} className="hidden items-center gap-1.5 text-xs text-muted lg:flex">
+      {items.map((item, index) => {
+        const last = index === items.length - 1;
+        return (
+          <span key={`${item.label}-${index}`} className="flex items-center gap-1.5">
+            {item.href && !last ? (
+              <Link href={item.href} className="transition hover:text-brand">
+                {t(item.label)}
+              </Link>
+            ) : (
+              <span className={last ? "font-semibold text-brand" : ""}>{t(item.label)}</span>
+            )}
+            {!last ? <ChevronLeft className="size-3.5 opacity-60 ltr:rotate-180" /> : null}
+          </span>
+        );
+      })}
+    </nav>
+  );
+}
+
+const steps = [
+  { label: "مراجعة السلة", href: "/cart" },
+  { label: "بيانات التوصيل", href: "/checkout/delivery" },
+  { label: "الدفع", href: "/checkout/payment" },
+];
+
+export function CheckoutSteps({ active }: { active: 0 | 1 | 2 }) {
+  const { t } = useApp();
+  return (
+    <ol className="hidden items-center gap-2 text-[11px] lg:flex">
+      {steps.map((step, index) => {
+        const done = index < active;
+        return (
+          <li key={step.label} className="flex items-center gap-2">
+            <Link href={step.href} className="flex items-center gap-1.5">
+              <span
+                className={`grid size-5 place-items-center rounded-full border text-[9px] font-bold ${
+                  done
+                    ? "border-brand bg-brand text-white"
+                    : index === active
+                      ? "border-brand text-brand"
+                      : "border-muted/40 text-muted"
+                }`}
+              >
+                {done ? "✓" : index + 1}
+              </span>
+              <span
+                className={
+                  index === active
+                    ? "font-bold text-brand"
+                    : done
+                      ? "text-ink/70"
+                      : "text-muted"
+                }
+              >
+                {t(step.label)}
+              </span>
+            </Link>
+            {index < steps.length - 1 ? <ChevronLeft className="size-3.5 text-muted/70 ltr:rotate-180" /> : null}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+export function CheckoutShell({
+  title,
+  subtitle,
+  activeStep,
+  backHref,
+  backLabel,
+  breadcrumb,
+  mobileTitle,
+  main,
+  aside,
+}: {
+  title: string;
+  subtitle: string;
+  activeStep: 0 | 1 | 2;
+  backHref: string;
+  backLabel: string;
+  breadcrumb: { label: string; href?: string }[];
+  mobileTitle: string;
+  main: ReactNode;
+  aside: ReactNode;
+}) {
+  const { t } = useApp();
+  return (
+    <div className="pb-10">
+      <MobilePageHeader title={mobileTitle} backHref={backHref} />
+      <div className="shell lg:pt-8">
+        <div className="hidden items-center justify-between lg:flex">
+          <Breadcrumbs items={breadcrumb} />
+          <Link
+            href={backHref}
+            className="flex items-center gap-1.5 text-sm font-bold text-brand transition hover:text-brand-dark"
+          >
+            {t(backLabel)}
+            <ChevronLeft className="size-4 rtl:rotate-180" />
+          </Link>
+        </div>
+
+        <div className="mt-4 hidden items-end justify-between gap-8 lg:flex">
+          <div className="order-2 text-end">
+            <CheckoutSteps active={activeStep} />
+          </div>
+          <div className="order-1 max-w-xl text-start">
+            <h1 className="text-[34px] font-extrabold leading-[1.25]">{t(title)}</h1>
+            <p className="mt-2 text-sm leading-7 text-muted">{t(subtitle)}</p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-5 lg:mt-8 lg:grid-cols-[minmax(0,1fr)_370px] lg:items-start">
+          <div className="motion-stagger min-w-0 space-y-4 lg:space-y-5">{main}</div>
+          <aside className="motion-stagger w-full space-y-4 lg:sticky lg:top-24">{aside}</aside>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function EmptyState({
+  title,
+  description,
+  ctaLabel = "تصفح الأقسام",
+  ctaHref = "/categories",
+}: {
+  title: string;
+  description: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+}) {
+  const { t } = useApp();
+  return (
+    <div className="motion-pop card flex flex-col items-center px-6 py-14 text-center">
+      <span className="grid size-16 place-items-center rounded-full bg-brand-soft text-brand">
+        <ShoppingBag className="size-7" />
+      </span>
+      <h2 className="mt-5 text-xl font-extrabold">{t(title)}</h2>
+      <p className="mt-2 max-w-sm text-sm leading-6 text-muted">{t(description)}</p>
+      <Link href={ctaHref} className={buttonStyles({ size: "sm", className: "mt-6" })}>
+        {t(ctaLabel)}
+      </Link>
+    </div>
+  );
+}
+
+/**
+ * The account picture.
+ *
+ * A new customer has no photo, and the app must not hand them one: an empty
+ * `src` would throw inside next/image, so the no-photo case renders a neutral
+ * disc instead. `children` sits inside the same positioning box so a screen can
+ * float a camera control over the disc without repeating the layout.
+ */
+export function CustomerAvatar({
+  name,
+  src,
+  className = "",
+  priority = false,
+  children,
+}: {
+  /** Accessible name for the photo, already localised by the caller. */
+  name: string;
+  /** Data URL or public path; empty means the customer has not added a photo. */
+  src: string;
+  /** Tailwind size, radius and ring classes shared by both branches. */
+  className?: string;
+  priority?: boolean;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="relative w-fit">
+      {src ? (
+        <Image
+          src={src}
+          alt={name}
+          width={144}
+          height={144}
+          priority={priority}
+          unoptimized={src.startsWith("data:")}
+          className={className}
+        />
+      ) : (
+        <span
+          role="img"
+          aria-label={name}
+          className={`grid place-items-center overflow-hidden bg-cream-100 text-muted ${className}`}
+        >
+          <UserRound className="h-1/2 w-1/2" strokeWidth={1.5} />
+        </span>
+      )}
+      {children}
+    </div>
+  );
+}
