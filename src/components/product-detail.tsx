@@ -21,16 +21,18 @@ const extrasList = [
 ];
 
 export function ProductDetail({ product }: { product: Product }) {
-  const { addItem, t } = useApp();
+  const { addItem, t, toast } = useApp();
   const [sizeId, setSizeId] = useState("sandwich");
   const [extras, setExtras] = useState<string[]>([]);
   const [note, setNote] = useState("");
   const [selectedQuantity, setSelectedQuantity] = useState(0);
 
-  const customizable = product.category === "burger";
-  const size = customizable ? (sizes.find((item) => item.id === sizeId) ?? sizes[0]) : null;
+  const availableSizes = product.sizes?.length ? product.sizes.map((item) => ({ ...item, extra: item.price - product.price, hint: "" })) : product.category === "burger" ? sizes : [];
+  const availableExtras = product.addOns?.length ? product.addOns : product.category === "burger" ? extrasList : [];
+  const customizable = availableSizes.length > 0 || availableExtras.length > 0;
+  const size = availableSizes.find((item) => item.id === sizeId) ?? availableSizes.find((item) => "isDefault" in item && item.isDefault) ?? availableSizes[0] ?? null;
   const extrasPrice = customizable
-    ? extras.reduce((total, id) => total + (extrasList.find((item) => item.id === id)?.price ?? 0), 0)
+    ? extras.reduce((total, id) => total + (availableExtras.find((item) => item.id === id)?.price ?? 0), 0)
     : 0;
   const unitPrice = product.price + (size?.extra ?? 0) + extrasPrice;
   const category = categoriesById[product.category];
@@ -38,14 +40,18 @@ export function ProductDetail({ product }: { product: Product }) {
   const selectedExtras = useMemo(
     () =>
       customizable
-        ? extras.map((id) => extrasList.find((item) => item.id === id)?.label ?? "").filter(Boolean)
+        ? extras.map((id) => availableExtras.find((item) => item.id === id)?.label ?? "").filter(Boolean)
         : [],
-    [customizable, extras],
+    [customizable, extras, availableExtras],
   );
 
   const total = unitPrice * selectedQuantity;
 
   const addToCart = () => {
+    if (product.isAvailable === false) {
+      toast(t("هذا الصنف غير متاح في الفرع المحدد"), "info");
+      return;
+    }
     addItem(product.id, {
       qty: selectedQuantity,
       price: unitPrice,
@@ -145,7 +151,7 @@ export function ProductDetail({ product }: { product: Product }) {
                     <span className="text-[10px] text-muted">{t("مطلوب · اختار واحد")}</span>
                   </div>
                   <div className="mt-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:mt-3">
-                    {sizes.map((item) => {
+                    {availableSizes.map((item) => {
                       const active = sizeId === item.id;
                       return (
                         <label
@@ -193,7 +199,7 @@ export function ProductDetail({ product }: { product: Product }) {
                     <span className="text-[10px] text-muted">{t("اختياري · اختر اللي يعجبك")}</span>
                   </div>
                   <div className="mt-2.5 space-y-2 lg:space-y-2.5">
-                    {extrasList.map((item) => {
+                    {availableExtras.map((item) => {
                       const active = extras.includes(item.id);
                       return (
                         <label

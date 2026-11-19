@@ -29,6 +29,10 @@ export type Product = {
   popular?: boolean;
   offer?: boolean;
   calories?: number;
+  /** Availability is branch-aware when the product came from the tenant menu API. */
+  isAvailable?: boolean;
+  sizes?: Array<{ id: string; label: string; price: number; isDefault?: boolean }>;
+  addOns?: Array<{ id: string; label: string; price: number }>;
 };
 
 export type OrderLine = {

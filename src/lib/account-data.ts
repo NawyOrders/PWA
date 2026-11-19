@@ -9,6 +9,9 @@ export type SavedAddress = {
   lastUsed?: string;
   lat: number;
   lng: number;
+  /** Server-assigned branch; never sent back while creating/updating an address. */
+  branchId?: string | null;
+  isDefault?: boolean;
 };
 
 export const savedAddresses: SavedAddress[] = [
