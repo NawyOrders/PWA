@@ -1,21 +1,14 @@
 import type { NextConfig } from "next";
 
 /**
- * The integration guide names the tenant host `TENANT_API_BASE_URL`, but only
- * `NEXT_PUBLIC_` variables are inlined into the browser bundle — and the login
- * screen makes its anonymous OTP call from the browser, because the tenant is
- * resolved from the host that call reaches. Folding the guide's name in here is
- * what lets a deploy set either one and have both sides of the app agree.
+ * The storefront is multi-tenant at runtime: the request host decides which
+ * tenant API to call, so there is deliberately no build-time
+ * `NEXT_PUBLIC_*_API_BASE_URL` here. One image serves every store.
  *
- * Declared only when a value exists: inlining an empty string would override a
- * host the server is meant to read at runtime.
+ * `cacheComponents` stays on; `src/app/layout.tsx` opts into a blocking render
+ * because tenant branding must be known before the first paint.
  */
-const tenantApiBaseUrl =
-  process.env.NEXT_PUBLIC_TENANT_API_BASE_URL?.trim() || process.env.TENANT_API_BASE_URL?.trim() || "";
-
 const nextConfig: NextConfig = {
-  ...(tenantApiBaseUrl ? { env: { NEXT_PUBLIC_TENANT_API_BASE_URL: tenantApiBaseUrl } } : {}),
-  /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
   reactCompiler: true,

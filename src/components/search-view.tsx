@@ -12,6 +12,9 @@ import { ProductCard } from "@/components/product-card";
 import { MenuRow } from "@/components/menu-row";
 import { useApp } from "@/components/providers";
 import { translate } from "@/lib/i18n";
+import { apiConfigured } from "@/lib/api";
+import { useMenuItems } from "@/hooks/use-tenant-menu";
+import { menuProduct } from "@/lib/tenant-menu";
 
 const types = ["لحم", "سمك", "دجاج", "نباتي"] as const;
 
@@ -30,7 +33,7 @@ function matchesQuery(product: Product, query: string) {
     product.name,
     product.description,
     product.type ?? "",
-    categoriesById[product.category].name,
+    categoriesById[product.category]?.name ?? "",
     ...product.tags,
   ];
   return fields.some((field) => {
@@ -40,14 +43,21 @@ function matchesQuery(product: Product, query: string) {
 }
 
 export function SearchView({ query }: { query: string }) {
-  const { t } = useApp();
+  const { t, lang, selectedBranchId, branding } = useApp();
+  const branchId = branding?.branches?.some((branch) => branch.branchId === selectedBranchId) ? selectedBranchId : undefined;
+  const remoteItems = useMenuItems({ search: query, branchId, pageSize: 100 });
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [priceFrom, setPriceFrom] = useState("");
   const [priceTo, setPriceTo] = useState("");
   const [offersOnly, setOffersOnly] = useState(false);
   const [sort, setSort] = useState("popular");
 
-  const base = useMemo(() => products.filter((product) => matchesQuery(product, query)), [query]);
+  const base = useMemo(
+    () => apiConfigured()
+      ? remoteItems.data.items.map((item) => menuProduct(item, lang))
+      : products.filter((product) => matchesQuery(product, query)),
+    [lang, query, remoteItems.data.items],
+  );
 
   const results = useMemo(() => {
     let list = base.filter((product) => {

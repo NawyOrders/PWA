@@ -2,16 +2,25 @@
 
 import { Flame } from "lucide-react";
 import { categoriesById, products, type CategoryId } from "@/lib/data";
+import { apiConfigured } from "@/lib/api";
+import { menuProduct } from "@/lib/tenant-menu";
+import { useMenuCategories, useMenuItems } from "@/hooks/use-tenant-menu";
 import { useApp } from "@/components/providers";
 import { Breadcrumbs, MobilePageHeader } from "@/components/ui";
 import { ProductCard } from "@/components/product-card";
 import { MenuRow } from "@/components/menu-row";
 import { StoreHeader } from "@/components/store-header";
 
-export function CategoryDetailView({ categoryId }: { categoryId: CategoryId }) {
-  const { t } = useApp();
-  const category = categoriesById[categoryId];
-  const categoryProducts = products.filter((product) => product.category === categoryId);
+export function CategoryDetailView({ categoryId }: { categoryId: string }) {
+  const { t, lang, selectedBranchId, branding } = useApp();
+  const remoteCategories = useMenuCategories();
+  const branchId = branding?.branches?.some((branch) => branch.branchId === selectedBranchId) ? selectedBranchId : undefined;
+  const remoteItems = useMenuItems({ categoryId, branchId, pageSize: 100 });
+  const localCategory = categoriesById[categoryId as CategoryId];
+  const remoteCategory = remoteCategories.data.find((item) => item.id === categoryId);
+  const categoryName = remoteCategory ? (lang === "ar" ? remoteCategory.nameAr : remoteCategory.nameEn) || remoteCategory.nameEn || remoteCategory.nameAr || "" : localCategory?.name || "";
+  const category = { name: categoryName };
+  const categoryProducts = apiConfigured() ? remoteItems.data.items.map((item) => menuProduct(item, lang, categoryId)) : products.filter((product) => product.category === categoryId);
   const popular = [...categoryProducts]
     .sort((a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)))
     .slice(0, 2);
