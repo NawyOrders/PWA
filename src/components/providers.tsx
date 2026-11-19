@@ -30,6 +30,7 @@ import {
   type Item,
   type Menu,
 } from "@/lib/menu";
+import type { Offer } from "@/lib/offers";
 import { savedAddresses, type AddressKind, type SavedAddress } from "@/lib/account-data";
 import { translate, type Lang, type Vars } from "@/lib/i18n";
 import { storageKeys } from "@/lib/storage";
@@ -197,6 +198,12 @@ type AppContextValue = {
   branding: RestaurantBranding | null;
   /** The tenant's menu, loaded on the server; empty when the tenant has none. */
   menu: Menu;
+  /**
+   * The tenant's live offers, or `null` when the tenant has no usable offers
+   * file. An empty array means offers exist but none are live, which hides the
+   * promotional carousel; `null` keeps the built-in slides.
+   */
+  offers: Offer[] | null;
   categories: Category[];
   items: Item[];
   categoriesById: Map<string, Category>;
@@ -601,6 +608,7 @@ export function AppProvider({
   initialBranding = null,
   initialBrandingEtag = null,
   initialMenu = null,
+  initialOffers = null,
   tenantApiBaseUrl = "",
 }: {
   children: ReactNode;
@@ -609,6 +617,8 @@ export function AppProvider({
   initialBrandingEtag?: string | null;
   /** The tenant menu the server read from disk. `null` means no usable menu. */
   initialMenu?: Menu | null;
+  /** The tenant offers the server read from disk. `null` means no usable file. */
+  initialOffers?: Offer[] | null;
   /** Tenant API host resolved from the request, for direct browser calls. */
   tenantApiBaseUrl?: string;
 }) {
@@ -1544,6 +1554,7 @@ export function AppProvider({
       authFetch,
       branding,
       menu,
+      offers: initialOffers,
       categories,
       items,
       categoriesById,
@@ -1603,6 +1614,7 @@ export function AppProvider({
       authFetch,
       branding,
       menu,
+      initialOffers,
       categories,
       items,
       categoriesById,

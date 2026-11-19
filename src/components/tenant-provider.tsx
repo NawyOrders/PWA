@@ -6,6 +6,7 @@ import type { TenantBrandingResult } from "@/lib/tenant-branding";
 import { isTenantRootHost, tenantApiBaseUrl, tenantSlugFromHost } from "@/lib/tenant";
 import { loadTenantBranding } from "@/lib/static-tenant-data";
 import { loadTenantMenu } from "@/lib/static-menu-data";
+import { loadTenantOffers } from "@/lib/static-offers-data";
 
 /**
  * Server half of the storefront's tenant bootstrap.
@@ -60,12 +61,19 @@ export async function TenantProvider({ children }: { children: React.ReactNode }
   // it sells. A missing or broken menu therefore renders an empty storefront
   // instead of a 404, and its loader logs the reason it was rejected.
   const menu = slug ? await loadTenantMenu(slug) : null;
+  const menuData = menu?.status === "ok" ? menu.menu : null;
+
+  // Offers are checked against the menu, so they load after it. `null` means
+  // "no offers file", which keeps the built-in slides; an empty array means the
+  // tenant has offers but none are live, which hides the carousel.
+  const offers = slug ? await loadTenantOffers(slug, menuData) : null;
 
   return (
     <AppProvider
       initialBranding={branding?.status === "ok" ? branding.branding : null}
       initialBrandingEtag={branding?.status === "ok" ? branding.etag : null}
-      initialMenu={menu?.status === "ok" ? menu.menu : null}
+      initialMenu={menuData}
+      initialOffers={offers?.status === "ok" ? offers.offers : null}
       tenantApiBaseUrl={apiBaseUrl ?? ""}
     >
       {children}
