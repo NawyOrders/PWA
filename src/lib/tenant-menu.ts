@@ -1,6 +1,7 @@
 import { apiUrl, type ApiResponse } from "@/lib/api";
 import { apiBaseUrl } from "@/lib/api";
 import type { Product } from "@/lib/data";
+import type { AuthFetch } from "@/lib/session";
 
 export type MenuCategory = { id: string; nameAr?: string | null; nameEn?: string | null; imageKey?: string | null; itemCount?: number | null; hasSubCategories?: boolean };
 export type MenuSize = { id: string; nameAr?: string | null; nameEn?: string | null; price?: number | null; isDefault?: boolean };
@@ -10,8 +11,10 @@ export type MenuItemDetails = MenuItemDto & { addOns?: Array<{ id: string; nameA
 
 export class TenantApiError extends Error { constructor(public status: number, public errors?: Record<string, string>) { super("tenant-api-error"); } }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(apiUrl(path), { ...init, headers: { Accept: "application/json", ...(init?.headers ?? {}) } });
+async function request<T>(path: string, init?: RequestInit, authFetch?: AuthFetch): Promise<T> {
+  const response = authFetch
+    ? await authFetch(path, { ...init, headers: { Accept: "application/json", ...(init?.headers ?? {}) } })
+    : await fetch(apiUrl(path), { ...init, headers: { Accept: "application/json", ...(init?.headers ?? {}) } });
   let body: unknown = null;
   try { body = await response.json(); } catch { /* non-JSON middleware responses are expected */ }
   const envelope = body as Partial<ApiResponse<T>> | null;
@@ -29,11 +32,15 @@ function query(values: Record<string, string | number | undefined>): string {
 }
 
 export const menuApi = {
-  categories: () => request<MenuCategory[]>("/api/v1/menu/categories"),
-  subcategories: (categoryId: string) => request<MenuCategory[]>(`/api/v1/menu/categories/${encodeURIComponent(categoryId)}/subcategories`),
-  items: (filters: { categoryId?: string; branchId?: string; search?: string; pageNumber?: number; pageSize?: number }) => request<PagedMenuItems>(`/api/v1/menu/items${query({ ...filters, pageNumber: filters.pageNumber ?? 1, pageSize: Math.min(filters.pageSize ?? 20, 100) })}`),
-  mostSold: (branchId?: string) => request<MenuItemDto[]>(`/api/v1/menu/most-sold${query({ branchId, limit: 10 })}`),
-  item: (id: string, branchId?: string, coords?: { lat: number; lng: number }) => request<MenuItemDetails>(`/api/v1/menu/items/${encodeURIComponent(id)}${query({ branchId, lat: coords?.lat, lng: coords?.lng })}`),
+  categories: (authFetch?: AuthFetch) => request<MenuCategory[]>("/api/v1/menu/categories", undefined, authFetch),
+  subcategories: (categoryId: string, authFetch?: AuthFetch) => request<MenuCategory[]>(`/api/v1/menu/categories/${encodeURIComponent(categoryId)}/subcategories`, undefined, authFetch),
+  items: (filters: { categoryId?: string; subCategoryId?: string; branchId?: string; search?: string; pageNumber?: number; pageSize?: number }, authFetch?: AuthFetch) => {
+    const categoryId = filters.categoryId && !filters.subCategoryId ? filters.categoryId : undefined;
+    const subCategoryId = filters.subCategoryId;
+    return request<PagedMenuItems>(`/api/v1/menu/items${query({ subCategoryId, categoryId, branchId: filters.branchId, search: filters.search?.trim().slice(0, 100), pageNumber: filters.pageNumber ?? 1, pageSize: Math.min(filters.pageSize ?? 20, 100) })}`, undefined, authFetch);
+  },
+  mostSold: (branchId?: string, authFetch?: AuthFetch) => request<MenuItemDto[]>(`/api/v1/menu/most-sold${query({ branchId, limit: 10 })}`, undefined, authFetch),
+  item: (id: string, branchId?: string, coords?: { lat: number; lng: number }, authFetch?: AuthFetch) => request<MenuItemDetails>(`/api/v1/menu/items/${encodeURIComponent(id)}${query({ branchId, lat: coords?.lat, lng: coords?.lng })}`, undefined, authFetch),
 };
 
 /** Listing keys are not URLs. Without an explicitly configured media resolver, use the existing local placeholder. */
@@ -41,7 +48,12 @@ export function menuImage(imageKey?: string | null, imageUrl?: string | null): s
   if (imageUrl) {
     try { return new URL(imageUrl, apiBaseUrl() || window.location.origin).toString(); } catch { return "/images/burger.webp"; }
   }
-  void imageKey;
+  if (imageKey) {
+    const mediaBase = (process.env.NEXT_PUBLIC_TENANT_MEDIA_BASE_URL ?? "").trim().replace(/\/+$/, "");
+    if (mediaBase) {
+      try { return new URL(imageKey.replace(/^\/+/, ""), `${mediaBase}/`).toString(); } catch { return "/images/burger.webp"; }
+    }
+  }
   return "/images/burger.webp";
 }
 

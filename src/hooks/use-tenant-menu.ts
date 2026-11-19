@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { apiConfigured } from "@/lib/api";
 import { menuApi, type MenuCategory, type MenuItemDto, type PagedMenuItems } from "@/lib/tenant-menu";
-
 type State<T> = { data: T; loading: boolean; error: boolean };
 function useRequest<T>(enabled: boolean, key: string, load: () => Promise<T>, initial: T): State<T> {
   const [state, setState] = useState<State<T>>({ data: initial, loading: enabled, error: false });
@@ -20,7 +19,7 @@ function useRequest<T>(enabled: boolean, key: string, load: () => Promise<T>, in
 }
 
 export function useMenuCategories() { return useRequest<MenuCategory[]>(apiConfigured(), "categories", menuApi.categories, []); }
-export function useMenuItems(filters: { categoryId?: string; branchId?: string; search?: string; pageNumber?: number; pageSize?: number }) {
+export function useMenuItems(filters: { categoryId?: string; subCategoryId?: string; branchId?: string; search?: string; pageNumber?: number; pageSize?: number }) {
   const key = JSON.stringify(filters);
   const empty: PagedMenuItems = { items: [], totalCount: 0, page: 1, pageSize: 20, totalPages: 0, hasPreviousPage: false, hasNextPage: false };
   return useRequest(apiConfigured(), key, () => menuApi.items(filters), empty);
