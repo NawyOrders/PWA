@@ -5,7 +5,7 @@
       "id": "chicken",
       "nameAr": "دجاج",
       "nameEn": "Chicken",
-      "image": null,
+      "image": "https://www.themealdb.com/images/media/meals/nlxald1764112200.jpg",
       "needsReview": true,
       "items": []
     },
@@ -13,7 +13,7 @@
       "id": "seafood",
       "nameAr": "أسماك",
       "nameEn": "Seafood",
-      "image": null,
+      "image": "https://www.themealdb.com/images/media/meals/1548772327.jpg",
       "needsReview": true,
       "items": []
     },
@@ -21,7 +21,7 @@
       "id": "meat",
       "nameAr": "لحوم",
       "nameEn": "Meat",
-      "image": null,
+      "image": "https://www.themealdb.com/images/media/meals/04axct1763793018.jpg",
       "needsReview": true,
       "items": []
     },
@@ -29,7 +29,7 @@
       "id": "burger",
       "nameAr": "برجر",
       "nameEn": "Burger",
-      "image": null,
+      "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80",
       "needsReview": true,
       "items": []
     },
@@ -37,7 +37,7 @@
       "id": "combo",
       "nameAr": "الكومبو",
       "nameEn": "Combo",
-      "image": null,
+      "image": "https://images.unsplash.com/photo-1555658094-ca794654362c?auto=format&fit=crop&w=800&q=80",
       "needsReview": true,
       "items": []
     },
@@ -45,24 +45,24 @@
       "id": "liver",
       "nameAr": "كبدة",
       "nameEn": "Liver",
-      "image": null,
+      "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/17/Alexandria_delight_Liver_sandwiches.jpg/960px-Alexandria_delight_Liver_sandwiches.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "items": [
         {
           "id": "liver-alexandrani",
           "nameAr": "كبدة اسكندراني",
           "nameEn": "Alexandrian Liver",
-          "price": null,
+          "price": 40,
           "variants": {},
-          "image": null,
+          "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Kebda_eskandarani.jpg/960px-Kebda_eskandarani.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
           "needsReview": true
         },
         {
           "id": "liver-grilled-charcoal",
           "nameAr": "كبدة مشوية على الفحم",
           "nameEn": "Charcoal Grilled Liver",
-          "price": null,
+          "price": 45,
           "variants": {},
-          "image": null,
+          "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/Jigar_Uzbek_Shashlik_from_Liver_and_Fat_Tail_Grilled_on_Skewers_on_Mangal_over_Charcoal_outdoor_Barbecue_Newton_Massachusetts.jpg/960px-Jigar_Uzbek_Shashlik_from_Liver_and_Fat_Tail_Grilled_on_Skewers_on_Mangal_over_Charcoal_outdoor_Barbecue_Newton_Massachusetts.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
           "needsReview": true
         }
       ]
@@ -71,7 +71,7 @@
       "id": "mixes",
       "nameAr": "ميكسات",
       "nameEn": "Mixes",
-      "image": null,
+      "image": "https://www.themealdb.com/images/media/meals/3um6il1763794322.jpg",
       "needsReview": true,
       "items": []
     },
@@ -79,7 +79,7 @@
       "id": "kids-meals",
       "nameAr": "وجبة الأطفال",
       "nameEn": "Kids Meals",
-      "image": null,
+      "image": "https://www.themealdb.com/images/media/meals/40r49m1763197022.jpg",
       "items": [
         {
           "id": "kids-burger",
@@ -87,9 +87,9 @@
           "nameEn": "Chicken or Beef Burger Kids Meal",
           "descriptionAr": "برجر دجاج أو لحم + بطاطس + مشروب + لعبة",
           "descriptionEn": "Chicken or beef burger + fries + drink + toy",
-          "price": null,
+          "price": 45,
           "variants": {},
-          "image": null,
+          "image": "https://www.themealdb.com/images/media/meals/lgmnff1763789847.jpg",
           "needsReview": true
         },
         {
@@ -98,9 +98,9 @@
           "nameEn": "Breaded or Grilled Chicken Kids Meal",
           "descriptionAr": "دجاج بانيه أو مشوي + بطاطس + مشروب + لعبة",
           "descriptionEn": "Breaded or grilled chicken + fries + drink + toy",
-          "price": null,
+          "price": 55,
           "variants": {},
-          "image": null,
+          "image": "https://images.unsplash.com/photo-1762631884776-e1a2e5cd6d8d?auto=format&fit=crop&w=800&q=80",
           "needsReview": true
         }
       ]
@@ -109,7 +109,7 @@
       "id": "mouslim-meals",
       "nameAr": "وجبات مسلم",
       "nameEn": "Mouslim Meals",
-      "image": null,
+      "image": "https://www.themealdb.com/images/media/meals/er4d081765186828.jpg",
       "needsReview": true,
       "items": []
     },
@@ -117,7 +117,7 @@
       "id": "mix-meals",
       "nameAr": "وجبات الميكس",
       "nameEn": "Mix Meals",
-      "image": null,
+      "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d6/Arabic_MixedGrill.JPG/960px-Arabic_MixedGrill.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "needsReview": true,
       "items": []
     },
@@ -125,7 +125,7 @@
       "id": "rice-meals",
       "nameAr": "وجبات الأرز",
       "nameEn": "Rice Meals",
-      "image": null,
+      "image": "https://www.themealdb.com/images/media/meals/zg2b9l1760524940.jpg",
       "needsReview": true,
       "items": []
     },
@@ -133,7 +133,7 @@
       "id": "quarter-meals",
       "nameAr": "وجبات الربع",
       "nameEn": "Quarter Meals",
-      "image": null,
+      "image": "https://images.unsplash.com/photo-1784902540562-9b048bde9ace?auto=format&fit=crop&w=800&q=80",
       "isNew": true,
       "needsReview": true,
       "items": []
@@ -142,7 +142,7 @@
       "id": "sides",
       "nameAr": "طلبات جانبية",
       "nameEn": "Sides",
-      "image": null,
+      "image": "https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=800&q=80",
       "needsReview": true,
       "items": []
     },
@@ -150,7 +150,7 @@
       "id": "desserts",
       "nameAr": "الحلو",
       "nameEn": "Desserts",
-      "image": null,
+      "image": "https://images.unsplash.com/photo-1548865164-1f50430ddd6f?auto=format&fit=crop&w=800&q=80",
       "items": [
         {
           "id": "tiramisu",
@@ -158,7 +158,7 @@
           "nameEn": "Tiramisu",
           "price": 35,
           "variants": {},
-          "image": null
+          "image": "https://images.unsplash.com/photo-1587322740944-9bc2776404e8?auto=format&fit=crop&w=800&q=80"
         },
         {
           "id": "chocolate-mousse",
@@ -166,7 +166,7 @@
           "nameEn": "Chocolate Mousse",
           "price": 35,
           "variants": {},
-          "image": null
+          "image": "https://images.unsplash.com/photo-1747230395711-772a88c260db?auto=format&fit=crop&w=800&q=80"
         },
         {
           "id": "trifle",
@@ -174,7 +174,7 @@
           "nameEn": "Trifle",
           "price": 35,
           "variants": {},
-          "image": null
+          "image": "https://www.themealdb.com/images/media/meals/6aj3wy1784661564.jpg"
         },
         {
           "id": "crunchy",
@@ -182,7 +182,7 @@
           "nameEn": "Crunchy",
           "price": 35,
           "variants": {},
-          "image": null
+          "image": "https://www.themealdb.com/images/media/meals/1550442508.jpg"
         }
       ]
     }

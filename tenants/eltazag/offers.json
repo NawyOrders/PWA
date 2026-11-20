@@ -5,64 +5,76 @@
       "enabled": true,
       "order": 1,
       "theme": "dark",
-      "image": "https://images.pexels.com/photos/36007382/pexels-photo-36007382/free-photo-of-cheeseburger-and-fries-on-fast-food-tray.jpeg?auto=compress&cs=tinysrgb&w=1800&h=380&fit=crop",
+      "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/er4d081765186828.jpg?resize=1800,380",
       "badgeAr": "الأكثر طلباً",
       "badgeEn": "Most ordered",
-      "titleAr": "كومبو برجر ببلاش",
-      "titleEn": "Free burger combo",
-      "textAr": "جرّب انهيارة عرض الشقاوة.. عرض برجر الشقاوة على الكومبو لآخر اليوم.",
-      "textEn": "Try the Shaqawa offer on the combo, until the end of the day.",
-      "ctaAr": "اطلب الان",
+      "titleAr": "ريزو الطازج بـ 125 جنيه",
+      "titleEn": "Al Tazaj Fresh Rizo for 125 EGP",
+      "textAr": "أرز بسمتي بالخلطة السعودي مع ٢ قطعة استربس كبير واختيارك من الصوص والكولسلو.",
+      "textEn": "Saudi-spiced basmati rice with 2 large crispy strips, your choice of sauce, and coleslaw.",
+      "ctaAr": "اطلب الآن",
       "ctaEn": "Order now",
-      "action": { "type": "product", "value": "antara" }
+      "action": {
+        "type": "product",
+        "value": "rizo-al-tazaj"
+      }
     },
     {
       "id": "offer-2",
       "enabled": true,
       "order": 2,
-      "theme": "light",
-      "image": "https://images.unsplash.com/photo-1622880833523-7cf1c0bd4296?auto=format&fit=crop&w=1800&h=380&q=85",
-      "badgeAr": "خصم 20%",
-      "badgeEn": "20% off",
-      "titleAr": "بيتزا طازة من الفرن",
-      "titleEn": "Fresh pizza from the oven",
-      "textAr": "خصم 20% على كل أنواع البيتزا مع صوص الجبنة الإضافي.",
-      "textEn": "20% off all pizzas with extra cheese sauce.",
-      "ctaAr": "اطلب بيتزا",
-      "ctaEn": "Order pizza",
-      "action": { "type": "search", "value": "بيتزا" }
+      "theme": "dark",
+      "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/a08uqk1761848682.jpg?resize=1800,380",
+      "badgeAr": "عرض السنجل",
+      "badgeEn": "Single deal",
+      "titleAr": "فروج مشوي ع الفحم",
+      "titleEn": "Charcoal-Grilled Farrouj",
+      "textAr": "استمتع بعرض فروج سنجل بـ 215 جنيه مع الخبز والطحينة والدقوس أو الكولسلو.",
+      "textEn": "Enjoy the Single Farrouj offer for 215 EGP with flatbread, tahini, and Daqoos or coleslaw.",
+      "ctaAr": "اطلب فروج",
+      "ctaEn": "Order Farrouj",
+      "action": {
+        "type": "search",
+        "value": "فروج"
+      }
     },
     {
       "id": "offer-3",
       "enabled": true,
       "order": 3,
       "theme": "light",
-      "image": "https://images.pexels.com/photos/33254639/pexels-photo-33254639/free-photo-of-close-up-of-crispy-fried-chicken-on-plate.jpeg?auto=compress&cs=tinysrgb&w=1800&h=380&fit=crop",
+      "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/hglsbl1614346998.jpg?resize=1800,380",
       "badgeAr": "وجبة عائلية",
       "badgeEn": "Family meal",
-      "titleAr": "فرايد تشيكن مقرمش",
-      "titleEn": "Crispy fried chicken",
-      "textAr": "وجبة العائلة بـ 4 قطع دجاج وبطاطس وكول سلو بسعر مميز.",
-      "textEn": "Family meal with 4 chicken pieces, fries and coleslaw at a special price.",
+      "titleAr": "عرض عائلي مكس بـ 640 جنيه",
+      "titleEn": "Family Mix Offer for 640 EGP",
+      "textAr": "وجبة فروج + وجبة الكبير دجاج + وجبة البيك مع الأرز بالخلطة والبطاطس والصوصات و٣ بيج كولا.",
+      "textEn": "Farrouj, Al Kabeer Chicken, and Al Baik meals with spiced rice, fries, sauces, and 3 Big Colas.",
       "ctaAr": "اطلب دلوقتي",
       "ctaEn": "Order now",
-      "action": { "type": "category", "value": "mixes" }
+      "action": {
+        "type": "category",
+        "value": "family-and-offers"
+      }
     },
     {
       "id": "offer-4",
       "enabled": true,
       "order": 4,
-      "theme": "dark",
-      "image": "https://images.unsplash.com/photo-1526367790999-0150786686a2?auto=format&fit=crop&w=1800&h=380&q=85",
-      "badgeAr": "عرض محدود",
-      "badgeEn": "Limited offer",
-      "titleAr": "توصيل علينا",
-      "titleEn": "Free delivery",
-      "textAr": "اطلب من 200 جنيه واستمتع بتوصيل مجاني لحد باب البيت.",
-      "textEn": "Order 200 EGP or more and enjoy free delivery to your door.",
-      "ctaAr": "اطلب الان",
-      "ctaEn": "Order now",
-      "action": { "type": "path", "value": "/categories" }
+      "theme": "light",
+      "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/40r49m1763197022.jpg?resize=1800,380",
+      "badgeAr": "بروستد مقرمش",
+      "badgeEn": "Crispy broasted",
+      "titleAr": "وجبة البيك حار أو عادي",
+      "titleEn": "Al Baik Broasted Meal",
+      "textAr": "٤ قطع بروستد مقرمش مع البطاطس والتومية والكولسلو والكيزر بـ 209 جنيه فقط.",
+      "textEn": "4 crispy broasted chicken pieces with fries, garlic sauce, coleslaw, and bun for only 209 EGP.",
+      "ctaAr": "تصفح المنيو",
+      "ctaEn": "Browse menu",
+      "action": {
+        "type": "path",
+        "value": "/categories"
+      }
     }
   ]
 }

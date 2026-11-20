@@ -7,14 +7,17 @@ import { seedTestStorage, testMenu } from "@/test/menu";
 export function AppTestProvider({
   children,
   offers = null,
+  tenantSlug = null,
 }: {
   children: ReactNode;
   /** `null` keeps the built-in demo slides; an array switches to tenant offers. */
   offers?: Offer[] | null;
+  /** Set it to render the app as a tenant storefront rather than the default site. */
+  tenantSlug?: string | null;
 }) {
   seedTestStorage();
   return (
-    <AppProvider initialMenu={testMenu} initialOffers={offers}>
+    <AppProvider initialMenu={testMenu} initialOffers={offers} initialTenantSlug={tenantSlug}>
       {children}
     </AppProvider>
   );

@@ -17,7 +17,7 @@ const quickLinks = [
 ];
 
 const companyLinks = [
-  { label: "عن ناوي أوردرز", href: "/about" },
+  { label: "عن {brand}", href: "/about" },
   { label: "سياسة الخصوصية", href: "/help/policies?tab=privacy" },
   { label: "الشروط والأحكام", href: "/help/policies?tab=terms" },
   { label: "المساعدة والدعم", href: "/help" },
@@ -25,8 +25,8 @@ const companyLinks = [
 ];
 
 export function Footer() {
-  const { t, branding, lang, branches } = useApp();
-  const storeName = brandingName(branding, lang) ?? t("ناوي أوردرز");
+  const { t, branding, lang, branches, tenantSlug } = useApp();
+  const storeName = brandingName(branding, lang) ?? tenantSlug ?? t("ناوي أوردرز");
   const phone = branding?.contactPhone?.trim() || "19885";
   const telHref = `tel:${phone.replace(/[^\d+]/g, "")}`;
   const primaryBranch = branches.find((branch) => branch.isPrimary) ?? branches[0];
@@ -123,12 +123,12 @@ export function Footer() {
         </div>
 
         <div>
-          <h3 className="text-base font-bold">{t("عن ناوي أوردرز")}</h3>
+          <h3 className="text-base font-bold">{t("عن {brand}", { brand: storeName })}</h3>
           <ul className="mt-5 space-y-3 text-sm text-muted">
             {companyLinks.map((link) => (
               <li key={link.label}>
                 <Link href={link.href} className="motion-underline transition hover:text-brand">
-                  {t(link.label)}
+                  {t(link.label, { brand: storeName })}
                 </Link>
               </li>
             ))}
@@ -155,7 +155,7 @@ export function Footer() {
               {t("الرئيسية")}
             </Link>
           </div>
-          <p>{t("© 2026 ناوي أوردرز — جميع الحقوق محفوظة.")}</p>
+          <p>{t("© 2026 {brand} — جميع الحقوق محفوظة.", { brand: storeName })}</p>
         </div>
       </div>
     </footer>

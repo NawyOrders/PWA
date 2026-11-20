@@ -23,9 +23,11 @@ import {
   MobileOrderTrackingBanner,
 } from "@/components/order-tracking-promo";
 import { useApp } from "@/components/providers";
+import { brandingName } from "@/lib/branding";
 
 function PhoneMockup() {
-  const { lang, t } = useApp();
+  const { lang, t, branding, tenantSlug } = useApp();
+  const storeName = brandingName(branding, lang) ?? tenantSlug ?? t("ناوي أوردرز");
   const isEnglish = lang === "en";
   const mockup = isEnglish ? "/images/phonomockupen.PNG" : "/images/phonomockupar.PNG";
   const mockupDimensions = isEnglish
@@ -37,7 +39,7 @@ function PhoneMockup() {
       <div className="relative h-full w-full overflow-hidden rounded-t-[27px] bg-cream max-[750px]:rounded-b-[27px] sm:rounded-t-[37px] sm:max-[750px]:rounded-b-[37px] lg:rounded-t-[46px]">
         <Image
           src={mockup}
-          alt={t("Nawy Orders mobile app")}
+          alt={`${storeName} mobile app`}
           {...mockupDimensions}
           sizes="(max-width: 639px) 145px, (max-width: 1023px) 182px, 246px"
           unoptimized
@@ -50,7 +52,9 @@ function PhoneMockup() {
 }
 
 export function HomeView() {
-  const { t, loggedIn, orders, toast, categories, items, nameOf } = useApp();
+  const { t, loggedIn, orders, toast, categories, items, nameOf, branding, lang, tenantSlug } =
+    useApp();
+  const storeName = brandingName(branding, lang) ?? tenantSlug ?? t("ناوي أوردرز");
   const [filter, setFilter] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showActiveOrder, setShowActiveOrder] = useState(true);
@@ -103,7 +107,7 @@ export function HomeView() {
                 type="button"
                 aria-pressed={active}
                 onClick={() => selectCategory(category.id)}
-                className="group flex w-[68px] shrink-0 flex-col items-center gap-2 text-center"
+                className="group flex w-[84px] shrink-0 flex-col items-center gap-2 text-center"
               >
                 <span
                   className={`grid size-[60px] place-items-center rounded-full border-2 bg-white transition duration-300 group-hover:-translate-y-1 group-hover:border-brand/60 ${
@@ -120,7 +124,9 @@ export function HomeView() {
                   />
                 </span>
                 <span
-                  className={`whitespace-nowrap text-[10px] font-bold ${active ? "text-brand" : "text-ink"}`}
+                  className={`line-clamp-2 min-h-[2.4em] w-full break-words text-center text-[10px] font-bold leading-tight ${
+                    active ? "text-brand" : "text-ink"
+                  }`}
                 >
                   {nameOf(category)}
                 </span>
@@ -151,7 +157,7 @@ export function HomeView() {
                   />
                 </span>
                 <span
-                  className={`mt-2 text-xs font-extrabold sm:mt-2.5 sm:text-[13px] lg:text-sm ${
+                  className={`mt-2 line-clamp-2 w-full break-words text-center text-xs font-extrabold leading-tight sm:mt-2.5 sm:text-[13px] lg:text-sm ${
                     active ? "text-brand" : "text-ink"
                   }`}
                 >
@@ -272,7 +278,7 @@ export function HomeView() {
             <div className="max-w-xl min-[750px]:max-w-[calc(100%-300px)]">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/60 px-3.5 py-1.5 text-[11px] font-bold text-ink/70">
                 <Smartphone className="size-3.5 text-brand" />
-                {t("ناوي أوردرز")}
+                {storeName}
               </span>
               <h2 className="mt-3 text-[26px] font-extrabold leading-[1.3] sm:text-[30px] lg:mt-4 lg:text-[36px]">
                 {t("احصل على طعامك")}

@@ -9,6 +9,7 @@ import { MenuImage } from "@/components/menu-image";
 import { MobilePageHeader } from "@/components/ui";
 import { ProductCard } from "@/components/product-card";
 import { useApp } from "@/components/providers";
+import { brandingName } from "@/lib/branding";
 
 const sortOptions = [
   { id: "default", label: "الترتيب الافتراضي" },
@@ -33,7 +34,13 @@ function CategoryTile({
       <span className="grid size-[68px] place-items-center rounded-full bg-peach/80 transition-colors duration-300 group-hover:bg-brand-soft">
         <MenuImage src={image} name={name} className="size-12 rounded-full" textClassName="text-[8px]" />
       </span>
-      <span className={`mt-2.5 text-[15px] font-extrabold ${active ? "text-brand" : "text-ink"}`}>{name}</span>
+      <span
+        className={`mt-2.5 line-clamp-2 w-full break-words text-center text-[15px] font-extrabold leading-tight ${
+          active ? "text-brand" : "text-ink"
+        }`}
+      >
+        {name}
+      </span>
       <span className="mt-1 text-[11px] font-semibold text-muted">
         {count} {t("صنف")}
       </span>
@@ -42,7 +49,8 @@ function CategoryTile({
 }
 
 export function CategoriesView() {
-  const { t, categories, nameOf } = useApp();
+  const { t, categories, nameOf, branding, lang, tenantSlug } = useApp();
+  const storeName = brandingName(branding, lang) ?? tenantSlug ?? t("ناوي أوردرز");
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [sort, setSort] = useState("default");
 
@@ -175,7 +183,12 @@ export function CategoriesView() {
       </div>
 
       <div className="shell mt-8 hidden text-center text-xs text-muted lg:block">
-        <span>{t("{count} أقسام رئيسية — كل الأصناف محضرة طازة في مطبخ ناوي أوردرز", { count: categories.length })}</span>
+        <span>
+          {t("{count} أقسام رئيسية — كل الأصناف محضرة طازة في مطبخ {brand}", {
+            count: categories.length,
+            brand: storeName,
+          })}
+        </span>
       </div>
     </div>
   );

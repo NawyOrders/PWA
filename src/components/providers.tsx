@@ -196,6 +196,12 @@ type AppContextValue = {
   authFetch: AuthFetch;
   /** Tenant identity and palette, or `null` while running on built-in defaults. */
   branding: RestaurantBranding | null;
+  /**
+   * Slug middleware resolved from the host, or `null` on the default site.
+   * It names the store when the tenant has no branding file, which keeps
+   * "Nawy Orders" reserved for the non-tenant demo.
+   */
+  tenantSlug: string | null;
   /** The tenant's menu, loaded on the server; empty when the tenant has none. */
   menu: Menu;
   /**
@@ -607,6 +613,7 @@ export function AppProvider({
   children,
   initialBranding = null,
   initialBrandingEtag = null,
+  initialTenantSlug = null,
   initialMenu = null,
   initialOffers = null,
   tenantApiBaseUrl = "",
@@ -615,6 +622,8 @@ export function AppProvider({
   /** Branding the server fetched for this request's tenant, before first paint. */
   initialBranding?: RestaurantBranding | null;
   initialBrandingEtag?: string | null;
+  /** The slug the server resolved for this request; `null` on the default site. */
+  initialTenantSlug?: string | null;
   /** The tenant menu the server read from disk. `null` means no usable menu. */
   initialMenu?: Menu | null;
   /** The tenant offers the server read from disk. `null` means no usable file. */
@@ -1553,6 +1562,7 @@ export function AppProvider({
       sessionStatus,
       authFetch,
       branding,
+      tenantSlug: initialTenantSlug,
       menu,
       offers: initialOffers,
       categories,
@@ -1613,6 +1623,7 @@ export function AppProvider({
       sessionStatus,
       authFetch,
       branding,
+      initialTenantSlug,
       menu,
       initialOffers,
       categories,

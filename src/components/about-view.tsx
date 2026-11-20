@@ -7,6 +7,7 @@ import { LogoMark } from "@/components/logo";
 import { useApp } from "@/components/providers";
 import { MobilePageHeader } from "@/components/ui";
 import { appVersion, platforms, policyTabs } from "@/lib/account-data";
+import { brandingName } from "@/lib/branding";
 
 type TabId = (typeof policyTabs)[number]["id"];
 
@@ -19,7 +20,8 @@ const linkIcons: Record<TabId, ComponentType<LucideProps>> = {
 const links = policyTabs.map((tab) => ({ ...tab, icon: linkIcons[tab.id] }));
 
 export function AboutView() {
-  const { t } = useApp();
+  const { t, branding, lang, tenantSlug } = useApp();
+  const storeName = brandingName(branding, lang) ?? tenantSlug ?? t("ناوي أوردرز");
 
   return (
     <div className="pb-12">
@@ -43,8 +45,10 @@ export function AboutView() {
 
           <div className="card relative mt-6 flex items-center gap-4 overflow-hidden bg-cream-50 px-5 py-6 lg:mt-8">
             <div className="min-w-0 flex-1 text-start">
-              <p className="font-display text-2xl font-extrabold text-brand">{t("ناوي أوردرز")}</p>
-              <p className="mt-1.5 text-sm text-muted">{t("ناوي أوردرز — طعم يوصلك لباب البيت.")}</p>
+              <p className="font-display text-2xl font-extrabold text-brand">{storeName}</p>
+              <p className="mt-1.5 text-sm text-muted">
+                {t("{brand} — طعم يوصلك لباب البيت.", { brand: storeName })}
+              </p>
             </div>
             <LogoMark className="size-14 shrink-0" />
           </div>
@@ -84,7 +88,7 @@ export function AboutView() {
           </div>
 
           <p className="mt-8 text-center text-sm font-bold text-gold">
-            {t("© 2026 ناوي أوردرز — جميع الحقوق محفوظة.")}
+            {t("© 2026 {brand} — جميع الحقوق محفوظة.", { brand: storeName })}
           </p>
         </div>
       </div>
