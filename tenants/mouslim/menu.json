@@ -5,7 +5,7 @@
       "id": "chicken",
       "nameAr": "دجاج",
       "nameEn": "Chicken",
-      "image": null,
+      "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/er4d081765186828.jpg?w=800",
       "needsReview": true,
       "items": []
     },
@@ -13,7 +13,7 @@
       "id": "seafood",
       "nameAr": "أسماك",
       "nameEn": "Seafood",
-      "image": null,
+      "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/wuyd2h1765655837.jpg?w=800",
       "needsReview": true,
       "items": []
     },
