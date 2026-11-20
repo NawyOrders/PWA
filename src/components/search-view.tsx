@@ -80,7 +80,7 @@ export function SearchView({ query }: { query: string }) {
               <Link
                 key={category.id}
                 href={`/search?q=${encodeURIComponent(name)}`}
-                className="flex w-[60px] shrink-0 flex-col items-center gap-2 text-center"
+                className="flex w-[84px] shrink-0 flex-col items-center gap-2 text-center"
               >
                 <span
                   className={`grid size-[60px] place-items-center rounded-full border-2 bg-white p-1 transition ${
@@ -94,7 +94,13 @@ export function SearchView({ query }: { query: string }) {
                     textClassName="text-[7px]"
                   />
                 </span>
-                <span className={`whitespace-nowrap text-[10px] font-bold ${active ? "text-brand" : "text-ink"}`}>{name}</span>
+                <span
+                  className={`line-clamp-2 min-h-[2.4em] w-full break-words text-center text-[10px] font-bold leading-tight ${
+                    active ? "text-brand" : "text-ink"
+                  }`}
+                >
+                  {name}
+                </span>
               </Link>
             );
           })}

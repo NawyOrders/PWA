@@ -17,8 +17,8 @@ const links = [
 
 export function Navbar() {
   const pathname = usePathname();
-  const { count, t, loggedIn, openLoginPrompt, branding, lang } = useApp();
-  const storeName = brandingName(branding, lang);
+  const { count, t, loggedIn, openLoginPrompt, branding, lang, tenantSlug } = useApp();
+  const storeName = brandingName(branding, lang) ?? tenantSlug ?? t("ناوي أوردرز");
   const cartActive = pathname === "/cart" || pathname.startsWith("/checkout");
 
   return (
@@ -27,15 +27,13 @@ export function Navbar() {
         <div className="flex w-60 items-center justify-start">
           <Link
             href="/"
-            aria-label={t("ناوي أوردرز - الرئيسية")}
+            aria-label={t("{brand} - الرئيسية", { brand: storeName })}
             className="motion-press inline-flex min-w-0 items-center gap-3"
           >
             <LogoMark className="size-14 shrink-0 transition-transform duration-300 hover:-rotate-3" />
-            {storeName ? (
-              <span className="min-w-0 truncate font-display text-lg font-extrabold text-brand">
-                {storeName}
-              </span>
-            ) : null}
+            <span className="min-w-0 truncate font-display text-lg font-extrabold text-brand">
+              {storeName}
+            </span>
           </Link>
         </div>
 

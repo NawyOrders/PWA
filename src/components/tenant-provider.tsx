@@ -72,6 +72,7 @@ export async function TenantProvider({ children }: { children: React.ReactNode }
     <AppProvider
       initialBranding={branding?.status === "ok" ? branding.branding : null}
       initialBrandingEtag={branding?.status === "ok" ? branding.etag : null}
+      initialTenantSlug={slug}
       initialMenu={menuData}
       initialOffers={offers?.status === "ok" ? offers.offers : null}
       tenantApiBaseUrl={apiBaseUrl ?? ""}

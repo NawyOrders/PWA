@@ -7,6 +7,7 @@ import { LogoMark } from "@/components/logo";
 import { useApp } from "@/components/providers";
 import { MobilePageHeader, chipStyles } from "@/components/ui";
 import { appVersion, platforms, policies, policyTabs, policyUpdated } from "@/lib/account-data";
+import { brandingName } from "@/lib/branding";
 
 type TabId = (typeof policyTabs)[number]["id"];
 
@@ -21,7 +22,8 @@ function isTabId(value: string | null): value is TabId {
 }
 
 export function PoliciesView() {
-  const { t } = useApp();
+  const { t, branding, lang, tenantSlug } = useApp();
+  const storeName = brandingName(branding, lang) ?? tenantSlug ?? t("ناوي أوردرز");
   const [active, setActive] = useState<TabId>("privacy");
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
@@ -62,8 +64,10 @@ export function PoliciesView() {
 
             <div className="flex flex-col items-center pb-6 text-center">
               <LogoMark className="size-14" />
-              <p className="mt-3 font-display text-2xl font-extrabold text-brand">{t("ناوي اوردرز")}</p>
-              <p className="mt-1 text-sm text-muted">{t("ناوي أوردرز — طعم يوصلك لباب البيت.")}</p>
+              <p className="mt-3 font-display text-2xl font-extrabold text-brand">{storeName}</p>
+              <p className="mt-1 text-sm text-muted">
+                {t("{brand} — طعم يوصلك لباب البيت.", { brand: storeName })}
+              </p>
             </div>
 
             <div

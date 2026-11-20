@@ -6,6 +6,7 @@ const en: Record<string, string> = {
   // shell & navigation
   "ناوي أوردرز": "Nawy Orders",
   "ناوي أوردرز - الرئيسية": "Nawy Orders — Home",
+  "{brand} - الرئيسية": "{brand} — Home",
   "الرئيسية": "Home",
   "الاقسام": "Categories",
   "الأقسام": "Categories",
@@ -117,6 +118,7 @@ const en: Record<string, string> = {
   "قسم «ال{name}»": "Category “{name}”",
   "قسم غير موجود": "Category not found",
   "{count} أقسام رئيسية — كل الأصناف محضرة طازة في مطبخ ناوي أوردرز": "{count} main categories — everything is freshly prepared in the Nawy Orders kitchen",
+  "{count} أقسام رئيسية — كل الأصناف محضرة طازة في مطبخ {brand}": "{count} main categories — everything is freshly prepared in the {brand} kitchen",
 
   // search page
   "نتائج البحث": "Search results",
@@ -463,9 +465,12 @@ const en: Record<string, string> = {
   "مدينة نصر، عباس العقاد": "Nasr City, Abbas El Akkad",
   "مواعيد العمل: يومياً 11 صباحاً - 3 صباحاً": "Working hours: Daily 11 AM – 3 AM",
   "عن ناوي أوردرز": "About Nawy Orders",
+  "عن {brand}": "About {brand}",
   "ناوي أوردرز — طعم يوصلك لباب البيت.": "Nawy Orders — great taste delivered to your door.",
+  "{brand} — طعم يوصلك لباب البيت.": "{brand} — great taste delivered to your door.",
   "اطلب من خلال التطبيق واستمتع بتجربة أسرع وعروض حصرية.": "Order through the app for a faster experience and exclusive offers.",
   "© 2026 ناوي أوردرز — جميع الحقوق محفوظة.": "© 2026 Nawy Orders — All rights reserved.",
+  "© 2026 {brand} — جميع الحقوق محفوظة.": "© 2026 {brand} — All rights reserved.",
   "ساندويتشات": "Sandwiches",
   "عروض التوصيل المجاني": "Free delivery offers",
   "المشروبات والحلويات": "Drinks & desserts",

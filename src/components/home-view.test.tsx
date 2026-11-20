@@ -89,8 +89,12 @@ describe("HomeView categories section", () => {
     expect(rail.className).toContain("overflow-x-auto");
     expect(rail.className).toContain("sm:hidden");
     const firstItem = within(rail).getAllByRole("button")[0];
-    expect(firstItem.className).toContain("w-[68px]");
+    expect(firstItem.className).toContain("w-[84px]");
     expect(firstItem.className).toContain("shrink-0");
+    // Long Arabic names wrap instead of running into the next chip.
+    const label = firstItem.querySelector<HTMLElement>("span.line-clamp-2");
+    expect(label).not.toBeNull();
+    expect(label?.className).toContain("break-words");
   });
 
   it("spreads the same categories across the shell from the tablet breakpoint", () => {
