@@ -5,7 +5,7 @@
       "id": "rizo",
       "nameAr": "ريزو الطازج",
       "nameEn": "Fresh Rizo",
-      "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/er4d081765186828.jpg?w=800",
+      "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/er4d081765186828.jpg?w=800",
       "items": [
         {
           "id": "rizo-al-tazaj",
@@ -15,7 +15,7 @@
           "descriptionEn": "Saudi-spiced basmati rice, 2 large crispy chicken strips (~250g, spicy or regular), choice of sauce (spicy/regular BBQ, sweet chili, ranch, or cheddar), and coleslaw",
           "price": 125,
           "variants": {},
-          "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/wuyd2h1765655837.jpg?w=800"
+          "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/wuyd2h1765655837.jpg?w=800"
         }
       ]
     },
@@ -23,7 +23,7 @@
       "id": "grilled-meals",
       "nameAr": "وجبات المشويات",
       "nameEn": "Charcoal Grilled Meals",
-      "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/a08uqk1761848682.jpg?w=800",
+      "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/a08uqk1761848682.jpg?w=800",
       "items": [
         {
           "id": "al-kabeer-chicken-meal",
@@ -33,7 +33,7 @@
           "descriptionEn": "Half charcoal-grilled chicken, spiced basmati rice, Daqoos tomato-chili sauce, garlic sauce (Toumeya), and flatbread",
           "price": 205,
           "variants": {},
-          "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/utqnjv1763598650.jpg?w=800"
+          "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/utqnjv1763598650.jpg?w=800"
         },
         {
           "id": "quarter-chicken-kabeer-meal",
@@ -43,7 +43,7 @@
           "descriptionEn": "Quarter charcoal-grilled chicken, spiced basmati rice, Daqoos sauce, garlic sauce (Toumeya), and flatbread",
           "price": 125,
           "variants": {},
-          "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/er4d081765186828.jpg?w=800"
+          "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/er4d081765186828.jpg?w=800"
         },
         {
           "id": "farrouj-meal",
@@ -53,7 +53,7 @@
           "descriptionEn": "Whole charcoal-grilled Farrouj chicken, spiced basmati rice, tahini, Daqoos sauce, and flatbread",
           "price": 234,
           "variants": {},
-          "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/nlxald1764112200.jpg?w=800"
+          "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/nlxald1764112200.jpg?w=800"
         },
         {
           "id": "chicken-bbq",
@@ -63,7 +63,7 @@
           "descriptionEn": "4 pieces charcoal-grilled BBQ chicken, spiced basmati rice, garlic sauce (Toumeya), Daqoos sauce, and flatbread",
           "price": 209,
           "variants": {},
-          "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/a08uqk1761848682.jpg?w=800"
+          "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/a08uqk1761848682.jpg?w=800"
         },
         {
           "id": "chicken-kofta-meal",
@@ -73,7 +73,7 @@
           "descriptionEn": "5 grilled chicken kofta fingers, spiced basmati rice, coleslaw, Daqoos sauce, tahini, and flatbread",
           "price": 130,
           "variants": {},
-          "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/vc08jn1628769553.jpg?w=800"
+          "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/vc08jn1628769553.jpg?w=800"
         }
       ]
     },
@@ -81,7 +81,7 @@
       "id": "broasted-and-strips",
       "nameAr": "وجبات البروستد والاستربس",
       "nameEn": "Broasted & Strips Meals",
-      "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/40r49m1763197022.jpg?w=800",
+      "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/40r49m1763197022.jpg?w=800",
       "items": [
         {
           "id": "al-baik-meal",
@@ -91,7 +91,7 @@
           "descriptionEn": "4 pieces crispy broasted chicken (spicy or regular), french fries, garlic sauce (Toumeya), coleslaw, and kaiser bun",
           "price": 209,
           "variants": {},
-          "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/40r49m1763197022.jpg?w=800"
+          "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/40r49m1763197022.jpg?w=800"
         },
         {
           "id": "strips-meal",
@@ -101,7 +101,7 @@
           "descriptionEn": "4 crispy chicken strips (spicy or regular), spiced basmati rice, spicy or regular garlic sauce, and flatbread",
           "price": 180,
           "variants": {},
-          "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/7i6csk1780094394.jpg?w=800"
+          "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/7i6csk1780094394.jpg?w=800"
         },
         {
           "id": "mini-broasted",
@@ -111,7 +111,7 @@
           "descriptionEn": "2 pieces crispy broasted chicken (spicy or regular), french fries, garlic sauce (Toumeya), coleslaw, and kaiser bun",
           "price": 125,
           "variants": {},
-          "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/feh9k21784665694.jpg?w=800"
+          "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/feh9k21784665694.jpg?w=800"
         }
       ]
     },
@@ -119,7 +119,7 @@
       "id": "family-and-offers",
       "nameAr": "العروض العائلية والسنجل",
       "nameEn": "Family & Single Offers",
-      "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/qptpvt1487339892.jpg?w=800",
+      "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/qptpvt1487339892.jpg?w=800",
       "items": [
         {
           "id": "family-farrouj-offer",
@@ -129,7 +129,7 @@
           "descriptionEn": "3 Farrouj meals, 3 spiced basmati rice, 3 Daqoos sauces, 3 tahini dips, large coleslaw, 3 flatbreads, and 3 Big Cola bottles",
           "price": 690,
           "variants": {},
-          "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/nlxald1764112200.jpg?w=800"
+          "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/nlxald1764112200.jpg?w=800"
         },
         {
           "id": "family-kabeer-chicken-offer",
@@ -139,7 +139,7 @@
           "descriptionEn": "3 Al Kabeer chicken meals, 3 garlic sauces, 3 Daqoos sauces, 3 flatbreads, large coleslaw, and 3 Big Cola bottles",
           "price": 630,
           "variants": {},
-          "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/utqnjv1763598650.jpg?w=800"
+          "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/utqnjv1763598650.jpg?w=800"
         },
         {
           "id": "family-mix-offer",
@@ -149,7 +149,7 @@
           "descriptionEn": "1 Farrouj meal, 1 Al Kabeer chicken meal, 1 Al Baik meal (spicy or regular), 2 spiced basmati rice, french fries, 2 Daqoos, 2 garlic sauces, 1 tahini, large coleslaw, and 3 Big Cola bottles",
           "price": 640,
           "variants": {},
-          "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/hglsbl1614346998.jpg?w=800"
+          "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/hglsbl1614346998.jpg?w=800"
         },
         {
           "id": "single-farrouj-offer",
@@ -159,7 +159,7 @@
           "descriptionEn": "Whole charcoal-grilled Farrouj chicken, flatbread, tahini, and Daqoos sauce or small coleslaw",
           "price": 215,
           "variants": {},
-          "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/qptpvt1487339892.jpg?w=800"
+          "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/qptpvt1487339892.jpg?w=800"
         }
       ]
     },
@@ -167,7 +167,7 @@
       "id": "add-ons-and-drinks",
       "nameAr": "الإضافات والمشروبات",
       "nameEn": "Add-ons & Drinks",
-      "Image": "https://i0.wp.com/images.unsplash.com/photo-1594225133715-301184181802?w=800",
+      "image": "https://i0.wp.com/images.unsplash.com/photo-1594225133715-301184181802?w=800",
       "items": [
         {
           "id": "white-garlic-sauce",
@@ -175,7 +175,7 @@
           "nameEn": "White Garlic Sauce",
           "price": 15,
           "variants": {},
-          "Image": "https://i0.wp.com/images.unsplash.com/photo-1637949385162-e416fb15b2ce?w=800"
+          "image": "https://i0.wp.com/images.unsplash.com/photo-1637949385162-e416fb15b2ce?w=800"
         },
         {
           "id": "spicy-garlic-sauce",
@@ -183,7 +183,7 @@
           "nameEn": "Spicy Garlic Sauce",
           "price": 15,
           "variants": {},
-          "Image": "https://i0.wp.com/images.unsplash.com/photo-1637949907734-d5583aa35b41?w=800"
+          "image": "https://i0.wp.com/images.unsplash.com/photo-1637949907734-d5583aa35b41?w=800"
         },
         {
           "id": "tahini",
@@ -191,7 +191,7 @@
           "nameEn": "Tahini Sauce",
           "price": 15,
           "variants": {},
-          "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/gpon5u1763801180.jpg?w=800"
+          "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/gpon5u1763801180.jpg?w=800"
         },
         {
           "id": "daqoos-sauce",
@@ -199,7 +199,7 @@
           "nameEn": "Daqoos Sauce",
           "price": 15,
           "variants": {},
-          "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/hkz4k71782590338.jpg?w=800"
+          "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/hkz4k71782590338.jpg?w=800"
         },
         {
           "id": "bbq-sauce",
@@ -207,7 +207,7 @@
           "nameEn": "BBQ Sauce",
           "price": 15,
           "variants": {},
-          "Image": "https://i0.wp.com/images.unsplash.com/photo-1653418622353-e9f40f9aef00?w=800"
+          "image": "https://i0.wp.com/images.unsplash.com/photo-1653418622353-e9f40f9aef00?w=800"
         },
         {
           "id": "large-coleslaw",
@@ -215,7 +215,7 @@
           "nameEn": "Large Coleslaw",
           "price": 25,
           "variants": {},
-          "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/e2g2r21764367568.jpg?w=800"
+          "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/e2g2r21764367568.jpg?w=800"
         },
         {
           "id": "fries",
@@ -223,7 +223,7 @@
           "nameEn": "French Fries",
           "price": 30,
           "variants": {},
-          "Image": "https://i0.wp.com/images.unsplash.com/photo-1664337873087-ac64b3f1e454?w=800"
+          "image": "https://i0.wp.com/images.unsplash.com/photo-1664337873087-ac64b3f1e454?w=800"
         },
         {
           "id": "spiced-basmati-rice",
@@ -231,7 +231,7 @@
           "nameEn": "Spiced Basmati Rice",
           "price": 30,
           "variants": {},
-          "Image": "https://i0.wp.com/www.themealdb.com/images/media/meals/xw1ruy1763786501.jpg?w=800"
+          "image": "https://i0.wp.com/www.themealdb.com/images/media/meals/xw1ruy1763786501.jpg?w=800"
         },
         {
           "id": "canned-drink",
@@ -239,7 +239,7 @@
           "nameEn": "Canned Soft Drink",
           "price": 25,
           "variants": {},
-          "Image": "https://i0.wp.com/images.unsplash.com/photo-1622483767028-3f66f32aef97?w=800"
+          "image": "https://i0.wp.com/images.unsplash.com/photo-1622483767028-3f66f32aef97?w=800"
         },
         {
           "id": "mineral-water",
@@ -247,7 +247,7 @@
           "nameEn": "Mineral Water",
           "price": 12,
           "variants": {},
-          "Image": "https://i0.wp.com/images.unsplash.com/photo-1787038728229-47363c456318?w=800"
+          "image": "https://i0.wp.com/images.unsplash.com/photo-1787038728229-47363c456318?w=800"
         }
       ]
     }
