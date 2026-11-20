@@ -1,0 +1,68 @@
+{
+  "offers": [
+    {
+      "id": "offer-1",
+      "enabled": true,
+      "order": 1,
+      "theme": "dark",
+      "image": null,
+      "badgeAr": "الأكثر طلباً",
+      "badgeEn": "Most ordered",
+      "titleAr": "كومبو مسلم",
+      "titleEn": "Mouslim Combo",
+      "textAr": "ساندوتش بضمير + بطاطس + مشروب بسعر مميز.",
+      "textEn": "A sandwich with fries and a drink at a special price.",
+      "ctaAr": "اطلب الآن",
+      "ctaEn": "Order now",
+      "action": { "type": "category", "value": "combo" }
+    },
+    {
+      "id": "offer-2",
+      "enabled": true,
+      "order": 2,
+      "theme": "light",
+      "image": null,
+      "badgeAr": "للأطفال",
+      "badgeEn": "For kids",
+      "titleAr": "وجبة الأطفال مع لعبة",
+      "titleEn": "Kids meal with a toy",
+      "textAr": "برجر أو دجاج + بطاطس + مشروب + لعبة.",
+      "textEn": "Burger or chicken + fries + drink + toy.",
+      "ctaAr": "اطلب وجبة الأطفال",
+      "ctaEn": "Order kids meal",
+      "action": { "type": "category", "value": "kids-meals" }
+    },
+    {
+      "id": "offer-3",
+      "enabled": true,
+      "order": 3,
+      "theme": "light",
+      "image": null,
+      "badgeAr": "حلو",
+      "badgeEn": "Sweet",
+      "titleAr": "الحلو بـ 35 جنيه",
+      "titleEn": "Desserts for 35 EGP",
+      "textAr": "تيراميسو، شوكليت موس، تراي يقل، كرانشو.",
+      "textEn": "Tiramisu, chocolate mousse, trifle and crunchy.",
+      "ctaAr": "اطلب حلو",
+      "ctaEn": "Order dessert",
+      "action": { "type": "category", "value": "desserts" }
+    },
+    {
+      "id": "offer-4",
+      "enabled": true,
+      "order": 4,
+      "theme": "dark",
+      "image": null,
+      "badgeAr": "19 سنة",
+      "badgeEn": "19 years",
+      "titleAr": "19 سنة من الطعم",
+      "titleEn": "19 years of taste",
+      "textAr": "توصيل من 10 صباحاً حتى 3:30 فجراً. كول سنتر: 033360100 - 01120008009.",
+      "textEn": "Home delivery from 10 am to 3:30 am. Call center: 033360100 / 01120008009.",
+      "ctaAr": "اطلب الآن",
+      "ctaEn": "Order now",
+      "action": { "type": "path", "value": "/categories" }
+    }
+  ]
+}

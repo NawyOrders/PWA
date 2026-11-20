@@ -1,0 +1,42 @@
+{
+  "statusCode": 200,
+  "isSuccess": true,
+  "data": {
+    "tenantId": "mouslim",
+    "nameAr": "مسلم",
+    "nameEn": "MOUSLIM",
+    "logoUrl": null,
+    "faviconUrl": null,
+    "primaryColor": "#F58220",
+    "secondaryColor": "#0B6B3A",
+    "accentColor": "#D96A0B",
+    "backgroundColor": "#FFF1E0",
+    "surfaceColor": "#FFFBF5",
+    "textOnPrimaryColor": "#FFFFFF",
+    "contactPhone": "01120008009",
+    "contactEmail": null,
+    "whatsAppUrl": null,
+    "messengerUrl": null,
+    "socialLinks": {},
+    "branches": [
+      {
+        "branchId": "mouslim-sidi-bishr",
+        "nameAr": "سيدي بشر",
+        "nameEn": "Sidi Bishr",
+        "address": "سيدي بشر - 91 شارع خالد بن الوليد، أمام كمال سعد",
+        "latitude": null,
+        "longitude": null,
+        "phone": "033360100",
+        "status": "Open",
+        "isPrimary": true,
+        "sortOrder": 0,
+        "workingHours": [
+          { "day": "daily", "open": "10:00", "close": "03:30" }
+        ],
+        "deliveryAreas": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-11-20T00:00:00Z"
+}

@@ -1,0 +1,190 @@
+{
+  "currency": "EGP",
+  "categories": [
+    {
+      "id": "chicken",
+      "nameAr": "دجاج",
+      "nameEn": "Chicken",
+      "image": null,
+      "needsReview": true,
+      "items": []
+    },
+    {
+      "id": "seafood",
+      "nameAr": "أسماك",
+      "nameEn": "Seafood",
+      "image": null,
+      "needsReview": true,
+      "items": []
+    },
+    {
+      "id": "meat",
+      "nameAr": "لحوم",
+      "nameEn": "Meat",
+      "image": null,
+      "needsReview": true,
+      "items": []
+    },
+    {
+      "id": "burger",
+      "nameAr": "برجر",
+      "nameEn": "Burger",
+      "image": null,
+      "needsReview": true,
+      "items": []
+    },
+    {
+      "id": "combo",
+      "nameAr": "الكومبو",
+      "nameEn": "Combo",
+      "image": null,
+      "needsReview": true,
+      "items": []
+    },
+    {
+      "id": "liver",
+      "nameAr": "كبدة",
+      "nameEn": "Liver",
+      "image": null,
+      "items": [
+        {
+          "id": "liver-alexandrani",
+          "nameAr": "كبدة اسكندراني",
+          "nameEn": "Alexandrian Liver",
+          "price": null,
+          "variants": {},
+          "image": null,
+          "needsReview": true
+        },
+        {
+          "id": "liver-grilled-charcoal",
+          "nameAr": "كبدة مشوية على الفحم",
+          "nameEn": "Charcoal Grilled Liver",
+          "price": null,
+          "variants": {},
+          "image": null,
+          "needsReview": true
+        }
+      ]
+    },
+    {
+      "id": "mixes",
+      "nameAr": "ميكسات",
+      "nameEn": "Mixes",
+      "image": null,
+      "needsReview": true,
+      "items": []
+    },
+    {
+      "id": "kids-meals",
+      "nameAr": "وجبة الأطفال",
+      "nameEn": "Kids Meals",
+      "image": null,
+      "items": [
+        {
+          "id": "kids-burger",
+          "nameAr": "برجر دجاج أو لحم",
+          "nameEn": "Chicken or Beef Burger Kids Meal",
+          "descriptionAr": "برجر دجاج أو لحم + بطاطس + مشروب + لعبة",
+          "descriptionEn": "Chicken or beef burger + fries + drink + toy",
+          "price": null,
+          "variants": {},
+          "image": null,
+          "needsReview": true
+        },
+        {
+          "id": "kids-chicken",
+          "nameAr": "دجاج بانيه أو مشوي",
+          "nameEn": "Breaded or Grilled Chicken Kids Meal",
+          "descriptionAr": "دجاج بانيه أو مشوي + بطاطس + مشروب + لعبة",
+          "descriptionEn": "Breaded or grilled chicken + fries + drink + toy",
+          "price": null,
+          "variants": {},
+          "image": null,
+          "needsReview": true
+        }
+      ]
+    },
+    {
+      "id": "mouslim-meals",
+      "nameAr": "وجبات مسلم",
+      "nameEn": "Mouslim Meals",
+      "image": null,
+      "needsReview": true,
+      "items": []
+    },
+    {
+      "id": "mix-meals",
+      "nameAr": "وجبات الميكس",
+      "nameEn": "Mix Meals",
+      "image": null,
+      "needsReview": true,
+      "items": []
+    },
+    {
+      "id": "rice-meals",
+      "nameAr": "وجبات الأرز",
+      "nameEn": "Rice Meals",
+      "image": null,
+      "needsReview": true,
+      "items": []
+    },
+    {
+      "id": "quarter-meals",
+      "nameAr": "وجبات الربع",
+      "nameEn": "Quarter Meals",
+      "image": null,
+      "isNew": true,
+      "needsReview": true,
+      "items": []
+    },
+    {
+      "id": "sides",
+      "nameAr": "طلبات جانبية",
+      "nameEn": "Sides",
+      "image": null,
+      "needsReview": true,
+      "items": []
+    },
+    {
+      "id": "desserts",
+      "nameAr": "الحلو",
+      "nameEn": "Desserts",
+      "image": null,
+      "items": [
+        {
+          "id": "tiramisu",
+          "nameAr": "تيراميسو",
+          "nameEn": "Tiramisu",
+          "price": 35,
+          "variants": {},
+          "image": null
+        },
+        {
+          "id": "chocolate-mousse",
+          "nameAr": "شوكليت موس",
+          "nameEn": "Chocolate Mousse",
+          "price": 35,
+          "variants": {},
+          "image": null
+        },
+        {
+          "id": "trifle",
+          "nameAr": "تراي يقل",
+          "nameEn": "Trifle",
+          "price": 35,
+          "variants": {},
+          "image": null
+        },
+        {
+          "id": "crunchy",
+          "nameAr": "كرانشو",
+          "nameEn": "Crunchy",
+          "price": 35,
+          "variants": {},
+          "image": null
+        }
+      ]
+    }
+  ]
+}
