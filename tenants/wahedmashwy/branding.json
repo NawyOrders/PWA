@@ -1,0 +1,170 @@
+{
+  "statusCode": 200,
+  "isSuccess": true,
+  "data": {
+    "tenantId": "wahed-mashwy",
+    "nameAr": "واحد مشوي - غير اي واحد",
+    "nameEn": "WAHED MASHWY",
+    "logoUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRyx5hSn8BBNv8qpWIu0lJZPtpQlS3og8VtHQaIpKHi7A7hg67JmQ8ad08J&s=10",
+    "faviconUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRyx5hSn8BBNv8qpWIu0lJZPtpQlS3og8VtHQaIpKHi7A7hg67JmQ8ad08J&s=10",
+    "primaryColor": "#CD161C",
+    "secondaryColor": "#161212",
+    "accentColor": "#D9AB58",
+    "backgroundColor": "#FBF8F4",
+    "surfaceColor": "#FFFFFF",
+    "textOnPrimaryColor": "#FFFFFF",
+    "contactPhone": "15178",
+    "contactEmail": null,
+    "whatsAppUrl": null,
+    "messengerUrl": null,
+    "socialLinks": {},
+    "branches": [
+      {
+        "branchId": "wahed-mashwy-mahatet-el-raml",
+        "nameAr": "محطة الرمل - الإسكندرية",
+        "nameEn": "Mahatet El Raml - Alexandria",
+        "address": "الإسكندرية: محطة الرمل - 17 شارع سعد زغلول، أمام سينما راديو",
+        "latitude": null,
+        "longitude": null,
+        "phone": "15178",
+        "status": "Open",
+        "isPrimary": true,
+        "sortOrder": 0,
+        "workingHours": [
+          { "day": "daily", "open": "11:00", "close": "03:00" }
+        ],
+        "deliveryAreas": []
+      },
+      {
+        "branchId": "wahed-mashwy-smouha",
+        "nameAr": "سموحة - الإسكندرية",
+        "nameEn": "Smouha - Alexandria",
+        "address": "الإسكندرية: سموحة - دوران فيكتور عمانوئيل، بجوار كرم الشام",
+        "latitude": null,
+        "longitude": null,
+        "phone": "15178",
+        "status": "Open",
+        "isPrimary": false,
+        "sortOrder": 1,
+        "workingHours": [
+          { "day": "daily", "open": "11:00", "close": "03:00" }
+        ],
+        "deliveryAreas": []
+      },
+      {
+        "branchId": "wahed-mashwy-nasr-city",
+        "nameAr": "مدينة نصر",
+        "nameEn": "Nasr City",
+        "address": "مدينة نصر: الحديقة الدولية - آخر عباس، مول ليفلز",
+        "latitude": null,
+        "longitude": null,
+        "phone": "15178",
+        "status": "Open",
+        "isPrimary": false,
+        "sortOrder": 2,
+        "workingHours": [
+          { "day": "daily", "open": "11:00", "close": "03:00" }
+        ],
+        "deliveryAreas": []
+      },
+      {
+        "branchId": "wahed-mashwy-downtown",
+        "nameAr": "وسط البلد - القاهرة",
+        "nameEn": "Downtown Cairo",
+        "address": "القاهرة: وسط البلد - 41 شارع شريف، أمام حلواني إيتوال",
+        "latitude": null,
+        "longitude": null,
+        "phone": "15178",
+        "status": "Open",
+        "isPrimary": false,
+        "sortOrder": 3,
+        "workingHours": [
+          { "day": "daily", "open": "11:00", "close": "03:00" }
+        ],
+        "deliveryAreas": []
+      },
+      {
+        "branchId": "wahed-mashwy-6th-of-october",
+        "nameAr": "6 أكتوبر",
+        "nameEn": "6th of October",
+        "address": "6 أكتوبر: منطقة الحصري - أمام مسجد الحصري",
+        "latitude": null,
+        "longitude": null,
+        "phone": "15178",
+        "status": "Open",
+        "isPrimary": false,
+        "sortOrder": 4,
+        "workingHours": [
+          { "day": "daily", "open": "11:00", "close": "03:00" }
+        ],
+        "deliveryAreas": []
+      },
+      {
+        "branchId": "wahed-mashwy-korba",
+        "nameAr": "الكوربة - مصر الجديدة",
+        "nameEn": "El Korba - Heliopolis",
+        "address": "مصر الجديدة: الكوربة - شارع الأهرام، بجوار سينما نورماندي",
+        "latitude": null,
+        "longitude": null,
+        "phone": "15178",
+        "status": "Open",
+        "isPrimary": false,
+        "sortOrder": 5,
+        "workingHours": [
+          { "day": "daily", "open": "11:00", "close": "03:00" }
+        ],
+        "deliveryAreas": []
+      },
+      {
+        "branchId": "wahed-mashwy-mohandessin",
+        "nameAr": "المهندسين",
+        "nameEn": "Mohandessin",
+        "address": "المهندسين: سور نادي الزمالك",
+        "latitude": null,
+        "longitude": null,
+        "phone": "15178",
+        "status": "Open",
+        "isPrimary": false,
+        "sortOrder": 6,
+        "workingHours": [
+          { "day": "daily", "open": "11:00", "close": "03:00" }
+        ],
+        "deliveryAreas": []
+      },
+      {
+        "branchId": "wahed-mashwy-alf-maskan",
+        "nameAr": "ألف مسكن",
+        "nameEn": "Alf Maskan",
+        "address": "ميدان ألف مسكن - بجوار حلواني العبد",
+        "latitude": null,
+        "longitude": null,
+        "phone": "15178",
+        "status": "Open",
+        "isPrimary": false,
+        "sortOrder": 7,
+        "workingHours": [
+          { "day": "daily", "open": "11:00", "close": "03:00" }
+        ],
+        "deliveryAreas": []
+      },
+      {
+        "branchId": "wahed-mashwy-fifth-settlement",
+        "nameAr": "التجمع الخامس",
+        "nameEn": "5th Settlement - New Cairo",
+        "address": "التجمع الخامس: مول سيلفر ستار - شارع التسعين، بجوار عم بشندي",
+        "latitude": null,
+        "longitude": null,
+        "phone": "15178",
+        "status": "Open",
+        "isPrimary": false,
+        "sortOrder": 8,
+        "workingHours": [
+          { "day": "daily", "open": "11:00", "close": "03:00" }
+        ],
+        "deliveryAreas": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-11-20T20:33:00Z"
+}

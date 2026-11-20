@@ -1,0 +1,499 @@
+{
+  "currency": "EGP",
+  "categories": [
+    {
+      "id": "sandwiches",
+      "nameAr": "السندوتشات",
+      "nameEn": "Sandwiches",
+      "image": "https://live.staticflickr.com/7238/7304112900_5bb41ae2c9_b.jpg",
+      "items": [
+        {
+          "id": "kofta-sandwich",
+          "nameAr": "كفتة",
+          "nameEn": "Kofta Sandwich",
+          "image": "https://live.staticflickr.com/3111/3132085570_b1ed70fa6a_b.jpg",
+          "price": 65,
+          "variants": {}
+        },
+        {
+          "id": "double-kofta-sandwich",
+          "nameAr": "كفتة دابل",
+          "nameEn": "Double Kofta Sandwich",
+          "image": "https://www.themealdb.com/images/media/meals/lgmnff1763789847.jpg",
+          "price": 110,
+          "variants": {}
+        },
+        {
+          "id": "tarb-sandwich",
+          "nameAr": "طرب",
+          "nameEn": "Tarb Sandwich",
+          "image": "https://live.staticflickr.com/3831/8921443138_7f88b05b35_b.jpg",
+          "price": 120,
+          "variants": {}
+        },
+        {
+          "id": "sodoq-sandwich",
+          "nameAr": "سدق",
+          "nameEn": "Sodoq (Oriental Sausage) Sandwich",
+          "image": "https://live.staticflickr.com/3871/15096007310_e4cc44be07_b.jpg",
+          "price": 70,
+          "variants": {}
+        },
+        {
+          "id": "hawawshi",
+          "nameAr": "حواوشي",
+          "nameEn": "Hawawshi",
+          "image": "https://live.staticflickr.com/2820/11568199634_ba1139990d_b.jpg",
+          "price": 65,
+          "variants": {}
+        },
+        {
+          "id": "cheese-hawawshi",
+          "nameAr": "حواوشي جبنة",
+          "nameEn": "Cheese Hawawshi",
+          "image": "https://live.staticflickr.com/7067/13226151855_bcd5c04ef6_b.jpg",
+          "price": 80,
+          "variants": {}
+        },
+        {
+          "id": "shish-tawook-sandwich",
+          "nameAr": "شيش طاووق",
+          "nameEn": "Shish Tawook Sandwich",
+          "image": "https://live.staticflickr.com/5487/9415362773_f7e1ff3ed0_b.jpg",
+          "price": 70,
+          "variants": {}
+        },
+        {
+          "id": "basbousa-sandwich",
+          "nameAr": "بسبوسة",
+          "nameEn": "Basbousa (Tenderloin Cut) Sandwich",
+          "image": "https://live.staticflickr.com/7105/7177232181_8dfe7c6c09_b.jpg",
+          "price": 110,
+          "variants": {}
+        },
+        {
+          "id": "beef-steak-sandwich",
+          "nameAr": "لحم ستيك",
+          "nameEn": "Beef Steak Sandwich",
+          "image": "https://live.staticflickr.com/4149/5067543924_7b525da545_b.jpg",
+          "price": 120,
+          "variants": {}
+        },
+        {
+          "id": "mazalika-sandwich",
+          "nameAr": "مزاليكا",
+          "nameEn": "Mazalika Sandwich",
+          "image": "https://live.staticflickr.com/2054/1843764340_2da8d5b3e1_b.jpg",
+          "price": 100,
+          "variants": {}
+        },
+        {
+          "id": "baklawa-sandwich",
+          "nameAr": "بقلاوة",
+          "nameEn": "Baklawa (Grilled Meat Roll) Sandwich",
+          "image": "https://live.staticflickr.com/2294/5815494237_dcdab5caaf_b.jpg",
+          "price": 100,
+          "variants": {}
+        }
+      ]
+    },
+    {
+      "id": "al-faroug",
+      "nameAr": "الفروج",
+      "nameEn": "Al-Faroug",
+      "image": "https://www.themealdb.com/images/media/meals/kcv6hj1598733479.jpg",
+      "items": [
+        {
+          "id": "farouga",
+          "nameAr": "فروجة",
+          "nameEn": "Farouga",
+          "image": "https://www.themealdb.com/images/media/meals/i8l2fu1763742525.jpg",
+          "price": 115,
+          "variants": {}
+        },
+        {
+          "id": "farouga-didi-dynamite",
+          "nameAr": "فروجة ديدي (ديناميت)",
+          "nameEn": "Farouga Didi (Dynamite)",
+          "image": "https://live.staticflickr.com/5573/14797323602_2a261d8289.jpg",
+          "price": 120,
+          "variants": {}
+        },
+        {
+          "id": "farouga-kiki-bbq",
+          "nameAr": "فروجة كيكي (باربكيو)",
+          "nameEn": "Farouga Kiki (BBQ)",
+          "image": "https://live.staticflickr.com/3382/4623406372_f150139b14_b.jpg",
+          "price": 125,
+          "variants": {}
+        },
+        {
+          "id": "farouga-shiki-ranch-cheddar",
+          "nameAr": "فروجة شيكي (رانش - شيدر)",
+          "nameEn": "Farouga Shiki (Ranch & Cheddar)",
+          "image": "https://www.themealdb.com/images/media/meals/swo87v1763595282.jpg",
+          "price": 125,
+          "variants": {}
+        },
+        {
+          "id": "farouga-soso-smoky",
+          "nameAr": "فروجة سوسو (سموكي)",
+          "nameEn": "Farouga Soso (Smoky)",
+          "image": "https://live.staticflickr.com/227/1501708426_c572ceb5f4_b.jpg",
+          "price": 135,
+          "variants": {}
+        },
+        {
+          "id": "farouga-zizi-mozzarella",
+          "nameAr": "فروجة زيزي (موزاريلا)",
+          "nameEn": "Farouga Zizi (Mozzarella)",
+          "image": "https://live.staticflickr.com/6135/6035556472_a27a9ccdcf_b.jpg",
+          "price": 135,
+          "variants": {}
+        }
+      ]
+    },
+    {
+      "id": "sauced-sandwiches",
+      "nameAr": "سندوتشات بصوصات مختلفة",
+      "nameEn": "Sauced Sandwiches",
+      "image": "https://live.staticflickr.com/82/210941571_55ab5225af.jpg",
+      "items": [
+        {
+          "id": "toxico-sandwich",
+          "nameAr": "ساندوتش التوكسيكو",
+          "nameEn": "Toxico Sandwich",
+          "image": "https://live.staticflickr.com/82/210941571_55ab5225af.jpg",
+          "price": 70,
+          "variants": {},
+          "noteAr": "الحواوشي بصوص البيج تيستي",
+          "noteEn": "Hawawshi with Big Tasty sauce"
+        }
+      ]
+    },
+    {
+      "id": "meals",
+      "nameAr": "الوجبات",
+      "nameEn": "Meals",
+      "image": "https://live.staticflickr.com/65535/47939083858_0e10864c18_b.jpg",
+      "noteAr": "يضاف لوجبات المشويات: أرز - بطاطس - صوص - عيش",
+      "noteEn": "Grill meals served with rice, fries, sauce, and bread",
+      "items": [
+        {
+          "id": "kofta-meal",
+          "nameAr": "كفتة",
+          "nameEn": "Kofta Meal",
+          "image": "https://live.staticflickr.com/8063/8178440351_8ccf8ff393_b.jpg",
+          "price": 175,
+          "variants": {},
+          "noteAr": "يضاف أرز - بطاطس - صوص - عيش",
+          "noteEn": "Served with rice, fries, sauce & bread"
+        },
+        {
+          "id": "tarb-meal",
+          "nameAr": "طرب",
+          "nameEn": "Tarb Meal",
+          "image": "https://live.staticflickr.com/4532/38652637446_288a847555_b.jpg",
+          "price": 250,
+          "variants": {},
+          "noteAr": "يضاف أرز - بطاطس - صوص - عيش",
+          "noteEn": "Served with rice, fries, sauce & bread"
+        },
+        {
+          "id": "sodoq-meal",
+          "nameAr": "سدق",
+          "nameEn": "Sodoq Meal",
+          "image": "https://www.themealdb.com/images/media/meals/vc08jn1628769553.jpg",
+          "price": 175,
+          "variants": {},
+          "noteAr": "يضاف أرز - بطاطس - صوص - عيش",
+          "noteEn": "Served with rice, fries, sauce & bread"
+        },
+        {
+          "id": "shish-meal",
+          "nameAr": "شيش",
+          "nameEn": "Shish Tawook Meal",
+          "image": "https://www.themealdb.com/images/media/meals/prjve31763486864.jpg",
+          "price": 175,
+          "variants": {},
+          "noteAr": "يضاف أرز - بطاطس - صوص - عيش",
+          "noteEn": "Served with rice, fries, sauce & bread"
+        },
+        {
+          "id": "mix-grill-meal",
+          "nameAr": "ميكس جريل",
+          "nameEn": "Mix Grill Meal",
+          "image": "https://www.themealdb.com/images/media/meals/04axct1763793018.jpg",
+          "price": 175,
+          "variants": {}
+        },
+        {
+          "id": "half-faroug-without-rice",
+          "nameAr": "نص فروج بدون أرز",
+          "nameEn": "Half Faroug without Rice",
+          "image": "https://live.staticflickr.com/16/20805732_fc7c43a883_b.jpg",
+          "price": 205,
+          "variants": {}
+        },
+        {
+          "id": "half-faroug-with-rice",
+          "nameAr": "نص فروج مع أرز",
+          "nameEn": "Half Faroug with Rice",
+          "image": "https://www.themealdb.com/images/media/meals/er4d081765186828.jpg",
+          "price": 210,
+          "variants": {}
+        }
+      ]
+    },
+    {
+      "id": "boxes",
+      "nameAr": "البوكسات",
+      "nameEn": "Boxes",
+      "image": "https://live.staticflickr.com/2413/2351273120_45b68fba2a_b.jpg",
+      "items": [
+        {
+          "id": "box-4",
+          "nameAr": "بوكس 4",
+          "nameEn": "Box 4",
+          "image": "https://live.staticflickr.com/2895/14334066676_6dcb80cb0d_b.jpg",
+          "price": 240,
+          "variants": {},
+          "noteAr": "كفتة - حواوشي",
+          "noteEn": "Kofta & Hawawshi"
+        },
+        {
+          "id": "box-4-mix",
+          "nameAr": "بوكس 4 ميكس",
+          "nameEn": "Box 4 Mix",
+          "image": "https://live.staticflickr.com/4044/4648215616_9990c22ba8.jpg",
+          "price": 240,
+          "variants": {},
+          "noteAr": "كفتة - سدق - شيش طاووق - حواوشي",
+          "noteEn": "Kofta, Sodoq, Shish Tawook & Hawawshi"
+        },
+        {
+          "id": "box-8",
+          "nameAr": "بوكس 8",
+          "nameEn": "Box 8",
+          "image": "https://live.staticflickr.com/2624/3849614645_ce9c8407d3_b.jpg",
+          "price": 440,
+          "variants": {},
+          "noteAr": "كفتة - حواوشي",
+          "noteEn": "Kofta & Hawawshi"
+        },
+        {
+          "id": "box-8-mix",
+          "nameAr": "بوكس 8 ميكس",
+          "nameEn": "Box 8 Mix",
+          "image": "https://live.staticflickr.com/65535/47939083858_0e10864c18_b.jpg",
+          "price": 460,
+          "variants": {},
+          "noteAr": "كفتة - سدق - شيش طاووق - حواوشي",
+          "noteEn": "Kofta, Sodoq, Shish Tawook & Hawawshi"
+        }
+      ]
+    },
+    {
+      "id": "monashetat",
+      "nameAr": "منشطات",
+      "nameEn": "Appetizers & Add-ons",
+      "image": "https://live.staticflickr.com/3392/3577798357_8c689942ca_b.jpg",
+      "items": [
+        {
+          "id": "tahina",
+          "nameAr": "طحينة",
+          "nameEn": "Tahina",
+          "image": "https://live.staticflickr.com/2657/3866216252_7de21e2f91_b.jpg",
+          "price": 15,
+          "variants": {}
+        },
+        {
+          "id": "garlic-sauce",
+          "nameAr": "تومية",
+          "nameEn": "Garlic Sauce",
+          "image": "https://live.staticflickr.com/3324/3270515791_37d180951e_b.jpg",
+          "price": 15,
+          "variants": {}
+        },
+        {
+          "id": "pickles",
+          "nameAr": "مخلل",
+          "nameEn": "Pickles",
+          "image": "https://live.staticflickr.com/49/143556563_481e66dceb.jpg",
+          "price": 10,
+          "variants": {}
+        },
+        {
+          "id": "hard-drink",
+          "nameAr": "هارد درينك",
+          "nameEn": "Hard Drink",
+          "image": "https://live.staticflickr.com/65535/48492234141_eacb1d6aca_b.jpg",
+          "price": 10,
+          "variants": {}
+        },
+        {
+          "id": "cheddar-sauce",
+          "nameAr": "صوص شيدر",
+          "nameEn": "Cheddar Sauce",
+          "image": "https://live.staticflickr.com/2482/3952945439_271c8b1f67_b.jpg",
+          "price": 20,
+          "variants": {}
+        },
+        {
+          "id": "ranch-sauce",
+          "nameAr": "صوص رانش",
+          "nameEn": "Ranch Sauce",
+          "image": "https://live.staticflickr.com/3340/3478981300_798ee8f12d_b.jpg",
+          "price": 25,
+          "variants": {}
+        },
+        {
+          "id": "fries",
+          "nameAr": "بطاطس",
+          "nameEn": "Fries",
+          "image": "https://live.staticflickr.com/3559/3376336822_efc303daa9_b.jpg",
+          "price": 30,
+          "variants": {}
+        },
+        {
+          "id": "side-mombar-4pcs",
+          "nameAr": "سايد ممبار 4 قطع",
+          "nameEn": "Side Mombar (4 Pieces)",
+          "image": "https://www.themealdb.com/images/media/meals/st1ifa1583267248.jpg",
+          "price": 70,
+          "variants": {}
+        },
+        {
+          "id": "side-sambousek-4pcs",
+          "nameAr": "سايد سمبوسك 4 قطع",
+          "nameEn": "Side Sambousek (4 Pieces)",
+          "image": "https://live.staticflickr.com/3083/3140016979_3003ec0a9d_b.jpg",
+          "price": 40,
+          "variants": {}
+        },
+        {
+          "id": "side-mix",
+          "nameAr": "سايد ميكس",
+          "nameEn": "Side Mix",
+          "image": "https://live.staticflickr.com/5533/9316387431_60aa54c0ac_b.jpg",
+          "price": 60,
+          "variants": {},
+          "noteAr": "2 ممبار + 2 سمبوسك",
+          "noteEn": "2 Mombar + 2 Sambousek"
+        },
+        {
+          "id": "bread-10pcs",
+          "nameAr": "10 قطع خبز",
+          "nameEn": "10 Pieces of Bread",
+          "image": "https://live.staticflickr.com/1569/24872916714_c78d921c87_b.jpg",
+          "price": 20,
+          "variants": {}
+        },
+        {
+          "id": "mineral-water",
+          "nameAr": "مياة معدنية",
+          "nameEn": "Mineral Water",
+          "image": "https://live.staticflickr.com/2430/3855927509_ba4917d249_b.jpg",
+          "price": 10,
+          "variants": {}
+        },
+        {
+          "id": "soft-drink",
+          "nameAr": "حاجة ساقعة",
+          "nameEn": "Soft Drink",
+          "image": "https://live.staticflickr.com/1194/1295513901_047b771dc2_b.jpg",
+          "price": 25,
+          "variants": {}
+        }
+      ]
+    },
+    {
+      "id": "trays",
+      "nameAr": "الصواني",
+      "nameEn": "Trays",
+      "image": "https://live.staticflickr.com/4702/28345316939_31f38838c9_b.jpg",
+      "items": [
+        {
+          "id": "wahed-wahed-tray",
+          "nameAr": "صنية واحد واحد",
+          "nameEn": "Wahed Wahed Tray",
+          "image": "https://live.staticflickr.com/4702/28345316939_31f38838c9_b.jpg",
+          "price": 650,
+          "variants": {},
+          "noteAr": "3 حواوشي + 3 ورك + 3 كفتة + 6 شيش + أرز + 2 ممبار + 2 سمبوسك + 3 بيج كولا + طحينة + ثومية + 2 عيش",
+          "noteEn": "3 Hawawshi + 3 Chicken Thighs + 3 Kofta + 6 Shish + Rice + 2 Mombar + 2 Sambousek + 3 Big Cola + Tahina + Garlic Sauce + 2 Bread"
+        },
+        {
+          "id": "el-power-el-aly-tray",
+          "nameAr": "صنية الباور العالي",
+          "nameEn": "El Power El Aly Tray",
+          "image": "https://live.staticflickr.com/2413/2351273120_45b68fba2a_b.jpg",
+          "price": 550,
+          "variants": {},
+          "noteAr": "2 حواوشي + نص كفتة + نص شواية + أرز + 2 ممبار + 2 سمبوسك + 3 بيج كولا + طحينة + ثومية + 2 عيش",
+          "noteEn": "2 Hawawshi + Half Kofta + Half Charcoal Chicken + Rice + 2 Mombar + 2 Sambousek + 3 Big Cola + Tahina + Garlic Sauce + 2 Bread"
+        },
+        {
+          "id": "kollo-kollo-tray",
+          "nameAr": "صنية كله كلة",
+          "nameEn": "Kollo Kollo Tray",
+          "image": "https://www.themealdb.com/images/media/meals/xrttsx1487339558.jpg",
+          "price": 850,
+          "variants": {},
+          "noteAr": "نص شواية + 2 حواوشي + نص كفتة (5 صوابع) + 2 ستيك + 2 طرب + نص أرز + 2 ممبار + 2 سمبوسك + 3 بيك كولا + طحينة وتومية و 2 عيش",
+          "noteEn": "Half Charcoal Chicken + 2 Hawawshi + Half Kofta (5 pcs) + 2 Steak + 2 Tarb + Half Rice + 2 Mombar + 2 Sambousek + 3 Big Cola + Tahina, Garlic Sauce & 2 Bread"
+        },
+        {
+          "id": "el-khamsa-w-khmisa-tray",
+          "nameAr": "صنية الخمسة وخميسة",
+          "nameEn": "El Khamsa W Khmisa Tray",
+          "image": "https://live.staticflickr.com/54/155147995_68ba7aae6c_b.jpg",
+          "price": 900,
+          "variants": {},
+          "noteAr": "5 وراك + 5 كفتة + 5 حواوشي + 5 سمبوسك + 5 ممبار + أرز + 5 عيش + علبة طحينة + علبة تومية + علبة طماطم",
+          "noteEn": "5 Chicken Thighs + 5 Kofta + 5 Hawawshi + 5 Sambousek + 5 Mombar + Rice + 5 Bread + Tahina Box + Garlic Sauce Box + Tomato Salad Box"
+        },
+        {
+          "id": "el-amoora-tray",
+          "nameAr": "القمورة",
+          "nameEn": "El Amoora",
+          "image": "https://live.staticflickr.com/6239/6429287635_0b62b90f7a.jpg",
+          "price": 175,
+          "variants": {},
+          "noteAr": "وراك مشوي + كفتة + سمبوسة + قطعة ممبار + أرز + طحينة + عيش",
+          "noteEn": "Grilled Chicken Thigh + Kofta + Sambousek + Mombar Piece + Rice + Tahina + Bread"
+        },
+        {
+          "id": "el-katkoota-tray",
+          "nameAr": "الكتكوتة",
+          "nameEn": "El Katkoota",
+          "image": "https://www.themealdb.com/images/media/meals/vussxq1511882648.jpg",
+          "price": 210,
+          "variants": {},
+          "noteAr": "طرب + كفتة + قطعة ممبار + سمبوسة + ورك مشوي + أرز + طحينة وعيش",
+          "noteEn": "Tarb + Kofta + Mombar Piece + Sambousek + Grilled Chicken Thigh + Rice + Tahina & Bread"
+        },
+        {
+          "id": "el-bonbonaya-tray",
+          "nameAr": "البونبوناية",
+          "nameEn": "El Bonbonaya",
+          "image": "https://www.themealdb.com/images/media/meals/wyxwsp1486979827.jpg",
+          "price": 275,
+          "variants": {},
+          "noteAr": "أرز + 3 قطع شيش + قطعة ستيك + قطعة بسبوسة + سيخ كفتة + قطعة سمبوسة + قطعة ممبار + طحينة + عيش",
+          "noteEn": "Rice + 3 Shish Pieces + Steak Piece + Basbousa Cut + Kofta Skewer + Sambousek + Mombar + Tahina + Bread"
+        },
+        {
+          "id": "el-gatohaya-tray",
+          "nameAr": "الجاتوهية",
+          "nameEn": "El Gatohaya",
+          "image": "https://www.themealdb.com/images/media/meals/cj56fs1762340001.jpg",
+          "price": 350,
+          "variants": {},
+          "noteAr": "كفتة + إستيك + 3 قطع سدق + 2 طرب + قطعة ممبار + سمبوسة + أرز + طحينة + عيش",
+          "noteEn": "Kofta + Steak + 3 Sodoq Pieces + 2 Tarb + Mombar + Sambousek + Rice + Tahina + Bread"
+        }
+      ]
+    }
+  ]
+}

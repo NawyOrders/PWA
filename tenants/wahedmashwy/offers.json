@@ -1,0 +1,80 @@
+{
+  "offers": [
+    {
+      "id": "offer-1",
+      "enabled": true,
+      "order": 1,
+      "theme": "dark",
+      "image": "https://wsrv.nl/?url=https://pd.w.org/2025/01/400678ba111c446a3.68572769-2048x1365.jpg&w=1800&h=380&fit=cover&a=center",
+      "badgeAr": "الأكثر طلباً",
+      "badgeEn": "Most ordered",
+      "titleAr": "فروجة ديدي ديناميت",
+      "titleEn": "Farouga Didi Dynamite",
+      "textAr": "جرّب ساندوتش الفروجة بصوص الديناميت الحار بـ 120 جنيه بس.. طعم غير أي واحد!",
+      "textEn": "Try our signature Farouga wrap with spicy Dynamite sauce for 120 EGP only.",
+      "ctaAr": "اطلب الان",
+      "ctaEn": "Order now",
+      "action": {
+        "type": "product",
+        "value": "farouga-didi-dynamite"
+      }
+    },
+    {
+      "id": "offer-2",
+      "enabled": true,
+      "order": 2,
+      "theme": "light",
+      "image": "https://wsrv.nl/?url=https://pd.w.org/2026/03/42869c86002cddc03.42479774-2048x1232.jpg&w=1800&h=380&fit=cover&a=center",
+      "badgeAr": "خصم 20%",
+      "badgeEn": "20% off",
+      "titleAr": "بوكس 4 ميكس المشويات",
+      "titleEn": "Box 4 Mix Grill",
+      "textAr": "كفتة وسدق وشيش طاووق وحواوشي في بوكس واحد متكامل ليك ولأصحابك.",
+      "textEn": "Kofta, Sodoq, Shish Tawook and Hawawshi packed together in one loaded box.",
+      "ctaAr": "اطلب البوكس",
+      "ctaEn": "Order box",
+      "action": {
+        "type": "search",
+        "value": "بوكس"
+      }
+    },
+    {
+      "id": "offer-3",
+      "enabled": true,
+      "order": 3,
+      "theme": "light",
+      "image": "https://wsrv.nl/?url=https://pd.w.org/2025/09/26668c93d904156a4.20726041-2048x1152.jpeg&w=1800&h=380&fit=cover&a=center",
+      "badgeAr": "صواني العيلة",
+      "badgeEn": "Family trays",
+      "titleAr": "صواني واحد واحد والخمسة وخميسة",
+      "titleEn": "Family Grill Trays",
+      "textAr": "صواني اللمة من القمورة والكتكوتة لحد صنية الخمسة وخميسة بالمشويات والرز والممبار والسمبوسك.",
+      "textEn": "Shareable grill trays loaded with kofta, tarb, shish tawook, hawawshi, rice, mombar & sambousek.",
+      "ctaAr": "اطلب دلوقتي",
+      "ctaEn": "Order now",
+      "action": {
+        "type": "category",
+        "value": "trays"
+      }
+    },
+    {
+      "id": "offer-4",
+      "enabled": true,
+      "order": 4,
+      "theme": "dark",
+      "image": "https://wsrv.nl/?url=https://pd.w.org/2024/02/23365be97925b8aa1.87840211-2048x1536.jpg&w=1800&h=380&fit=cover&a=center",
+      "badgeAr": "عرض محدود",
+      "badgeEn": "Limited offer",
+      "titleAr": "توصيل علينا",
+      "titleEn": "Free delivery",
+      "textAr": "اطلب من السندوتشات والوجبات والمنشطات بـ 200 جنيه أو أكتر واستمتع بتوصيل مجاني لحد باب البيت.",
+      "textEn": "Order 200 EGP or more from Sandwiches, Meals & Sides and enjoy free delivery to your door.",
+      "ctaAr": "اطلب الان",
+      "ctaEn": "Order now",
+      "action": {
+        "type": "path",
+        "value": "/categories"
+      }
+    }
+  ]
+}
