@@ -32,9 +32,6 @@ import {
   MobileOrderTrackingBanner,
 } from "@/components/order-tracking-promo";
 import { useApp } from "@/components/providers";
-import { apiConfigured } from "@/lib/api";
-import { menuProduct } from "@/lib/tenant-menu";
-import { useMostSold } from "@/hooks/use-tenant-menu";
 
 function PhoneMockup() {
   const { lang, t } = useApp();
@@ -62,9 +59,7 @@ function PhoneMockup() {
 }
 
 export function HomeView() {
-  const { t, loggedIn, orders, toast, lang, selectedBranchId, branding } = useApp();
-  const branchId = branding?.branches?.some((branch) => branch.branchId === selectedBranchId) ? selectedBranchId : undefined;
-  const mostSold = useMostSold(branchId);
+  const { t, loggedIn, orders, toast } = useApp();
   const [filter, setFilter] = useState("الكل");
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(
     "burger",
@@ -74,9 +69,6 @@ export function HomeView() {
     ? products.filter((product) => product.category === selectedCategory)
     : filterMenu(filter);
   const activeOrder = orders.find((order) => order.status === "preparing");
-  const bestSellers = apiConfigured()
-    ? mostSold.data.map((item) => menuProduct(item, lang))
-    : products.filter((product) => product.category === (selectedCategory ?? "burger")).sort((a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)));
 
   const selectCategory = (categoryId: CategoryId) => {
     setSelectedCategory(categoryId);
@@ -194,7 +186,14 @@ export function HomeView() {
           className="translate-x-1.5"
         />
         <div className="motion-stagger mt-3 grid grid-cols-2 gap-3 lg:mt-5 lg:grid-cols-5 lg:gap-4">
-          {bestSellers.slice(0, 4)
+          {products
+            .filter(
+              (product) => product.category === (selectedCategory ?? "burger"),
+            )
+            .sort(
+              (a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)),
+            )
+            .slice(0, 4)
             .map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
