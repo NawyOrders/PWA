@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChevronLeft, LayoutGrid, SlidersHorizontal } from "lucide-react";
 import {
-  categories as demoCategories,
+  categories,
   catalogCategoryOrder,
   categoriesById,
   categoryCounts,
@@ -17,9 +17,6 @@ import { StoreHeader } from "@/components/store-header";
 import { MobilePageHeader } from "@/components/ui";
 import { ProductCard } from "@/components/product-card";
 import { useApp } from "@/components/providers";
-import { apiConfigured } from "@/lib/api";
-import { menuImage, menuProduct } from "@/lib/tenant-menu";
-import { useMenuCategories, useMenuItems } from "@/hooks/use-tenant-menu";
 
 const chips = ["الكل", "الأكثر طلباً", "العروض"];
 
@@ -30,25 +27,13 @@ const sortOptions = [
 ];
 
 export function CategoriesView() {
-  const { t, lang, selectedBranchId, branding } = useApp();
-  const remoteCategories = useMenuCategories();
-  const [categoryId, setCategoryId] = useState<string>("burger");
+  const { t } = useApp();
+  const [categoryId, setCategoryId] = useState<CategoryId>("burger");
   const [chip, setChip] = useState("الكل");
   const [sort, setSort] = useState("popular");
 
-  useEffect(() => {
-    if (apiConfigured() && remoteCategories.data.length && !remoteCategories.data.some((item) => item.id === categoryId)) setCategoryId(remoteCategories.data[0].id);
-  }, [categoryId, remoteCategories.data]);
-  const branchId = branding?.branches?.some((branch) => branch.branchId === selectedBranchId) ? selectedBranchId : undefined;
-  const remoteItems = useMenuItems({ categoryId, branchId, pageSize: 100 });
-  const categories = apiConfigured() ? remoteCategories.data.map((item) => ({ id: item.id, name: (lang === "ar" ? item.nameAr : item.nameEn) || item.nameEn || item.nameAr || "", image: menuImage(item.imageKey), count: item.itemCount ?? 0 })) : demoCategories;
-  const category = categories.find((item) => item.id === categoryId) ?? categories[0] ?? {
-    id: "",
-    name: lang === "ar" ? "الأقسام" : "Categories",
-    image: "/images/burger.webp",
-    count: 0,
-  };
-  const categoryItems = apiConfigured() ? remoteItems.data.items.map((item) => menuProduct(item, lang, categoryId)) : products.filter((product) => product.category === categoryId);
+  const category = categoriesById[categoryId];
+  const categoryItems = products.filter((product) => product.category === categoryId);
   const categoryTotal = categoryItems.length;
   let items = categoryItems;
 
@@ -86,8 +71,8 @@ export function CategoriesView() {
         </div>
 
         <div className="motion-stagger mt-4 grid grid-cols-2 gap-3 lg:hidden">
-          {categories.map((item) => {
-            const id = item.id;
+          {catalogCategoryOrder.map((id) => {
+            const item = categoriesById[id];
             return (
               <Link
                 key={id}
@@ -107,7 +92,7 @@ export function CategoriesView() {
                 </span>
                 <span className="mt-2.5 text-[15px] font-extrabold text-ink">{t(item.name)}</span>
                 <span className="mt-1 text-[11px] font-semibold text-muted">
-                  {(apiConfigured() ? item.count : categoryCounts[id] ?? 0)} {t("صنف")}
+                  {categoryCounts[id] ?? 0} {t("صنف")}
                 </span>
               </Link>
             );
@@ -115,8 +100,8 @@ export function CategoriesView() {
         </div>
 
         <div className="motion-stagger mt-5 hidden grid-cols-7 gap-3 lg:grid">
-          {categories.map((item) => {
-            const id = item.id;
+          {desktopCategoryOrder.map((id) => {
+            const item = categoriesById[id];
             const active = id === categoryId;
             return (
               <button
@@ -143,7 +128,7 @@ export function CategoriesView() {
                   </span>
                 </span>
                 <span className={`mt-2.5 text-sm font-extrabold ${active ? "text-brand" : "text-ink"}`}>{t(item.name)}</span>
-                <span className="mt-1 text-[10px] font-semibold text-muted">{(apiConfigured() ? item.count : categoryCounts[id] ?? 0)} {t("صنف")}</span>
+                <span className="mt-1 text-[10px] font-semibold text-muted">{categoryCounts[id] ?? 0} {t("صنف")}</span>
               </button>
             );
           })}

@@ -23,11 +23,6 @@ vi.mock("next/link", () => ({
 }));
 
 describe("CategoriesView", () => {
-  it("does not crash while live categories are loading", () => {
-    renderApp(<CategoriesView />);
-    expect(screen.queryByText(/cannot read/i)).not.toBeInTheDocument();
-  });
-
   it("renders the mobile category catalogue with a link per category", () => {
     const { container } = renderApp(<CategoriesView />);
 

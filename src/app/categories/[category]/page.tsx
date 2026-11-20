@@ -15,5 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
 
 export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
   const { category } = await params;
-  return <CategoryDetailView categoryId={category} />;
+  const item = categoriesById[category as CategoryId];
+  if (!item) notFound();
+  return <CategoryDetailView categoryId={item.id} />;
 }

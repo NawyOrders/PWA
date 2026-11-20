@@ -166,9 +166,6 @@ export function AddressNewView() {
       kind,
       lat: point.lat,
       lng: point.lng,
-      placeType: kind === "work" ? "Office" : kind === "family" ? "Villa" : "Apartment",
-      street: detail.trim() || pinLabel || areaName(point, lang),
-      landmark: detail.trim() ? detail.trim().slice(0, 500) : null,
     });
     setMode("list");
     router.push("/checkout/delivery");

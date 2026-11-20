@@ -5,12 +5,11 @@ import { useRouter } from "next/navigation";
 import { Bike, MapPin, PackageCheck } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { CheckoutShell, Button } from "@/components/ui";
-import { deliveryFee, formatPrice, user } from "@/lib/data";
-import { branchHoursLabel } from "@/lib/branding";
+import { branches, deliveryFee, formatPrice, user } from "@/lib/data";
 
 export function PickupView() {
   const router = useRouter();
-  const { fulfilment, setFulfilment, subtotal, count, t, lang, addresses, selectedAddressId, selectedBranchId, coupon, branches } = useApp();
+  const { fulfilment, setFulfilment, subtotal, count, t, lang, addresses, selectedAddressId, selectedBranchId, coupon } = useApp();
   const branch = branches.find((item) => item.id === selectedBranchId) ?? branches[0];
   const selectedAddress = addresses.find((address) => address.id === selectedAddressId) ?? null;
   const deliveryAddress = selectedAddress
@@ -39,9 +38,7 @@ export function PickupView() {
       icon: PackageCheck,
       badge: "بدون رسوم توصيل",
       badgeTone: "bg-success-soft text-success",
-      description: branchHoursLabel(branch)
-        ? `${branch.address} · ${branchHoursLabel(branch)}`
-        : branch.address,
+      description: branch.address,
     },
   ];
 
