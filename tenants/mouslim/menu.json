@@ -2,6 +2,44 @@
   "currency": "EGP",
   "categories": [
     {
+      "id": "chicken",
+      "nameAr": "دجاج",
+      "nameEn": "Chicken",
+      "image": "https://www.themealdb.com/images/media/meals/nlxald1764112200.jpg",
+      "items": []
+    },
+    {
+      "id": "seafood",
+      "nameAr": "أسماك",
+      "nameEn": "Seafood",
+      "image": "https://www.themealdb.com/images/media/meals/1548772327.jpg",
+      "items": []
+    },
+    {
+      "id": "meat",
+      "nameAr": "لحوم",
+      "nameEn": "Meat",
+      "image": "https://www.themealdb.com/images/media/meals/04axct1763793018.jpg",
+      "needsReview": false,
+      "items": []
+    },
+    {
+      "id": "burger",
+      "nameAr": "برجر",
+      "nameEn": "Burger",
+      "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80",
+      "needsReview": true,
+      "items": []
+    },
+    {
+      "id": "combo",
+      "nameAr": "الكومبو",
+      "nameEn": "Combo",
+      "image": "https://images.unsplash.com/photo-1555658094-ca794654362c?auto=format&fit=crop&w=800&q=80",
+      "needsReview": true,
+      "items": []
+    },
+    {
       "id": "liver",
       "nameAr": "كبدة",
       "nameEn": "Liver",
