@@ -1,0 +1,80 @@
+{
+  "offers": [
+    {
+      "id": "offer-1",
+      "enabled": true,
+      "order": 1,
+      "theme": "dark",
+      "image": "https://wsrv.nl/?url=https://pd.w.org/2026/07/8636a6d0de1bdd797.99183133-2048x1536.jpg&w=1800&h=380&fit=cover&a=attention",
+      "badgeAr": "الأكثر طلباً",
+      "badgeEn": "Most ordered",
+      "titleAr": "فطير رول سوبر سوبريم",
+      "titleEn": "Super Supreme Feteer Roll",
+      "textAr": "جرّب وجبة الفطير رول الجديدة مع البطاطس والمخلل وصوص من اختيارك بـ 175 جنيه.",
+      "textEn": "Try the new Super Supreme Feteer Roll meal served with fries, pickles, and your choice of sauce for 175 EGP.",
+      "ctaAr": "اطلب الان",
+      "ctaEn": "Order now",
+      "action": {
+        "type": "product",
+        "value": "super-supreme-feteer-roll"
+      }
+    },
+    {
+      "id": "offer-2",
+      "enabled": true,
+      "order": 2,
+      "theme": "light",
+      "image": "https://wsrv.nl/?url=https://pd.w.org/2022/09/81863219cf1d81401.70143273-2048x946.jpg&w=1800&h=380&fit=cover&a=center",
+      "badgeAr": "خصم 20%",
+      "badgeEn": "20% off",
+      "titleAr": "بيتزا طازة من الفرن",
+      "titleEn": "Fresh pizza from the oven",
+      "textAr": "خصم 20% على كل أنواع البيتزا بأحجامها المختلفة مع إمكانية إضافة الستافت كراست.",
+      "textEn": "20% off all oven-fresh pizzas in Small, Medium & Large with optional Stuffed Crust.",
+      "ctaAr": "اطلب بيتزا",
+      "ctaEn": "Order pizza",
+      "action": {
+        "type": "search",
+        "value": "بيتزا"
+      }
+    },
+    {
+      "id": "offer-3",
+      "enabled": true,
+      "order": 3,
+      "theme": "light",
+      "image": "https://wsrv.nl/?url=https://pd.w.org/2023/07/34364bf44a5407c74.02317777-2048x1365.jpg&w=1800&h=380&fit=cover&a=attention",
+      "badgeAr": "تحلية دادي",
+      "badgeEn": "Sweet special",
+      "titleAr": "فطير حلو وبقلاوة وأم علي",
+      "titleEn": "Sweet Feteer, Baklava & Om Ali",
+      "textAr": "اختار فطيرتك المفضلة بالنوتيلا، اللوتس، الكيندر، البستاشيو أو البقلاوة بالمكسرات.",
+      "textEn": "Pick your favorite Sweet Feteer with Chocolate, Lotus, Kinder, Pistachio or Nuts Baklava.",
+      "ctaAr": "اطلب دلوقتي",
+      "ctaEn": "Order now",
+      "action": {
+        "type": "category",
+        "value": "sweet-feteer"
+      }
+    },
+    {
+      "id": "offer-4",
+      "enabled": true,
+      "order": 4,
+      "theme": "dark",
+      "image": "https://wsrv.nl/?url=https://pd.w.org/2022/09/7276329e1a6385ce6.48110671-2048x1536.jpg&w=1800&h=380&fit=cover&a=attention",
+      "badgeAr": "عرض محدود",
+      "badgeEn": "Limited offer",
+      "titleAr": "توصيل علينا",
+      "titleEn": "Free delivery",
+      "textAr": "اطلب من المكرونات، الكالزوني والفطائر بـ 200 جنيه أو أكتر واستمتع بتوصيل مجاني لحد باب البيت.",
+      "textEn": "Order 200 EGP or more from Pasta, Calzone & Pies and enjoy free delivery to your door.",
+      "ctaAr": "اطلب الان",
+      "ctaEn": "Order now",
+      "action": {
+        "type": "path",
+        "value": "/categories"
+      }
+    }
+  ]
+}
