@@ -1,0 +1,981 @@
+{
+  "currency": "EGP",
+  "categories": [
+    {
+      "id": "grills",
+      "nameAr": "قسم المشويات",
+      "nameEn": "Grills",
+      "image": "https://live.staticflickr.com/65535/47939083858_0e10864c18_b.jpg",
+      "items": [
+        {
+          "id": "grilled-kebab",
+          "nameAr": "كباب مشوى",
+          "nameEn": "Grilled Kebab",
+          "image": "https://www.themealdb.com/images/media/meals/04axct1763793018.jpg",
+          "price": null,
+          "variants": {
+            "ثلث كيلو": 285,
+            "نص كيلو": 420,
+            "كيلو": 820
+          }
+        },
+        {
+          "id": "grilled-meat",
+          "nameAr": "لحم مشوى",
+          "nameEn": "Grilled Meat",
+          "image": "https://live.staticflickr.com/4149/5067543924_7b525da545_b.jpg",
+          "price": null,
+          "variants": {
+            "ثلث كيلو": 275,
+            "نص كيلو": 400,
+            "كيلو": 800
+          }
+        },
+        {
+          "id": "grilled-ribs",
+          "nameAr": "ريش مشوى",
+          "nameEn": "Grilled Lamb Ribs",
+          "image": "https://live.staticflickr.com/5135/5510832549_32acd4afe0_b.jpg",
+          "price": null,
+          "variants": {
+            "ثلث كيلو": 320,
+            "نص كيلو": 470,
+            "كيلو": 900
+          }
+        },
+        {
+          "id": "mixed-kebab",
+          "nameAr": "كباب مشكل",
+          "nameEn": "Mixed Kebab",
+          "image": "https://live.staticflickr.com/3951/15006443834_b3d451b296_b.jpg",
+          "price": null,
+          "variants": {
+            "ثلث كيلو": 265,
+            "نص كيلو": 380,
+            "كيلو": 750
+          }
+        },
+        {
+          "id": "lamb-shank-rice-salad",
+          "nameAr": "موزة ضانى + أرز + سلطة",
+          "nameEn": "Lamb Shank + Rice + Salad",
+          "image": "https://live.staticflickr.com/5058/5440328764_fff8f7485e_b.jpg",
+          "price": 550,
+          "variants": {}
+        },
+        {
+          "id": "grilled-kofta",
+          "nameAr": "كفتة مشوية",
+          "nameEn": "Grilled Kofta",
+          "image": "https://live.staticflickr.com/8063/8178440351_8ccf8ff393_b.jpg",
+          "price": null,
+          "variants": {
+            "ثلث كيلو": 215,
+            "نص كيلو": 315,
+            "كيلو": 625
+          }
+        },
+        {
+          "id": "tarb",
+          "nameAr": "طرب",
+          "nameEn": "Tarb",
+          "image": "https://live.staticflickr.com/3831/8921443138_7f88b05b35_b.jpg",
+          "price": null,
+          "variants": {
+            "ثلث كيلو": 275,
+            "نص كيلو": 420,
+            "كيلو": 800
+          }
+        },
+        {
+          "id": "grilled-sausage",
+          "nameAr": "سجق مشوى",
+          "nameEn": "Grilled Sausage",
+          "image": "https://www.themealdb.com/images/media/meals/vc08jn1628769553.jpg",
+          "price": null,
+          "variants": {
+            "ثلث كيلو": 190,
+            "نص كيلو": 285,
+            "كيلو": 560
+          }
+        },
+        {
+          "id": "pane-grill",
+          "nameAr": "بانية",
+          "nameEn": "Chicken Pane",
+          "image": "https://live.staticflickr.com/4145/5098441431_0f66a91636_b.jpg",
+          "price": null,
+          "variants": {
+            "ثلث كيلو": 180,
+            "نص كيلو": 260,
+            "كيلو": 500
+          }
+        },
+        {
+          "id": "shish-tawook",
+          "nameAr": "شيش طاووق",
+          "nameEn": "Shish Tawook",
+          "image": "https://live.staticflickr.com/5487/9415362773_f7e1ff3ed0_b.jpg",
+          "price": null,
+          "variants": {
+            "ثلث كيلو": 180,
+            "نص كيلو": 260,
+            "كيلو": 500
+          }
+        },
+        {
+          "id": "grilled-chicken",
+          "nameAr": "فرخة مشوية",
+          "nameEn": "Grilled Chicken",
+          "image": "https://live.staticflickr.com/16/20805732_fc7c43a883_b.jpg",
+          "price": null,
+          "variants": {
+            "نصف": 150,
+            "كاملة": 300
+          }
+        },
+        {
+          "id": "shish-chicken",
+          "nameAr": "فرخة شيش",
+          "nameEn": "Shish Chicken",
+          "image": "https://www.themealdb.com/images/media/meals/prjve31763486864.jpg",
+          "price": null,
+          "variants": {
+            "نصف": 150,
+            "كاملة": 300
+          }
+        },
+        {
+          "id": "stuffed-or-grilled-pigeon",
+          "nameAr": "حمام محشى / مشوى",
+          "nameEn": "Stuffed / Grilled Pigeon",
+          "image": "https://live.staticflickr.com/4224/35174883426_009e318006_b.jpg",
+          "price": 175,
+          "variants": {}
+        }
+      ]
+    },
+    {
+      "id": "kitchen",
+      "nameAr": "قسم المطبخ",
+      "nameEn": "Kitchen & Tagines",
+      "image": "https://www.themealdb.com/images/media/meals/yuwtuu1511295751.jpg",
+      "items": [
+        {
+          "id": "orzo-soup",
+          "nameAr": "شوربة لسان عصفور",
+          "nameEn": "Orzo Soup",
+          "image": "https://live.staticflickr.com/8337/8191470721_14c018fd3f_b.jpg",
+          "price": 20,
+          "variants": {}
+        },
+        {
+          "id": "meat-soup",
+          "nameAr": "شوربة لحم",
+          "nameEn": "Meat Soup",
+          "image": "https://www.themealdb.com/images/media/meals/pbzcrx1763765096.jpg",
+          "price": 20,
+          "variants": {}
+        },
+        {
+          "id": "chicken-soup",
+          "nameAr": "شوربة فراخ",
+          "nameEn": "Chicken Soup",
+          "image": "https://www.themealdb.com/images/media/meals/1529446137.jpg",
+          "price": 20,
+          "variants": {}
+        },
+        {
+          "id": "lentil-soup",
+          "nameAr": "شوربة عدس",
+          "nameEn": "Lentil Soup",
+          "image": "https://live.staticflickr.com/3444/3210281474_f3950cb1c0_b.jpg",
+          "price": 50,
+          "variants": {}
+        },
+        {
+          "id": "okra-or-molokhia",
+          "nameAr": "بامية سادة / ملوخية",
+          "nameEn": "Plain Okra / Molokhia",
+          "image": "https://www.themealdb.com/images/media/meals/x2fw9e1560460636.jpg",
+          "price": 50,
+          "variants": {}
+        },
+        {
+          "id": "mixed-vegetables-plain",
+          "nameAr": "خضار مشكل سادة",
+          "nameEn": "Plain Mixed Vegetables",
+          "image": "https://www.themealdb.com/images/media/meals/d8bfyg1764117503.jpg",
+          "price": 50,
+          "variants": {}
+        },
+        {
+          "id": "okra-meat-tagine",
+          "nameAr": "طاجن بامية باللحم",
+          "nameEn": "Okra with Meat Tagine",
+          "image": "https://live.staticflickr.com/2899/14015331512_c3d85d93a9_b.jpg",
+          "price": 170,
+          "variants": {}
+        },
+        {
+          "id": "potato-meat-tagine",
+          "nameAr": "طاجن بطاطس باللحم",
+          "nameEn": "Potato with Meat Tagine",
+          "image": "https://www.themealdb.com/images/media/meals/cgl60b1683206581.jpg",
+          "price": 170,
+          "variants": {}
+        },
+        {
+          "id": "vegetables-meat-tagine",
+          "nameAr": "طاجن خضار باللحم",
+          "nameEn": "Mixed Vegetables with Meat Tagine",
+          "image": "https://www.themealdb.com/images/media/meals/yuwtuu1511295751.jpg",
+          "price": 170,
+          "variants": {}
+        },
+        {
+          "id": "baked-pasta",
+          "nameAr": "مكرونة فرن",
+          "nameEn": "Baked Oven Pasta",
+          "image": "https://live.staticflickr.com/4053/4571026174_17257694b2_b.jpg",
+          "price": 60,
+          "variants": {}
+        }
+      ]
+    },
+    {
+      "id": "taswyat",
+      "nameAr": "قسم التسويات",
+      "nameEn": "Cooking & Roasting Services",
+      "image": "https://live.staticflickr.com/5081/5216840890_12350fae32_b.jpg",
+      "items": [
+        {
+          "id": "roast-lamb-20kg",
+          "nameAr": "خروف 20 ك + 20 أرز",
+          "nameEn": "20 Kg Lamb Cooking + 20 Rice",
+          "image": "https://live.staticflickr.com/54/155147995_68ba7aae6c_b.jpg",
+          "price": 2200,
+          "variants": {}
+        },
+        {
+          "id": "roast-goat-12kg",
+          "nameAr": "تيس 12 ك + 20 أرز",
+          "nameEn": "12 Kg Goat Cooking + 20 Rice",
+          "image": "https://live.staticflickr.com/2624/3849614645_ce9c8407d3_b.jpg",
+          "price": 1850,
+          "variants": {}
+        },
+        {
+          "id": "roast-turkey-8kg",
+          "nameAr": "ديك رومى 8 ك + 10 أرز",
+          "nameEn": "8 Kg Turkey Cooking + 10 Rice",
+          "image": "https://live.staticflickr.com/4806/32072724778_f2ebea8b9d_b.jpg",
+          "price": 1050,
+          "variants": {}
+        },
+        {
+          "id": "roast-leg-4kg",
+          "nameAr": "فخذة 4 ك + 8 أرز",
+          "nameEn": "4 Kg Lamb Leg Cooking + 8 Rice",
+          "image": "https://live.staticflickr.com/2940/13929781675_349d4e8d2b_b.jpg",
+          "price": 750,
+          "variants": {}
+        },
+        {
+          "id": "roast-duck-rice",
+          "nameAr": "بطة + 5 أرز",
+          "nameEn": "Duck Cooking + 5 Rice",
+          "image": "https://www.themealdb.com/images/media/meals/wvpvsu1511786158.jpg",
+          "price": 450,
+          "variants": {}
+        },
+        {
+          "id": "cook-meat-kofta-kg",
+          "nameAr": "كيلو لحم / كفتة",
+          "nameEn": "1 Kg Meat / Kofta Cooking",
+          "image": "https://live.staticflickr.com/3932/15440562729_7eec8e02bc_b.jpg",
+          "price": 60,
+          "variants": {}
+        },
+        {
+          "id": "cook-chicken",
+          "nameAr": "فراخ",
+          "nameEn": "Chicken Cooking",
+          "image": "https://www.themealdb.com/images/media/meals/cj56fs1762340001.jpg",
+          "price": 60,
+          "variants": {}
+        }
+      ]
+    },
+    {
+      "id": "sandwiches",
+      "nameAr": "قسم السندوتشات",
+      "nameEn": "Sandwiches",
+      "image": "https://live.staticflickr.com/7238/7304112900_5bb41ae2c9_b.jpg",
+      "items": [
+        {
+          "id": "hawawshi-sandwich",
+          "nameAr": "سندوتش حواوشى",
+          "nameEn": "Hawawshi Sandwich",
+          "image": "https://live.staticflickr.com/2820/11568199634_ba1139990d_b.jpg",
+          "price": 80,
+          "variants": {}
+        },
+        {
+          "id": "kofta-sandwich",
+          "nameAr": "سندوتش كفتة",
+          "nameEn": "Kofta Sandwich",
+          "image": "https://live.staticflickr.com/3111/3132085570_b1ed70fa6a_b.jpg",
+          "price": 70,
+          "variants": {}
+        },
+        {
+          "id": "kebab-sandwich",
+          "nameAr": "سندوتش كباب",
+          "nameEn": "Kebab Sandwich",
+          "image": "https://live.staticflickr.com/2294/5815494237_dcdab5caaf_b.jpg",
+          "price": 100,
+          "variants": {}
+        },
+        {
+          "id": "tarb-sandwich",
+          "nameAr": "سندوتش طرب",
+          "nameEn": "Tarb Sandwich",
+          "image": "https://live.staticflickr.com/82/210941571_55ab5225af.jpg",
+          "price": 85,
+          "variants": {}
+        },
+        {
+          "id": "pane-sandwich",
+          "nameAr": "سندوتش بانية",
+          "nameEn": "Pane Sandwich",
+          "image": "https://live.staticflickr.com/5140/5573152776_6965b3601a_b.jpg",
+          "price": 75,
+          "variants": {}
+        },
+        {
+          "id": "shish-tawook-sandwich",
+          "nameAr": "سندوتش شيش طاووق",
+          "nameEn": "Shish Tawook Sandwich",
+          "image": "https://live.staticflickr.com/4069/4312039297_7b963c38ba_b.jpg",
+          "price": 75,
+          "variants": {}
+        }
+      ]
+    },
+    {
+      "id": "mahashi",
+      "nameAr": "قسم المحاشى",
+      "nameEn": "Stuffed Dishes (Mahashi)",
+      "image": "https://live.staticflickr.com/8513/8524696545_b9995b1d88_b.jpg",
+      "items": [
+        {
+          "id": "quarter-grape-leaves",
+          "nameAr": "ربع ك محشى ورق عنب",
+          "nameEn": "Quarter Kg Stuffed Grape Leaves",
+          "image": "https://live.staticflickr.com/8513/8524696545_b9995b1d88_b.jpg",
+          "price": 70,
+          "variants": {}
+        },
+        {
+          "id": "quarter-mombar",
+          "nameAr": "ربع ك ممبار",
+          "nameEn": "Quarter Kg Mombar",
+          "image": "https://www.themealdb.com/images/media/meals/st1ifa1583267248.jpg",
+          "price": 75,
+          "variants": {}
+        },
+        {
+          "id": "sambousek-4pcs",
+          "nameAr": "سمبوسك لحم / جبنة 4 قطع",
+          "nameEn": "Meat / Cheese Sambousek (4 Pieces)",
+          "image": "https://live.staticflickr.com/3083/3140016979_3003ec0a9d_b.jpg",
+          "price": 60,
+          "variants": {}
+        },
+        {
+          "id": "medium-mahashi-plate-1kg",
+          "nameAr": "طبق محشى وسط كيلو",
+          "nameEn": "Medium Mixed Mahashi Plate (1 Kg)",
+          "image": "https://live.staticflickr.com/7281/8743893817_8b7bcd38bc_b.jpg",
+          "price": 250,
+          "variants": {}
+        },
+        {
+          "id": "large-mahashi-plate-1-5kg",
+          "nameAr": "طبق محشى كبير كيلو ونص",
+          "nameEn": "Large Mixed Mahashi Plate (1.5 Kg)",
+          "image": "https://live.staticflickr.com/6005/5917213739_232d7a767a_b.jpg",
+          "price": 375,
+          "variants": {}
+        },
+        {
+          "id": "kilo-mombar",
+          "nameAr": "كيلو ممبار",
+          "nameEn": "1 Kg Mombar",
+          "image": "https://live.staticflickr.com/3871/15096007310_e4cc44be07_b.jpg",
+          "price": 250,
+          "variants": {}
+        },
+        {
+          "id": "kilo-grape-leaves",
+          "nameAr": "كيلو ورق عنب",
+          "nameEn": "1 Kg Stuffed Grape Leaves",
+          "image": "https://live.staticflickr.com/7281/8743893817_8b7bcd38bc_b.jpg",
+          "price": 250,
+          "variants": {}
+        }
+      ]
+    },
+    {
+      "id": "appetizers",
+      "nameAr": "قسم المقبلات",
+      "nameEn": "Appetizers & Salads",
+      "image": "https://live.staticflickr.com/6005/5917213739_232d7a767a_b.jpg",
+      "items": [
+        {
+          "id": "green-salad-or-tahina",
+          "nameAr": "سلطة خضراء / طحينة",
+          "nameEn": "Green Salad / Tahina",
+          "image": "https://live.staticflickr.com/2050/2465764824_b9f4d32478_b.jpg",
+          "price": 15,
+          "variants": {}
+        },
+        {
+          "id": "fattoush-or-hummus",
+          "nameAr": "فتوش / حمص",
+          "nameEn": "Fattoush / Hummus",
+          "image": "https://live.staticflickr.com/1695/24934823760_2e46059a9e.jpg",
+          "price": 20,
+          "variants": {}
+        },
+        {
+          "id": "cucumber-yogurt-or-coleslaw",
+          "nameAr": "خيار باللبن / كلوسلو",
+          "nameEn": "Cucumber Yogurt / Coleslaw",
+          "image": "https://live.staticflickr.com/3236/2913514019_f70f46ac43_b.jpg",
+          "price": 20,
+          "variants": {}
+        },
+        {
+          "id": "garlic-sauce",
+          "nameAr": "ثومية",
+          "nameEn": "Garlic Sauce (Toumeya)",
+          "image": "https://live.staticflickr.com/3324/3270515791_37d180951e_b.jpg",
+          "price": 20,
+          "variants": {}
+        },
+        {
+          "id": "onion-chili-lemon",
+          "nameAr": "بصل وشطة وليمون",
+          "nameEn": "Onion, Chili & Lemon",
+          "image": "https://live.staticflickr.com/49/143556563_481e66dceb.jpg",
+          "price": 15,
+          "variants": {}
+        },
+        {
+          "id": "beetroot-or-baba-ghanoush",
+          "nameAr": "بنجر / بابا غنوج",
+          "nameEn": "Beetroot Salad / Baba Ghanoush",
+          "image": "https://live.staticflickr.com/8630/15718693804_f35252ea13_b.jpg",
+          "price": 20,
+          "variants": {}
+        },
+        {
+          "id": "french-fries",
+          "nameAr": "بطاطس محمرة",
+          "nameEn": "French Fries",
+          "image": "https://live.staticflickr.com/3559/3376336822_efc303daa9_b.jpg",
+          "price": 40,
+          "variants": {}
+        },
+        {
+          "id": "large-hot-sauce",
+          "nameAr": "صوص حار كبير",
+          "nameEn": "Large Hot Sauce",
+          "image": "https://live.staticflickr.com/4045/4315525366_005ae9b1d7_b.jpg",
+          "price": 20,
+          "variants": {}
+        }
+      ]
+    },
+    {
+      "id": "feasts",
+      "nameAr": "قسم العزائم",
+      "nameEn": "Feasts & Banquets",
+      "image": "https://live.staticflickr.com/4702/28345316939_31f38838c9_b.jpg",
+      "items": [
+        {
+          "id": "mandi-goat-20-rice",
+          "nameAr": "تيس مندى + 20 أرز",
+          "nameEn": "Mandi Goat + 20 Rice",
+          "image": "https://live.staticflickr.com/2624/3849614645_ce9c8407d3_b.jpg",
+          "price": 9500,
+          "variants": {}
+        },
+        {
+          "id": "half-mandi-goat-10-rice",
+          "nameAr": "نص تيس + 10 أرز",
+          "nameEn": "Half Mandi Goat + 10 Rice",
+          "image": "https://live.staticflickr.com/4532/38652637446_288a847555_b.jpg",
+          "price": 4750,
+          "variants": {}
+        },
+        {
+          "id": "mandi-lamb-30-rice",
+          "nameAr": "خروف مندى + 30 أرز",
+          "nameEn": "Mandi Whole Lamb + 30 Rice",
+          "image": "https://live.staticflickr.com/54/155147995_68ba7aae6c_b.jpg",
+          "price": 15000,
+          "variants": {}
+        },
+        {
+          "id": "mandi-duck-7-rice",
+          "nameAr": "بطة مندى + 7 أرز",
+          "nameEn": "Mandi Duck + 7 Rice",
+          "image": "https://live.staticflickr.com/3306/3643455841_38fcd0f0c7_b.jpg",
+          "price": 900,
+          "variants": {}
+        },
+        {
+          "id": "roast-turkey-10-rice",
+          "nameAr": "ديك رومى + 10 أرز",
+          "nameEn": "Turkey + 10 Rice",
+          "image": "https://live.staticflickr.com/5081/5216840890_12350fae32_b.jpg",
+          "price": 2900,
+          "variants": {}
+        },
+        {
+          "id": "lamb-leg-10-rice",
+          "nameAr": "فخذه ضانى + 10 أرز",
+          "nameEn": "Lamb Leg + 10 Rice",
+          "image": "https://live.staticflickr.com/2940/13929781675_349d4e8d2b_b.jpg",
+          "price": 3600,
+          "variants": {}
+        },
+        {
+          "id": "turkey-feast-15-persons",
+          "nameAr": "عزومة ديك رومى",
+          "nameEn": "Turkey Banquet (15 Persons)",
+          "image": "https://live.staticflickr.com/4806/32072724778_f2ebea8b9d_b.jpg",
+          "price": 3600,
+          "variants": {},
+          "noteAr": "ك كفتة + ك محشى + سلطات + 15 فرد أرز بالمكسرات",
+          "noteEn": "1 Kg Kofta + 1 Kg Mahashi + Salads + Nut Rice for 15 Persons"
+        }
+      ]
+    },
+    {
+      "id": "chicken-mandi-kabsa-biryani",
+      "nameAr": "قسم الدجاج المندى والكبسة والبريانى",
+      "nameEn": "Chicken Mandi, Kabsa & Biryani",
+      "image": "https://live.staticflickr.com/5150/5745952426_7af2b77f7f_b.jpg",
+      "items": [
+        {
+          "id": "quarter-chicken-mandi-thigh-rice",
+          "nameAr": "ربع دجاج مندى (ورك) + أرز",
+          "nameEn": "Quarter Chicken Mandi (Thigh) + Rice",
+          "image": "https://live.staticflickr.com/5150/5745952426_7af2b77f7f_b.jpg",
+          "price": 100,
+          "variants": {}
+        },
+        {
+          "id": "quarter-chicken-mandi-breast-rice",
+          "nameAr": "ربع دجاج مندى (صدر) + أرز",
+          "nameEn": "Quarter Chicken Mandi (Breast) + Rice",
+          "image": "https://www.themealdb.com/images/media/meals/er4d081765186828.jpg",
+          "price": 115,
+          "variants": {}
+        },
+        {
+          "id": "half-chicken-mandi-rice",
+          "nameAr": "نص دجاج مندى + أرز",
+          "nameEn": "Half Chicken Mandi + Rice",
+          "image": "https://live.staticflickr.com/5/6123431_e83ac2619d_b.jpg",
+          "price": 175,
+          "variants": {}
+        },
+        {
+          "id": "whole-chicken-mandi-4-rice",
+          "nameAr": "فرخة مندى + 4 أرز",
+          "nameEn": "Whole Chicken Mandi + 4 Rice",
+          "image": "https://live.staticflickr.com/5212/5529999374_b9180d2ce1_b.jpg",
+          "price": 435,
+          "variants": {}
+        },
+        {
+          "id": "large-plain-basmati-rice",
+          "nameAr": "أرز بسمتى سادة كبير",
+          "nameEn": "Large Plain Basmati Rice",
+          "image": "https://live.staticflickr.com/78/225058559_820a3cdfcb_b.jpg",
+          "price": 55,
+          "variants": {}
+        },
+        {
+          "id": "small-plain-basmati-rice",
+          "nameAr": "أرز بسمتى سادة صغير",
+          "nameEn": "Small Plain Basmati Rice",
+          "image": "https://live.staticflickr.com/40/85866478_7355b3d3b4.jpg",
+          "price": 40,
+          "variants": {}
+        }
+      ]
+    },
+    {
+      "id": "meat-mandi-kabsa-biryani",
+      "nameAr": "قسم اللحم المندى والكبسة والبريانى",
+      "nameEn": "Meat Mandi, Kabsa & Biryani",
+      "image": "https://www.themealdb.com/images/media/meals/xrttsx1487339558.jpg",
+      "items": [
+        {
+          "id": "meat-mandi-regular",
+          "nameAr": "نفر لحم (عادى) + أرز + سلطات",
+          "nameEn": "Meat Portion (Regular) + Rice + Salads",
+          "image": "https://www.themealdb.com/images/media/meals/1nalo51765188375.jpg",
+          "price": 420,
+          "variants": {}
+        },
+        {
+          "id": "meat-mandi-super",
+          "nameAr": "نفر لحم (سوبر) + أرز + سلطات",
+          "nameEn": "Meat Portion (Super) + Rice + Salads",
+          "image": "https://www.themealdb.com/images/media/meals/xrttsx1487339558.jpg",
+          "price": 470,
+          "variants": {}
+        },
+        {
+          "id": "eighth-goat-mandi-rice",
+          "nameAr": "ثمن تيس مندى + أرز + سلطات",
+          "nameEn": "1/8 Mandi Goat + Rice + Salads",
+          "image": "https://www.themealdb.com/images/media/meals/vvstvq1487342592.jpg",
+          "price": 1199,
+          "variants": {}
+        },
+        {
+          "id": "quarter-goat-mandi-rice",
+          "nameAr": "ربع تيس مندى + أرز + سلطات",
+          "nameEn": "1/4 Mandi Goat + Rice + Salads",
+          "image": "https://live.staticflickr.com/1439/1274181802_754903383c_b.jpg",
+          "price": 2500,
+          "variants": {}
+        }
+      ]
+    },
+    {
+      "id": "trays",
+      "nameAr": "قسم الصوانى",
+      "nameEn": "Family Trays",
+      "image": "https://live.staticflickr.com/2413/2351273120_45b68fba2a_b.jpg",
+      "items": [
+        {
+          "id": "miami-tray",
+          "nameAr": "صنية ميامى",
+          "nameEn": "Miami Tray (3–4 Persons)",
+          "image": "https://live.staticflickr.com/4702/28345316939_31f38838c9_b.jpg",
+          "price": 650,
+          "variants": {},
+          "noteAr": "من 3:4 أفراد - فرخة مندى أو مشوى + نص كفتة + ارز + سلطات",
+          "noteEn": "For 3-4 persons: Mandi/Grilled Chicken + Half Kofta + Rice + Salads"
+        },
+        {
+          "id": "sidi-bishr-tray",
+          "nameAr": "صنية سيدى بشر",
+          "nameEn": "Sidi Bishr Tray (4–6 Persons)",
+          "image": "https://live.staticflickr.com/2413/2351273120_45b68fba2a_b.jpg",
+          "price": 1250,
+          "variants": {},
+          "noteAr": "من 4:6 أفراد - فرخة مندى أو مشوى + ك كفتة + أرز + سلطات + ك محاشى مشكل",
+          "noteEn": "For 4-6 persons: Mandi/Grilled Chicken + 1 Kg Kofta + Rice + Salads + 1 Kg Mixed Mahashi"
+        },
+        {
+          "id": "lauran-tray",
+          "nameAr": "صنية لوران",
+          "nameEn": "Lauran Tray (6–8 Persons)",
+          "image": "https://live.staticflickr.com/65535/47939083858_0e10864c18_b.jpg",
+          "price": 1350,
+          "variants": {},
+          "noteAr": "من 6:8 أفراد - 6 أربع فراخ مندى أو مشوى + 3 أربع ك كفتة + أرز + 1 ك محاشى مشكل + أرز + سلطات",
+          "noteEn": "For 6-8 persons: 6 Chicken Quarters + 3/4 Kg Kofta + 1 Kg Mixed Mahashi + Rice + Salads"
+        },
+        {
+          "id": "mandara-tray",
+          "nameAr": "صنية المندرة",
+          "nameEn": "El Mandara Tray (4–5 Persons)",
+          "image": "https://live.staticflickr.com/4044/4648215616_9990c22ba8.jpg",
+          "price": 1600,
+          "variants": {},
+          "noteAr": "من 4:5 أفراد - ثمن تيس + نص كفتة + 1 ك محاشى مشكل + أرز + سلطات",
+          "noteEn": "For 4-5 persons: 1/8 Goat + Half Kofta + 1 Kg Mixed Mahashi + Rice + Salads"
+        },
+        {
+          "id": "maamoura-tray",
+          "nameAr": "صنية المعمورة",
+          "nameEn": "El Maamoura Tray (6–8 Persons)",
+          "image": "https://live.staticflickr.com/4532/38652637446_288a847555_b.jpg",
+          "price": 2300,
+          "variants": {},
+          "noteAr": "من 6:8 أفراد - ثمن تيس + فرخة مندى أو مشوى + نص كفتة + ربع طرب + 2 بامية + ك محاشى مشكل + أرز + سلطات",
+          "noteEn": "For 6-8 persons: 1/8 Goat + Whole Chicken + Half Kofta + 1/4 Tarb + 2 Okra + 1 Kg Mahashi + Rice + Salads"
+        },
+        {
+          "id": "bahary-tray",
+          "nameAr": "صنية بحرى",
+          "nameEn": "Bahary Tray (10–14 Persons)",
+          "image": "https://live.staticflickr.com/4702/28345316939_31f38838c9_b.jpg",
+          "price": 4400,
+          "variants": {},
+          "noteAr": "من 10:14 أفراد - ربع تيس + ك كفتة + ك طرب + فرخة مندى أو مشوى + 5 خضار + ك محاشى مشكل + أرز + سلطات",
+          "noteEn": "For 10-14 persons: 1/4 Goat + 1 Kg Kofta + 1 Kg Tarb + Whole Chicken + 5 Veg + 1 Kg Mahashi + Rice + Salads"
+        },
+        {
+          "id": "grills-tray",
+          "nameAr": "صنية المشاوى",
+          "nameEn": "Mixed Grills Tray (7–9 Persons)",
+          "image": "https://live.staticflickr.com/65535/47939083858_0e10864c18_b.jpg",
+          "price": 2150,
+          "variants": {},
+          "noteAr": "من 7:9 أفراد - نص طرب + نص سجق + نص كفتة + نص شيش طاووق + نص ك ورق عنب + نص ك ممبار + نص كباب / لحم شرائح + أرز + سلطات",
+          "noteEn": "For 7-9 persons: Half Tarb + Half Sausage + Half Kofta + Half Shish + Half Grape Leaves + Half Mombar + Half Kebab/Meat + Rice + Salads"
+        },
+        {
+          "id": "bride-tray",
+          "nameAr": "صنية العروسة",
+          "nameEn": "Bride & Groom Tray",
+          "image": "https://live.staticflickr.com/3306/3643455841_38fcd0f0c7_b.jpg",
+          "price": 1450,
+          "variants": {},
+          "noteAr": "تكفى عريس وعروسة - بطة مندى + 2 حمام + ك محاشى + أرز + سلطات",
+          "noteEn": "For Bride & Groom: Mandi Duck + 2 Pigeon + 1 Kg Mahashi + Rice + Salads"
+        },
+        {
+          "id": "big-night-tray",
+          "nameAr": "صنية الليلة الكبيرة",
+          "nameEn": "El Leila El Kebira Tray (3–5 Persons)",
+          "image": "https://live.staticflickr.com/5058/5440328764_fff8f7485e_b.jpg",
+          "price": 1350,
+          "variants": {},
+          "noteAr": "من 3:5 أفراد - موزة + نص كفتة + نص طرب + نص ممبار + أرز + سلطات",
+          "noteEn": "For 3-5 persons: Lamb Shank + Half Kofta + Half Tarb + Half Mombar + Rice + Salads"
+        },
+        {
+          "id": "wedding-tray",
+          "nameAr": "صنية الفرح",
+          "nameEn": "Wedding Tray (6 Persons)",
+          "image": "https://live.staticflickr.com/2574/3673096556_d633f38bcc_b.jpg",
+          "price": 1900,
+          "variants": {},
+          "noteAr": "تكفى 6 أفراد - سته حمام محشى + ك كفتة + ك محشى + أرز + سلطات",
+          "noteEn": "For 6 persons: 6 Stuffed Pigeon + 1 Kg Kofta + 1 Kg Mahashi + Rice + Salads"
+        },
+        {
+          "id": "night-of-a-lifetime-tray",
+          "nameAr": "صنية ليلة العمر",
+          "nameEn": "Leilat El Omr Tray (8–10 Persons)",
+          "image": "https://live.staticflickr.com/5212/5529999374_b9180d2ce1_b.jpg",
+          "price": 2150,
+          "variants": {},
+          "noteAr": "من 8:10 أفراد (عشا عروسة) - فرخة مندى + فرخة مشوى + ك كفتة + 3 حمام + ك محاشى",
+          "noteEn": "For 8-10 persons: Mandi Chicken + Grilled Chicken + 1 Kg Kofta + 3 Pigeon + 1 Kg Mahashi"
+        },
+        {
+          "id": "winter-tray",
+          "nameAr": "صنية الشتا",
+          "nameEn": "Winter Tray (4–5 Persons)",
+          "image": "https://live.staticflickr.com/4702/28345316939_31f38838c9_b.jpg",
+          "price": 1999,
+          "variants": {},
+          "noteAr": "من 4:5 أفراد - خمسه حمام محشى + نص كفتة + نص سجق + نص طرب + نص ممبار + أرز + سلطات",
+          "noteEn": "For 4-5 persons: 5 Stuffed Pigeon + Half Kofta + Half Sausage + Half Tarb + Half Mombar + Rice + Salads"
+        }
+      ]
+    },
+    {
+      "id": "couples-meals",
+      "nameAr": "وجبات الكابلز",
+      "nameEn": "Couples Meals",
+      "image": "https://live.staticflickr.com/5212/5529999374_b9180d2ce1_b.jpg",
+      "items": [
+        {
+          "id": "ana-w-enty-tray",
+          "nameAr": "صنية أنا وأنتى",
+          "nameEn": "Ana W Enty Tray",
+          "image": "https://live.staticflickr.com/5212/5529999374_b9180d2ce1_b.jpg",
+          "price": 400,
+          "variants": {},
+          "noteAr": "ربع مندى + ربع مشوى + 2 قطع كفتة + 2 طرب + 2 قطع ممبار + أرز",
+          "noteEn": "1/4 Mandi + 1/4 Grilled Chicken + 2 Kofta + 2 Tarb + 2 Mombar + Rice"
+        },
+        {
+          "id": "pigeon-couples-meal",
+          "nameAr": "وجبة الحمام",
+          "nameEn": "Pigeon Couples Meal",
+          "image": "https://live.staticflickr.com/4224/35174883426_009e318006_b.jpg",
+          "price": 400,
+          "variants": {},
+          "noteAr": "1 حمام + 2 قطع شيش طاووق + 2 قطع كفتة + 2 قطع سجق + أرز",
+          "noteEn": "1 Pigeon + 2 Shish Tawook + 2 Kofta + 2 Sausage + Rice"
+        },
+        {
+          "id": "anteem-meal",
+          "nameAr": "وجبة الأنتيم",
+          "nameEn": "El Anteem Meal",
+          "image": "https://live.staticflickr.com/2574/3673096556_d633f38bcc_b.jpg",
+          "price": 480,
+          "variants": {},
+          "noteAr": "2 حمام + 2 قطع ممبار + 2 قطع كفتة + 2 سمبوسك + أرز",
+          "noteEn": "2 Pigeon + 2 Mombar + 2 Kofta + 2 Sambousek + Rice"
+        },
+        {
+          "id": "hero-meal",
+          "nameAr": "وجبة البطل",
+          "nameEn": "El Batal Meal",
+          "image": "https://www.themealdb.com/images/media/meals/1nalo51765188375.jpg",
+          "price": 350,
+          "variants": {},
+          "noteAr": "2 قطع لحم مندى + 2 قطع شيش طاووق + 2 ممبار + 6 قطع ورق عنب + أرز",
+          "noteEn": "2 Mandi Meat + 2 Shish Tawook + 2 Mombar + 6 Grape Leaves + Rice"
+        },
+        {
+          "id": "rocket-meal",
+          "nameAr": "وجبة الصاروخ",
+          "nameEn": "El Saroukh Meal",
+          "image": "https://live.staticflickr.com/4532/38652637446_288a847555_b.jpg",
+          "price": 499,
+          "variants": {},
+          "noteAr": "2 لحم شرائح + 4 قطع سجق + 2 قطع كفتة + 2 قطع طرب + 2 ممبار + أرز",
+          "noteEn": "2 Beef Slices + 4 Sausage + 2 Kofta + 2 Tarb + 2 Mombar + Rice"
+        },
+        {
+          "id": "pasha-meal",
+          "nameAr": "وجبة الباشا",
+          "nameEn": "El Basha Meal",
+          "image": "https://live.staticflickr.com/5/6123431_e83ac2619d_b.jpg",
+          "price": 210,
+          "variants": {},
+          "noteAr": "ربع مشوى / مندى + 3 قطع كفتة + 2 قطع سمبوسك + أرز",
+          "noteEn": "1/4 Grilled or Mandi Chicken + 3 Kofta + 2 Sambousek + Rice"
+        }
+      ]
+    },
+    {
+      "id": "mix-meals",
+      "nameAr": "وجبات المكس",
+      "nameEn": "Mix Meals",
+      "image": "https://live.staticflickr.com/2895/14334066676_6dcb80cb0d_b.jpg",
+      "items": [
+        {
+          "id": "mix-quarter-thigh-kofta",
+          "nameAr": "ربع فرخة مشوى / مندى ورك + ثمن كفتة + أرز + سلطات",
+          "nameEn": "1/4 Chicken (Thigh) + 1/8 Kofta + Rice + Salads",
+          "image": "https://live.staticflickr.com/5150/5745952426_7af2b77f7f_b.jpg",
+          "price": 185,
+          "variants": {}
+        },
+        {
+          "id": "mix-quarter-breast-kofta",
+          "nameAr": "ربع فرخة مشوى / مندى صدر + ثمن كفتة + أرز + سلطات",
+          "nameEn": "1/4 Chicken (Breast) + 1/8 Kofta + Rice + Salads",
+          "image": "https://www.themealdb.com/images/media/meals/er4d081765186828.jpg",
+          "price": 200,
+          "variants": {}
+        },
+        {
+          "id": "mix-kebab-kofta-meal",
+          "nameAr": "ثمن كباب + ثمن كفتة + أرز + سلطات",
+          "nameEn": "1/8 Kebab + 1/8 Kofta + Rice + Salads",
+          "image": "https://live.staticflickr.com/3951/15006443834_b3d451b296_b.jpg",
+          "price": 250,
+          "variants": {}
+        },
+        {
+          "id": "mix-half-grilled-chicken-rice",
+          "nameAr": "نص فرخة مشوى + أرز + سلطات",
+          "nameEn": "1/2 Grilled Chicken + Rice + Salads",
+          "image": "https://live.staticflickr.com/16/20805732_fc7c43a883_b.jpg",
+          "price": 185,
+          "variants": {}
+        },
+        {
+          "id": "mix-half-grilled-chicken-fries",
+          "nameAr": "نص فرخة مشوى + بطاطس محمرة",
+          "nameEn": "1/2 Grilled Chicken + French Fries",
+          "image": "https://live.staticflickr.com/3559/3376336822_efc303daa9_b.jpg",
+          "price": 185,
+          "variants": {}
+        },
+        {
+          "id": "mix-quarter-kofta-rice",
+          "nameAr": "ربع كفتة + أرز + سلطات",
+          "nameEn": "1/4 Kofta + Rice + Salads",
+          "image": "https://live.staticflickr.com/8063/8178440351_8ccf8ff393_b.jpg",
+          "price": 180,
+          "variants": {}
+        },
+        {
+          "id": "mix-half-shish-chicken-rice",
+          "nameAr": "نص فرخة شيش + أرز + سلطات",
+          "nameEn": "1/2 Shish Chicken + Rice + Salads",
+          "image": "https://www.themealdb.com/images/media/meals/prjve31763486864.jpg",
+          "price": 185,
+          "variants": {}
+        },
+        {
+          "id": "mix-quarter-grilled-thigh-rice",
+          "nameAr": "ربع فرخة مشوى ورك + أرز + سلطات",
+          "nameEn": "1/4 Grilled Chicken (Thigh) + Rice + Salads",
+          "image": "https://www.themealdb.com/images/media/meals/cj56fs1762340001.jpg",
+          "price": 110,
+          "variants": {}
+        },
+        {
+          "id": "mix-quarter-grilled-breast-rice",
+          "nameAr": "ربع فرخة مشوى صدر + أرز + سلطات",
+          "nameEn": "1/4 Grilled Chicken (Breast) + Rice + Salads",
+          "image": "https://www.themealdb.com/images/media/meals/er4d081765186828.jpg",
+          "price": 125,
+          "variants": {}
+        },
+        {
+          "id": "mix-quarter-kofta-tarb-meal",
+          "nameAr": "ربع مندى أو مشوى + 3 قطع كفتة + 2 قطعة طرب + أرز + سلطات",
+          "nameEn": "1/4 Chicken + 3 Kofta + 2 Tarb + Rice + Salads",
+          "image": "https://live.staticflickr.com/3831/8921443138_7f88b05b35_b.jpg",
+          "price": 260,
+          "variants": {}
+        },
+        {
+          "id": "mix-3-kofta-3-shish-meal",
+          "nameAr": "3 قطع كفتة + 3 قطع شيش طاووق + أرز + سلطات",
+          "nameEn": "3 Kofta + 3 Shish Tawook + Rice + Salads",
+          "image": "https://live.staticflickr.com/5487/9415362773_f7e1ff3ed0_b.jpg",
+          "price": 190,
+          "variants": {}
+        },
+        {
+          "id": "mix-half-chicken-eighth-kofta",
+          "nameAr": "نص مندى / مشوى + ثمن كفتة + أرز + سلطات",
+          "nameEn": "1/2 Chicken + 1/8 Kofta + Rice + Salads",
+          "image": "https://live.staticflickr.com/5/6123431_e83ac2619d_b.jpg",
+          "price": 260,
+          "variants": {}
+        },
+        {
+          "id": "mix-4-kofta-rice",
+          "nameAr": "4 قطع كفتة + أرز + سلطات",
+          "nameEn": "4 Kofta Pieces + Rice + Salads",
+          "image": "https://live.staticflickr.com/8063/8178440351_8ccf8ff393_b.jpg",
+          "price": 115,
+          "variants": {}
+        },
+        {
+          "id": "mix-3-grilled-pane-rice",
+          "nameAr": "3 بانية مشوى + أرز + سلطات",
+          "nameEn": "3 Grilled Pane + Rice + Salads",
+          "image": "https://live.staticflickr.com/4145/5098441431_0f66a91636_b.jpg",
+          "price": 110,
+          "variants": {}
+        }
+      ]
+    }
+  ]
+}

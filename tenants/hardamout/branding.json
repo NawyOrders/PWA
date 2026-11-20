@@ -1,0 +1,40 @@
+{
+  "statusCode": 200,
+  "isSuccess": true,
+  "data": {
+    "tenantId": "hadramout",
+    "nameAr": "حضرموت",
+    "nameEn": "hadramout",
+    "logoUrl": "2wCEAAkGBxAQDxUQEBAPEBUPEBAQFRYVDw8QFRUYFRUWFhUWFhUYHSggGBolHRUVITEiJTUrOi4uFx8zODMtNygtLisBCgoKDg0OGxAQGy0mHyUvLy0tLS0rLS0tLS0tLS0tLS0rLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLf",
+    "faviconUrl":"2wCEAAkGBxAQDxUQEBAPEBUPEBAQFRYVDw8QFRUYFRUWFhUWFhUYHSggGBolHRUVITEiJTUrOi4uFx8zODMtNygtLisBCgoKDg0OGxAQGy0mHyUvLy0tLS0rLS0tLS0tLS0tLS0rLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLf",
+    "primaryColor": "#730F11",
+    "secondaryColor": "#E2C569",
+    "accentColor": "#FBD715",
+    "backgroundColor": "#FAF7F2",
+    "surfaceColor": "#F5EDE0",
+    "textOnPrimaryColor": "#FCF8F2",
+    "contactPhone": null,
+    "contactEmail": null,
+    "whatsAppUrl": null,
+    "messengerUrl": null,
+    "socialLinks": {},
+    "branches": [
+      {
+        "branchId": "hadramout",
+        "nameAr": "الفرع الرئيسي",
+        "nameEn": "Main branch",
+        "address": null,
+        "latitude": 31.2001,
+        "longitude": 29.9187,
+        "phone": null,
+        "status": "Open",
+        "isPrimary": true,
+        "sortOrder": 0,
+        "workingHours": [],
+        "deliveryAreas": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-11-20T00:00:00Z"
+}

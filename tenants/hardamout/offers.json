@@ -1,0 +1,80 @@
+{
+  "offers": [
+    {
+      "id": "offer-1",
+      "enabled": true,
+      "order": 1,
+      "theme": "dark",
+      "image": "https://wsrv.nl/?url=https://pd.w.org/2023/12/63165729bfa60ab83.27017672-2048x1786.jpg&w=1800&h=380&fit=cover&a=center",
+      "badgeAr": "الأكثر طلباً",
+      "badgeEn": "Most ordered",
+      "titleAr": "صنية ميامي للعيلة",
+      "titleEn": "Miami Family Tray",
+      "textAr": "فرخة مندي أو مشوي + نص كفتة + أرز بسمتي + سلطات تكفي 3–4 أفراد بـ 650 جنيه.",
+      "textEn": "Mandi or grilled chicken, half kilo kofta, basmati rice & salads for 3-4 persons at 650 EGP.",
+      "ctaAr": "اطلب الان",
+      "ctaEn": "Order now",
+      "action": {
+        "type": "product",
+        "value": "miami-tray"
+      }
+    },
+    {
+      "id": "offer-2",
+      "enabled": true,
+      "order": 2,
+      "theme": "light",
+      "image": "https://wsrv.nl/?url=https://pd.w.org/2025/03/30267d566b6662797.15646565-2048x1536.jpeg&w=1800&h=380&fit=cover&a=center",
+      "badgeAr": "خصم 20%",
+      "badgeEn": "20% off",
+      "titleAr": "أصل المندي والكبسة والبرياني",
+      "titleEn": "Authentic Mandi, Kabsa & Biryani",
+      "textAr": "استمتع بأشهى وجبات الدجاج واللحم المندي على الأرز البسمتي الأصلي مع السلطات.",
+      "textEn": "Enjoy tender Mandi chicken and lamb served over spiced basmati rice with fresh salads.",
+      "ctaAr": "اطلب مندي",
+      "ctaEn": "Order Mandi",
+      "action": {
+        "type": "search",
+        "value": "مندى"
+      }
+    },
+    {
+      "id": "offer-3",
+      "enabled": true,
+      "order": 3,
+      "theme": "light",
+      "image": "https://wsrv.nl/?url=https://pd.w.org/2025/04/762680fd59dd030c4.91811363-2048x1536.jpg&w=1800&h=380&fit=cover&a=center",
+      "badgeAr": "وحوش العزائم",
+      "badgeEn": "Family feast",
+      "titleAr": "صواني حضرموت للمات والعزائم",
+      "titleEn": "Hadramout Banquet Trays",
+      "textAr": "من صنية سيدي بشر ولوران لحد صنية بحري وصنية الفرح.. تشكيلة مندي ومشاوي ومحاشي لكل مناسبة.",
+      "textEn": "From Sidi Bishr & Lauran to Bahary & Wedding Trays—Mandi, grills & mahashi for every gathering.",
+      "ctaAr": "اطلب دلوقتي",
+      "ctaEn": "Order now",
+      "action": {
+        "type": "category",
+        "value": "trays"
+      }
+    },
+    {
+      "id": "offer-4",
+      "enabled": true,
+      "order": 4,
+      "theme": "dark",
+      "image": "https://wsrv.nl/?url=https://pd.w.org/2025/12/816692d3878c8d721.36914748-2048x1536.jpg&w=1800&h=380&fit=cover&a=center",
+      "badgeAr": "عرض محدود",
+      "badgeEn": "Limited offer",
+      "titleAr": "توصيل علينا",
+      "titleEn": "Free delivery",
+      "textAr": "اطلب بـ 200 جنيه أو أكتر من المشويات أو الطواجن أو وجبات المكس واستمتع بتوصيل مجاني لحد باب البيت.",
+      "textEn": "Order 200 EGP or more from Grills, Tagines or Mix Meals and enjoy free delivery to your door.",
+      "ctaAr": "اطلب الان",
+      "ctaEn": "Order now",
+      "action": {
+        "type": "path",
+        "value": "/categories"
+      }
+    }
+  ]
+}
