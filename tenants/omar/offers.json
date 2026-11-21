@@ -1,0 +1,68 @@
+{
+  "offers": [
+    {
+      "id": "offer-1",
+      "enabled": true,
+      "order": 1,
+      "theme": "dark",
+      "image": "https://images.pexels.com/photos/36007382/pexels-photo-36007382/free-photo-of-cheeseburger-and-fries-on-fast-food-tray.jpeg?auto=compress&cs=tinysrgb&w=1800&h=380&fit=crop",
+      "badgeAr": "الأكثر طلباً",
+      "badgeEn": "Most ordered",
+      "titleAr": "كومبو برجر ببلاش",
+      "titleEn": "Free burger combo",
+      "textAr": "جرّب انهيارة عرض الشقاوة.. عرض برجر الشقاوة على الكومبو لآخر اليوم.",
+      "textEn": "Try the Shaqawa offer on the combo, until the end of the day.",
+      "ctaAr": "اطلب الان",
+      "ctaEn": "Order now",
+      "action": { "type": "product", "value": "antara" }
+    },
+    {
+      "id": "offer-2",
+      "enabled": true,
+      "order": 2,
+      "theme": "light",
+      "image": "https://images.unsplash.com/photo-1622880833523-7cf1c0bd4296?auto=format&fit=crop&w=1800&h=380&q=85",
+      "badgeAr": "خصم 20%",
+      "badgeEn": "20% off",
+      "titleAr": "بيتزا طازة من الفرن",
+      "titleEn": "Fresh pizza from the oven",
+      "textAr": "خصم 20% على كل أنواع البيتزا مع صوص الجبنة الإضافي.",
+      "textEn": "20% off all pizzas with extra cheese sauce.",
+      "ctaAr": "اطلب بيتزا",
+      "ctaEn": "Order pizza",
+      "action": { "type": "search", "value": "بيتزا" }
+    },
+    {
+      "id": "offer-3",
+      "enabled": true,
+      "order": 3,
+      "theme": "light",
+      "image": "https://images.pexels.com/photos/33254639/pexels-photo-33254639/free-photo-of-close-up-of-crispy-fried-chicken-on-plate.jpeg?auto=compress&cs=tinysrgb&w=1800&h=380&fit=crop",
+      "badgeAr": "وجبة عائلية",
+      "badgeEn": "Family meal",
+      "titleAr": "فرايد تشيكن مقرمش",
+      "titleEn": "Crispy fried chicken",
+      "textAr": "وجبة العائلة بـ 4 قطع دجاج وبطاطس وكول سلو بسعر مميز.",
+      "textEn": "Family meal with 4 chicken pieces, fries and coleslaw at a special price.",
+      "ctaAr": "اطلب دلوقتي",
+      "ctaEn": "Order now",
+      "action": { "type": "category", "value": "mixes" }
+    },
+    {
+      "id": "offer-4",
+      "enabled": true,
+      "order": 4,
+      "theme": "dark",
+      "image": "https://images.unsplash.com/photo-1526367790999-0150786686a2?auto=format&fit=crop&w=1800&h=380&q=85",
+      "badgeAr": "عرض محدود",
+      "badgeEn": "Limited offer",
+      "titleAr": "توصيل علينا",
+      "titleEn": "Free delivery",
+      "textAr": "اطلب من 200 جنيه واستمتع بتوصيل مجاني لحد باب البيت.",
+      "textEn": "Order 200 EGP or more and enjoy free delivery to your door.",
+      "ctaAr": "اطلب الان",
+      "ctaEn": "Order now",
+      "action": { "type": "path", "value": "/categories" }
+    }
+  ]
+}

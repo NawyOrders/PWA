@@ -1,0 +1,746 @@
+{
+  "currency": "EGP",
+  "categories": [
+    {
+      "id": "mixes",
+      "nameAr": "ميكسات",
+      "nameEn": "Mixes",
+      "image": "https://images.unsplash.com/photo-1511421585906-57a6e6dc3a2f?w=800&auto=format&fit=crop&q=80",
+      "items": [
+        {
+          "id": "antara",
+          "nameAr": "عنترة",
+          "nameEn": "Antara",
+          "descriptionAr": "سدق - بسطرمة - سوسيس - شيدر - تركي - موتزاريلا",
+          "descriptionEn": "Sogo2 Sausage, Pastrami, Hot Dog Sausage, Cheddar, Rumi (Turki) Cheese, Mozzarella",
+          "price": null,
+          "variants": {
+            "M": 40,
+            "L": 54,
+            "سوري": 80
+          },
+          "image": "https://www.themealdb.com/images/media/meals/j80gmw1764372176.jpg"
+        },
+        {
+          "id": "antara-basha",
+          "nameAr": "عنترة باشا",
+          "nameEn": "Antara Basha",
+          "descriptionAr": "بسطرمة - روزبيف - كيري - موتزاريلا",
+          "descriptionEn": "Pastrami, Roast Beef, Kiri Cream Cheese, Mozzarella",
+          "price": null,
+          "variants": {
+            "M": 55,
+            "L": 70,
+            "سوري": 110
+          },
+          "image": "https://www.themealdb.com/images/media/meals/djdg8l1784578885.jpg"
+        },
+        {
+          "id": "al-shami-al-maghrebi",
+          "nameAr": "الشامي ع المغربي",
+          "nameEn": "Al Shami Al Maghrebi",
+          "descriptionAr": "زعتر سمسم - فلفل ألوان - طماطم - جبنة حلوم",
+          "descriptionEn": "Zaatar & Sesame, Bell Peppers, Tomatoes, Halloumi Cheese",
+          "price": null,
+          "variants": {
+            "M": 37,
+            "L": 45,
+            "سوري": 60
+          },
+          "image": "https://www.themealdb.com/images/media/meals/vdwloy1713225718.jpg"
+        },
+        {
+          "id": "mix-cheese",
+          "nameAr": "مكس جبن",
+          "nameEn": "Mix Cheese",
+          "descriptionAr": "شيدر - تركي - موتزاريلا",
+          "descriptionEn": "Cheddar, Rumi (Turki) Cheese, Mozzarella",
+          "price": null,
+          "variants": {
+            "M": 20,
+            "L": 25,
+            "سوري": 42
+          },
+          "image": "https://images.unsplash.com/photo-1788843304341-7edbe347ba66?w=800&auto=format&fit=crop&q=80"
+        },
+        {
+          "id": "ba2aly-fakher",
+          "nameAr": "بقالي فاخر",
+          "nameEn": "Ba2aly Fakher (Deluxe)",
+          "descriptionAr": "جودة - فلمنك - ريكفورد - موتزاريلا",
+          "descriptionEn": "Gouda, Edam (Falamank), Roquefort Blue Cheese, Mozzarella",
+          "price": null,
+          "variants": {
+            "M": 55,
+            "L": 70,
+            "سوري": 90
+          },
+          "image": "https://www.themealdb.com/images/media/meals/fg7d641784666908.jpg"
+        }
+      ]
+    },
+    {
+      "id": "cheeses",
+      "nameAr": "الجبن",
+      "nameEn": "Cheeses",
+      "image": "https://www.themealdb.com/images/media/meals/oal8x31764119345.jpg",
+      "items": [
+        {
+          "id": "labneh-zaatar",
+          "nameAr": "لبنة زعتر",
+          "nameEn": "Labneh Zaatar",
+          "price": null,
+          "variants": {
+            "M": 15,
+            "L": 20
+          },
+          "image": "https://www.themealdb.com/images/media/meals/16zbeu1763789342.jpg"
+        },
+        {
+          "id": "kiri-focaccia",
+          "nameAr": "كيري فوكاتشا",
+          "nameEn": "Kiri Focaccia",
+          "descriptionAr": "كيري - فلفل ألوان - زيتون",
+          "descriptionEn": "Kiri Cream Cheese, Bell Peppers, Olives",
+          "price": null,
+          "variants": {
+            "M": 15,
+            "L": 20
+          },
+          "image": "https://www.themealdb.com/images/media/meals/1543774956.jpg"
+        },
+        {
+          "id": "turki-cold-or-grilled",
+          "nameAr": "تركي بارد/جريل",
+          "nameEn": "Rumi (Turki) Cheese Cold or Grilled",
+          "price": null,
+          "variants": {
+            "M": 17,
+            "L": 25
+          },
+          "image": "https://www.themealdb.com/images/media/meals/1wj8w31763781990.jpg"
+        },
+        {
+          "id": "fried-turki",
+          "nameAr": "تركي مقلي",
+          "nameEn": "Fried Rumi (Turki) Cheese",
+          "price": null,
+          "variants": {
+            "M": 35,
+            "L": 40,
+            "سوري": 55
+          },
+          "image": "https://www.themealdb.com/images/media/meals/7i6csk1780094394.jpg"
+        },
+        {
+          "id": "fried-cheddar",
+          "nameAr": "شيدر مقلي",
+          "nameEn": "Fried Cheddar Cheese",
+          "price": null,
+          "variants": {
+            "M": 30,
+            "L": 35,
+            "سوري": 50
+          },
+          "image": "https://www.themealdb.com/images/media/meals/oal8x31764119345.jpg"
+        }
+      ]
+    },
+    {
+      "id": "desserts",
+      "nameAr": "الحلو",
+      "nameEn": "Sweet Sandwiches",
+      "image": "https://images.unsplash.com/photo-1770110757095-be12181e82b5?w=800&auto=format&fit=crop&q=80",
+      "items": [
+        {
+          "id": "toffee",
+          "nameAr": "طوفي",
+          "nameEn": "Toffee",
+          "descriptionAr": "كريمة - مربى - كراميل",
+          "descriptionEn": "Cream, Jam, Caramel",
+          "price": null,
+          "variants": {
+            "M": 25,
+            "L": 29
+          },
+          "image": "https://www.themealdb.com/images/media/meals/xrptpq1483909204.jpg"
+        },
+        {
+          "id": "happiness-hormone",
+          "nameAr": "هرمون السعادة",
+          "nameEn": "Happiness Hormone",
+          "descriptionAr": "كريمة - حلاوة - شوكولاتة",
+          "descriptionEn": "Cream, Halawa, Chocolate",
+          "price": null,
+          "variants": {
+            "M": 25,
+            "L": 29
+          },
+          "image": "https://images.unsplash.com/photo-1641538207883-712b6f77b42d?w=800&auto=format&fit=crop&q=80"
+        },
+        {
+          "id": "alaih-el-awad",
+          "nameAr": "عليه العوض",
+          "nameEn": "Alaih El Awad",
+          "descriptionAr": "كريمة - أوريو - شوكولاتة",
+          "descriptionEn": "Cream, Oreo, Chocolate",
+          "price": null,
+          "variants": {
+            "M": 25,
+            "L": 29
+          },
+          "image": "https://images.unsplash.com/photo-1595257841899-b8d7ca01174b?w=800&auto=format&fit=crop&q=80"
+        },
+        {
+          "id": "sakalans",
+          "nameAr": "سكلانس",
+          "nameEn": "Sakalans",
+          "descriptionAr": "كريمة - حلاوة - مربى - عسل",
+          "descriptionEn": "Cream, Halawa, Jam, Honey",
+          "price": null,
+          "variants": {
+            "M": 30,
+            "L": 40
+          },
+          "image": "https://www.themealdb.com/images/media/meals/eqnf3p1779649407.jpg"
+        },
+        {
+          "id": "barbie",
+          "nameAr": "باربي",
+          "nameEn": "Barbie",
+          "descriptionAr": "كريمة - كراميل - وايت شوكولاتة - بلوبيري",
+          "descriptionEn": "Cream, Caramel, White Chocolate, Blueberry",
+          "price": null,
+          "variants": {
+            "M": 35,
+            "L": 40
+          },
+          "image": "https://images.unsplash.com/photo-1567327613485-fbc7bf196198?w=800&auto=format&fit=crop&q=80"
+        },
+        {
+          "id": "adrenaline",
+          "nameAr": "أدرينالين",
+          "nameEn": "Adrenaline",
+          "descriptionAr": "حلاوة - لوتس - شوكولاتة - عسل",
+          "descriptionEn": "Halawa, Lotus Biscoff, Chocolate, Honey",
+          "price": null,
+          "variants": {
+            "M": 35,
+            "L": 40
+          },
+          "image": "https://www.themealdb.com/images/media/meals/erzs951763296201.jpg"
+        }
+      ]
+    },
+    {
+      "id": "ba2aly-add-ons",
+      "nameAr": "اضافات بقالي",
+      "nameEn": "Ba2aly Add-ons",
+      "image": "https://images.unsplash.com/photo-1594225133715-301184181802?w=800&auto=format&fit=crop&q=80",
+      "items": [
+        {
+          "id": "favorite-cheese",
+          "nameAr": "جبن من النوع المفضل",
+          "nameEn": "Favorite Cheese Add-on",
+          "descriptionAr": "كيري - تركي - موتزاريلا - صوص شيدر",
+          "descriptionEn": "Kiri, Rumi (Turki), Mozzarella, Cheddar Sauce",
+          "price": null,
+          "variants": {
+            "M": 13,
+            "L": 19
+          },
+          "image": "https://images.unsplash.com/photo-1653418622353-e9f40f9aef00?w=800&auto=format&fit=crop&q=80"
+        },
+        {
+          "id": "pickles",
+          "nameAr": "مخلل",
+          "nameEn": "Pickles",
+          "price": 5,
+          "variants": {},
+          "image": "https://images.unsplash.com/photo-1634737000609-a927ce72cc2c?w=800&auto=format&fit=crop&q=80"
+        },
+        {
+          "id": "garlic-sauce",
+          "nameAr": "ثومية",
+          "nameEn": "Garlic Sauce (Toumeya)",
+          "price": 10,
+          "variants": {},
+          "image": "https://images.unsplash.com/photo-1637949385162-e416fb15b2ce?w=800&auto=format&fit=crop&q=80"
+        },
+        {
+          "id": "naruto-hot-sauce",
+          "nameAr": "ناروتو صوص حار",
+          "nameEn": "Naruto Hot Sauce",
+          "price": 13,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/hkz4k71782590338.jpg"
+        },
+        {
+          "id": "cheddar-sauce-cup",
+          "nameAr": "علبة صوص شيدر",
+          "nameEn": "Cheddar Sauce Cup",
+          "price": 20,
+          "variants": {},
+          "image": "https://images.unsplash.com/photo-1653418622353-e9f40f9aef00?w=800&auto=format&fit=crop&q=80"
+        },
+        {
+          "id": "fries-packet",
+          "nameAr": "باكت بطاطس",
+          "nameEn": "Fries Packet",
+          "price": null,
+          "variants": {
+            "S": 30,
+            "M": 55,
+            "L": 60
+          },
+          "image": "https://images.unsplash.com/photo-1664337873087-ac64b3f1e454?w=800&auto=format&fit=crop&q=80"
+        }
+      ]
+    },
+    {
+      "id": "egg-skillets",
+      "nameAr": "طاسات بيض",
+      "nameEn": "Egg Skillets",
+      "image": "https://www.themealdb.com/images/media/meals/30s7vf1763741844.jpg",
+      "items": [
+        {
+          "id": "eggs-pastrami-pan",
+          "nameAr": "بيض بسطرمة",
+          "nameEn": "Eggs with Pastrami Skillet",
+          "price": 89,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/0y6uvc1763258983.jpg"
+        },
+        {
+          "id": "eggs-sausage-pan",
+          "nameAr": "بيض سدق",
+          "nameEn": "Eggs with Sausage (Sogo2) Skillet",
+          "price": 79,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/wpkfin1763597958.jpg"
+        },
+        {
+          "id": "eggs-bully-beef-pan",
+          "nameAr": "بيض بلوبيف",
+          "nameEn": "Eggs with Bully Beef Skillet",
+          "price": 85,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/vz94r81760534692.jpg"
+        },
+        {
+          "id": "fried-eggs-pan",
+          "nameAr": "بيض مقلي (أومليت - شكشوكة)",
+          "nameEn": "Fried Eggs Skillet (Omelette or Shakshuka)",
+          "price": 60,
+          "variants": {},
+          "image": "https://images.unsplash.com/photo-1695960682129-d35477676196?w=800&auto=format&fit=crop&q=80"
+        }
+      ]
+    },
+    {
+      "id": "sweet-skillets",
+      "nameAr": "طاسات حلو",
+      "nameEn": "Sweet Skillets",
+      "image": "https://www.themealdb.com/images/media/meals/xrysxr1483568462.jpg",
+      "items": [
+        {
+          "id": "toffee-pan",
+          "nameAr": "طوفي",
+          "nameEn": "Toffee Skillet",
+          "descriptionAr": "كريمة - مربى - كراميل",
+          "descriptionEn": "Cream, Jam, Caramel",
+          "price": 79,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/uryqru1511798039.jpg"
+        },
+        {
+          "id": "happiness-hormone-pan",
+          "nameAr": "هرمون السعادة",
+          "nameEn": "Happiness Hormone Skillet",
+          "descriptionAr": "كريمة - حلاوة - شوكولاتة",
+          "descriptionEn": "Cream, Halawa, Chocolate",
+          "price": 79,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/xrysxr1483568462.jpg"
+        },
+        {
+          "id": "alaih-el-awad-pan",
+          "nameAr": "عليه العوض",
+          "nameEn": "Alaih El Awad Skillet",
+          "descriptionAr": "كريمة - أوريو - شوكولاتة",
+          "descriptionEn": "Cream, Oreo, Chocolate",
+          "price": 79,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/yh3sg71763741307.jpg"
+        },
+        {
+          "id": "sakalans-pan",
+          "nameAr": "سكلانس",
+          "nameEn": "Sakalans Skillet",
+          "descriptionAr": "كريمة - حلاوة - مربى - عسل",
+          "descriptionEn": "Cream, Halawa, Jam, Honey",
+          "price": 89,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/76nffj1763593933.jpg"
+        },
+        {
+          "id": "barbie-pan",
+          "nameAr": "باربي",
+          "nameEn": "Barbie Skillet",
+          "descriptionAr": "كريمة - كراميل - وايت شوكولاتة - بلوبيري",
+          "descriptionEn": "Cream, Caramel, White Chocolate, Blueberry",
+          "price": 99,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/e756bf1761848342.jpg"
+        },
+        {
+          "id": "adrenaline-pan",
+          "nameAr": "أدرينالين",
+          "nameEn": "Adrenaline Skillet",
+          "descriptionAr": "حلاوة - لوتس - شوكولاتة - عسل",
+          "descriptionEn": "Halawa, Lotus Biscoff, Chocolate, Honey",
+          "price": 99,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/jyjlhj1763075323.jpg"
+        }
+      ]
+    },
+    {
+      "id": "savory-skillets",
+      "nameAr": "طاسات حادق",
+      "nameEn": "Savory Skillets",
+      "image": "https://www.themealdb.com/images/media/meals/1550441882.jpg",
+      "items": [
+        {
+          "id": "ba2aly-fries-pan",
+          "nameAr": "بطاطس بقالي",
+          "nameEn": "Ba2aly Fries Skillet",
+          "descriptionAr": "بطاطس - صوص شيدر",
+          "descriptionEn": "Fries, Cheddar Sauce",
+          "price": 79,
+          "variants": {},
+          "image": "https://images.unsplash.com/photo-1768252452214-38f555002147?w=800&auto=format&fit=crop&q=80"
+        },
+        {
+          "id": "ba2aly-sausage-pan",
+          "nameAr": "سدق بقالي",
+          "nameEn": "Ba2aly Sausage (Sogo2) Skillet",
+          "descriptionAr": "سدق بقالي - فلفل وبصل - صوص شيدر",
+          "descriptionEn": "Ba2aly Sausage, Peppers & Onions, Cheddar Sauce",
+          "price": 109,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/vc08jn1628769553.jpg"
+        },
+        {
+          "id": "pastrami-pan",
+          "nameAr": "بسطرمة",
+          "nameEn": "Pastrami Skillet",
+          "descriptionAr": "بسطرمة - فلفل وطماطم - صوص شيدر",
+          "descriptionEn": "Pastrami, Peppers & Tomatoes, Cheddar Sauce",
+          "price": 129,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/uttupv1511815050.jpg"
+        },
+        {
+          "id": "mexicano-sausage-pan",
+          "nameAr": "سوسيس ميكسكانو",
+          "nameEn": "Mexicano Sausage Skillet",
+          "descriptionAr": "سوسيس - فلفل وبصل - صوص شيدر",
+          "descriptionEn": "Hot Dog Sausage, Peppers & Onions, Cheddar Sauce",
+          "price": 100,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/st1ifa1583267248.jpg"
+        },
+        {
+          "id": "corn-hot-dog-pan",
+          "nameAr": "كورن هوت دوج",
+          "nameEn": "Corn Hot Dog Skillet",
+          "descriptionAr": "كورن هوت دوج - صوص شيدر",
+          "descriptionEn": "Corn Hot Dog, Cheddar Sauce",
+          "price": 129,
+          "variants": {},
+          "image": "https://images.unsplash.com/photo-1581618466482-1edc3a0b9bbc?w=800&auto=format&fit=crop&q=80"
+        },
+        {
+          "id": "smoked-chicken-breasts-pan",
+          "nameAr": "صدور فراخ مدخنة",
+          "nameEn": "Smoked Chicken Breasts Skillet",
+          "descriptionAr": "صدور فراخ - باربيكيو - صوص شيدر",
+          "descriptionEn": "Smoked Chicken Breasts, BBQ Sauce, Cheddar Sauce",
+          "price": 129,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/hcg6l91763596970.jpg"
+        },
+        {
+          "id": "strips-pan",
+          "nameAr": "ستريبس (حار/عادي)",
+          "nameEn": "Chicken Strips Skillet (Spicy/Regular)",
+          "descriptionAr": "ستريبس - صوص شيدر",
+          "descriptionEn": "Crispy Chicken Strips, Cheddar Sauce",
+          "price": 129,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/40r49m1763197022.jpg"
+        },
+        {
+          "id": "antara-pan",
+          "nameAr": "عنترة",
+          "nameEn": "Antara Skillet",
+          "descriptionAr": "سدق - سوسيس - بسطرمة - خضار - صوص شيدر",
+          "descriptionEn": "Sogo2 Sausage, Hot Dog, Pastrami, Vegetables, Cheddar Sauce",
+          "price": 139,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/1550441882.jpg"
+        },
+        {
+          "id": "antara-basha-pan",
+          "nameAr": "عنترة باشا",
+          "nameEn": "Antara Basha Skillet",
+          "descriptionAr": "روزبيف - بسطرمة - صوص شيدر",
+          "descriptionEn": "Roast Beef, Pastrami, Cheddar Sauce",
+          "price": 149,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/qrqywr1503066605.jpg"
+        },
+        {
+          "id": "beef-with-onion-pan",
+          "nameAr": "لحم بصل",
+          "nameEn": "Beef with Onions Skillet",
+          "descriptionAr": "لحم شرائح - بصل - بهارات بقالي السرية - صوص شيدر",
+          "descriptionEn": "Sliced Beef, Onions, Ba2aly Secret Spices, Cheddar Sauce",
+          "price": 149,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/pkopc31683207947.jpg"
+        },
+        {
+          "id": "muqalqal-beef-pan",
+          "nameAr": "لحم مقلقل",
+          "nameEn": "Muqalqal Beef Skillet",
+          "descriptionAr": "لحم مكعبات - بهارات بقالي السرية - صوص شيدر",
+          "descriptionEn": "Beef Cubes, Ba2aly Secret Spices, Cheddar Sauce",
+          "price": 159,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/4pqimk1683207418.jpg"
+        },
+        {
+          "id": "roast-beef-pan",
+          "nameAr": "لحم روزبيف",
+          "nameEn": "Roast Beef Skillet",
+          "descriptionAr": "روزبيف - فلفل ألوان - صوص شيدر",
+          "descriptionEn": "Roast Beef, Bell Peppers, Cheddar Sauce",
+          "price": 139,
+          "variants": {},
+          "image": "https://images.unsplash.com/photo-1792271084856-e43f1aba506f?w=800&auto=format&fit=crop&q=80"
+        },
+        {
+          "id": "ba2aly-fakher-pan",
+          "nameAr": "بقالي فاخر",
+          "nameEn": "Ba2aly Fakher (Deluxe) Skillet",
+          "descriptionAr": "فلمنك - جودة - ريكفورد - صوص شيدر",
+          "descriptionEn": "Edam (Falamank), Gouda, Roquefort Blue Cheese, Cheddar Sauce",
+          "price": 149,
+          "variants": {},
+          "image": "https://www.themealdb.com/images/media/meals/30s7vf1763741844.jpg"
+        }
+      ]
+    },
+    {
+      "id": "protein",
+      "nameAr": "بروتين",
+      "nameEn": "Protein",
+      "image": "https://www.themealdb.com/images/media/meals/swo87v1763595282.jpg",
+      "items": [
+        {
+          "id": "ba2aly-liver",
+          "nameAr": "كبدة بقالي",
+          "nameEn": "Ba2aly Liver",
+          "price": null,
+          "variants": {
+            "M": 13,
+            "L": 20,
+            "سوري": 40
+          },
+          "image": "https://www.themealdb.com/images/media/meals/jyylmo1763790808.jpg"
+        },
+        {
+          "id": "ba2aly-sausage",
+          "nameAr": "سدق بقالي",
+          "nameEn": "Ba2aly Sausage (Sogo2)",
+          "price": null,
+          "variants": {
+            "M": 29,
+            "L": 35,
+            "سوري": 50
+          },
+          "image": "https://www.themealdb.com/images/media/meals/vc08jn1628769553.jpg"
+        },
+        {
+          "id": "pastrami",
+          "nameAr": "بسطرمة",
+          "nameEn": "Pastrami",
+          "price": null,
+          "variants": {
+            "M": 34,
+            "L": 45
+          },
+          "image": "https://www.themealdb.com/images/media/meals/uttupv1511815050.jpg"
+        },
+        {
+          "id": "bully-beef",
+          "nameAr": "بلوبيف",
+          "nameEn": "Bully Beef",
+          "price": null,
+          "variants": {
+            "M": 29,
+            "L": 45
+          },
+          "image": "https://www.themealdb.com/images/media/meals/vz94r81760534692.jpg"
+        },
+        {
+          "id": "mexicano-sausage",
+          "nameAr": "سوسيس ميكسكانو",
+          "nameEn": "Mexicano Sausage",
+          "price": null,
+          "variants": {
+            "M": 24,
+            "L": 30,
+            "سوري": 45
+          },
+          "image": "https://www.themealdb.com/images/media/meals/st1ifa1583267248.jpg"
+        },
+        {
+          "id": "corn-hot-dog",
+          "nameAr": "كورن هوت دوج",
+          "nameEn": "Corn Hot Dog",
+          "price": null,
+          "variants": {
+            "M": 30,
+            "L": 39,
+            "سوري": 65
+          },
+          "image": "https://images.unsplash.com/photo-1581618466482-1edc3a0b9bbc?w=800&auto=format&fit=crop&q=80"
+        },
+        {
+          "id": "chicken-strips",
+          "nameAr": "ستريبس حار/عادي",
+          "nameEn": "Chicken Strips (Spicy/Regular)",
+          "price": null,
+          "variants": {
+            "M": 40,
+            "L": 50,
+            "سوري": 79
+          },
+          "image": "https://www.themealdb.com/images/media/meals/sbx7n71587673021.jpg"
+        },
+        {
+          "id": "smoked-chicken-breasts",
+          "nameAr": "صدور فراخ مدخنة",
+          "nameEn": "Smoked Chicken Breasts",
+          "price": null,
+          "variants": {
+            "M": 30,
+            "L": 35,
+            "سوري": 70
+          },
+          "image": "https://www.themealdb.com/images/media/meals/hcg6l91763596970.jpg"
+        },
+        {
+          "id": "beef-with-onion",
+          "nameAr": "لحم بصل",
+          "nameEn": "Beef with Onions",
+          "descriptionAr": "يمكن إضافة صوص كريمي + فلفل ألوان وبصل مكرمل",
+          "descriptionEn": "Optional creamy sauce + bell peppers and caramelized onions",
+          "price": null,
+          "variants": {
+            "M": 49,
+            "L": 69,
+            "سوري": 105
+          },
+          "image": "https://www.themealdb.com/images/media/meals/0bpjb11763075817.jpg"
+        },
+        {
+          "id": "muqalqal-beef",
+          "nameAr": "لحم مقلقل",
+          "nameEn": "Muqalqal Beef",
+          "descriptionAr": "يمكن إضافة صوص كريمي + فلفل ألوان وبصل مكرمل",
+          "descriptionEn": "Optional creamy sauce + bell peppers and caramelized onions",
+          "price": null,
+          "variants": {
+            "M": 59,
+            "L": 79,
+            "سوري": 115
+          },
+          "image": "https://www.themealdb.com/images/media/meals/pkopc31683207947.jpg"
+        },
+        {
+          "id": "ba2aly-roast-beef",
+          "nameAr": "لحم روزبيف بقالي",
+          "nameEn": "Ba2aly Roast Beef",
+          "descriptionAr": "يمكن إضافة صوص كريمي + فلفل ألوان وبصل مكرمل",
+          "descriptionEn": "Optional creamy sauce + bell peppers and caramelized onions",
+          "price": null,
+          "variants": {
+            "M": 39,
+            "L": 50,
+            "سوري": 85
+          },
+          "image": "https://images.unsplash.com/photo-1792271084856-e43f1aba506f?w=800&auto=format&fit=crop&q=80"
+        }
+      ]
+    },
+    {
+      "id": "eggs-and-fries",
+      "nameAr": "بيض / بطاطس",
+      "nameEn": "Eggs & Fries",
+      "image": "https://www.themealdb.com/images/media/meals/hqaejl1695738653.jpg",
+      "items": [
+        {
+          "id": "ba2aly-fries",
+          "nameAr": "بطاطس بقالي",
+          "nameEn": "Ba2aly Fries Sandwich",
+          "price": null,
+          "variants": {
+            "M": 16,
+            "L": 25,
+            "سوري": 30
+          },
+          "image": "https://images.unsplash.com/photo-1687710085607-03bd57509ac0?w=800&auto=format&fit=crop&q=80"
+        },
+        {
+          "id": "eggs-fried-omelette-shakshuka",
+          "nameAr": "بيض (مقلي - أومليت - شكشوكة)",
+          "nameEn": "Eggs (Fried / Omelette / Shakshuka)",
+          "price": null,
+          "variants": {
+            "M": 20,
+            "L": 25
+          },
+          "image": "https://www.themealdb.com/images/media/meals/yvpuuy1511797244.jpg"
+        },
+        {
+          "id": "eggs-pastrami-sausage-bully-beef",
+          "nameAr": "بيض (بسطرمة - سدق - بلوبيف)",
+          "nameEn": "Eggs with Pastrami, Sausage or Bully Beef",
+          "price": null,
+          "variants": {
+            "M": 35,
+            "L": 39
+          },
+          "image": "https://www.themealdb.com/images/media/meals/0y6uvc1763258983.jpg"
+        },
+        {
+          "id": "eggs-mixed-cheese",
+          "nameAr": "بيض مشكل جبن",
+          "nameEn": "Eggs with Mixed Cheese",
+          "descriptionAr": "كيري - تركي - موتزاريلا",
+          "descriptionEn": "Kiri Cream Cheese, Rumi (Turki) Cheese, Mozzarella",
+          "price": null,
+          "variants": {
+            "M": 39,
+            "L": 49
+          },
+          "image": "https://www.themealdb.com/images/media/meals/hqaejl1695738653.jpg"
+        }
+      ]
+    }
+  ]
+}
