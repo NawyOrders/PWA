@@ -1,0 +1,80 @@
+{
+  "offers": [
+    {
+      "id": "offer-1",
+      "enabled": true,
+      "order": 1,
+      "theme": "dark",
+      "image": "https://wsrv.nl/?url=https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cd/Egyptian_Koshari.jpg/1920px-Egyptian_Koshari.jpg&w=1800&h=380&fit=cover&a=center",
+      "badgeAr": "الأكثر طلباً",
+      "badgeEn": "Most ordered",
+      "titleAr": "علبة وحش القائد",
+      "titleEn": "El Qaed Wahsh Box",
+      "textAr": "أصل الكشري الإسكندراني.. علبة وحش القائد بـ 70 جنيه، مكرونة وعدس وصلصة وتقلية على الوش.",
+      "textEn": "The original Alexandrian koshary. El Qaed Wahsh Box for 70 EGP with pasta, lentils, sauce and extra crispy onions.",
+      "ctaAr": "اطلب الان",
+      "ctaEn": "Order now",
+      "action": {
+        "type": "product",
+        "value": "koshary-wahsh"
+      }
+    },
+    {
+      "id": "offer-2",
+      "enabled": true,
+      "order": 2,
+      "theme": "light",
+      "image": "https://wsrv.nl/?url=https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Chicken_Shwarama_plate.jpeg/1920px-Chicken_Shwarama_plate.jpeg&w=1800&h=380&fit=cover&a=center",
+      "badgeAr": "معاها عيش وطحينة ومخلل",
+      "badgeEn": "Served with bread, tahini & pickles",
+      "titleAr": "أطباق القائد",
+      "titleEn": "El Qaed Plates",
+      "textAr": "طبق كبدة أو سجق إسكندراني أو شاورما ابتداءً من 85 جنيه، وكل طبق معاه عيش وطحينة ومخلل.",
+      "textEn": "Liver, Alexandrian sausage or shawarma plates starting at 85 EGP, every plate comes with bread, tahini and pickles.",
+      "ctaAr": "اطلب طبقك",
+      "ctaEn": "Order your plate",
+      "action": {
+        "type": "category",
+        "value": "plates"
+      }
+    },
+    {
+      "id": "offer-3",
+      "enabled": true,
+      "order": 3,
+      "theme": "light",
+      "image": "https://wsrv.nl/?url=https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/Maoravyerushalmi.jpeg/1920px-Maoravyerushalmi.jpeg&w=1800&h=380&fit=cover&a=center",
+      "badgeAr": "وجبة متكاملة",
+      "badgeEn": "Full meal",
+      "titleAr": "كل وجبات القائد بـ 110 جنيه",
+      "titleEn": "All El Qaed Meals at 110 EGP",
+      "textAr": "كفتة أو شيش أو زنجر أو كرسبي أو صدور بانيه.. وجبة متكاملة بـ 110 جنيه، ولو جعان أوي ميكس القائد بـ 150.",
+      "textEn": "Kofta, shish, zinger, crispy or panne.. a full meal for 110 EGP, or go big with the El Qaed Mix at 150.",
+      "ctaAr": "اطلب وجبتك",
+      "ctaEn": "Order your meal",
+      "action": {
+        "type": "category",
+        "value": "meals"
+      }
+    },
+    {
+      "id": "offer-4",
+      "enabled": true,
+      "order": 4,
+      "theme": "dark",
+      "image": "https://wsrv.nl/?url=https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/Crepe_with_nutella_and_fruits.jpg/1920px-Crepe_with_nutella_and_fruits.jpg&w=1800&h=380&fit=cover&a=center",
+      "badgeAr": "حاجة سكر",
+      "badgeEn": "Sweet treat",
+      "titleAr": "كريب نوتيلا",
+      "titleEn": "Nutella Crepe",
+      "textAr": "اختمها على حلو.. كريب نوتيلا بـ 70 جنيه أو موز بالنوتيلا بـ 75.",
+      "textEn": "End on a sweet note.. Nutella crepe for 70 EGP or banana Nutella for 75.",
+      "ctaAr": "اطلب حلو",
+      "ctaEn": "Order dessert",
+      "action": {
+        "type": "category",
+        "value": "sweet-crepe"
+      }
+    }
+  ]
+}

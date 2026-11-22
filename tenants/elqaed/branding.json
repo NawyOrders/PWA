@@ -1,0 +1,42 @@
+{
+  "statusCode": 200,
+  "isSuccess": true,
+  "data": {
+    "tenantId": "elqaed",
+    "nameAr": "كشري القائد",
+    "nameEn": "Koshary El Qaed",
+    "logoUrl": "https://talabat.dhmedia.io/image/talabat/restaurants/logo639288760812952973.jpg?width=600",
+    "faviconUrl": "https://talabat.dhmedia.io/image/talabat/restaurants/logo639288760812952973.jpg?width=64",
+    "primaryColor": "#D93828",
+    "secondaryColor": "#0A7A48",
+    "accentColor": "#FFFFFF",
+    "backgroundColor": "#FAF7F5",
+    "surfaceColor": "#F4EBE8",
+    "textOnPrimaryColor": "#FFFFFF",
+    "contactPhone": null,
+    "contactEmail": null,
+    "whatsAppUrl": null,
+    "messengerUrl": "https://m.me/467300489803185",
+    "socialLinks": {
+      "facebook": "https://www.facebook.com/467300489803185"
+    },
+    "branches": [
+      {
+        "branchId": "elqaed-asafra",
+        "nameAr": "فرع ش 45 بحري",
+        "nameEn": "Street 45 Bahri Branch",
+        "address": "ش 45 بحري - بجوار كوبرى عبد الناصر وسوق السيارات، العصافرة، الإسكندرية",
+        "latitude": 31.26786900528365,
+        "longitude": 29.999721871082386,
+        "phone": null,
+        "status": "Open",
+        "isPrimary": true,
+        "sortOrder": 0,
+        "workingHours": [],
+        "deliveryAreas": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-11-22T19:08:00Z"
+}
