@@ -27,7 +27,7 @@
           "id": "koshary-elqaed",
           "nameAr": "علبة القائد",
           "nameEn": "El Qaed Box",
-          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Cairo_koshary.jpg/960px-Cairo_koshary.jpg",
+          "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f7/Cairo_koshary.jpg/960px-Cairo_koshary.jpg",
           "price": 50,
           "variants": {}
         },
@@ -35,7 +35,7 @@
           "id": "koshary-tarawkh",
           "nameAr": "علبة طراوخ القائد",
           "nameEn": "Tarawkh El Qaed Box",
-          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Egyptian_Koshari.jpg/640px-Egyptian_Koshari.jpg",
+          "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cd/Egyptian_Koshari.jpg/960px-Egyptian_Koshari.jpg",
           "price": 60,
           "variants": {}
         },
@@ -43,7 +43,7 @@
           "id": "koshary-wahsh",
           "nameAr": "علبة وحش القائد",
           "nameEn": "Wahsh El Qaed Box",
-          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Egyptian_food_Koshary.jpg/640px-Egyptian_food_Koshary.jpg",
+          "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e9/Egyptian_food_Koshary.jpg/960px-Egyptian_food_Koshary.jpg",
           "price": 70,
           "variants": {}
         }
@@ -153,7 +153,7 @@
           "id": "tajin-sogo2",
           "nameAr": "طاجن سجق",
           "nameEn": "Sausage Tajin",
-          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Tajine-marocain-un-plat-varie-et-sain.jpg/960px-Tajine-marocain-un-plat-varie-et-sain.jpg",
+          "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/31/Tajine-marocain-un-plat-varie-et-sain.jpg/960px-Tajine-marocain-un-plat-varie-et-sain.jpg",
           "price": null,
           "variants": {
             "عادي": 65,
@@ -164,7 +164,7 @@
           "id": "tajin-farakh",
           "nameAr": "طاجن فراخ",
           "nameEn": "Chicken Tajin",
-          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Tajine_de_poulet_et_olives.jpg/960px-Tajine_de_poulet_et_olives.jpg",
+          "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/07/Tajine_de_poulet_et_olives.jpg/960px-Tajine_de_poulet_et_olives.jpg",
           "price": null,
           "variants": {
             "عادي": 70,
@@ -227,7 +227,7 @@
           "id": "sand-sogo2-mashwi",
           "nameAr": "سجق مشوي",
           "nameEn": "Grilled Sausage Sandwich",
-          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Sausage_Sandwich.jpg/960px-Sausage_Sandwich.jpg",
+          "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cb/Sausage_Sandwich.jpg/960px-Sausage_Sandwich.jpg",
           "price": null,
           "variants": {
             "سوري": 70,
@@ -261,7 +261,7 @@
           "id": "sand-burger-beed",
           "nameAr": "برجر بيض",
           "nameEn": "Egg Burger Sandwich",
-          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Homemade_cheeseburger.jpg/960px-Homemade_cheeseburger.jpg",
+          "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/22/Homemade_cheeseburger.jpg/960px-Homemade_cheeseburger.jpg",
           "price": null,
           "variants": {
             "بيتي بان": 45
@@ -273,7 +273,7 @@
           "id": "sand-burger-king",
           "nameAr": "برجر كينج القائد",
           "nameEn": "King El Qaed Burger",
-          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Cheeseburger.jpg/960px-Cheeseburger.jpg",
+          "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/Cheeseburger.jpg/960px-Cheeseburger.jpg",
           "price": null,
           "variants": {
             "بيتي بان": 50
@@ -337,7 +337,7 @@
           "id": "sand-strips",
           "nameAr": "إستربس",
           "nameEn": "Strips Sandwich",
-          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Fried_Chicken_strips.jpg/960px-Fried_Chicken_strips.jpg",
+          "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/Fried_Chicken_strips.jpg/960px-Fried_Chicken_strips.jpg",
           "price": null,
           "variants": {
             "سوري": 100,
@@ -540,7 +540,7 @@
           "id": "crepe-sosis",
           "nameAr": "كريب سوسيس",
           "nameEn": "Sosis Crepe",
-          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Austrian_Hot_Dog.jpg/960px-Austrian_Hot_Dog.jpg",
+          "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/Austrian_Hot_Dog.jpg/960px-Austrian_Hot_Dog.jpg",
           "price": null,
           "variants": {
             "عادي": 85,
@@ -614,7 +614,7 @@
           "id": "crepe-strips",
           "nameAr": "كريب إستربس",
           "nameEn": "Strips Crepe",
-          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Fried_Chicken_strips.jpg/960px-Fried_Chicken_strips.jpg",
+          "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/Fried_Chicken_strips.jpg/960px-Fried_Chicken_strips.jpg",
           "price": null,
           "variants": {
             "عادي": 100,
@@ -757,7 +757,7 @@
           "id": "meal-kofta",
           "nameAr": "وجبة كفتة",
           "nameEn": "Kofta Meal",
-          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Egyptian_kofta.jpg/640px-Egyptian_kofta.jpg",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/8/87/Egyptian_kofta.jpg",
           "price": 110,
           "variants": {}
         },
@@ -773,7 +773,7 @@
           "id": "meal-zinger",
           "nameAr": "وجبة زنجر",
           "nameEn": "Zinger Meal",
-          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Sandwich_with_Fries_%28Unsplash%29.jpg/960px-Sandwich_with_Fries_%28Unsplash%29.jpg",
+          "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/98/Sandwich_with_Fries_%28Unsplash%29.jpg/960px-Sandwich_with_Fries_%28Unsplash%29.jpg",
           "price": 110,
           "variants": {}
         },
@@ -789,7 +789,7 @@
           "id": "meal-crispy",
           "nameAr": "وجبة كرسبي",
           "nameEn": "Crispy Meal",
-          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Fried-Chicken-Set.jpg/960px-Fried-Chicken-Set.jpg",
+          "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2c/Fried-Chicken-Set.jpg/960px-Fried-Chicken-Set.jpg",
           "price": 110,
           "variants": {}
         },
@@ -837,7 +837,7 @@
           "id": "drink-maya-saghira",
           "nameAr": "مياه صغيرة",
           "nameEn": "Small Water",
-          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Water_bottle_%2813779%29.jpg/640px-Water_bottle_%2813779%29.jpg",
+          "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/Water_bottle_%2813779%29.jpg/960px-Water_bottle_%2813779%29.jpg",
           "price": 10,
           "variants": {}
         },
