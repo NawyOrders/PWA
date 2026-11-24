@@ -1,0 +1,40 @@
+{
+  "statusCode": 200,
+  "isSuccess": true,
+  "data": {
+    "tenantId": "test-sub",
+    "nameAr": "test-sub",
+    "nameEn": "test-sub",
+    "logoUrl": "https://scontent.fcai19-3.fna.fbcdn.net/v/t39.30808-6/282772786_1920255551508764_3980461535681513878_n.jpg?stp=dst-jpg_tt6&cstp=mx1500x1500&ctp=s1500x1500&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=SUXgSuJur-oQ7kNvwFQ3fFv&_nc_oc=AdoNydV4CJNVFTQfZVCXlNN9WSSBcTJoe7yZ5Ovtc8OgsJtobUKYax_jt1AEe6jxUpU&_nc_zt=23&_nc_ht=scontent.fcai19-3.fna&_nc_gid=1keG6EBc77-1dSu0LI6szg&_nc_ss=7b289&oh=00_AQScvu5qhwMy6RUKB-c4cJ67-aSYtnrxDc0ybPWCob0_-Q&oe=6B065041",
+    "faviconUrl": "https://scontent.fcai19-3.fna.fbcdn.net/v/t39.30808-6/534702210_1073275081559254_3557410042120542357_n.jpg?stp=dst-jpg_tt6&cstp=mx1500x1500&ctp=s1500x1500&_nc_cat=101&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=24MqCtmbo_wQ7kNvwFFbCte&_nc_oc=AdoVJbOiVcLLVHSNFw_BrO_Bc1Q0D2so6ycrcScDzF_kevQ5CuZeJ-eoheCfbEeOUvo&_nc_zt=23&_nc_ht=scontent.fcai19-3.fna&_nc_gid=raOTo2iRyonCIfKjFm_VRw&_nc_ss=7b289&oh=00_AQQSsOam_i-Tc_WxGU0f4nLFsm2b4iFeYZfKxbC07VVP3w&oe=6B0538AB",
+    "primaryColor": "#F58220",
+    "secondaryColor": "#F5CD21",
+    "accentColor": "#0B6B3A",
+    "backgroundColor": "#E6CCA8",
+    "surfaceColor": "#FFFBF6",
+    "textOnPrimaryColor": "#FFFFFF",
+    "contactPhone": null,
+    "contactEmail": null,
+    "whatsAppUrl": null,
+    "messengerUrl": null,
+    "socialLinks": {},
+    "branches": [
+      {
+        "branchId": "pablo-main",
+        "nameAr": "الفرع الرئيسي",
+        "nameEn": "Main branch",
+        "address": null,
+        "latitude": 30.0444,
+        "longitude": 31.2357,
+        "phone": null,
+        "status": "Open",
+        "isPrimary": true,
+        "sortOrder": 0,
+        "workingHours": [],
+        "deliveryAreas": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-11-18T00:00:00Z"
+}
