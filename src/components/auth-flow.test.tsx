@@ -7,7 +7,7 @@ import { LoginView } from "@/components/login-view";
 import { seedProfile, useApp } from "@/components/providers";
 import { useCustomerSession } from "@/hooks/use-customer-session";
 import { MOCK_TEST_PHONES, authMock } from "@/lib/auth-mock";
-import { orders as seedOrders, seedFavorites } from "@/lib/data";
+import { orders as seedOrders, seedCart, seedFavorites } from "@/lib/data";
 import { localAccount, rememberLocalAccount } from "@/lib/local-accounts";
 import { localCustomer } from "@/lib/local-customers";
 import { loginHref } from "@/lib/routes";
@@ -51,14 +51,29 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...props }: { href: string | { pathname?: string }; children: React.ReactNode }) => (
-    <a href={typeof href === "string" ? href : String(href.pathname ?? "")} {...props}>
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string | { pathname?: string };
+    children: React.ReactNode;
+  }) => (
+    <a
+      href={typeof href === "string" ? href : String(href.pathname ?? "")}
+      {...props}
+    >
       {children}
     </a>
   ),
 }));
 
-type Call = { url: string; method: string; headers: Headers; body: string | null };
+type Call = {
+  url: string;
+  method: string;
+  headers: Headers;
+  body: string | null;
+};
 
 const PHONE = MOCK_TEST_PHONES.newCustomer;
 const NAME = "مينا جويدي";
@@ -85,7 +100,8 @@ function stubNetwork() {
 }
 
 function FlowProbe() {
-  const { customer, status, loggedIn, logout, authFetch } = useCustomerSession();
+  const { customer, status, loggedIn, logout, authFetch } =
+    useCustomerSession();
   const { favorites, orders, points, toggleFavorite, placeOrder } = useApp();
   const [fetched, setFetched] = useState("idle");
   return (
@@ -100,9 +116,20 @@ function FlowProbe() {
         })}
       </p>
       <p data-testid="account">
-        {JSON.stringify({ favorites, orderIds: orders.map((order) => order.id), points })}
+        {JSON.stringify({
+          favorites,
+          orderIds: orders.map((order) => order.id),
+          points,
+        })}
       </p>
-      <button type="button" onClick={() => void authFetch("/api/v1/orders").then((response) => setFetched(String(response.status)))}>
+      <button
+        type="button"
+        onClick={() =>
+          void authFetch("/api/v1/orders").then((response) =>
+            setFetched(String(response.status)),
+          )
+        }
+      >
         probe fetch
       </button>
       <button type="button" onClick={() => logout()}>
@@ -135,7 +162,11 @@ function Flow({ mode = "Registration" }: { mode?: "Login" | "Registration" }) {
   }, []);
   return (
     <SiteChrome>
-      {pathname === "/login" ? <LoginView next="/profile" mode={mode} /> : <FlowProbe />}
+      {pathname === "/login" ? (
+        <LoginView next="/profile" mode={mode} />
+      ) : (
+        <FlowProbe />
+      )}
     </SiteChrome>
   );
 }
@@ -163,10 +194,17 @@ async function typeCode(code: string): Promise<void> {
 }
 
 function box(n: number): HTMLInputElement {
-  return screen.getByRole("textbox", { name: `خانة الكود ${n}` }) as HTMLInputElement;
+  return screen.getByRole("textbox", {
+    name: `خانة الكود ${n}`,
+  }) as HTMLInputElement;
 }
 
-function sessionLine(): { status: string; loggedIn: boolean; phone: string | null; name: string | null } {
+function sessionLine(): {
+  status: string;
+  loggedIn: boolean;
+  phone: string | null;
+  name: string | null;
+} {
   return JSON.parse(String(screen.getByTestId("session").textContent)) as {
     status: string;
     loggedIn: boolean;
@@ -175,10 +213,15 @@ function sessionLine(): { status: string; loggedIn: boolean; phone: string | nul
   };
 }
 
-const ordersCalls = (calls: Call[]) => calls.filter((call) => call.url.includes("/api/v1/orders"));
+const ordersCalls = (calls: Call[]) =>
+  calls.filter((call) => call.url.includes("/api/v1/orders"));
 
 /** What the account screens read: the history and balance owned by this visit. */
-function accountLine(): { favorites: string[]; orderIds: string[]; points: number } {
+function accountLine(): {
+  favorites: string[];
+  orderIds: string[];
+  points: number;
+} {
   return JSON.parse(String(screen.getByTestId("account").textContent)) as {
     favorites: string[];
     orderIds: string[];
@@ -206,7 +249,10 @@ describe("the OTP login journey, in mock mode", () => {
     renderApp(<Flow />);
 
     // 1. Ask for a code as a new account, separators and all.
-    await userEvent.type(screen.getByLabelText("رقم الموبايل"), PHONE.replace("+20", "0020 "));
+    await userEvent.type(
+      screen.getByLabelText("رقم الموبايل"),
+      PHONE.replace("+20", "0020 "),
+    );
     await userEvent.type(screen.getByLabelText("الاسم بالكامل"), NAME);
     await userEvent.click(screen.getByRole("button", { name: "إرسال" }));
     const code = await readCodeFromThePopup();
@@ -215,7 +261,9 @@ describe("the OTP login journey, in mock mode", () => {
     await typeCode(code);
 
     // 3. The session is live and the app moved on by itself.
-    await waitFor(() => expect(screen.getByText("protected content")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("protected content")).toBeInTheDocument(),
+    );
     expect(nav.replace).toHaveBeenCalledWith("/profile");
     await waitFor(() => expect(sessionLine().loggedIn).toBe(true));
     expect(sessionLine().status).toBe("active");
@@ -223,16 +271,25 @@ describe("the OTP login journey, in mock mode", () => {
 
     // The name the customer typed is the account the backend made, and the only
     // thing storage ever holds is that identity: no token of either kind.
-    const stored = JSON.parse(String(localStorage.getItem(storageKeys.session))) as Record<string, unknown>;
+    const stored = JSON.parse(
+      String(localStorage.getItem(storageKeys.session)),
+    ) as Record<string, unknown>;
     expect(stored.fullName).toBe(NAME);
-    expect(Object.keys(stored).sort()).toEqual(["customerId", "email", "fullName", "phoneNumber"]);
+    expect(Object.keys(stored).sort()).toEqual([
+      "customerId",
+      "email",
+      "fullName",
+      "phoneNumber",
+    ]);
     expect(JSON.stringify(stored)).not.toMatch(/token/i);
 
     // 4. An ordinary authenticated call carries the bearer token, no cookie and
     //    no tenant header — the host is the tenant's, and that is the backend's job.
     await userEvent.click(screen.getByRole("button", { name: "probe fetch" }));
     await waitFor(() => expect(ordersCalls(calls)).toHaveLength(1));
-    expect(ordersCalls(calls)[0]?.headers.get("Authorization")).toMatch(/^Bearer /);
+    expect(ordersCalls(calls)[0]?.headers.get("Authorization")).toMatch(
+      /^Bearer /,
+    );
     expect(ordersCalls(calls)[0]?.headers.has("X-Tenant-Id")).toBe(false);
     const firstToken = ordersCalls(calls)[0]?.headers.get("Authorization");
 
@@ -242,11 +299,17 @@ describe("the OTP login journey, in mock mode", () => {
     const beforeRotation = authMock.peekCookie();
     await userEvent.click(screen.getByRole("button", { name: "probe fetch" }));
     await waitFor(() => expect(ordersCalls(calls)).toHaveLength(2));
-    expect(ordersCalls(calls)[1]?.headers.get("Authorization")).toMatch(/^Bearer /);
-    expect(ordersCalls(calls)[1]?.headers.get("Authorization")).not.toBe(firstToken);
+    expect(ordersCalls(calls)[1]?.headers.get("Authorization")).toMatch(
+      /^Bearer /,
+    );
+    expect(ordersCalls(calls)[1]?.headers.get("Authorization")).not.toBe(
+      firstToken,
+    );
     expect(authMock.peekCookie()).not.toBe(beforeRotation);
     // Rotation stayed the cookie's business: no page request carried a token.
-    expect(JSON.stringify(calls.map((call) => call.body))).not.toMatch(/refreshToken/);
+    expect(JSON.stringify(calls.map((call) => call.body))).not.toMatch(
+      /refreshToken/,
+    );
 
     // 6. Logout revokes upstream and clears locally, and the guard puts the
     //    customer back on the form with the return path intact.
@@ -255,18 +318,29 @@ describe("the OTP login journey, in mock mode", () => {
     // The guard, not the logout button, is what ends the visit: as soon as the
     // session is gone the protected page comes down and the form is back with
     // the return path, so pressing back returns the customer to where they were.
-    await waitFor(() => expect(screen.queryByText("protected content")).not.toBeInTheDocument());
-    await waitFor(() => expect(nav.replace).toHaveBeenCalledWith(loginHref("/profile")));
-    await waitFor(() => expect(screen.getByLabelText("رقم الموبايل")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByText("protected content")).not.toBeInTheDocument(),
+    );
+    await waitFor(() =>
+      expect(nav.replace).toHaveBeenCalledWith(loginHref("/profile")),
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText("رقم الموبايل")).toBeInTheDocument(),
+    );
     // Storage is written empty rather than deleted, and an empty session is
     // literally `null`: no identity, so nothing that could half-restore later.
-    expect(JSON.parse(String(localStorage.getItem(storageKeys.session)))).toBeNull();
+    expect(
+      JSON.parse(String(localStorage.getItem(storageKeys.session))),
+    ).toBeNull();
   }, 30_000);
 
   it("signs a returning customer in with a phone number alone", async () => {
     stubNetwork();
     // Seed the account the way a first order would have, through the API alone.
-    const seeded = await authMock.requestOtp({ phoneNumber: PHONE, purpose: "Registration" });
+    const seeded = await authMock.requestOtp({
+      phoneNumber: PHONE,
+      purpose: "Registration",
+    });
     await authMock.verifyOtp({
       challengeId: seeded.challengeId,
       code: seeded.devOtpCode ?? "",
@@ -281,20 +355,27 @@ describe("the OTP login journey, in mock mode", () => {
     const code = await readCodeFromThePopup();
     await typeCode(code);
 
-    await waitFor(() => expect(screen.getByText("protected content")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("protected content")).toBeInTheDocument(),
+    );
     expect(sessionLine().phone).toBe(PHONE);
     // The name on the account came back from the API, not from a field the
     // customer had to fill: `Login` asks for a phone and nothing else.
     expect(sessionLine().name).toBe(NAME);
     // The form is gone, so a spent challenge cannot be typed into again.
-    expect(screen.queryByRole("textbox", { name: "خانة الكود 1" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: "خانة الكود 1" }),
+    ).not.toBeInTheDocument();
   }, 30_000);
 
   it("walks an unknown number over to registration with the phone kept", async () => {
     stubNetwork();
     renderApp(<Flow mode="Login" />);
 
-    await userEvent.type(screen.getByLabelText("رقم الموبايل"), MOCK_TEST_PHONES.unknown);
+    await userEvent.type(
+      screen.getByLabelText("رقم الموبايل"),
+      MOCK_TEST_PHONES.unknown,
+    );
     await userEvent.click(screen.getByRole("button", { name: "إرسال" }));
     const code = await readCodeFromThePopup();
     await typeCode(code);
@@ -304,10 +385,14 @@ describe("the OTP login journey, in mock mode", () => {
     expect(await screen.findByText("أنشئ حساب جديد")).toBeInTheDocument();
     // Two things are said at once and both are true: the number has no account,
     // and the field the new question needs is the name.
-    const alerts = screen.getAllByRole("alert").map((element) => element.textContent);
+    const alerts = screen
+      .getAllByRole("alert")
+      .map((element) => element.textContent);
     expect(alerts).toContain("مفيش حساب بالموبيل ده، سجّل حساب جديد");
     expect(alerts).toContain("اكتب اسمك بالكامل");
-    expect((screen.getByLabelText("رقم الموبايل") as HTMLInputElement).value).toBe(MOCK_TEST_PHONES.unknown);
+    expect(
+      (screen.getByLabelText("رقم الموبايل") as HTMLInputElement).value,
+    ).toBe(MOCK_TEST_PHONES.unknown);
     // The dead challenge is retired: the boxes go back to waiting for a new
     // code rather than offering the spent one for another try.
     await waitFor(() => expect(box(1)).toBeDisabled());
@@ -321,7 +406,12 @@ describe("the OTP login journey, in mock mode", () => {
 /* -------------------------------------------------------------------------- */
 
 /** What the account screen reads: the profile the provider persisted. */
-function storedProfile(): { name: string; phone: string; email: string; avatar: string } {
+function storedProfile(): {
+  name: string;
+  phone: string;
+  email: string;
+  avatar: string;
+} {
   return JSON.parse(String(localStorage.getItem(storageKeys.profile))) as {
     name: string;
     phone: string;
@@ -340,12 +430,16 @@ describe("the registered name outlives the visit, in mock mode", () => {
     await userEvent.type(screen.getByLabelText("الاسم بالكامل"), NAME);
     await userEvent.click(screen.getByRole("button", { name: "إرسال" }));
     await typeCode(await readCodeFromThePopup());
-    await waitFor(() => expect(screen.getByText("protected content")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("protected content")).toBeInTheDocument(),
+    );
     await waitFor(() => expect(sessionLine().name).toBe(NAME));
 
     // 2. Logout hands the shared device back the neutral identity…
     await userEvent.click(screen.getByRole("button", { name: "probe logout" }));
-    await waitFor(() => expect(screen.queryByText("protected content")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByText("protected content")).not.toBeInTheDocument(),
+    );
     await waitFor(() => expect(storedProfile().name).toBe(seedProfile.name));
 
     // 3. …and a fresh page load starts from storage alone. The login question
@@ -358,7 +452,9 @@ describe("the registered name outlives the visit, in mock mode", () => {
 
     // 4. The session and the visible profile both carry the registered name —
     //    the same person who registered, not the seeded demo identity.
-    await waitFor(() => expect(screen.getByText("protected content")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("protected content")).toBeInTheDocument(),
+    );
     await waitFor(() => expect(sessionLine().name).toBe(NAME));
     expect(sessionLine().phone).toBe(PHONE);
     await waitFor(() => expect(storedProfile().name).toBe(NAME));
@@ -369,32 +465,54 @@ describe("the registered name outlives the visit, in mock mode", () => {
 describe("the customer's own history outlives the visit, in mock mode", () => {
   it("answers the next login with the favorites and orders that phone saved", async () => {
     stubNetwork();
+    // The customer has something in the basket to order: a fresh device starts empty.
+    localStorage.setItem(storageKeys.cart, JSON.stringify(seedCart));
     const firstVisit = renderApp(<Flow />);
 
     await userEvent.type(screen.getByLabelText("رقم الموبايل"), PHONE);
     await userEvent.type(screen.getByLabelText("الاسم بالكامل"), NAME);
     await userEvent.click(screen.getByRole("button", { name: "إرسال" }));
     await typeCode(await readCodeFromThePopup());
-    await waitFor(() => expect(screen.getByText("protected content")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("protected content")).toBeInTheDocument(),
+    );
 
     // A customer who just registered has saved nothing: no seeded history, and
     // no balance copied off the demo identity.
-    await waitFor(() => expect(accountLine()).toEqual({ favorites: [], orderIds: [], points: 0 }));
+    await waitFor(() =>
+      expect(accountLine()).toEqual({ favorites: [], orderIds: [], points: 0 }),
+    );
 
-    await userEvent.click(screen.getByRole("button", { name: "probe favorite" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "probe favorite" }),
+    );
     await userEvent.click(screen.getByRole("button", { name: "probe order" }));
-    await waitFor(() => expect(accountLine().favorites).toEqual(["beef-burger"]));
+    await waitFor(() =>
+      expect(accountLine().favorites).toEqual(["beef-burger"]),
+    );
     await waitFor(() => expect(accountLine().orderIds).toHaveLength(1));
     const savedIds = accountLine().orderIds;
-    await waitFor(() => expect(localAccount(PHONE)?.favorites).toEqual(["beef-burger"]));
+    await waitFor(() =>
+      expect(localAccount(PHONE)?.favorites).toEqual(["beef-burger"]),
+    );
     expect(localAccount(PHONE)?.orders).toHaveLength(1);
 
     // Logout hands the shared device back the neutral view…
     await userEvent.click(screen.getByRole("button", { name: "probe logout" }));
-    await waitFor(() => expect(screen.queryByText("protected content")).not.toBeInTheDocument());
-    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.favorites)))).toEqual(seedFavorites));
-    expect(JSON.parse(String(localStorage.getItem(storageKeys.orders)))).toHaveLength(seedOrders.length);
-    expect(JSON.parse(String(localStorage.getItem(storageKeys.points)))).toBe(0);
+    await waitFor(() =>
+      expect(screen.queryByText("protected content")).not.toBeInTheDocument(),
+    );
+    await waitFor(() =>
+      expect(
+        JSON.parse(String(localStorage.getItem(storageKeys.favorites))),
+      ).toEqual(seedFavorites),
+    );
+    expect(
+      JSON.parse(String(localStorage.getItem(storageKeys.orders))),
+    ).toHaveLength(seedOrders.length);
+    expect(JSON.parse(String(localStorage.getItem(storageKeys.points)))).toBe(
+      0,
+    );
     // …without erasing the copy that belongs to the customer who just left.
     expect(localAccount(PHONE)?.favorites).toEqual(["beef-burger"]);
     expect(localAccount(PHONE)?.orders).toHaveLength(1);
@@ -404,11 +522,19 @@ describe("the customer's own history outlives the visit, in mock mode", () => {
     await userEvent.type(screen.getByLabelText("رقم الموبايل"), PHONE);
     await userEvent.click(screen.getByRole("button", { name: "إرسال" }));
     await typeCode(await readCodeFromThePopup());
-    await waitFor(() => expect(screen.getByText("protected content")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("protected content")).toBeInTheDocument(),
+    );
 
     // The number that verified owns the history: the same favorites, the same
     // order, and the same registered name — not the seeded demo account.
-    await waitFor(() => expect(accountLine()).toEqual({ favorites: ["beef-burger"], orderIds: savedIds, points: 0 }));
+    await waitFor(() =>
+      expect(accountLine()).toEqual({
+        favorites: ["beef-burger"],
+        orderIds: savedIds,
+        points: 0,
+      }),
+    );
     await waitFor(() => expect(sessionLine().name).toBe(NAME));
     expect(sessionLine().phone).toBe(PHONE);
   }, 30_000);
@@ -429,7 +555,9 @@ describe("the registered name outlives the visit, in demo mode", () => {
     await userEvent.type(screen.getByLabelText("الاسم بالكامل"), name);
     await userEvent.click(screen.getByRole("button", { name: "إرسال" }));
     await typeCode(await readCodeFromThePopup());
-    await waitFor(() => expect(screen.getByText("protected content")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("protected content")).toBeInTheDocument(),
+    );
   }
 
   /** Signs in with a phone alone, the way the Login question asks it. */
@@ -437,7 +565,9 @@ describe("the registered name outlives the visit, in demo mode", () => {
     await userEvent.type(screen.getByLabelText("رقم الموبايل"), phone);
     await userEvent.click(screen.getByRole("button", { name: "إرسال" }));
     await typeCode(await readCodeFromThePopup());
-    await waitFor(() => expect(screen.getByText("protected content")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("protected content")).toBeInTheDocument(),
+    );
   }
 
   it("answers the next login with the registered name after logout and a fresh load", async () => {
@@ -446,7 +576,9 @@ describe("the registered name outlives the visit, in demo mode", () => {
     await waitFor(() => expect(storedProfile().name).toBe(NAME));
 
     await userEvent.click(screen.getByRole("button", { name: "probe logout" }));
-    await waitFor(() => expect(screen.queryByText("protected content")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByText("protected content")).not.toBeInTheDocument(),
+    );
     await waitFor(() => expect(storedProfile().name).toBe(seedProfile.name));
 
     firstVisit.unmount();
@@ -469,7 +601,10 @@ describe("the registered name outlives the visit, in demo mode", () => {
     // The customer uploads a photo: it lives on the profile.
     localStorage.setItem(
       storageKeys.profile,
-      JSON.stringify({ ...storedProfile(), avatar: "data:image/png;base64,AAAA" }),
+      JSON.stringify({
+        ...storedProfile(),
+        avatar: "data:image/png;base64,AAAA",
+      }),
     );
     // The session ends without the shared-device reset: the flag is gone but
     // the profile is still on the device. (A logout would wipe the profile as
@@ -497,7 +632,10 @@ describe("the registered name outlives the visit, in demo mode", () => {
     await waitFor(() => expect(storedProfile().phone).toBe("+201012345678"));
     // Then the customer edits their name on the account screen, and the
     // session ends leaving that edited profile on the device.
-    localStorage.setItem(storageKeys.profile, JSON.stringify({ ...storedProfile(), name: "اسم معدل" }));
+    localStorage.setItem(
+      storageKeys.profile,
+      JSON.stringify({ ...storedProfile(), name: "اسم معدل" }),
+    );
     localStorage.setItem(storageKeys.auth, "false");
 
     firstVisit.unmount();
@@ -511,25 +649,43 @@ describe("the registered name outlives the visit, in demo mode", () => {
   }, 30_000);
 
   it("answers the next login with the favorites and orders this customer saved", async () => {
+    // The customer has something in the basket to order: a fresh device starts empty.
+    localStorage.setItem(storageKeys.cart, JSON.stringify(seedCart));
     const firstVisit = renderApp(<Flow />);
     await register("01012345678", NAME);
 
     // A new account inherits nothing: the seeded history belongs to the demo,
     // not to the person who just registered.
-    await waitFor(() => expect(accountLine()).toEqual({ favorites: [], orderIds: [], points: 0 }));
+    await waitFor(() =>
+      expect(accountLine()).toEqual({ favorites: [], orderIds: [], points: 0 }),
+    );
 
-    await userEvent.click(screen.getByRole("button", { name: "probe favorite" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "probe favorite" }),
+    );
     await userEvent.click(screen.getByRole("button", { name: "probe order" }));
-    await waitFor(() => expect(accountLine().favorites).toEqual(["beef-burger"]));
+    await waitFor(() =>
+      expect(accountLine().favorites).toEqual(["beef-burger"]),
+    );
     await waitFor(() => expect(accountLine().orderIds).toHaveLength(1));
     const savedIds = accountLine().orderIds;
-    await waitFor(() => expect(localAccount("+201012345678")?.favorites).toEqual(["beef-burger"]));
+    await waitFor(() =>
+      expect(localAccount("+201012345678")?.favorites).toEqual(["beef-burger"]),
+    );
 
     await userEvent.click(screen.getByRole("button", { name: "probe logout" }));
-    await waitFor(() => expect(screen.queryByText("protected content")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByText("protected content")).not.toBeInTheDocument(),
+    );
     // The shared device shows the neutral catalogue view again…
-    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.favorites)))).toEqual(seedFavorites));
-    expect(JSON.parse(String(localStorage.getItem(storageKeys.orders)))).toHaveLength(seedOrders.length);
+    await waitFor(() =>
+      expect(
+        JSON.parse(String(localStorage.getItem(storageKeys.favorites))),
+      ).toEqual(seedFavorites),
+    );
+    expect(
+      JSON.parse(String(localStorage.getItem(storageKeys.orders))),
+    ).toHaveLength(seedOrders.length);
     // …and the customer's own copy is still theirs.
     expect(localAccount("+201012345678")?.favorites).toEqual(["beef-burger"]);
     expect(localAccount("+201012345678")?.orders).toHaveLength(1);
@@ -539,7 +695,11 @@ describe("the registered name outlives the visit, in demo mode", () => {
     await loginWithPhone("01012345678");
 
     await waitFor(() =>
-      expect(accountLine()).toEqual({ favorites: ["beef-burger"], orderIds: savedIds, points: 0 }),
+      expect(accountLine()).toEqual({
+        favorites: ["beef-burger"],
+        orderIds: savedIds,
+        points: 0,
+      }),
     );
     await waitFor(() => expect(storedProfile().name).toBe(NAME));
   }, 30_000);
@@ -564,14 +724,18 @@ describe("the registered name outlives the visit, in demo mode", () => {
     );
 
     await userEvent.click(screen.getByRole("button", { name: "probe logout" }));
-    await waitFor(() => expect(screen.queryByText("protected content")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByText("protected content")).not.toBeInTheDocument(),
+    );
 
     firstVisit.unmount();
     renderApp(<Flow mode="Login" />);
     // A second person picks up the device and signs in with their own number.
     await loginWithPhone("01198765432");
 
-    await waitFor(() => expect(accountLine()).toEqual({ favorites: [], orderIds: [], points: 0 }));
+    await waitFor(() =>
+      expect(accountLine()).toEqual({ favorites: [], orderIds: [], points: 0 }),
+    );
     // The first customer is untouched: their next login still finds their own.
     expect(localAccount("+201012345678")).toEqual({
       points: 240,
@@ -583,19 +747,31 @@ describe("the registered name outlives the visit, in demo mode", () => {
   it("keeps writing into the same slot after a reload while signed in", async () => {
     const firstVisit = renderApp(<Flow />);
     await register("01012345678", NAME);
-    await userEvent.click(screen.getByRole("button", { name: "probe favorite" }));
-    await waitFor(() => expect(localAccount("+201012345678")?.favorites).toEqual(["beef-burger"]));
+    await userEvent.click(
+      screen.getByRole("button", { name: "probe favorite" }),
+    );
+    await waitFor(() =>
+      expect(localAccount("+201012345678")?.favorites).toEqual(["beef-burger"]),
+    );
 
     // A reload, not a logout: the flag and the ownership pointer both come back
     // from storage, and the form steps aside for the account that is still in.
     firstVisit.unmount();
     renderApp(<Flow mode="Login" />);
-    await waitFor(() => expect(screen.getByText("protected content")).toBeInTheDocument());
-    await waitFor(() => expect(accountLine().favorites).toEqual(["beef-burger"]));
+    await waitFor(() =>
+      expect(screen.getByText("protected content")).toBeInTheDocument(),
+    );
+    await waitFor(() =>
+      expect(accountLine().favorites).toEqual(["beef-burger"]),
+    );
 
     // The pointer survived, so this change still lands in the same slot rather
     // than nowhere — which is what would lose it at the next sign-in.
-    await userEvent.click(screen.getByRole("button", { name: "probe favorite" }));
-    await waitFor(() => expect(localAccount("+201012345678")?.favorites).toEqual([]));
+    await userEvent.click(
+      screen.getByRole("button", { name: "probe favorite" }),
+    );
+    await waitFor(() =>
+      expect(localAccount("+201012345678")?.favorites).toEqual([]),
+    );
   }, 30_000);
 });

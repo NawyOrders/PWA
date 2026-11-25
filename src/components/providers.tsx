@@ -17,14 +17,17 @@ import {
   deliveryFee,
   orders as seedOrders,
   productsById,
-  seedCart,
   seedFavorites,
   user,
   type Order,
   type OrderItem,
   type PaymentMethodId,
 } from "@/lib/data";
-import { savedAddresses, type AddressKind, type SavedAddress } from "@/lib/account-data";
+import {
+  savedAddresses,
+  type AddressKind,
+  type SavedAddress,
+} from "@/lib/account-data";
 import { translate, type Lang, type Vars } from "@/lib/i18n";
 import { storageKeys } from "@/lib/storage";
 import {
@@ -269,8 +272,18 @@ const seedDeliveryDetails: DeliveryDetails = {
   instructions: "",
 };
 
-const ADDRESS_KINDS = new Set<AddressKind>(["home", "work", "family", "cafe", "other"]);
-const PAYMENT_METHODS = new Set<PaymentMethodId>(["cash", "instapay", "wallet"]);
+const ADDRESS_KINDS = new Set<AddressKind>([
+  "home",
+  "work",
+  "family",
+  "cafe",
+  "other",
+]);
+const PAYMENT_METHODS = new Set<PaymentMethodId>([
+  "cash",
+  "instapay",
+  "wallet",
+]);
 const SAFE_ID = /^[A-Za-z0-9_-]{1,40}$/;
 
 /** The demo branch list, shaped like the branding branches the screens accept. */
@@ -308,11 +321,15 @@ function decodeCart(stored: unknown, fallback: CartLine[]): CartLine[] {
         ? Math.min(line.qty, 99)
         : 1;
     const price =
-      typeof line.price === "number" && Number.isFinite(line.price) && line.price > 0
+      typeof line.price === "number" &&
+      Number.isFinite(line.price) &&
+      line.price > 0
         ? line.price
         : product.price;
     const extras = Array.isArray(line.extras)
-      ? line.extras.filter((extra): extra is string => typeof extra === "string").slice(0, 20)
+      ? line.extras
+          .filter((extra): extra is string => typeof extra === "string")
+          .slice(0, 20)
       : undefined;
     return [
       {
@@ -344,7 +361,11 @@ function decodeAuth(stored: unknown): boolean {
 
 /** A balance is a whole, non-negative, safe integer; anything else is the fallback. */
 function decodePoints(stored: unknown, fallback: number): number {
-  return typeof stored === "number" && Number.isSafeInteger(stored) && stored >= 0 ? stored : fallback;
+  return typeof stored === "number" &&
+    Number.isSafeInteger(stored) &&
+    stored >= 0
+    ? stored
+    : fallback;
 }
 
 /**
@@ -352,8 +373,13 @@ function decodePoints(stored: unknown, fallback: number): number {
  * number in the same 8–15 digit window `isUsablePhone` applies, so tampered
  * storage cannot turn it into a path, a query or a key the table never wrote.
  */
-function decodeAccountPhone(stored: unknown, fallback: string | null): string | null {
-  return typeof stored === "string" && /^\+\d{8,15}$/.test(stored) ? stored : fallback;
+function decodeAccountPhone(
+  stored: unknown,
+  fallback: string | null,
+): string | null {
+  return typeof stored === "string" && /^\+\d{8,15}$/.test(stored)
+    ? stored
+    : fallback;
 }
 
 function decodeLang(stored: unknown): Lang {
@@ -381,7 +407,10 @@ function isSavedAddress(value: unknown): value is SavedAddress {
   );
 }
 
-function decodeAddresses(stored: unknown, fallback: SavedAddress[]): SavedAddress[] {
+function decodeAddresses(
+  stored: unknown,
+  fallback: SavedAddress[],
+): SavedAddress[] {
   if (!Array.isArray(stored)) return fallback;
   const seen = new Set<string>();
   return stored.flatMap((value) => {
@@ -397,20 +426,42 @@ function decodeAddresses(stored: unknown, fallback: SavedAddress[]): SavedAddres
         lastUsed: limited(value.lastUsed, 80),
         lat: value.lat,
         lng: value.lng,
-        placeType: value.placeType === "Apartment" || value.placeType === "Villa" || value.placeType === "Office" ? value.placeType : undefined,
-        street: typeof value.street === "string" ? value.street.slice(0, 200) : undefined,
-        buildingName: typeof value.buildingName === "string" ? value.buildingName.slice(0, 50) : null,
-        floor: typeof value.floor === "string" ? value.floor.slice(0, 20) : null,
-        apartmentNumber: typeof value.apartmentNumber === "string" ? value.apartmentNumber.slice(0, 20) : null,
-        landmark: typeof value.landmark === "string" ? value.landmark.slice(0, 500) : null,
+        placeType:
+          value.placeType === "Apartment" ||
+          value.placeType === "Villa" ||
+          value.placeType === "Office"
+            ? value.placeType
+            : undefined,
+        street:
+          typeof value.street === "string"
+            ? value.street.slice(0, 200)
+            : undefined,
+        buildingName:
+          typeof value.buildingName === "string"
+            ? value.buildingName.slice(0, 50)
+            : null,
+        floor:
+          typeof value.floor === "string" ? value.floor.slice(0, 20) : null,
+        apartmentNumber:
+          typeof value.apartmentNumber === "string"
+            ? value.apartmentNumber.slice(0, 20)
+            : null,
+        landmark:
+          typeof value.landmark === "string"
+            ? value.landmark.slice(0, 500)
+            : null,
         branchId: typeof value.branchId === "string" ? value.branchId : null,
-        isDefault: typeof value.isDefault === "boolean" ? value.isDefault : undefined,
+        isDefault:
+          typeof value.isDefault === "boolean" ? value.isDefault : undefined,
       },
     ];
   });
 }
 
-function decodeSelectedAddress(stored: unknown, fallback: string | null): string | null {
+function decodeSelectedAddress(
+  stored: unknown,
+  fallback: string | null,
+): string | null {
   return typeof stored === "string" ? stored : fallback;
 }
 
@@ -418,10 +469,15 @@ function decodeSelectedBranch(stored: unknown, fallback: string): string {
   // Tenant branch ids are UUIDs, so the demo list cannot validate this. The
   // provider resolves the selection against the branches that actually exist
   // after branding loads.
-  return typeof stored === "string" && stored.trim() ? stored.trim().slice(0, 80) : fallback;
+  return typeof stored === "string" && stored.trim()
+    ? stored.trim().slice(0, 80)
+    : fallback;
 }
 
-function decodeDeliveryDetails(stored: unknown, fallback: DeliveryDetails): DeliveryDetails {
+function decodeDeliveryDetails(
+  stored: unknown,
+  fallback: DeliveryDetails,
+): DeliveryDetails {
   if (!stored || typeof stored !== "object") return fallback;
   const value = stored as Record<string, unknown>;
   const limits: Record<keyof DeliveryDetails, number> = {
@@ -434,7 +490,8 @@ function decodeDeliveryDetails(stored: unknown, fallback: DeliveryDetails): Deli
   };
   const next = { ...fallback };
   (Object.keys(limits) as (keyof DeliveryDetails)[]).forEach((key) => {
-    if (typeof value[key] === "string") next[key] = (value[key] as string).slice(0, limits[key]);
+    if (typeof value[key] === "string")
+      next[key] = (value[key] as string).slice(0, limits[key]);
   });
   return next;
 }
@@ -472,7 +529,9 @@ function decodeOrders(stored: unknown, fallback: Order[]): Order[] {
     ) {
       return [];
     }
-    const items = Array.isArray(order.items) ? order.items.filter(isOrderItem) : undefined;
+    const items = Array.isArray(order.items)
+      ? order.items.filter(isOrderItem)
+      : undefined;
     return [
       {
         id: order.id.slice(0, 40),
@@ -488,7 +547,8 @@ function decodeOrders(stored: unknown, fallback: Order[]): Order[] {
         eta: limited(order.eta, 80),
         items: items?.length ? items : undefined,
         paymentMethod:
-          typeof order.paymentMethod === "string" && PAYMENT_METHODS.has(order.paymentMethod as PaymentMethodId)
+          typeof order.paymentMethod === "string" &&
+          PAYMENT_METHODS.has(order.paymentMethod as PaymentMethodId)
             ? (order.paymentMethod as PaymentMethodId)
             : undefined,
         fulfilment:
@@ -501,7 +561,8 @@ function decodeOrders(stored: unknown, fallback: Order[]): Order[] {
             : undefined,
         address: limited(order.address, 200),
         createdAt:
-          typeof order.createdAt === "number" && Number.isFinite(order.createdAt)
+          typeof order.createdAt === "number" &&
+          Number.isFinite(order.createdAt)
             ? order.createdAt
             : undefined,
       },
@@ -534,7 +595,8 @@ const maxStoredAvatarChars = 300_000;
  */
 function usableAvatar(value: unknown): string {
   if (typeof value !== "string" || !value || value === user.avatar) return "";
-  if (value.startsWith("data:image/")) return value.length <= maxStoredAvatarChars ? value : "";
+  if (value.startsWith("data:image/"))
+    return value.length <= maxStoredAvatarChars ? value : "";
   return /^\/[\w./-]+$/.test(value) ? value : "";
 }
 
@@ -571,18 +633,21 @@ export function AppProvider({
   // Client components below render after this line, so the runtime value is in
   // place before `authTransport()` or `apiConfigured()` is asked. The server
   // keeps its own per-request resolution and never writes this module value.
-  if (typeof window !== "undefined") setRuntimeTenantApiBaseUrl(tenantApiBaseUrl);
+  if (typeof window !== "undefined")
+    setRuntimeTenantApiBaseUrl(tenantApiBaseUrl);
   const [lines, setLines, cartReady] = usePersistentState<CartLine[]>(
     storageKeys.cart,
     [],
     decodeCart,
   );
-  const [favorites, setFavorites, favoritesReady] = usePersistentState<string[]>(
-    storageKeys.favorites,
-    seedFavorites,
-    decodeFavorites,
+  const [favorites, setFavorites, favoritesReady] = usePersistentState<
+    string[]
+  >(storageKeys.favorites, seedFavorites, decodeFavorites);
+  const [authFlag, setAuthFlag, authReady] = usePersistentState<boolean>(
+    storageKeys.auth,
+    false,
+    decodeAuth,
   );
-  const [authFlag, setAuthFlag, authReady] = usePersistentState<boolean>(storageKeys.auth, false, decodeAuth);
   /*
    * Only the identity is persisted. The access token lives in `grant` below —
    * memory, for this page load — and the refresh token lives in an httpOnly
@@ -593,38 +658,47 @@ export function AppProvider({
    * identity back, which would otherwise erase it before anyone could adopt it.
    */
   const storedRefreshToken = useRef<string | null>(null);
-  const decodeStoredSession = useCallback((stored: unknown): CustomerSession | null => {
-    const parsed = decodeSession(stored);
-    storedRefreshToken.current = parsed?.legacyRefreshToken ?? null;
-    return parsed?.identity ?? null;
-  }, []);
-  const [customer, setCustomer, sessionReady] = usePersistentState<CustomerSession | null>(
-    storageKeys.session,
-    null,
-    decodeStoredSession,
+  const decodeStoredSession = useCallback(
+    (stored: unknown): CustomerSession | null => {
+      const parsed = decodeSession(stored);
+      storedRefreshToken.current = parsed?.legacyRefreshToken ?? null;
+      return parsed?.identity ?? null;
+    },
+    [],
   );
+  const [customer, setCustomer, sessionReady] =
+    usePersistentState<CustomerSession | null>(
+      storageKeys.session,
+      null,
+      decodeStoredSession,
+    );
   const [grant, setGrant] = useState<AccessGrant | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   /** When a transient refresh failure should be retried, or `null` if none is pending. */
   const [refreshRetryAt, setRefreshRetryAt] = useState<number | null>(null);
-  const [brandingCache, setBrandingCache, brandingReady] = usePersistentState<BrandingCache | null>(
-    storageKeys.branding,
-    initialBranding ? { etag: initialBrandingEtag, branding: initialBranding } : null,
-    decodeBrandingCache,
-  );
-  const [addresses, setAddresses, addressesReady] = usePersistentState<SavedAddress[]>(
-    storageKeys.addresses,
-    savedAddresses,
-    decodeAddresses,
-  );
-  const [storedSelectedAddressId, setSelectedAddressId, selectedAddressReady] = usePersistentState<
-    string | null
-  >(storageKeys.selectedAddress, savedAddresses[0].id, decodeSelectedAddress);
-  const [storedBranchId, setSelectedBranchId, branchReady] = usePersistentState<string>(
-    storageKeys.selectedBranch,
-    DEMO_BRANCHES[0].id,
-    decodeSelectedBranch,
-  );
+  const [brandingCache, setBrandingCache, brandingReady] =
+    usePersistentState<BrandingCache | null>(
+      storageKeys.branding,
+      initialBranding
+        ? { etag: initialBrandingEtag, branding: initialBranding }
+        : null,
+      decodeBrandingCache,
+    );
+  const [addresses, setAddresses, addressesReady] = usePersistentState<
+    SavedAddress[]
+  >(storageKeys.addresses, savedAddresses, decodeAddresses);
+  const [storedSelectedAddressId, setSelectedAddressId, selectedAddressReady] =
+    usePersistentState<string | null>(
+      storageKeys.selectedAddress,
+      savedAddresses[0].id,
+      decodeSelectedAddress,
+    );
+  const [storedBranchId, setSelectedBranchId, branchReady] =
+    usePersistentState<string>(
+      storageKeys.selectedBranch,
+      DEMO_BRANCHES[0].id,
+      decodeSelectedBranch,
+    );
   const [deliveryDetails, setDeliveryDetails, deliveryDetailsReady] =
     usePersistentState<DeliveryDetails>(
       storageKeys.deliveryDetails,
@@ -656,7 +730,11 @@ export function AppProvider({
    * `user.points` was a demo constant every customer inherited, which is not a
    * reward anybody earned.
    */
-  const [points, setPoints, pointsReady] = usePersistentState<number>(storageKeys.points, 0, decodePoints);
+  const [points, setPoints, pointsReady] = usePersistentState<number>(
+    storageKeys.points,
+    0,
+    decodePoints,
+  );
   /*
    * Whose account the visible favorites, orders and points are. It is persisted
    * so a reload keeps writing to the same slot, and it is deliberately not the
@@ -664,13 +742,17 @@ export function AppProvider({
    * move somebody's order history onto a different identity. Only a fresh OTP
    * challenge claims a slot.
    */
-  const [accountPhone, setAccountPhone, accountPhoneReady] = usePersistentState<string | null>(
-    storageKeys.accountPhone,
-    null,
-    decodeAccountPhone,
+  const [accountPhone, setAccountPhone, accountPhoneReady] = usePersistentState<
+    string | null
+  >(storageKeys.accountPhone, null, decodeAccountPhone);
+  const [lang, setLang, langReady] = usePersistentState<Lang>(
+    storageKeys.lang,
+    "ar",
+    decodeLang,
   );
-  const [lang, setLang, langReady] = usePersistentState<Lang>(storageKeys.lang, "ar", decodeLang);
-  const [fulfilment, setFulfilment] = useState<"delivery" | "pickup">("delivery");
+  const [fulfilment, setFulfilment] = useState<"delivery" | "pickup">(
+    "delivery",
+  );
   const [loginPromptNext, setLoginPromptNext] = useState<string | null>(null);
   const [toastState, setToastState] = useState<ToastState>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -721,7 +803,9 @@ export function AppProvider({
 
   // Storage may reference a deleted address/branch; expose only values that
   // still resolve so screens never render a dangling selection.
-  const selectedAddressId = addresses.some((address) => address.id === storedSelectedAddressId)
+  const selectedAddressId = addresses.some(
+    (address) => address.id === storedSelectedAddressId,
+  )
     ? storedSelectedAddressId
     : null;
   const branding = brandingCache?.branding ?? null;
@@ -734,7 +818,9 @@ export function AppProvider({
     const tenantBranches = brandingBranches(branding, lang);
     return tenantBranches.length > 0 ? tenantBranches : DEMO_BRANCHES;
   }, [branding, lang]);
-  const selectedBranchId = storeBranches.some((branch) => branch.id === storedBranchId)
+  const selectedBranchId = storeBranches.some(
+    (branch) => branch.id === storedBranchId,
+  )
     ? storedBranchId
     : storeBranches[0].id;
 
@@ -754,7 +840,10 @@ export function AppProvider({
         ? "recovering"
         : "signed-out";
   const dir = lang === "ar" ? "rtl" : "ltr";
-  const t = useCallback((text: string, vars?: Vars) => translate(lang, text, vars), [lang]);
+  const t = useCallback(
+    (text: string, vars?: Vars) => translate(lang, text, vars),
+    [lang],
+  );
 
   /* ------------------------------------------------------------------------ */
   /* Local account ownership: one phone, one saved history.                    */
@@ -818,7 +907,10 @@ export function AppProvider({
     if (!brandingReady || serverBrandingApplied.current) return;
     serverBrandingApplied.current = true;
     if (initialBranding) {
-      setBrandingCache({ etag: initialBrandingEtag, branding: initialBranding });
+      setBrandingCache({
+        etag: initialBrandingEtag,
+        branding: initialBranding,
+      });
     }
   }, [brandingReady, initialBranding, initialBrandingEtag, setBrandingCache]);
 
@@ -862,14 +954,24 @@ export function AppProvider({
   useEffect(() => {
     if (!ready || !loggedIn || accountPhone) return;
     if (authTransport() === "live") return;
-    const normalized = normalizeEgyptianPhone(customer?.phoneNumber || profile.phone);
+    const normalized = normalizeEgyptianPhone(
+      customer?.phoneNumber || profile.phone,
+    );
     if (!normalized.replace(/\D/g, "")) return;
     if (localAccount(normalized)) {
       adoptLocalAccount(normalized);
       return;
     }
     setAccountPhone(normalized);
-  }, [ready, loggedIn, accountPhone, customer, profile.phone, adoptLocalAccount, setAccountPhone]);
+  }, [
+    ready,
+    loggedIn,
+    accountPhone,
+    customer,
+    profile.phone,
+    adoptLocalAccount,
+    setAccountPhone,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -886,7 +988,13 @@ export function AppProvider({
   /* One conditional GET per load: the stored ETag turns a fresh branding into
      a 304, and any failure simply leaves the palette that is already applied. */
   useEffect(() => {
-    if (!apiConfigured() || !brandingReady || brandingFetched.current || initialBranding) return;
+    if (
+      !apiConfigured() ||
+      !brandingReady ||
+      brandingFetched.current ||
+      initialBranding
+    )
+      return;
     brandingFetched.current = true;
     fetchBranding({ etag: brandingCache?.etag ?? null })
       .then((result) => {
@@ -969,7 +1077,16 @@ export function AppProvider({
     retryDeadline.current = null;
     setRefreshRetryAt(null);
     toast(t("انتهت الجلسة، سجّل الدخول تاني"), "info");
-  }, [applyGrant, setCustomer, setAuthFlag, setAddresses, setSelectedAddressId, releaseLocalAccount, toast, t]);
+  }, [
+    applyGrant,
+    setCustomer,
+    setAuthFlag,
+    setAddresses,
+    setSelectedAddressId,
+    releaseLocalAccount,
+    toast,
+    t,
+  ]);
 
   /*
    * Which refresh failures end the session, and which only cost a retry.
@@ -1015,7 +1132,8 @@ export function AppProvider({
         getGrant: () => grantRef.current,
         refresh: refreshNow,
         onSignedOut: expireSession,
-        join: (path) => (tenantApiBaseUrl ? joinApiUrl(tenantApiBaseUrl, path) : apiUrl(path)),
+        join: (path) =>
+          tenantApiBaseUrl ? joinApiUrl(tenantApiBaseUrl, path) : apiUrl(path),
       }),
     [refreshNow, expireSession, tenantApiBaseUrl],
   );
@@ -1024,20 +1142,45 @@ export function AppProvider({
   // its seeded values; a live signed-in customer replaces them as soon as a
   // bearer token is available.
   useEffect(() => {
-    if (!ready || authTransport() !== "live" || !customer || sessionStatus !== "active") return;
+    if (
+      !ready ||
+      authTransport() !== "live" ||
+      !customer ||
+      sessionStatus !== "active"
+    )
+      return;
     const customerId = customer.customerId;
     let cancelled = false;
     setAddresses([]);
     setSelectedAddressId(null);
-    Promise.all([addressApi.list(authFetch), addressApi.default(authFetch).catch(() => null)]).then(([remote, defaultAddress]) => {
-      if (!cancelled && grantRef.current && customer?.customerId === customerId) {
-        setAddresses(remote);
-        const selected = defaultAddress ?? remote.find((item) => item.isDefault) ?? null;
-        setSelectedAddressId(selected?.id ?? null);
-      }
-    }).catch(() => undefined);
-    return () => { cancelled = true; };
-  }, [ready, customer, sessionStatus, authFetch, setAddresses, setSelectedAddressId]);
+    Promise.all([
+      addressApi.list(authFetch),
+      addressApi.default(authFetch).catch(() => null),
+    ])
+      .then(([remote, defaultAddress]) => {
+        if (
+          !cancelled &&
+          grantRef.current &&
+          customer?.customerId === customerId
+        ) {
+          setAddresses(remote);
+          const selected =
+            defaultAddress ?? remote.find((item) => item.isDefault) ?? null;
+          setSelectedAddressId(selected?.id ?? null);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    ready,
+    customer,
+    sessionStatus,
+    authFetch,
+    setAddresses,
+    setSelectedAddressId,
+  ]);
 
   /*
    * An older build kept the refresh token in `localStorage`. Hand it to the app
@@ -1135,12 +1278,16 @@ export function AppProvider({
       const size = options.size ?? "";
       const extras = options.extras?.length ? [...options.extras].sort() : [];
       const note = options.note?.trim() ?? "";
-      const key = [productId, size, extras.join("+"), note].filter(Boolean).join("|");
+      const key = [productId, size, extras.join("+"), note]
+        .filter(Boolean)
+        .join("|");
       setLines((current) => {
         const existing = current.find((line) => line.key === key);
         if (existing) {
           return current.map((line) =>
-            line.key === key ? { ...line, qty: line.qty + (options.qty ?? 1) } : line,
+            line.key === key
+              ? { ...line, qty: line.qty + (options.qty ?? 1) }
+              : line,
           );
         }
         return [
@@ -1260,23 +1407,42 @@ export function AppProvider({
         email: next.email ?? current.email,
       }));
     },
-    [applyGrant, customer, profile.email, refreshNow, setCustomer, setProfile, updateProfile],
+    [
+      applyGrant,
+      customer,
+      profile.email,
+      refreshNow,
+      setCustomer,
+      setProfile,
+      updateProfile,
+    ],
   );
 
-  const isFavorite = useCallback((id: string) => favorites.includes(id), [favorites]);
+  const isFavorite = useCallback(
+    (id: string) => favorites.includes(id),
+    [favorites],
+  );
 
   const toggleFavorite = useCallback(
     (id: string) => {
       setFavorites((current) => {
         const exists = current.includes(id);
-        toast(t(exists ? "تمت الإزالة من المفضلة" : "تمت الإضافة إلى المفضلة"), "info");
-        return exists ? current.filter((item) => item !== id) : [...current, id];
+        toast(
+          t(exists ? "تمت الإزالة من المفضلة" : "تمت الإضافة إلى المفضلة"),
+          "info",
+        );
+        return exists
+          ? current.filter((item) => item !== id)
+          : [...current, id];
       });
     },
     [toast, t, setFavorites],
   );
 
-  const openLoginPrompt = useCallback((next: string = "/cart") => setLoginPromptNext(next), []);
+  const openLoginPrompt = useCallback(
+    (next: string = "/cart") => setLoginPromptNext(next),
+    [],
+  );
   const closeLoginPrompt = useCallback(() => setLoginPromptNext(null), []);
 
   const login = useCallback(
@@ -1312,7 +1478,16 @@ export function AppProvider({
       setLoginPromptNext(null);
       toast(t("تم تسجيل الدخول بنجاح"), "info");
     },
-    [toast, t, applyGrant, setCustomer, setAuthFlag, setAddresses, setSelectedAddressId, adoptLocalAccount],
+    [
+      toast,
+      t,
+      applyGrant,
+      setCustomer,
+      setAuthFlag,
+      setAddresses,
+      setSelectedAddressId,
+      adoptLocalAccount,
+    ],
   );
 
   const logout = useCallback(() => {
@@ -1344,36 +1519,85 @@ export function AppProvider({
     adoptionPending.current = null;
     setRefreshRetryAt(null);
     toast(t("تم تسجيل الخروج"), "info");
-  }, [toast, t, applyGrant, setCustomer, setAuthFlag, setAddresses, setSelectedAddressId, setProfile, releaseLocalAccount]);
+  }, [
+    toast,
+    t,
+    applyGrant,
+    setCustomer,
+    setAuthFlag,
+    setAddresses,
+    setSelectedAddressId,
+    setProfile,
+    releaseLocalAccount,
+  ]);
 
   const addAddress = useCallback(
     (address: SavedAddress) => {
       if (authTransport() === "live" && customer) {
-        void addressApi.create(authFetch, {
-          placeType: address.placeType ?? (address.kind === "work" ? "Office" : address.kind === "family" ? "Villa" : "Apartment"),
-          label: address.title.slice(0, 50),
-          street: (address.street ?? address.detail).slice(0, 200),
-          latitude: address.lat,
-          longitude: address.lng,
-          buildingName: address.buildingName?.slice(0, 50),
-          floor: address.placeType === "Apartment" || (!address.placeType && address.kind !== "family" && address.kind !== "work") ? address.floor?.slice(0, 20) : undefined,
-          apartmentNumber: address.placeType === "Apartment" || (!address.placeType && address.kind !== "family" && address.kind !== "work") ? address.apartmentNumber?.slice(0, 20) : undefined,
-          landmark: address.landmark?.slice(0, 500),
-          isDefault: addresses.length === 0,
-        }).then((created) => {
-          setAddresses((current) => [created, ...current.filter((item) => item.id !== created.id)]);
-          setSelectedAddressId(created.id);
-        }).catch(() => toast(t("تعذر حفظ العنوان. تحقق من البيانات وحاول مرة أخرى"), "info"));
+        void addressApi
+          .create(authFetch, {
+            placeType:
+              address.placeType ??
+              (address.kind === "work"
+                ? "Office"
+                : address.kind === "family"
+                  ? "Villa"
+                  : "Apartment"),
+            label: address.title.slice(0, 50),
+            street: (address.street ?? address.detail).slice(0, 200),
+            latitude: address.lat,
+            longitude: address.lng,
+            buildingName: address.buildingName?.slice(0, 50),
+            floor:
+              address.placeType === "Apartment" ||
+              (!address.placeType &&
+                address.kind !== "family" &&
+                address.kind !== "work")
+                ? address.floor?.slice(0, 20)
+                : undefined,
+            apartmentNumber:
+              address.placeType === "Apartment" ||
+              (!address.placeType &&
+                address.kind !== "family" &&
+                address.kind !== "work")
+                ? address.apartmentNumber?.slice(0, 20)
+                : undefined,
+            landmark: address.landmark?.slice(0, 500),
+            isDefault: addresses.length === 0,
+          })
+          .then((created) => {
+            setAddresses((current) => [
+              created,
+              ...current.filter((item) => item.id !== created.id),
+            ]);
+            setSelectedAddressId(created.id);
+          })
+          .catch(() =>
+            toast(
+              t("تعذر حفظ العنوان. تحقق من البيانات وحاول مرة أخرى"),
+              "info",
+            ),
+          );
         return;
       }
       setAddresses((current) => {
-        const withoutDuplicate = current.filter((item) => item.id !== address.id);
+        const withoutDuplicate = current.filter(
+          (item) => item.id !== address.id,
+        );
         return [...withoutDuplicate, address];
       });
       setSelectedAddressId(address.id);
       toast(t("تم حفظ العنوان بنجاح"), "info");
     },
-    [toast, t, setAddresses, setSelectedAddressId, addresses.length, authFetch, customer],
+    [
+      toast,
+      t,
+      setAddresses,
+      setSelectedAddressId,
+      addresses.length,
+      authFetch,
+      customer,
+    ],
   );
 
   const removeAddress = useCallback(
@@ -1385,20 +1609,32 @@ export function AppProvider({
     [toast, t, setAddresses, setSelectedAddressId],
   );
 
-  const selectAddress = useCallback((id: string | null) => {
-    if (id && authTransport() === "live" && customer) {
-      void addressApi.setDefault(authFetch, id).then((updated) => {
-        setAddresses((current) => current.map((item) => ({ ...item, isDefault: item.id === updated.id })));
-        setSelectedAddressId(updated.id);
-      }).catch(() => toast(t("تعذر تعيين العنوان الافتراضي"), "info"));
-      return;
-    }
-    setSelectedAddressId(id);
-  }, [authFetch, customer, setAddresses, setSelectedAddressId, t, toast]);
+  const selectAddress = useCallback(
+    (id: string | null) => {
+      if (id && authTransport() === "live" && customer) {
+        void addressApi
+          .setDefault(authFetch, id)
+          .then((updated) => {
+            setAddresses((current) =>
+              current.map((item) => ({
+                ...item,
+                isDefault: item.id === updated.id,
+              })),
+            );
+            setSelectedAddressId(updated.id);
+          })
+          .catch(() => toast(t("تعذر تعيين العنوان الافتراضي"), "info"));
+        return;
+      }
+      setSelectedAddressId(id);
+    },
+    [authFetch, customer, setAddresses, setSelectedAddressId, t, toast],
+  );
 
   const selectBranch = useCallback(
     (id: string) => {
-      if (storeBranches.some((branch) => branch.id === id)) setSelectedBranchId(id);
+      if (storeBranches.some((branch) => branch.id === id))
+        setSelectedBranchId(id);
     },
     [setSelectedBranchId, storeBranches],
   );
@@ -1419,7 +1655,10 @@ export function AppProvider({
     [setDeliveryDetails],
   );
 
-  const count = useMemo(() => lines.reduce((total, line) => total + line.qty, 0), [lines]);
+  const count = useMemo(
+    () => lines.reduce((total, line) => total + line.qty, 0),
+    [lines],
+  );
   const subtotal = useMemo(
     () => lines.reduce((total, line) => total + line.price * line.qty, 0),
     [lines],
@@ -1439,8 +1678,11 @@ export function AppProvider({
         extras: line.extras,
         note: line.note,
       }));
-      const address = addresses.find((item) => item.id === selectedAddressId) ?? null;
-      const branch = storeBranches.find((item) => item.id === selectedBranchId) ?? storeBranches[0];
+      const address =
+        addresses.find((item) => item.id === selectedAddressId) ?? null;
+      const branch =
+        storeBranches.find((item) => item.id === selectedBranchId) ??
+        storeBranches[0];
       const separator = lang === "ar" ? "، " : ", ";
       const deliveryAddress = address
         ? `${t(address.area)}${separator}${t(address.detail)}`
@@ -1448,23 +1690,29 @@ export function AppProvider({
       const discount = coupon ? Math.min(Math.round(subtotal * 0.2), 50) : 0;
       const fee = fulfilment === "delivery" ? deliveryFee : 0;
       const latestId = orders.reduce(
-        (max, order) => (/^\d+$/.test(order.id) ? Math.max(max, Number(order.id)) : max),
+        (max, order) =>
+          /^\d+$/.test(order.id) ? Math.max(max, Number(order.id)) : max,
         10000,
       );
-      const formattedDate = new Intl.DateTimeFormat(lang === "ar" ? "ar-EG" : "en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      }).format(new Date(now));
+      const formattedDate = new Intl.DateTimeFormat(
+        lang === "ar" ? "ar-EG" : "en-GB",
+        {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        },
+      ).format(new Date(now));
 
       const order: Order = {
         id: String(latestId + 1),
         status: "preparing",
         title: items[0].name,
         date: lang === "ar" ? `اليوم، ${formattedDate}` : formattedDate,
-        description: items.map((item) => `${item.qty} ${item.name}`).join(" + "),
+        description: items
+          .map((item) => `${item.qty} ${item.name}`)
+          .join(" + "),
         total: Math.max(0, subtotal - discount + fee),
         image: productsById[items[0].productId]?.image ?? "/images/burger.webp",
         eta: fulfilment === "delivery" ? "25 - 35 دقيقة" : "20 - 30 دقيقة",
@@ -1627,7 +1875,11 @@ export function AppProvider({
             className="animate-toast-in pointer-events-auto flex items-center gap-3 rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white shadow-[0_20px_50px_-20px_rgba(0,0,0,0.6)]"
           >
             <span className="grid size-7 place-items-center rounded-full bg-brand text-white">
-              {toastState.kind === "cart" ? <ShoppingCart className="size-4" /> : <Check className="size-4" />}
+              {toastState.kind === "cart" ? (
+                <ShoppingCart className="size-4" />
+              ) : (
+                <Check className="size-4" />
+              )}
             </span>
             <span>{toastState.message}</span>
             {toastState.kind === "cart" ? (

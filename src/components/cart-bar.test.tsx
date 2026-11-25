@@ -1,11 +1,19 @@
 import { screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CartBar } from "@/components/cart-bar";
 import { renderApp } from "@/test/render";
+import { seedCart } from "@/lib/data";
 import { storageKeys } from "@/lib/storage";
 
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...props }: { href: string | { pathname?: string }; children: React.ReactNode }) => (
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string | { pathname?: string };
+    children: React.ReactNode;
+  }) => (
     <a href={typeof href === "string" ? href : String(href)} {...props}>
       {children}
     </a>
@@ -23,6 +31,10 @@ function barText(): string {
 }
 
 describe("CartBar", () => {
+  beforeEach(() => {
+    localStorage.setItem(storageKeys.cart, JSON.stringify(seedCart));
+  });
+
   it("opens the basket instead of pushing straight to checkout", async () => {
     localStorage.setItem(storageKeys.auth, "true");
     renderApp(<CartBar />);
@@ -36,7 +48,9 @@ describe("CartBar", () => {
     localStorage.setItem(storageKeys.auth, "true");
     renderApp(<CartBar />);
 
-    expect(await screen.findByText("لديك 3 وجبات في سلة الطلب")).toBeInTheDocument();
+    expect(
+      await screen.findByText("لديك 3 وجبات في سلة الطلب"),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "السلة" })).toHaveTextContent("3");
     // 125 + 120 + 100 from the seeded basket, plus the 30 EGP delivery fee.
     expect(barText()).toContain("برجر سمك (×1)، برجر لحم (×1)");

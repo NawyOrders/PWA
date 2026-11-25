@@ -10,7 +10,7 @@ import {
   type AuthErrorCode,
   type CustomerSessionPayload,
 } from "@/lib/api";
-import { user as seedUser } from "@/lib/data";
+import { seedCart, user as seedUser } from "@/lib/data";
 import { storageKeys } from "@/lib/storage";
 
 const router = vi.hoisted(() => ({ replace: vi.fn() }));
@@ -77,7 +77,14 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...props }: { href: string | { pathname?: string }; children: React.ReactNode }) => (
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string | { pathname?: string };
+    children: React.ReactNode;
+  }) => (
     <a href={typeof href === "string" ? href : String(href)} {...props}>
       {children}
     </a>
@@ -168,7 +175,9 @@ function pendingForever(): Promise<never> {
  * reader or by `getByRole` — if a digit's box can be named.
  */
 function otpInputs(): HTMLInputElement[] {
-  return screen.getAllByRole("textbox", { name: /خانة الكود/ }) as HTMLInputElement[];
+  return screen.getAllByRole("textbox", {
+    name: /خانة الكود/,
+  }) as HTMLInputElement[];
 }
 
 function sendButton(): HTMLButtonElement {
@@ -176,16 +185,22 @@ function sendButton(): HTMLButtonElement {
 }
 
 function verifyButton(): HTMLButtonElement {
-  return screen.getByRole("button", { name: /تأكيد الكود/ }) as HTMLButtonElement;
+  return screen.getByRole("button", {
+    name: /تأكيد الكود/,
+  }) as HTMLButtonElement;
 }
 
 /** While a verify is open the submit button is a spinner, so it has its own name. */
 function busyVerifyButton(): HTMLButtonElement {
-  return screen.getByRole("button", { name: "جارٍ تسجيل الدخول" }) as HTMLButtonElement;
+  return screen.getByRole("button", {
+    name: "جارٍ تسجيل الدخول",
+  }) as HTMLButtonElement;
 }
 
 function resendButton(): HTMLButtonElement {
-  return screen.getByRole("button", { name: /إعادة إرسال الكود/ }) as HTMLButtonElement;
+  return screen.getByRole("button", {
+    name: /إعادة إرسال الكود/,
+  }) as HTMLButtonElement;
 }
 
 function codeValidity(): HTMLElement {
@@ -198,7 +213,10 @@ function resendRow(): HTMLElement {
 
 /** Every failure the screen shows is a `role="alert"`; the toast repeats the same sentence. */
 function alerts(): string {
-  return screen.queryAllByRole("alert").map((node) => node.textContent ?? "").join("\n");
+  return screen
+    .queryAllByRole("alert")
+    .map((node) => node.textContent ?? "")
+    .join("\n");
 }
 
 async function expectAlert(pattern: string | RegExp) {
@@ -216,7 +234,9 @@ function fillCode(value: string) {
 }
 
 function pasteCode(value: string, index = 0) {
-  fireEvent.paste(otpInputs()[index], { clipboardData: { getData: () => value } });
+  fireEvent.paste(otpInputs()[index], {
+    clipboardData: { getData: () => value },
+  });
 }
 
 function codeValues(): string[] {
@@ -226,7 +246,8 @@ function codeValues(): string[] {
 /** The form's own submit path — what the browser's implicit submission reaches. */
 function submitForm() {
   const form = document.querySelector("form");
-  if (!(form instanceof HTMLFormElement)) throw new Error("the login form is missing");
+  if (!(form instanceof HTMLFormElement))
+    throw new Error("the login form is missing");
   fireEvent.submit(form);
 }
 
@@ -236,13 +257,19 @@ function submitForm() {
  * dialog for focus.
  */
 async function closeCodeDialog(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "إغلاق" }));
+  await user.click(
+    within(screen.getByRole("dialog")).getByRole("button", { name: "إغلاق" }),
+  );
 }
 
 beforeEach(() => {
   apiMode.configured = false;
   fakeOtp.code = "123456";
-  api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+  api.fetchBranding.mockResolvedValue({
+    notModified: true,
+    branding: null,
+    etag: null,
+  });
   api.refreshSession.mockResolvedValue({
     accessToken: "rotated-token",
     tokenType: "Bearer",
@@ -267,7 +294,10 @@ async function requestCode(user: ReturnType<typeof userEvent.setup>) {
 }
 
 /** The same step against the mocked API, on the real clock. */
-async function requestApiCode(user: ReturnType<typeof userEvent.setup>, phone = "01012345678") {
+async function requestApiCode(
+  user: ReturnType<typeof userEvent.setup>,
+  phone = "01012345678",
+) {
   await user.type(screen.getByLabelText("رقم الموبايل"), phone);
   await user.click(sendButton());
   await waitFor(() => expect(api.requestOtp).toHaveBeenCalled());
@@ -291,7 +321,9 @@ async function tickSeconds(seconds: number) {
 }
 
 async function sendWithClock(phone = "01012345678") {
-  fireEvent.change(screen.getByLabelText("رقم الموبايل"), { target: { value: phone } });
+  fireEvent.change(screen.getByLabelText("رقم الموبايل"), {
+    target: { value: phone },
+  });
   await act(async () => {
     fireEvent.click(sendButton());
   });
@@ -315,10 +347,16 @@ describe("LoginView", () => {
 
     await waitFor(() => expect(otpInputs()).toHaveLength(6));
     for (let index = 1; index <= 6; index += 1) {
-      expect(screen.getByRole("textbox", { name: `خانة الكود ${index}` })).toBeInTheDocument();
+      expect(
+        screen.getByRole("textbox", { name: `خانة الكود ${index}` }),
+      ).toBeInTheDocument();
     }
-    expect(screen.getByRole("radiogroup", { name: "عندك حساب عندنا؟" })).toBeInTheDocument();
-    expect(screen.getByRole("radiogroup", { name: "طريقة استلام الكود" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("radiogroup", { name: "عندك حساب عندنا؟" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("radiogroup", { name: "طريقة استلام الكود" }),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("رقم الموبايل")).toBeInTheDocument();
     expect(screen.getByLabelText("الاسم بالكامل")).toBeInTheDocument();
     for (const input of otpInputs()) {
@@ -386,16 +424,23 @@ describe("LoginView", () => {
 
   it("authenticates with the demo code and redirects to the requested next path", async () => {
     const user = userEvent.setup();
+    localStorage.setItem(storageKeys.cart, JSON.stringify(seedCart));
     renderApp(<LoginView next="/checkout/payment" />);
     await requestCode(user);
     await closeCodeDialog(user);
 
     fillCode("123456");
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/checkout/payment"));
-    expect(screen.getByRole("status", { name: "جارٍ تسجيل الدخول" })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith("/checkout/payment"),
+    );
+    expect(
+      screen.getByRole("status", { name: "جارٍ تسجيل الدخول" }),
+    ).toBeInTheDocument();
     expect(localStorage.getItem(storageKeys.auth)).toBe("true");
-    expect(JSON.parse(localStorage.getItem(storageKeys.cart)!)).toHaveLength(3);
+    expect(JSON.parse(localStorage.getItem(storageKeys.cart)!)).toHaveLength(
+      seedCart.length,
+    );
   });
 
   it("defaults the redirect to the profile page", async () => {
@@ -406,7 +451,9 @@ describe("LoginView", () => {
 
     fillCode("123456");
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/profile"));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith("/profile"),
+    );
   });
 
   it("redirects an already signed-in visitor without asking for a code", async () => {
@@ -426,9 +473,13 @@ describe("LoginView", () => {
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveAccessibleName("كود التحقق جاهز");
     expect(within(dialog).getByText("123456")).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: /انسخ الكود/ })).toBeEnabled();
+    expect(
+      within(dialog).getByRole("button", { name: /انسخ الكود/ }),
+    ).toBeEnabled();
     // focus stays inside the popup instead of being grabbed by the boxes behind it
-    await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true));
+    await waitFor(() =>
+      expect(dialog.contains(document.activeElement)).toBe(true),
+    );
   });
 
   it("lets the customer reopen the code dialog after dismissing it", async () => {
@@ -487,11 +538,17 @@ describe("LoginView typing the code", () => {
 
     await requestApiCode(user);
     const dialog = await screen.findByRole("dialog");
-    await user.click(within(dialog).getByRole("button", { name: /استخدم الكود/ }));
+    await user.click(
+      within(dialog).getByRole("button", { name: /استخدم الكود/ }),
+    );
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     await waitFor(() =>
-      expect(api.verifyOtp).toHaveBeenCalledWith({ challengeId: "challenge-1", code: "246810", fullName: "" }),
+      expect(api.verifyOtp).toHaveBeenCalledWith({
+        challengeId: "challenge-1",
+        code: "246810",
+        fullName: "",
+      }),
     );
   });
 
@@ -510,7 +567,11 @@ describe("LoginView typing the code", () => {
     await tick(1);
 
     expect(api.verifyOtp).toHaveBeenCalledTimes(1);
-    expect(api.verifyOtp).toHaveBeenCalledWith({ challengeId: "challenge-1", code: "246810", fullName: "" });
+    expect(api.verifyOtp).toHaveBeenCalledWith({
+      challengeId: "challenge-1",
+      code: "246810",
+      fullName: "",
+    });
 
     // The other two ways step two can start: the button and the browser's
     // implicit submission on the last box.
@@ -589,7 +650,9 @@ describe("LoginView typing the code", () => {
 
   it("retires the challenge when the server's code lifetime runs out", async () => {
     vi.useFakeTimers();
-    api.requestOtp.mockResolvedValue(challenge({ expiresInSeconds: 30, devOtpCode: null }));
+    api.requestOtp.mockResolvedValue(
+      challenge({ expiresInSeconds: 30, devOtpCode: null }),
+    );
     renderApp(<LoginView />);
 
     await sendWithClock();
@@ -619,7 +682,11 @@ describe("LoginView typing the code", () => {
     vi.useFakeTimers();
     vi.setSystemTime("2026-11-05T10:00:00Z");
     api.requestOtp.mockResolvedValue(
-      challenge({ expiresAtUtc: "2026-11-05T10:00:30Z", expiresInSeconds: 120, devOtpCode: null }),
+      challenge({
+        expiresAtUtc: "2026-11-05T10:00:30Z",
+        expiresInSeconds: 120,
+        devOtpCode: null,
+      }),
     );
     renderApp(<LoginView />);
 
@@ -645,7 +712,11 @@ describe("LoginView typing the code", () => {
     await tick(1);
 
     expect(api.verifyOtp).toHaveBeenCalledTimes(1);
-    expect(api.verifyOtp).toHaveBeenCalledWith({ challengeId: "challenge-1", code: "246810", fullName: "" });
+    expect(api.verifyOtp).toHaveBeenCalledWith({
+      challengeId: "challenge-1",
+      code: "246810",
+      fullName: "",
+    });
   });
 
   it("strips the spaces and dashes a text message brings with it", async () => {
@@ -659,7 +730,11 @@ describe("LoginView typing the code", () => {
     pasteCode("24 68-10");
     expect(codeValues()).toEqual(["2", "4", "6", "8", "1", "0"]);
     await tick(1);
-    expect(api.verifyOtp).toHaveBeenCalledWith({ challengeId: "challenge-1", code: "246810", fullName: "" });
+    expect(api.verifyOtp).toHaveBeenCalledWith({
+      challengeId: "challenge-1",
+      code: "246810",
+      fullName: "",
+    });
   });
 
   it("truncates a paste that is longer than the code instead of splitting it", async () => {
@@ -692,7 +767,9 @@ describe("LoginView typing the code", () => {
 
   it("moves back a box on backspace and clears the one it lands on", async () => {
     vi.useFakeTimers();
-    api.requestOtp.mockResolvedValue(challenge({ expiresInSeconds: 300, devOtpCode: null }));
+    api.requestOtp.mockResolvedValue(
+      challenge({ expiresInSeconds: 300, devOtpCode: null }),
+    );
     api.verifyOtp.mockReturnValue(pendingForever());
     renderApp(<LoginView />);
 
@@ -763,12 +840,16 @@ describe("LoginView against the tenant API", () => {
     expect(screen.getByRole("radio", { name: "رسالة SMS" })).toBeChecked();
 
     await user.click(registerDoor);
-    expect(screen.getByRole("heading", { name: "أنشئ حساب جديد" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "أنشئ حساب جديد" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("مطلوب لتسجيل حساب جديد")).toBeInTheDocument();
     expect(verifyButton()).toHaveTextContent("تأكيد الكود وإنشاء الحساب");
 
     await user.click(loginDoor);
-    expect(screen.getByRole("heading", { name: "تسجيل الدخول" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "تسجيل الدخول" }),
+    ).toBeInTheDocument();
     expect(verifyButton()).toHaveTextContent("تأكيد الكود والمتابعة");
   });
 
@@ -786,16 +867,27 @@ describe("LoginView against the tenant API", () => {
     });
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("246810")).toBeInTheDocument();
-    expect(within(dialog).getByText(/الكود صالح 120 ثانية/)).toBeInTheDocument();
-    expect(screen.queryByText(/اكتب الكود اللي وصل في/)).not.toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/الكود صالح 120 ثانية/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/اكتب الكود اللي وصل في/),
+    ).not.toBeInTheDocument();
   });
 
   it("normalises every Egyptian phone shape the contract accepts", async () => {
     api.requestOtp.mockResolvedValue(challenge({ devOtpCode: null }));
 
-    for (const typed of ["01012345678", "+201012345678", "00201012345678", "010 1234 5678"]) {
+    for (const typed of [
+      "01012345678",
+      "+201012345678",
+      "00201012345678",
+      "010 1234 5678",
+    ]) {
       const { unmount } = renderApp(<LoginView />);
-      fireEvent.change(screen.getByLabelText("رقم الموبايل"), { target: { value: typed } });
+      fireEvent.change(screen.getByLabelText("رقم الموبايل"), {
+        target: { value: typed },
+      });
       await act(async () => {
         fireEvent.click(sendButton());
       });
@@ -824,8 +916,12 @@ describe("LoginView against the tenant API", () => {
     await requestApiCode(user);
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByText(/اكتب الكود اللي وصل في رسالة SMS/)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /إظهار الكود/ })).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/اكتب الكود اللي وصل في رسالة SMS/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /إظهار الكود/ }),
+    ).not.toBeInTheDocument();
     // Nothing to read, so the boxes take the typing straight away.
     await waitFor(() => expect(otpInputs()[0]).toHaveFocus());
   });
@@ -844,8 +940,12 @@ describe("LoginView against the tenant API", () => {
       channel: "whatsapp",
     });
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByText(/اتُبعت عن طريق واتساب/)).toBeInTheDocument();
-    expect(screen.getByText(/هنبعتلك كود تحقق عن طريق واتساب/)).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/اتُبعت عن طريق واتساب/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/هنبعتلك كود تحقق عن طريق واتساب/),
+    ).toBeInTheDocument();
   });
 
   it("tells the customer which channel the code is on while they type it", async () => {
@@ -856,7 +956,9 @@ describe("LoginView against the tenant API", () => {
     await user.click(screen.getByRole("radio", { name: /واتساب/ }));
     await requestApiCode(user);
 
-    expect(screen.getByText(/اكتب الكود اللي وصل في واتساب/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/اكتب الكود اللي وصل في واتساب/),
+    ).toBeInTheDocument();
   });
 
   it("verifies the typed code and keeps the session without a token in storage", async () => {
@@ -869,8 +971,14 @@ describe("LoginView against the tenant API", () => {
     await closeCodeDialog(user);
     fillCode("246810");
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/checkout/payment"));
-    expect(api.verifyOtp).toHaveBeenCalledWith({ challengeId: "challenge-1", code: "246810", fullName: "" });
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith("/checkout/payment"),
+    );
+    expect(api.verifyOtp).toHaveBeenCalledWith({
+      challengeId: "challenge-1",
+      code: "246810",
+      fullName: "",
+    });
     expect(JSON.parse(storedSession()!)).toEqual({
       customerId: "customer-1",
       phoneNumber: "+201012345678",
@@ -893,13 +1001,22 @@ describe("LoginView against the tenant API", () => {
     await closeCodeDialog(user);
     fillCode("246810");
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/profile"));
-    await waitFor(() => expect(JSON.parse(storedSession()!)).toMatchObject({ fullName: "Ahmed Nawy" }));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith("/profile"),
+    );
+    await waitFor(() =>
+      expect(JSON.parse(storedSession()!)).toMatchObject({
+        fullName: "Ahmed Nawy",
+      }),
+    );
   });
 
   it("keeps the name the backend already has for a returning customer", async () => {
     api.requestOtp.mockResolvedValue(challenge());
-    api.verifyOtp.mockResolvedValue({ ...sessionPayload, fullName: "Nawy Guest" });
+    api.verifyOtp.mockResolvedValue({
+      ...sessionPayload,
+      fullName: "Nawy Guest",
+    });
     const user = userEvent.setup();
     renderApp(<LoginView />);
 
@@ -915,7 +1032,11 @@ describe("LoginView against the tenant API", () => {
         fullName: "Someone Else",
       }),
     );
-    await waitFor(() => expect(JSON.parse(storedSession()!)).toMatchObject({ fullName: "Nawy Guest" }));
+    await waitFor(() =>
+      expect(JSON.parse(storedSession()!)).toMatchObject({
+        fullName: "Nawy Guest",
+      }),
+    );
   });
 
   it("sends no name at all when the field is left blank", async () => {
@@ -929,7 +1050,11 @@ describe("LoginView against the tenant API", () => {
     fillCode("246810");
 
     await waitFor(() =>
-      expect(api.verifyOtp).toHaveBeenCalledWith({ challengeId: "challenge-1", code: "246810", fullName: "" }),
+      expect(api.verifyOtp).toHaveBeenCalledWith({
+        challengeId: "challenge-1",
+        code: "246810",
+        fullName: "",
+      }),
     );
   });
 
@@ -943,14 +1068,18 @@ describe("LoginView against the tenant API", () => {
     api.requestOtp.mockReturnValue(open.promise);
     renderApp(<LoginView />);
 
-    fireEvent.change(screen.getByLabelText("رقم الموبايل"), { target: { value: "01012345678" } });
+    fireEvent.change(screen.getByLabelText("رقم الموبايل"), {
+      target: { value: "01012345678" },
+    });
     fireEvent.click(sendButton());
     await tick(1);
 
     const busy = screen.getByRole("button", { name: /جارٍ إرسال الكود/ });
     expect(busy).toBeDisabled();
     expect(busy).toHaveAttribute("aria-busy", "true");
-    expect(screen.getByRole("status", { name: "جارٍ إرسال الكود" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "جارٍ إرسال الكود" }),
+    ).toBeInTheDocument();
     for (const input of otpInputs()) expect(input).toBeDisabled();
 
     await act(async () => {
@@ -965,7 +1094,9 @@ describe("LoginView against the tenant API", () => {
 
   it("never offers a resend earlier than the code itself expires", async () => {
     vi.useFakeTimers();
-    api.requestOtp.mockResolvedValue(challenge({ expiresInSeconds: 20, devOtpCode: null }));
+    api.requestOtp.mockResolvedValue(
+      challenge({ expiresInSeconds: 20, devOtpCode: null }),
+    );
     renderApp(<LoginView />);
 
     await sendWithClock();
@@ -974,7 +1105,9 @@ describe("LoginView against the tenant API", () => {
     expect(resendRow()).toHaveTextContent("00:20");
     expect(codeValidity()).toHaveTextContent("00:20");
     expect(screen.queryByText("00:45")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /إعادة إرسال الكود/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /إعادة إرسال الكود/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("hands the resend link back when the cooldown ends and locks it mid-request", async () => {
@@ -1013,7 +1146,12 @@ describe("LoginView against the tenant API", () => {
   it("counts the server's Retry-After down instead of a silent dead button", async () => {
     vi.useFakeTimers();
     api.requestOtp.mockRejectedValue(
-      apiError({ kind: "rateLimited", status: 429, code: "Auth.OtpRateLimitExceeded", retryAfterSeconds: 90 }),
+      apiError({
+        kind: "rateLimited",
+        status: 429,
+        code: "Auth.OtpRateLimitExceeded",
+        retryAfterSeconds: 90,
+      }),
     );
     renderApp(<LoginView />);
 
@@ -1033,7 +1171,9 @@ describe("LoginView against the tenant API", () => {
 
   it("gives the send button back when the Retry-After window ends", async () => {
     vi.useFakeTimers();
-    api.requestOtp.mockRejectedValueOnce(apiError({ kind: "rateLimited", status: 429, retryAfterSeconds: 3 }));
+    api.requestOtp.mockRejectedValueOnce(
+      apiError({ kind: "rateLimited", status: 429, retryAfterSeconds: 3 }),
+    );
     api.requestOtp.mockResolvedValue(challenge({ devOtpCode: null }));
     renderApp(<LoginView />);
 
@@ -1054,7 +1194,9 @@ describe("LoginView against the tenant API", () => {
 
   it("falls back to the app's own cooldown when a 429 gives no Retry-After", async () => {
     vi.useFakeTimers();
-    api.requestOtp.mockRejectedValue(apiError({ kind: "rateLimited", status: 429 }));
+    api.requestOtp.mockRejectedValue(
+      apiError({ kind: "rateLimited", status: 429 }),
+    );
     renderApp(<LoginView />);
 
     await sendWithClock();
@@ -1068,7 +1210,12 @@ describe("LoginView against the tenant API", () => {
     vi.useFakeTimers();
     api.requestOtp.mockResolvedValue(challenge({ devOtpCode: null }));
     api.verifyOtp.mockRejectedValue(
-      apiError({ kind: "rateLimited", status: 429, code: "Auth.OtpRateLimitExceeded", retryAfterSeconds: 60 }),
+      apiError({
+        kind: "rateLimited",
+        status: 429,
+        code: "Auth.OtpRateLimitExceeded",
+        retryAfterSeconds: 60,
+      }),
     );
     renderApp(<LoginView />);
 
@@ -1091,7 +1238,13 @@ describe("LoginView against the tenant API", () => {
 
   it("keeps the challenge alive for a wrong code and lets the customer retry", async () => {
     api.requestOtp.mockResolvedValue(challenge({ devOtpCode: null }));
-    api.verifyOtp.mockRejectedValue(apiError({ kind: "validation", status: 422, code: "Customer.InvalidOtpCode" }));
+    api.verifyOtp.mockRejectedValue(
+      apiError({
+        kind: "validation",
+        status: 422,
+        code: "Customer.InvalidOtpCode",
+      }),
+    );
     const user = userEvent.setup();
     renderApp(<LoginView />);
 
@@ -1102,13 +1255,21 @@ describe("LoginView against the tenant API", () => {
     expect(codeValues()).toEqual(["", "", "", "", "", ""]);
     // Five guesses are allowed against the same challenge, so the boxes stay open.
     for (const input of otpInputs()) expect(input).toBeEnabled();
-    expect(screen.queryByRole("link", { name: /تواصل مع خدمة العملاء/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /تواصل مع خدمة العملاء/ }),
+    ).not.toBeInTheDocument();
 
     api.verifyOtp.mockResolvedValue(sessionPayload);
     fillCode("246810");
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/profile"));
-    expect(api.verifyOtp).toHaveBeenLastCalledWith({ challengeId: "challenge-1", code: "246810", fullName: "" });
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith("/profile"),
+    );
+    expect(api.verifyOtp).toHaveBeenLastCalledWith({
+      challengeId: "challenge-1",
+      code: "246810",
+      fullName: "",
+    });
   });
 
   /**
@@ -1135,35 +1296,57 @@ describe("LoginView against the tenant API", () => {
 
   it("forces a new code when the lifetime ran out on the server", async () => {
     await expectNewCodeForced(
-      apiError({ kind: "validation", status: 422, code: "Customer.OtpExpired" }),
+      apiError({
+        kind: "validation",
+        status: 422,
+        code: "Customer.OtpExpired",
+      }),
       "انتهت صلاحية الكود، اطلب كود جديد",
     );
   });
 
   it("forces a new code when the code was already spent", async () => {
     await expectNewCodeForced(
-      apiError({ kind: "conflict", status: 409, code: "Customer.OtpAlreadyUsed" }),
+      apiError({
+        kind: "conflict",
+        status: 409,
+        code: "Customer.OtpAlreadyUsed",
+      }),
       "الكود ده اتستخدم خلاص، اطلب كود جديد",
     );
   });
 
   it("forces a new code when the attempts ran out", async () => {
     await expectNewCodeForced(
-      apiError({ kind: "conflict", status: 409, code: "Customer.OtpMaxAttemptsExceeded" }),
+      apiError({
+        kind: "conflict",
+        status: 409,
+        code: "Customer.OtpMaxAttemptsExceeded",
+      }),
       "عدد محاولات زايد، اطلب كود جديد",
     );
   });
 
   it("forces a new code when the challenge itself is gone", async () => {
     await expectNewCodeForced(
-      apiError({ kind: "notFound", status: 404, code: "Customer.ChallengeNotFound" }),
+      apiError({
+        kind: "notFound",
+        status: 404,
+        code: "Customer.ChallengeNotFound",
+      }),
       "انتهت صلاحية الكود، اطلب كود جديد",
     );
   });
 
   it("routes a phone with no account to registration, keeping the number", async () => {
     api.requestOtp.mockResolvedValue(challenge({ devOtpCode: null }));
-    api.verifyOtp.mockRejectedValue(apiError({ kind: "notFound", status: 404, code: "Customer.NotFoundByPhone" }));
+    api.verifyOtp.mockRejectedValue(
+      apiError({
+        kind: "notFound",
+        status: 404,
+        code: "Customer.NotFoundByPhone",
+      }),
+    );
     const user = userEvent.setup();
     renderApp(<LoginView />);
 
@@ -1174,7 +1357,9 @@ describe("LoginView against the tenant API", () => {
     // The number they just proved they hold is not something to retype.
     expect(screen.getByLabelText("رقم الموبايل")).toHaveValue("01012345678");
     expect(screen.getByRole("radio", { name: "حساب جديد" })).toBeChecked();
-    expect(screen.getByRole("heading", { name: "أنشئ حساب جديد" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "أنشئ حساب جديد" }),
+    ).toBeInTheDocument();
     // ...and the door it routed them through is the one that needs a name.
     await expectAlert("اكتب اسمك بالكامل");
     for (const input of otpInputs()) expect(input).toBeDisabled();
@@ -1198,7 +1383,9 @@ describe("LoginView against the tenant API", () => {
     const support = screen.getByRole("link", { name: /تواصل مع خدمة العملاء/ });
     expect(support).toHaveAttribute("href", "/help");
     for (const input of otpInputs()) expect(input).toBeDisabled();
-    expect(screen.queryByRole("button", { name: /إعادة إرسال الكود/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /إعادة إرسال الكود/ }),
+    ).not.toBeInTheDocument();
     expect(router.replace).not.toHaveBeenCalled();
     expect(storedSession()).toBe("null");
   }
@@ -1219,14 +1406,22 @@ describe("LoginView against the tenant API", () => {
 
   it("sends an account the auth layer stopped to the same place", async () => {
     await expectSupportInsteadOfRetry(
-      apiError({ kind: "unauthorized", status: 403, code: "Auth.InactiveAccount" }),
+      apiError({
+        kind: "unauthorized",
+        status: 403,
+        code: "Auth.InactiveAccount",
+      }),
       "الحساب ده متقفل حاليًا، كلم خدمة العملاء",
     );
   });
 
   it("shows the field message the backend sent for the phone number", async () => {
     api.requestOtp.mockRejectedValue(
-      apiError({ kind: "validation", status: 422, fieldErrors: { PhoneNumber: "Invalid phone number." } }),
+      apiError({
+        kind: "validation",
+        status: 422,
+        fieldErrors: { PhoneNumber: "Invalid phone number." },
+      }),
     );
     const user = userEvent.setup();
     renderApp(<LoginView />);
@@ -1238,13 +1433,19 @@ describe("LoginView against the tenant API", () => {
     // The message belongs under the number it is about, not under the boxes —
     // and the input itself carries it, so a screen reader hears it with the
     // field rather than as a floating sentence.
-    expect(screen.getByLabelText("رقم الموبايل")).toHaveAccessibleDescription("رقم الموبايل غير صحيح");
+    expect(screen.getByLabelText("رقم الموبايل")).toHaveAccessibleDescription(
+      "رقم الموبايل غير صحيح",
+    );
   });
 
   it("puts a rejected name back on the name field", async () => {
     api.requestOtp.mockResolvedValue(challenge({ devOtpCode: null }));
     api.verifyOtp.mockRejectedValue(
-      apiError({ kind: "validation", status: 422, fieldErrors: { FullName: "FullName is required." } }),
+      apiError({
+        kind: "validation",
+        status: 422,
+        fieldErrors: { FullName: "FullName is required." },
+      }),
     );
     const user = userEvent.setup();
     renderApp(<LoginView mode="Registration" />);
@@ -1259,7 +1460,9 @@ describe("LoginView against the tenant API", () => {
     expect(screen.getByLabelText("الاسم بالكامل")).toHaveValue("Ahmed");
     // It is the name field that was refused, and the field says so to a screen
     // reader as well as in the line of text under it.
-    expect(screen.getByLabelText("الاسم بالكامل")).toHaveAccessibleDescription("اكتب اسمك بالكامل");
+    expect(screen.getByLabelText("الاسم بالكامل")).toHaveAccessibleDescription(
+      "اكتب اسمك بالكامل",
+    );
   });
 
   /**
@@ -1270,7 +1473,11 @@ describe("LoginView against the tenant API", () => {
    */
   async function expectChannelFieldError(key: "Channel" | "Purpose") {
     api.requestOtp.mockRejectedValue(
-      apiError({ kind: "validation", status: 422, fieldErrors: { [key]: `${key} is invalid.` } }),
+      apiError({
+        kind: "validation",
+        status: 422,
+        fieldErrors: { [key]: `${key} is invalid.` },
+      }),
     );
     const user = userEvent.setup();
     renderApp(<LoginView />);
@@ -1278,9 +1485,9 @@ describe("LoginView against the tenant API", () => {
     await requestApiCode(user);
 
     await expectAlert("طلب غير صحيح، جرب تاني");
-    expect(screen.getByRole("radiogroup", { name: "طريقة استلام الكود" })).toHaveAccessibleDescription(
-      "طلب غير صحيح، جرب تاني",
-    );
+    expect(
+      screen.getByRole("radiogroup", { name: "طريقة استلام الكود" }),
+    ).toHaveAccessibleDescription("طلب غير صحيح، جرب تاني");
     // The number itself was never the problem, so it keeps its hint.
     expect(screen.getByLabelText("رقم الموبايل")).toHaveAccessibleDescription(
       "استخدم رقم موبايل مصري لاستلام كود التحقق",
@@ -1297,21 +1504,27 @@ describe("LoginView against the tenant API", () => {
 
   it("clears the channel message as soon as the customer picks the other one", async () => {
     api.requestOtp.mockRejectedValue(
-      apiError({ kind: "validation", status: 422, fieldErrors: { Channel: "Channel is invalid." } }),
+      apiError({
+        kind: "validation",
+        status: 422,
+        fieldErrors: { Channel: "Channel is invalid." },
+      }),
     );
     const user = userEvent.setup();
     renderApp(<LoginView />);
 
     await requestApiCode(user);
     await waitFor(() =>
-      expect(screen.getByRole("radiogroup", { name: "طريقة استلام الكود" })).toHaveAccessibleDescription(
-        "طلب غير صحيح، جرب تاني",
-      ),
+      expect(
+        screen.getByRole("radiogroup", { name: "طريقة استلام الكود" }),
+      ).toHaveAccessibleDescription("طلب غير صحيح، جرب تاني"),
     );
 
     await user.click(screen.getByRole("radio", { name: /واتساب/ }));
 
-    expect(screen.getByRole("radiogroup", { name: "طريقة استلام الكود" })).not.toHaveAccessibleDescription();
+    expect(
+      screen.getByRole("radiogroup", { name: "طريقة استلام الكود" }),
+    ).not.toHaveAccessibleDescription();
     expect(screen.getByRole("radio", { name: /واتساب/ })).toBeChecked();
   });
 
@@ -1324,7 +1537,9 @@ describe("LoginView against the tenant API", () => {
    */
   it("will not ask for a second code for an account it already refused", async () => {
     api.requestOtp.mockResolvedValue(challenge({ devOtpCode: null }));
-    api.verifyOtp.mockRejectedValue(apiError({ kind: "conflict", status: 409, code: "Customer.Blocked" }));
+    api.verifyOtp.mockRejectedValue(
+      apiError({ kind: "conflict", status: 409, code: "Customer.Blocked" }),
+    );
     const user = userEvent.setup();
     renderApp(<LoginView />);
 
@@ -1345,7 +1560,9 @@ describe("LoginView against the tenant API", () => {
 
   it("lifts the refusal the moment a different number is typed", async () => {
     api.requestOtp.mockResolvedValue(challenge({ devOtpCode: null }));
-    api.verifyOtp.mockRejectedValue(apiError({ kind: "conflict", status: 409, code: "Customer.Blocked" }));
+    api.verifyOtp.mockRejectedValue(
+      apiError({ kind: "conflict", status: 409, code: "Customer.Blocked" }),
+    );
     const user = userEvent.setup();
     renderApp(<LoginView />);
 
@@ -1359,7 +1576,9 @@ describe("LoginView against the tenant API", () => {
     expect(sendButton()).toBeEnabled();
     await user.click(sendButton());
     await waitFor(() => expect(api.requestOtp).toHaveBeenCalledTimes(2));
-    expect(api.requestOtp.mock.calls[1]?.[0]).toMatchObject({ phoneNumber: "+201099998877" });
+    expect(api.requestOtp.mock.calls[1]?.[0]).toMatchObject({
+      phoneNumber: "+201099998877",
+    });
   });
 
   it("keeps a server outage wording instead of leaking the raw error", async () => {
@@ -1435,17 +1654,27 @@ describe("LoginView against the tenant API", () => {
     vi.useFakeTimers();
     const stale = deferred<CustomerSessionPayload>();
     api.requestOtp
-      .mockResolvedValueOnce(challenge({ challengeId: "challenge-a", devOtpCode: null }))
-      .mockResolvedValueOnce(challenge({ challengeId: "challenge-b", devOtpCode: null }));
+      .mockResolvedValueOnce(
+        challenge({ challengeId: "challenge-a", devOtpCode: null }),
+      )
+      .mockResolvedValueOnce(
+        challenge({ challengeId: "challenge-b", devOtpCode: null }),
+      );
     api.verifyOtp.mockImplementation((options: { challengeId: string }) =>
-      options.challengeId === "challenge-a" ? stale.promise : Promise.resolve(sessionPayload),
+      options.challengeId === "challenge-a"
+        ? stale.promise
+        : Promise.resolve(sessionPayload),
     );
     renderApp(<LoginView next="/checkout/payment" />);
 
     await sendWithClock();
     fillCode("246810");
     await tick(1);
-    expect(api.verifyOtp).toHaveBeenCalledWith({ challengeId: "challenge-a", code: "246810", fullName: "" });
+    expect(api.verifyOtp).toHaveBeenCalledWith({
+      challengeId: "challenge-a",
+      code: "246810",
+      fullName: "",
+    });
 
     // The cooldown ends, so the customer asks for another code — and gets B.
     await tickSeconds(45);
@@ -1469,15 +1698,23 @@ describe("LoginView against the tenant API", () => {
     fillCode("246810");
     await tick(1);
 
-    expect(api.verifyOtp).toHaveBeenLastCalledWith({ challengeId: "challenge-b", code: "246810", fullName: "" });
+    expect(api.verifyOtp).toHaveBeenLastCalledWith({
+      challengeId: "challenge-b",
+      code: "246810",
+      fullName: "",
+    });
     expect(router.replace).toHaveBeenCalledWith("/checkout/payment");
-    expect(JSON.parse(storedSession()!)).toMatchObject({ customerId: "customer-1" });
+    expect(JSON.parse(storedSession()!)).toMatchObject({
+      customerId: "customer-1",
+    });
   });
 
   it("drops an answer for a challenge the countdown already retired", async () => {
     vi.useFakeTimers();
     const slow = deferred<CustomerSessionPayload>();
-    api.requestOtp.mockResolvedValue(challenge({ expiresInSeconds: 60, devOtpCode: null }));
+    api.requestOtp.mockResolvedValue(
+      challenge({ expiresInSeconds: 60, devOtpCode: null }),
+    );
     api.verifyOtp.mockReturnValue(slow.promise);
     renderApp(<LoginView />);
 
@@ -1531,7 +1768,9 @@ describe("LoginView registering a first-time customer", () => {
     renderApp(<LoginView mode="Registration" />);
 
     expect(screen.getByRole("radio", { name: "حساب جديد" })).toBeChecked();
-    expect(screen.getByRole("heading", { name: "أنشئ حساب جديد" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "أنشئ حساب جديد" }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/ادخل رقم موبايلك واسمك/)).toBeInTheDocument();
     await user.type(screen.getByLabelText("الاسم بالكامل"), "Ahmed Samir");
     expect(screen.getByLabelText("الاسم بالكامل")).toHaveValue("Ahmed Samir");
@@ -1539,7 +1778,10 @@ describe("LoginView registering a first-time customer", () => {
 
   it("asks for a registration challenge and names the new account with it", async () => {
     api.requestOtp.mockResolvedValue(challenge({ devOtpCode: null }));
-    api.verifyOtp.mockResolvedValue({ ...sessionPayload, fullName: "Ahmed Samir" });
+    api.verifyOtp.mockResolvedValue({
+      ...sessionPayload,
+      fullName: "Ahmed Samir",
+    });
     const user = userEvent.setup();
     renderApp(<LoginView next="/checkout/payment" mode="Registration" />);
 
@@ -1563,8 +1805,14 @@ describe("LoginView registering a first-time customer", () => {
         fullName: "Ahmed Samir",
       }),
     );
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/checkout/payment"));
-    await waitFor(() => expect(JSON.parse(storedSession()!)).toMatchObject({ fullName: "Ahmed Samir" }));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith("/checkout/payment"),
+    );
+    await waitFor(() =>
+      expect(JSON.parse(storedSession()!)).toMatchObject({
+        fullName: "Ahmed Samir",
+      }),
+    );
   });
 
   it("cuts a name down to the 200 characters the contract allows", async () => {
@@ -1574,7 +1822,9 @@ describe("LoginView registering a first-time customer", () => {
     renderApp(<LoginView mode="Registration" />);
 
     await user.type(screen.getByLabelText("رقم الموبايل"), "01012345678");
-    fireEvent.change(screen.getByLabelText("الاسم بالكامل"), { target: { value: "ا".repeat(250) } });
+    fireEvent.change(screen.getByLabelText("الاسم بالكامل"), {
+      target: { value: "ا".repeat(250) },
+    });
     expect(screen.getByLabelText("الاسم بالكامل")).toHaveValue("ا".repeat(200));
 
     await user.click(sendButton());
@@ -1610,7 +1860,9 @@ describe("LoginView in a production bundle (no backend configured)", () => {
 
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("123456")).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: /انسخ الكود/ })).toBeEnabled();
+    expect(
+      within(dialog).getByRole("button", { name: /انسخ الكود/ }),
+    ).toBeEnabled();
   });
 
   it("asks for the name a first-time customer registers with", () => {
@@ -1630,10 +1882,14 @@ describe("LoginView in a production bundle (no backend configured)", () => {
     await screen.findByText(/استخدم كود التجربة 123456/);
     fillCode("123456");
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/profile"));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith("/profile"),
+    );
     // A new account has no picture: the customer adds one from the edit screen.
     await waitFor(() =>
-      expect(JSON.parse(localStorage.getItem(storageKeys.profile)!)).toMatchObject({
+      expect(
+        JSON.parse(localStorage.getItem(storageKeys.profile)!),
+      ).toMatchObject({
         name: "Ahmed Samir",
         phone: "+201099887766",
         avatar: "",
@@ -1650,7 +1906,11 @@ describe("LoginView in a production bundle (no backend configured)", () => {
     await screen.findByText(/استخدم كود التجربة 123456/);
     fillCode("123456");
 
-    await waitFor(() => expect(JSON.parse(localStorage.getItem(storageKeys.profile)!)).toBeTruthy());
+    await waitFor(() =>
+      expect(
+        JSON.parse(localStorage.getItem(storageKeys.profile)!),
+      ).toBeTruthy(),
+    );
     const stored = JSON.parse(localStorage.getItem(storageKeys.profile)!);
     expect(stored.phone).toBe("+201099887766");
     expect(stored.name).toBe(seedUser.name);
@@ -1676,8 +1936,12 @@ describe("LoginView in a production bundle against the tenant API", () => {
 
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("246810")).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: /انسخ الكود/ })).toBeEnabled();
-    expect(within(dialog).getByRole("button", { name: /استخدم الكود/ })).toBeEnabled();
+    expect(
+      within(dialog).getByRole("button", { name: /انسخ الكود/ }),
+    ).toBeEnabled();
+    expect(
+      within(dialog).getByRole("button", { name: /استخدم الكود/ }),
+    ).toBeEnabled();
   });
 
   it("keeps the popup shut when the backend returns no test code", async () => {
@@ -1688,7 +1952,9 @@ describe("LoginView in a production bundle against the tenant API", () => {
     await requestApiCode(user);
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /إظهار الكود/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /إظهار الكود/ }),
+    ).not.toBeInTheDocument();
     await waitFor(() => expect(otpInputs()[0]).toHaveFocus());
   });
 
@@ -1700,7 +1966,9 @@ describe("LoginView in a production bundle against the tenant API", () => {
     await requestApiCode(user);
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /إظهار الكود/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /إظهار الكود/ }),
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -1717,7 +1985,9 @@ describe("LoginView mints a fresh demo code", () => {
     renderApp(<LoginView />);
 
     await sendWithClock();
-    expect(within(screen.getByRole("dialog")).getByText("123456")).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("dialog")).getByText("123456"),
+    ).toBeInTheDocument();
 
     // A demo code's cooldown is the code's own lifetime, so the second request
     // has to wait for it — and gets a different number when it comes.
@@ -1757,7 +2027,9 @@ describe("LoginView mints a fresh demo code", () => {
     for (const input of otpInputs()) expect(input).toBeDisabled();
     expect(resendRow()).toHaveTextContent("معاودة الطلب بعد");
     expect(resendRow()).toHaveTextContent("00:45");
-    expect(screen.queryByRole("button", { name: /إظهار الكود/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /إظهار الكود/ }),
+    ).not.toBeInTheDocument();
     expect(router.replace).not.toHaveBeenCalled();
     expect(localStorage.getItem(storageKeys.auth)).not.toBe("true");
   });
@@ -1788,7 +2060,9 @@ describe("LoginView mints a fresh demo code", () => {
     // The popup closes rather than keep handing out a code that no longer works.
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.queryByText(/استخدم كود التجربة/)).not.toBeInTheDocument();
-    expect(screen.getByText(/اكتب الكود اللي وصل في رسالة SMS/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/اكتب الكود اللي وصل في رسالة SMS/),
+    ).toBeInTheDocument();
     expect(alerts()).toContain("انتهت صلاحية الكود، اطلب كود جديد");
     for (const input of otpInputs()) expect(input).toBeDisabled();
     expect(verifyButton()).toBeDisabled();
@@ -1803,4 +2077,3 @@ describe("LoginView mints a fresh demo code", () => {
     expect(sendButton()).toBeEnabled();
   });
 });
-
