@@ -11,10 +11,22 @@ import { AppError, type AuthErrorCode } from "@/lib/api";
 import { useCustomerSession } from "@/hooks/use-customer-session";
 import { localAccount, rememberLocalAccount } from "@/lib/local-accounts";
 import { renderAppHook } from "@/test/render";
-import { seedCart, seedFavorites, productsById, orders as seedOrders, branches, user, type Order } from "@/lib/data";
+import {
+  seedCart,
+  seedFavorites,
+  productsById,
+  orders as seedOrders,
+  branches,
+  user,
+  type Order,
+} from "@/lib/data";
 import { savedAddresses } from "@/lib/account-data";
 import { storageKeys } from "@/lib/storage";
-import type { AuthTransport, CustomerSessionPayload, TokenPair } from "@/lib/api";
+import type {
+  AuthTransport,
+  CustomerSessionPayload,
+  TokenPair,
+} from "@/lib/api";
 import type { CustomerSession } from "@/lib/session";
 
 /**
@@ -70,7 +82,9 @@ function legacyRecord() {
 }
 
 /** What `/otp/verify` hands the app after the BFF stripped the refresh token. */
-function sessionPayload(options: Partial<CustomerSessionPayload> = {}): CustomerSessionPayload {
+function sessionPayload(
+  options: Partial<CustomerSessionPayload> = {},
+): CustomerSessionPayload {
   return {
     ...identity,
     accessToken: "access-token",
@@ -91,7 +105,10 @@ function dyingPayload(accessToken = "access-token"): CustomerSessionPayload {
 }
 
 /** What `/api/auth/refresh` answers: a new access token, never a new refresh token. */
-function tokenPair(accessToken = "rotated-access", lifetimeMs = 900_000): TokenPair {
+function tokenPair(
+  accessToken = "rotated-access",
+  lifetimeMs = 900_000,
+): TokenPair {
   return {
     accessToken,
     tokenType: "Bearer",
@@ -112,7 +129,8 @@ const expiredSessionMessage = "انتهت الجلسة، سجّل الدخول �
  */
 function refusal(status: number, code: AuthErrorCode | null): AppError {
   return new AppError({
-    kind: status === 401 ? "unauthorized" : status >= 500 ? "server" : "offline",
+    kind:
+      status === 401 ? "unauthorized" : status >= 500 ? "server" : "offline",
     status,
     code,
   });
@@ -148,6 +166,20 @@ async function app() {
 }
 
 /**
+ * A new visitor starts with an empty basket. Tests that need lines in it put
+ * the demo basket into storage first, the same way a returning visitor's
+ * saved cart reaches the provider.
+ */
+function seedStoredCart() {
+  localStorage.setItem(storageKeys.cart, JSON.stringify(seedCart));
+}
+
+async function seededApp() {
+  seedStoredCart();
+  return app();
+}
+
+/**
  * Every block that wires the backend flips the transport in its own `beforeEach`
  * and runs inside the mocked client; the offline demo is the default each test
  * starts from, so no suite can leak a live transport into the next one.
@@ -157,8 +189,15 @@ beforeEach(() => {
 });
 
 describe("AppProvider — cart flow", () => {
-  it("hydrates the seeded cart and derives totals", async () => {
+  it("starts with an empty cart and derives zero totals", async () => {
     const { result } = await app();
+    expect(result.current.lines).toEqual([]);
+    expect(result.current.count).toBe(0);
+    expect(result.current.subtotal).toBe(0);
+  });
+
+  it("hydrates a stored cart and derives totals", async () => {
+    const { result } = await seededApp();
     expect(result.current.lines).toHaveLength(seedCart.length);
     expect(result.current.count).toBe(3);
     expect(result.current.subtotal).toBe(345);
@@ -171,7 +210,13 @@ describe("AppProvider — cart flow", () => {
         { key: "beef-burger|", productId: "beef-burger", qty: 2, price: 120 },
         // A stored line can carry anything a previous version wrote: extras
         // that are not text are dropped rather than rendered.
-        { key: "veggie-burger|", productId: "veggie-burger", qty: 1, price: 90, extras: ["جبن", 42, null] },
+        {
+          key: "veggie-burger|",
+          productId: "veggie-burger",
+          qty: 1,
+          price: 90,
+          extras: ["جبن", 42, null],
+        },
         { key: 12, productId: null, qty: "many" },
         null,
       ]),
@@ -184,19 +229,44 @@ describe("AppProvider — cart flow", () => {
   });
 
   it("merges identical configurations and keeps notes separate", async () => {
-    const { result } = await app();
-    act(() => result.current.addItem("beef-burger", { price: 120, size: "ساندوتش فقط" }));
-    expect(result.current.lines.find((line) => line.key === "beef-burger|ساندوتش فقط")?.qty).toBe(2);
+    const { result } = await seededApp();
+    act(() =>
+      result.current.addItem("beef-burger", {
+        price: 120,
+        size: "ساندوتش فقط",
+      }),
+    );
+    expect(
+      result.current.lines.find(
+        (line) => line.key === "beef-burger|ساندوتش فقط",
+      )?.qty,
+    ).toBe(2);
 
-    act(() => result.current.addItem("beef-burger", { price: 120, extras: ["جبن", "بصل"] }));
-    act(() => result.current.addItem("beef-burger", { price: 120, extras: ["بصل", "جبن"] }));
-    const extraLines = result.current.lines.filter((line) => line.extras?.length);
+    act(() =>
+      result.current.addItem("beef-burger", {
+        price: 120,
+        extras: ["جبن", "بصل"],
+      }),
+    );
+    act(() =>
+      result.current.addItem("beef-burger", {
+        price: 120,
+        extras: ["بصل", "جبن"],
+      }),
+    );
+    const extraLines = result.current.lines.filter(
+      (line) => line.extras?.length,
+    );
     expect(extraLines).toHaveLength(1);
     expect(extraLines[0].qty).toBe(2);
     expect(extraLines[0].extras).toEqual(["بصل", "جبن"]);
 
-    act(() => result.current.addItem("beef-burger", { price: 120, note: "بدون بصل" }));
-    expect(result.current.lines.filter((line) => line.note === "بدون بصل")).toHaveLength(1);
+    act(() =>
+      result.current.addItem("beef-burger", { price: 120, note: "بدون بصل" }),
+    );
+    expect(
+      result.current.lines.filter((line) => line.note === "بدون بصل"),
+    ).toHaveLength(1);
   });
 
   it("ignores unknown products", async () => {
@@ -209,19 +279,27 @@ describe("AppProvider — cart flow", () => {
   it("supports quick add, quantity changes and removal", async () => {
     const { result } = await app();
     act(() => result.current.quickAdd("veggie-burger"));
-    const created = result.current.lines.find((line) => line.productId === "veggie-burger")!.key;
+    const created = result.current.lines.find(
+      (line) => line.productId === "veggie-burger",
+    )!.key;
     expect(productsById["veggie-burger"].category).toBe("burger");
-    expect(result.current.lines.find((line) => line.key === created)?.size).toBe("ساندوتش فقط");
+    expect(
+      result.current.lines.find((line) => line.key === created)?.size,
+    ).toBe("ساندوتش فقط");
 
     act(() => result.current.changeQty(created, 2));
-    expect(result.current.lines.find((line) => line.key === created)?.qty).toBe(3);
+    expect(result.current.lines.find((line) => line.key === created)?.qty).toBe(
+      3,
+    );
 
     act(() => result.current.changeQty(created, -3));
-    expect(result.current.lines.some((line) => line.key === created)).toBe(false);
+    expect(result.current.lines.some((line) => line.key === created)).toBe(
+      false,
+    );
   });
 
   it("removes a single line without touching the rest", async () => {
-    const { result } = await app();
+    const { result } = await seededApp();
     const key = result.current.lines[0].key;
     act(() => result.current.removeLine(key));
     expect(result.current.lines).toHaveLength(seedCart.length - 1);
@@ -231,7 +309,9 @@ describe("AppProvider — cart flow", () => {
   it("persists cart mutations", async () => {
     const { result } = await app();
     act(() => result.current.clearCart(true));
-    await waitFor(() => expect(JSON.parse(localStorage.getItem(storageKeys.cart)!)).toEqual([]));
+    await waitFor(() =>
+      expect(JSON.parse(localStorage.getItem(storageKeys.cart)!)).toEqual([]),
+    );
   });
 });
 
@@ -243,7 +323,11 @@ describe("AppProvider — discounts and notes", () => {
 
     act(() => expect(result.current.applyCoupon("  nawy20 ")).toBe(true));
     expect(result.current.coupon).toBe("NAWY20");
-    await waitFor(() => expect(JSON.parse(localStorage.getItem(storageKeys.coupon)!)).toBe("NAWY20"));
+    await waitFor(() =>
+      expect(JSON.parse(localStorage.getItem(storageKeys.coupon)!)).toBe(
+        "NAWY20",
+      ),
+    );
   });
 
   it("clears cart, coupon and note together", async () => {
@@ -260,7 +344,11 @@ describe("AppProvider — discounts and notes", () => {
     const { result } = await app();
     act(() => result.current.setOrderNote("ملاحظة"));
     expect(result.current.orderNote).toBe("ملاحظة");
-    await waitFor(() => expect(JSON.parse(localStorage.getItem(storageKeys.orderNote)!)).toBe("ملاحظة"));
+    await waitFor(() =>
+      expect(JSON.parse(localStorage.getItem(storageKeys.orderNote)!)).toBe(
+        "ملاحظة",
+      ),
+    );
   });
 });
 
@@ -271,12 +359,19 @@ describe("AppProvider — favorites, profile and language", () => {
     act(() => result.current.toggleFavorite("beef-burger"));
     expect(result.current.isFavorite("beef-burger")).toBe(false);
     act(() => result.current.toggleFavorite("beef-burger"));
-    expect(result.current.favorites.filter((id) => id === "beef-burger")).toHaveLength(1);
+    expect(
+      result.current.favorites.filter((id) => id === "beef-burger"),
+    ).toHaveLength(1);
   });
 
   it("updates the profile and persists it", async () => {
     const { result } = await app();
-    act(() => result.current.updateProfile({ name: "أحمد الجديد", phone: "01000000000" }));
+    act(() =>
+      result.current.updateProfile({
+        name: "أحمد الجديد",
+        phone: "01000000000",
+      }),
+    );
     expect(result.current.profile.name).toBe("أحمد الجديد");
     await waitFor(() => {
       const stored = JSON.parse(localStorage.getItem(storageKeys.profile)!);
@@ -292,7 +387,9 @@ describe("AppProvider — favorites, profile and language", () => {
     expect(result.current.dir).toBe("ltr");
     expect(document.documentElement.lang).toBe("en");
     expect(document.documentElement.dir).toBe("ltr");
-    await waitFor(() => expect(JSON.parse(localStorage.getItem(storageKeys.lang)!)).toBe("en"));
+    await waitFor(() =>
+      expect(JSON.parse(localStorage.getItem(storageKeys.lang)!)).toBe("en"),
+    );
   });
 
   it("changes fulfilment without persisting it", async () => {
@@ -311,7 +408,9 @@ describe("AppProvider — checkout details", () => {
     act(() => result.current.selectBranch("smouha"));
     expect(result.current.selectedBranchId).toBe("smouha");
     await waitFor(() =>
-      expect(JSON.parse(localStorage.getItem(storageKeys.selectedBranch)!)).toBe("smouha"),
+      expect(
+        JSON.parse(localStorage.getItem(storageKeys.selectedBranch)!),
+      ).toBe("smouha"),
     );
 
     act(() => result.current.selectBranch("does-not-exist"));
@@ -324,7 +423,10 @@ describe("AppProvider — checkout details", () => {
     expect(first.result.current.selectedBranchId).toBe("maadi");
     first.unmount();
 
-    localStorage.setItem(storageKeys.selectedBranch, JSON.stringify("closed-store"));
+    localStorage.setItem(
+      storageKeys.selectedBranch,
+      JSON.stringify("closed-store"),
+    );
     const second = await app();
     expect(second.result.current.selectedBranchId).toBe(branches[0].id);
   });
@@ -344,7 +446,9 @@ describe("AppProvider — checkout details", () => {
     expect(result.current.deliveryDetails.name).toBe("منى");
     expect(result.current.deliveryDetails.instructions).toHaveLength(200);
     await waitFor(() => {
-      const stored = JSON.parse(localStorage.getItem(storageKeys.deliveryDetails)!);
+      const stored = JSON.parse(
+        localStorage.getItem(storageKeys.deliveryDetails)!,
+      );
       expect(stored.building).toBe("5");
       expect(stored.instructions).toHaveLength(200);
     });
@@ -364,7 +468,7 @@ describe("AppProvider — checkout details", () => {
 
 describe("AppProvider — order lifecycle", () => {
   it("records a delivery order from the current cart and persists it", async () => {
-    const { result } = await app();
+    const { result } = await seededApp();
     expect(result.current.orders).toHaveLength(seedOrders.length);
 
     let placed: Order | null = null;
@@ -379,7 +483,10 @@ describe("AppProvider — order lifecycle", () => {
     expect(placed!.fulfilment).toBe("delivery");
     expect(placed!.total).toBe(345 + 30);
     expect(placed!.items).toHaveLength(seedCart.length);
-    expect(placed!.items?.[0]).toMatchObject({ productId: seedCart[0].productId, qty: seedCart[0].qty });
+    expect(placed!.items?.[0]).toMatchObject({
+      productId: seedCart[0].productId,
+      qty: seedCart[0].qty,
+    });
     expect(placed!.branchId).toBeUndefined();
     expect(placed!.address).toContain(savedAddresses[0].detail);
     expect(result.current.orders[0].id).toBe("10249");
@@ -395,9 +502,12 @@ describe("AppProvider — order lifecycle", () => {
   it("records a delivery order against the account address when the stored selection is gone", async () => {
     // Storage is untrusted input: an id naming an address that no longer exists
     // must not put `undefined` — or a deleted address — into a placed order.
-    localStorage.setItem(storageKeys.selectedAddress, JSON.stringify("deleted-address"));
+    localStorage.setItem(
+      storageKeys.selectedAddress,
+      JSON.stringify("deleted-address"),
+    );
 
-    const { result } = await app();
+    const { result } = await seededApp();
     expect(result.current.selectedAddressId).toBeNull();
 
     let placed: Order | null = null;
@@ -411,7 +521,7 @@ describe("AppProvider — order lifecycle", () => {
   });
 
   it("applies coupon and pickup branch to the recorded order", async () => {
-    const { result } = await app();
+    const { result } = await seededApp();
     act(() => result.current.setFulfilment("pickup"));
     act(() => result.current.selectBranch("smouha"));
     act(() => result.current.applyCoupon("nawy20"));
@@ -429,7 +539,7 @@ describe("AppProvider — order lifecycle", () => {
   });
 
   it("increments order ids without reusing earlier ids", async () => {
-    const { result } = await app();
+    const { result } = await seededApp();
     let first: Order | null = null;
     let second: Order | null = null;
     act(() => {
@@ -457,18 +567,52 @@ describe("AppProvider — order lifecycle", () => {
     localStorage.setItem(
       storageKeys.orders,
       JSON.stringify([
-        { id: "9001", title: "طلب صالح", description: "وصف", total: 120, status: "delivered", image: "//evil.example/x.png" },
-        { id: "9002", title: "ناقص", description: "وصف", total: -1, status: "preparing" },
-        { id: "", title: "بدون رقم", description: "وصف", total: 10, status: "preparing" },
-        { id: "../settings", title: "مسار غريب", description: "وصف", total: 10, status: "preparing" },
-        { id: "9003", title: "حالة غلط", description: "وصف", total: 10, status: "flying" },
+        {
+          id: "9001",
+          title: "طلب صالح",
+          description: "وصف",
+          total: 120,
+          status: "delivered",
+          image: "//evil.example/x.png",
+        },
+        {
+          id: "9002",
+          title: "ناقص",
+          description: "وصف",
+          total: -1,
+          status: "preparing",
+        },
+        {
+          id: "",
+          title: "بدون رقم",
+          description: "وصف",
+          total: 10,
+          status: "preparing",
+        },
+        {
+          id: "../settings",
+          title: "مسار غريب",
+          description: "وصف",
+          total: 10,
+          status: "preparing",
+        },
+        {
+          id: "9003",
+          title: "حالة غلط",
+          description: "وصف",
+          total: 10,
+          status: "flying",
+        },
         null,
         "order",
       ]),
     );
     const { result } = await app();
     expect(result.current.orders).toHaveLength(1);
-    expect(result.current.orders[0]).toMatchObject({ id: "9001", status: "delivered" });
+    expect(result.current.orders[0]).toMatchObject({
+      id: "9001",
+      status: "delivered",
+    });
     expect(result.current.orders[0].image).toBe("/images/burger.webp");
   });
 });
@@ -492,12 +636,22 @@ describe("AppProvider — local account ownership", () => {
     expect(result.current.favorites).toEqual([]);
     expect(result.current.orders).toEqual([]);
     expect(result.current.points).toBe(0);
-    await waitFor(() => expect(localAccount(NORMALIZED)).toEqual({ points: 0, favorites: [], orders: [] }));
+    await waitFor(() =>
+      expect(localAccount(NORMALIZED)).toEqual({
+        points: 0,
+        favorites: [],
+        orders: [],
+      }),
+    );
   });
 
   it("saves what the customer changes into their own slot and nobody else's", async () => {
-    rememberLocalAccount(OTHER, { points: 90, favorites: ["fries"], orders: [] });
-    const { result } = await app();
+    rememberLocalAccount(OTHER, {
+      points: 90,
+      favorites: ["fries"],
+      orders: [],
+    });
+    const { result } = await seededApp();
     act(() => {
       result.current.adoptLocalAccount(PHONE);
       result.current.login();
@@ -512,11 +666,15 @@ describe("AppProvider — local account ownership", () => {
       expect(localAccount(NORMALIZED)?.favorites).toEqual(["beef-burger"]);
       expect(localAccount(NORMALIZED)?.orders).toHaveLength(1);
     });
-    expect(localAccount(OTHER)).toEqual({ points: 90, favorites: ["fries"], orders: [] });
+    expect(localAccount(OTHER)).toEqual({
+      points: 90,
+      favorites: ["fries"],
+      orders: [],
+    });
   });
 
   it("hands the shared device back the neutral view on logout and keeps the slot", async () => {
-    const { result } = await app();
+    const { result } = await seededApp();
     act(() => {
       result.current.adoptLocalAccount(PHONE);
       result.current.login();
@@ -525,7 +683,9 @@ describe("AppProvider — local account ownership", () => {
     act(() => {
       result.current.placeOrder("cash");
     });
-    await waitFor(() => expect(localAccount(NORMALIZED)?.orders).toHaveLength(1));
+    await waitFor(() =>
+      expect(localAccount(NORMALIZED)?.orders).toHaveLength(1),
+    );
 
     act(() => result.current.logout());
 
@@ -537,12 +697,24 @@ describe("AppProvider — local account ownership", () => {
     // neutral view the device now shows is never written over it.
     expect(localAccount(NORMALIZED)?.favorites).toEqual(["beef-burger"]);
     expect(localAccount(NORMALIZED)?.orders).toHaveLength(1);
-    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.accountPhone)))).toBeNull());
-    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.favorites)))).toEqual(seedFavorites));
+    await waitFor(() =>
+      expect(
+        JSON.parse(String(localStorage.getItem(storageKeys.accountPhone))),
+      ).toBeNull(),
+    );
+    await waitFor(() =>
+      expect(
+        JSON.parse(String(localStorage.getItem(storageKeys.favorites))),
+      ).toEqual(seedFavorites),
+    );
   });
 
   it("restores the saved slot — balance included — on the next sign-in", async () => {
-    rememberLocalAccount(PHONE, { points: 240, favorites: ["beef-burger"], orders: [seedOrders[0]] });
+    rememberLocalAccount(PHONE, {
+      points: 240,
+      favorites: ["beef-burger"],
+      orders: [seedOrders[0]],
+    });
     const { result } = await app();
     act(() => {
       // The same customer, typed the way a phone keypad offers it.
@@ -551,60 +723,98 @@ describe("AppProvider — local account ownership", () => {
     });
 
     expect(result.current.favorites).toEqual(["beef-burger"]);
-    expect(result.current.orders.map((order) => order.id)).toEqual([seedOrders[0].id]);
+    expect(result.current.orders.map((order) => order.id)).toEqual([
+      seedOrders[0].id,
+    ]);
     expect(result.current.points).toBe(240);
   });
 
   it("drops a tampered balance and an unsafe pointer from storage", async () => {
     localStorage.setItem(storageKeys.points, JSON.stringify(-40));
-    localStorage.setItem(storageKeys.accountPhone, JSON.stringify("../../settings"));
+    localStorage.setItem(
+      storageKeys.accountPhone,
+      JSON.stringify("../../settings"),
+    );
     const { result } = await app();
 
     expect(result.current.points).toBe(0);
-    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.points)))).toBe(0));
-    await waitFor(() => expect(JSON.parse(String(localStorage.getItem(storageKeys.accountPhone)))).toBeNull());
+    await waitFor(() =>
+      expect(JSON.parse(String(localStorage.getItem(storageKeys.points)))).toBe(
+        0,
+      ),
+    );
+    await waitFor(() =>
+      expect(
+        JSON.parse(String(localStorage.getItem(storageKeys.accountPhone))),
+      ).toBeNull(),
+    );
   });
 
   it("keeps a reload writing into the slot the pointer names", async () => {
     localStorage.setItem(storageKeys.auth, "true");
     localStorage.setItem(storageKeys.accountPhone, JSON.stringify(NORMALIZED));
-    localStorage.setItem(storageKeys.favorites, JSON.stringify(["beef-burger"]));
+    localStorage.setItem(
+      storageKeys.favorites,
+      JSON.stringify(["beef-burger"]),
+    );
     const { result } = await app();
     expect(result.current.loggedIn).toBe(true);
-    await waitFor(() => expect(localAccount(NORMALIZED)?.favorites).toEqual(["beef-burger"]));
+    await waitFor(() =>
+      expect(localAccount(NORMALIZED)?.favorites).toEqual(["beef-burger"]),
+    );
 
     act(() => result.current.toggleFavorite("beef-burger"));
-    await waitFor(() => expect(localAccount(NORMALIZED)?.favorites).toEqual([]));
+    await waitFor(() =>
+      expect(localAccount(NORMALIZED)?.favorites).toEqual([]),
+    );
   });
 
   it("attaches the data on screen to the signed-in identity when storage has no pointer", async () => {
     // Storage written before account data had an owner: dropping it would lose
     // a returning customer's history, so the identity signs for it instead.
     localStorage.setItem(storageKeys.auth, "true");
-    localStorage.setItem(storageKeys.favorites, JSON.stringify(["beef-burger"]));
+    localStorage.setItem(
+      storageKeys.favorites,
+      JSON.stringify(["beef-burger"]),
+    );
     const { result } = await app();
 
-    await waitFor(() => expect(localAccount(result.current.profile.phone)?.favorites).toEqual(["beef-burger"]));
+    await waitFor(() =>
+      expect(localAccount(result.current.profile.phone)?.favorites).toEqual([
+        "beef-burger",
+      ]),
+    );
   });
 
   it("attaches a restored session's own number when storage has no pointer", async () => {
     apiMode.transport = "mock";
-    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    api.fetchBranding.mockResolvedValue({
+      notModified: true,
+      branding: null,
+      etag: null,
+    });
     api.refreshSession.mockResolvedValue(tokenPair());
     api.attachStoredRefresh.mockResolvedValue(undefined);
     localStorage.setItem(storageKeys.session, JSON.stringify(identity));
     localStorage.setItem(storageKeys.favorites, JSON.stringify(["fries"]));
     const { result } = await app();
 
-    await waitFor(() => expect(result.current.customer?.customerId).toBe("customer-1"));
+    await waitFor(() =>
+      expect(result.current.customer?.customerId).toBe("customer-1"),
+    );
     // The session's number owns the slot, not the profile the device happens to
     // be showing: against the simulator the verified identity is the authority.
-    await waitFor(() => expect(localAccount(identity.phoneNumber)?.favorites).toEqual(["fries"]));
+    await waitFor(() =>
+      expect(localAccount(identity.phoneNumber)?.favorites).toEqual(["fries"]),
+    );
   });
 
   it("claims no slot for an identity with no number at all", async () => {
     localStorage.setItem(storageKeys.auth, "true");
-    localStorage.setItem(storageKeys.profile, JSON.stringify({ ...seedProfile, phone: "" }));
+    localStorage.setItem(
+      storageKeys.profile,
+      JSON.stringify({ ...seedProfile, phone: "" }),
+    );
     const { result } = await app();
 
     expect(result.current.loggedIn).toBe(true);
@@ -612,10 +822,20 @@ describe("AppProvider — local account ownership", () => {
   });
 
   it("lets an existing slot win over the data a load happens to show", async () => {
-    rememberLocalAccount(NORMALIZED, { points: 7, favorites: ["fries"], orders: [] });
+    rememberLocalAccount(NORMALIZED, {
+      points: 7,
+      favorites: ["fries"],
+      orders: [],
+    });
     localStorage.setItem(storageKeys.auth, "true");
-    localStorage.setItem(storageKeys.profile, JSON.stringify({ ...seedProfile, phone: NORMALIZED }));
-    localStorage.setItem(storageKeys.favorites, JSON.stringify(["beef-burger"]));
+    localStorage.setItem(
+      storageKeys.profile,
+      JSON.stringify({ ...seedProfile, phone: NORMALIZED }),
+    );
+    localStorage.setItem(
+      storageKeys.favorites,
+      JSON.stringify(["beef-burger"]),
+    );
     const { result } = await app();
 
     await waitFor(() => expect(result.current.favorites).toEqual(["fries"]));
@@ -631,11 +851,19 @@ describe("AppProvider — local account ownership", () => {
 
   it("never reads or writes a browser slot against the live tenant API", async () => {
     apiMode.transport = "live";
-    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    api.fetchBranding.mockResolvedValue({
+      notModified: true,
+      branding: null,
+      etag: null,
+    });
     api.refreshSession.mockResolvedValue(tokenPair());
     api.revokeSession.mockResolvedValue(undefined);
     api.attachStoredRefresh.mockResolvedValue(undefined);
-    rememberLocalAccount(NORMALIZED, { points: 240, favorites: ["cola"], orders: [] });
+    rememberLocalAccount(NORMALIZED, {
+      points: 240,
+      favorites: ["cola"],
+      orders: [],
+    });
 
     const { result } = await app();
     // The payload's phone is the slot's phone: only the transport guard stands
@@ -653,7 +881,11 @@ describe("AppProvider — local account ownership", () => {
     });
     const recorded = result.current.orders.length;
 
-    expect(localAccount(NORMALIZED)).toEqual({ points: 240, favorites: ["cola"], orders: [] });
+    expect(localAccount(NORMALIZED)).toEqual({
+      points: 240,
+      favorites: ["cola"],
+      orders: [],
+    });
     expect(localStorage.getItem(storageKeys.accountPhone)).toBe("null");
 
     // And a sign-out does not wipe what this device recorded for a real account.
@@ -685,7 +917,9 @@ describe("AppProvider — untrusted storage", () => {
       ]),
     );
     const { result } = await app();
-    expect(result.current.addresses.map((address) => address.id)).toEqual(["kept"]);
+    expect(result.current.addresses.map((address) => address.id)).toEqual([
+      "kept",
+    ]);
   });
 
   it("repairs tampered cart quantities and prices", async () => {
@@ -698,7 +932,9 @@ describe("AppProvider — untrusted storage", () => {
     );
     const { result } = await app();
     expect(result.current.lines[0].qty).toBe(99);
-    expect(result.current.lines[0].price).toBe(productsById["beef-burger"].price);
+    expect(result.current.lines[0].price).toBe(
+      productsById["beef-burger"].price,
+    );
     expect(result.current.lines[1].qty).toBe(1);
   });
 });
@@ -706,21 +942,28 @@ describe("AppProvider — untrusted storage", () => {
 describe("AppProvider — auth and addresses", () => {
   it("clears live addresses on logout and between customers", async () => {
     apiMode.transport = "live";
-    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    api.fetchBranding.mockResolvedValue({
+      notModified: true,
+      branding: null,
+      etag: null,
+    });
     api.refreshSession.mockResolvedValue(tokenPair());
     api.revokeSession.mockResolvedValue(undefined);
     api.attachStoredRefresh.mockResolvedValue(undefined);
-    localStorage.setItem(storageKeys.addresses, JSON.stringify([
-      {
-        id: "customer-1-address",
-        title: "Customer 1 address",
-        detail: "Customer 1 street",
-        area: "Customer 1 area",
-        kind: "home",
-        lat: 31.2,
-        lng: 29.9,
-      },
-    ]));
+    localStorage.setItem(
+      storageKeys.addresses,
+      JSON.stringify([
+        {
+          id: "customer-1-address",
+          title: "Customer 1 address",
+          detail: "Customer 1 street",
+          area: "Customer 1 area",
+          kind: "home",
+          lat: 31.2,
+          lng: 29.9,
+        },
+      ]),
+    );
     stubFetch(() => 200);
 
     const { result } = await app();
@@ -730,11 +973,15 @@ describe("AppProvider — auth and addresses", () => {
     act(() => result.current.logout());
     expect(result.current.addresses).toEqual([]);
 
-    act(() => result.current.login(sessionPayload({
-      customerId: "customer-2",
-      phoneNumber: "+201098765432",
-      accessToken: "customer-2-access",
-    })));
+    act(() =>
+      result.current.login(
+        sessionPayload({
+          customerId: "customer-2",
+          phoneNumber: "+201098765432",
+          accessToken: "customer-2-access",
+        }),
+      ),
+    );
     await waitFor(() => expect(result.current.addresses).toEqual([]));
   });
 
@@ -754,7 +1001,9 @@ describe("AppProvider — auth and addresses", () => {
     expect(result.current.loggedIn).toBe(true);
     expect(result.current.loginPromptOpen).toBe(false);
     expect(result.current.loginPromptNext).toBeNull();
-    await waitFor(() => expect(JSON.parse(localStorage.getItem(storageKeys.auth)!)).toBe(true));
+    await waitFor(() =>
+      expect(JSON.parse(localStorage.getItem(storageKeys.auth)!)).toBe(true),
+    );
   });
 
   it("defaults the prompt to the cart and can close it", async () => {
@@ -770,7 +1019,9 @@ describe("AppProvider — auth and addresses", () => {
     const { result } = await app();
     act(() => result.current.logout());
     expect(result.current.loggedIn).toBe(false);
-    await waitFor(() => expect(JSON.parse(localStorage.getItem(storageKeys.auth)!)).toBe(false));
+    await waitFor(() =>
+      expect(JSON.parse(localStorage.getItem(storageKeys.auth)!)).toBe(false),
+    );
   });
 
   it("adds, updates, selects and removes addresses", async () => {
@@ -811,7 +1062,9 @@ describe("AppProvider — auth and addresses", () => {
     expect(result.current.selectedAddressId).toBeNull();
     await waitFor(() => {
       const stored = JSON.parse(localStorage.getItem(storageKeys.addresses)!);
-      expect(stored.some((address: { id: string }) => address.id === "gym")).toBe(false);
+      expect(
+        stored.some((address: { id: string }) => address.id === "gym"),
+      ).toBe(false);
     });
   });
 });
@@ -829,7 +1082,11 @@ const brandingNames = [
 describe("AppProvider — tenant API session and branding", () => {
   beforeEach(() => {
     apiMode.transport = "live";
-    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    api.fetchBranding.mockResolvedValue({
+      notModified: true,
+      branding: null,
+      etag: null,
+    });
     api.refreshSession.mockResolvedValue(tokenPair());
     api.revokeSession.mockResolvedValue(undefined);
     api.attachStoredRefresh.mockResolvedValue(undefined);
@@ -842,7 +1099,8 @@ describe("AppProvider — tenant API session and branding", () => {
   });
 
   function clearBranding() {
-    for (const name of brandingNames) document.documentElement.style.removeProperty(name);
+    for (const name of brandingNames)
+      document.documentElement.style.removeProperty(name);
   }
 
   it("keeps a real session instead of the demo flag once the API is wired", async () => {
@@ -854,11 +1112,20 @@ describe("AppProvider — tenant API session and branding", () => {
 
     // The write the provider itself performs: identity only, no token anywhere.
     await waitFor(() => {
-      const stored = JSON.parse(localStorage.getItem(storageKeys.session)!) as Record<string, unknown>;
+      const stored = JSON.parse(
+        localStorage.getItem(storageKeys.session)!,
+      ) as Record<string, unknown>;
       expect(stored).toEqual(identity);
-      expect(Object.keys(stored).sort()).toEqual(["customerId", "email", "fullName", "phoneNumber"]);
+      expect(Object.keys(stored).sort()).toEqual([
+        "customerId",
+        "email",
+        "fullName",
+        "phoneNumber",
+      ]);
     });
-    expect(localStorage.getItem(storageKeys.session)).not.toContain("access-token");
+    expect(localStorage.getItem(storageKeys.session)).not.toContain(
+      "access-token",
+    );
     expect(JSON.parse(localStorage.getItem(storageKeys.auth)!)).toBe(false);
   });
 
@@ -874,7 +1141,9 @@ describe("AppProvider — tenant API session and branding", () => {
     // called with no arguments, and its result never reaches storage.
     expect(api.refreshSession).toHaveBeenCalledTimes(1);
     expect(api.refreshSession).toHaveBeenCalledWith();
-    expect(localStorage.getItem(storageKeys.session)).not.toContain("rotated-access");
+    expect(localStorage.getItem(storageKeys.session)).not.toContain(
+      "rotated-access",
+    );
   });
 
   it("sends the minted token as a bearer header without cookies", async () => {
@@ -889,30 +1158,40 @@ describe("AppProvider — tenant API session and branding", () => {
       await authFetch("/api/v1/orders");
     });
 
-    const orderCalls = calls.filter((call) => call.url.endsWith("/api/v1/orders"));
+    const orderCalls = calls.filter((call) =>
+      call.url.endsWith("/api/v1/orders"),
+    );
     expect(orderCalls).toHaveLength(1);
     expect(orderCalls[0]!.url).toBe("https://api.test/api/v1/orders");
     expect(bearer(orderCalls[0]!)).toBe("Bearer rotated-access");
     expect(orderCalls[0]!.init.credentials).toBe("omit");
     // One refresh for the whole life of the page: the request reused the boot grant.
     expect(api.refreshSession).toHaveBeenCalledTimes(1);
-    expect(localStorage.getItem(storageKeys.session)).not.toContain("rotated-access");
+    expect(localStorage.getItem(storageKeys.session)).not.toContain(
+      "rotated-access",
+    );
   });
 
   it("adopts a refresh token an older build left in storage, exactly once", async () => {
     localStorage.setItem(storageKeys.session, JSON.stringify(legacyRecord()));
 
     const { result } = await app();
-    await waitFor(() => expect(api.attachStoredRefresh).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(api.attachStoredRefresh).toHaveBeenCalledTimes(1),
+    );
     expect(api.attachStoredRefresh).toHaveBeenCalledWith("legacy-refresh");
     expect(result.current.customer).toEqual(identity);
 
     // The same page load rewrites the record with the clean identity, so the
     // copy in browser storage is gone as soon as the cookie jar has adopted it.
     await waitFor(() =>
-      expect(JSON.parse(localStorage.getItem(storageKeys.session)!)).toEqual(identity),
+      expect(JSON.parse(localStorage.getItem(storageKeys.session)!)).toEqual(
+        identity,
+      ),
     );
-    expect(localStorage.getItem(storageKeys.session)).not.toContain("legacy-refresh");
+    expect(localStorage.getItem(storageKeys.session)).not.toContain(
+      "legacy-refresh",
+    );
   });
 
   it("waits for the adoption to land before it mints the first token", async () => {
@@ -925,7 +1204,9 @@ describe("AppProvider — tenant API session and branding", () => {
     localStorage.setItem(storageKeys.session, JSON.stringify(legacyRecord()));
 
     const hook = renderAppHook(() => useApp());
-    await waitFor(() => expect(api.attachStoredRefresh).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(api.attachStoredRefresh).toHaveBeenCalledTimes(1),
+    );
 
     // The recovery refresh reads the very cookie jar the adoption is still
     // writing. Minting a token first would spend a request on a jar the browser
@@ -950,7 +1231,9 @@ describe("AppProvider — tenant API session and branding", () => {
     expect(result.current.loggedIn).toBe(true);
     expect(api.attachStoredRefresh).not.toHaveBeenCalled();
     expect(api.refreshSession).not.toHaveBeenCalled();
-    expect(JSON.parse(localStorage.getItem(storageKeys.session)!)).toEqual(identity);
+    expect(JSON.parse(localStorage.getItem(storageKeys.session)!)).toEqual(
+      identity,
+    );
   });
 
   it("keeps the signed-in identity when the legacy adoption is refused", async () => {
@@ -964,7 +1247,10 @@ describe("AppProvider — tenant API session and branding", () => {
   });
 
   it("drops a tampered session instead of trusting it", async () => {
-    localStorage.setItem(storageKeys.session, JSON.stringify({ accessToken: "a" }));
+    localStorage.setItem(
+      storageKeys.session,
+      JSON.stringify({ accessToken: "a" }),
+    );
 
     const { result } = await app();
     expect(result.current.loggedIn).toBe(false);
@@ -974,33 +1260,47 @@ describe("AppProvider — tenant API session and branding", () => {
 
   it("refreshes once for a burst of 401s and retries each request once", async () => {
     const { result } = await app();
-    act(() => result.current.login(sessionPayload({ accessToken: "boot-access" })));
+    act(() =>
+      result.current.login(sessionPayload({ accessToken: "boot-access" })),
+    );
 
     // The tenant only accepts the rotated token, so every request born with the
     // old one answers 401 and has to be retried.
-    const calls = stubFetch((call) => (bearer(call) === "Bearer rotated-access" ? 200 : 401));
+    const calls = stubFetch((call) =>
+      bearer(call) === "Bearer rotated-access" ? 200 : 401,
+    );
     const authFetch = result.current.authFetch;
     let statuses: number[] = [];
     await act(async () => {
-      statuses = (await Promise.all([
-        authFetch("/api/v1/orders"),
-        authFetch("/api/v1/orders"),
-        authFetch("/api/v1/orders"),
-      ])).map((response) => response.status);
+      statuses = (
+        await Promise.all([
+          authFetch("/api/v1/orders"),
+          authFetch("/api/v1/orders"),
+          authFetch("/api/v1/orders"),
+        ])
+      ).map((response) => response.status);
     });
 
     expect(statuses).toEqual([200, 200, 200]);
     expect(api.refreshSession).toHaveBeenCalledTimes(1);
     expect(calls).toHaveLength(6);
-    expect(calls.filter((call) => bearer(call) === "Bearer boot-access")).toHaveLength(3);
-    expect(calls.filter((call) => bearer(call) === "Bearer rotated-access")).toHaveLength(3);
+    expect(
+      calls.filter((call) => bearer(call) === "Bearer boot-access"),
+    ).toHaveLength(3);
+    expect(
+      calls.filter((call) => bearer(call) === "Bearer rotated-access"),
+    ).toHaveLength(3);
     expect(result.current.loggedIn).toBe(true);
-    expect(localStorage.getItem(storageKeys.session)).not.toContain("rotated-access");
+    expect(localStorage.getItem(storageKeys.session)).not.toContain(
+      "rotated-access",
+    );
   });
 
   it("gives up after one retry instead of looping on a 401", async () => {
     const { result } = await app();
-    act(() => result.current.login(sessionPayload({ accessToken: "never-accepted" })));
+    act(() =>
+      result.current.login(sessionPayload({ accessToken: "never-accepted" })),
+    );
     const calls = stubFetch(() => 401);
 
     const authFetch = result.current.authFetch;
@@ -1029,7 +1329,9 @@ describe("AppProvider — tenant API session and branding", () => {
       await Promise.resolve();
     });
     expect(api.refreshSession).toHaveBeenCalledTimes(1);
-    expect(JSON.parse(localStorage.getItem(storageKeys.session)!)).toEqual(identity);
+    expect(JSON.parse(localStorage.getItem(storageKeys.session)!)).toEqual(
+      identity,
+    );
   });
 
   it("sends the rotated token, never the one it replaced", async () => {
@@ -1047,7 +1349,9 @@ describe("AppProvider — tenant API session and branding", () => {
       await authFetch("/api/v1/orders");
     });
 
-    const orderCalls = calls.filter((call) => call.url.endsWith("/api/v1/orders"));
+    const orderCalls = calls.filter((call) =>
+      call.url.endsWith("/api/v1/orders"),
+    );
     expect(orderCalls.map(bearer)).toEqual(["Bearer second-access"]);
     expect(orderCalls.map(bearer)).not.toContain("Bearer first-access");
   });
@@ -1071,11 +1375,15 @@ describe("AppProvider — tenant API session and branding", () => {
   });
 
   it("signs the customer out on a reuse alarm the same way", async () => {
-    api.refreshSession.mockRejectedValue(refusal(401, "RefreshToken.CompromisedReuse"));
+    api.refreshSession.mockRejectedValue(
+      refusal(401, "RefreshToken.CompromisedReuse"),
+    );
     localStorage.setItem(storageKeys.session, JSON.stringify(identity));
 
     const { result } = await app();
-    await waitFor(() => expect(result.current.sessionStatus).toBe("signed-out"));
+    await waitFor(() =>
+      expect(result.current.sessionStatus).toBe("signed-out"),
+    );
     expect(api.refreshSession).toHaveBeenCalledTimes(1);
     expect(await screen.findByText(expiredSessionMessage)).toBeInTheDocument();
   });
@@ -1115,7 +1423,9 @@ describe("AppProvider — tenant API session and branding", () => {
     expect(hook.result.current.loggedIn).toBe(true);
     expect(hook.result.current.sessionStatus).toBe("recovering");
     expect(screen.queryByText(expiredSessionMessage)).not.toBeInTheDocument();
-    expect(localStorage.getItem(storageKeys.session)).toBe(JSON.stringify(identity));
+    expect(localStorage.getItem(storageKeys.session)).toBe(
+      JSON.stringify(identity),
+    );
 
     await settle();
     expect(api.refreshSession).toHaveBeenCalledTimes(1);
@@ -1140,7 +1450,11 @@ describe("AppProvider — tenant API session and branding", () => {
     // one window apart. Every retry in the budget leaves the customer signed
     // in and recovering; a session stuck behind a dead backend with a
     // nominally valid token is the worst of both, so the last one ends it.
-    for (let attempt = 1; attempt < MAX_TRANSIENT_REFRESH_RETRIES; attempt += 1) {
+    for (
+      let attempt = 1;
+      attempt < MAX_TRANSIENT_REFRESH_RETRIES;
+      attempt += 1
+    ) {
       await waitBackoff();
       expect(api.refreshSession).toHaveBeenCalledTimes(attempt + 1);
       expect(hook.result.current.sessionStatus).toBe("recovering");
@@ -1148,7 +1462,9 @@ describe("AppProvider — tenant API session and branding", () => {
     }
 
     await waitBackoff();
-    expect(api.refreshSession).toHaveBeenCalledTimes(MAX_TRANSIENT_REFRESH_RETRIES + 1);
+    expect(api.refreshSession).toHaveBeenCalledTimes(
+      MAX_TRANSIENT_REFRESH_RETRIES + 1,
+    );
     expect(hook.result.current.sessionStatus).toBe("signed-out");
     expect(hook.result.current.customer).toBeNull();
     expect(localStorage.getItem(storageKeys.session)).toBe("null");
@@ -1156,7 +1472,9 @@ describe("AppProvider — tenant API session and branding", () => {
 
     // And it stays over: no further attempt is queued behind the sign-out.
     await waitBackoff();
-    expect(api.refreshSession).toHaveBeenCalledTimes(MAX_TRANSIENT_REFRESH_RETRIES + 1);
+    expect(api.refreshSession).toHaveBeenCalledTimes(
+      MAX_TRANSIENT_REFRESH_RETRIES + 1,
+    );
   });
 
   it("publishes the backoff it waits, so the window is a decision not a detail", () => {
@@ -1184,9 +1502,13 @@ describe("AppProvider — tenant API session and branding", () => {
     await waitFor(() => expect(result.current.branding?.nameAr).toBe("ناوي"));
 
     expect(api.fetchBranding).toHaveBeenCalled();
-    expect(document.documentElement.style.getPropertyValue("--color-brand")).toBe("");
+    expect(
+      document.documentElement.style.getPropertyValue("--color-brand"),
+    ).toBe("");
     await waitFor(() =>
-      expect(JSON.parse(localStorage.getItem(storageKeys.branding)!)).toMatchObject({ etag: '"b1"' }),
+      expect(
+        JSON.parse(localStorage.getItem(storageKeys.branding)!),
+      ).toMatchObject({ etag: '"b1"' }),
     );
   });
 
@@ -1221,7 +1543,11 @@ describe("AppProvider — tenant API session and branding", () => {
     const { result } = await app();
     await waitFor(() => expect(result.current.branches).toHaveLength(1));
 
-    expect(result.current.branches[0]).toMatchObject({ id: "brand-branch", name: "سموحة", open: true });
+    expect(result.current.branches[0]).toMatchObject({
+      id: "brand-branch",
+      name: "سموحة",
+      open: true,
+    });
     expect(result.current.selectedBranchId).toBe("brand-branch");
   });
 
@@ -1234,22 +1560,35 @@ describe("AppProvider — tenant API session and branding", () => {
     });
 
     await app();
-    await waitFor(() => expect(document.documentElement.style.getPropertyValue("--color-brand")).toBe("#123456"));
+    await waitFor(() =>
+      expect(
+        document.documentElement.style.getPropertyValue("--color-brand"),
+      ).toBe("#123456"),
+    );
   });
 
   it("sends the cached etag and keeps the cache on a 304", async () => {
     localStorage.setItem(
       storageKeys.branding,
-      JSON.stringify({ etag: '"b1"', branding: { primaryColor: "#654321", nameAr: "ناوي" } }),
+      JSON.stringify({
+        etag: '"b1"',
+        branding: { primaryColor: "#654321", nameAr: "ناوي" },
+      }),
     );
-    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: '"b1"' });
+    api.fetchBranding.mockResolvedValue({
+      notModified: true,
+      branding: null,
+      etag: '"b1"',
+    });
 
     const { result } = await app();
     await waitFor(() => expect(api.fetchBranding).toHaveBeenCalled());
 
     expect(api.fetchBranding.mock.calls[0]?.[0]).toEqual({ etag: '"b1"' });
     expect(result.current.branding).toMatchObject({ primaryColor: "#654321" });
-    expect(document.documentElement.style.getPropertyValue("--color-brand")).toBe("");
+    expect(
+      document.documentElement.style.getPropertyValue("--color-brand"),
+    ).toBe("");
   });
 
   it("keeps working when branding cannot be loaded", async () => {
@@ -1260,7 +1599,9 @@ describe("AppProvider — tenant API session and branding", () => {
 
     expect(result.current.ready).toBe(true);
     expect(result.current.branding).toBeNull();
-    expect(document.documentElement.style.getPropertyValue("--color-brand")).toBe("");
+    expect(
+      document.documentElement.style.getPropertyValue("--color-brand"),
+    ).toBe("");
   });
 
   it("does not call the API for branding while no base URL is set", async () => {
@@ -1285,7 +1626,12 @@ describe("AppProvider — tenant API session and branding", () => {
     localStorage.setItem(storageKeys.session, JSON.stringify(identity));
     localStorage.setItem(
       storageKeys.profile,
-      JSON.stringify({ ...user, email: "me@example.com", customerId: "customer-1", name: "اسمي الجديد" }),
+      JSON.stringify({
+        ...user,
+        email: "me@example.com",
+        customerId: "customer-1",
+        name: "اسمي الجديد",
+      }),
     );
 
     const { result } = await app();
@@ -1306,7 +1652,10 @@ describe("AppProvider — tenant API session and branding", () => {
   });
 
   it("does not blank a saved email when the session carries none", async () => {
-    localStorage.setItem(storageKeys.profile, JSON.stringify({ ...user, email: "keep@example.com" }));
+    localStorage.setItem(
+      storageKeys.profile,
+      JSON.stringify({ ...user, email: "keep@example.com" }),
+    );
 
     const { result } = await app();
     act(() => result.current.login(sessionPayload()));
@@ -1317,12 +1666,22 @@ describe("AppProvider — tenant API session and branding", () => {
   it("does not blank the account when the session carries no identity text", async () => {
     localStorage.setItem(
       storageKeys.session,
-      JSON.stringify({ ...identity, fullName: "", phoneNumber: "", email: null }),
+      JSON.stringify({
+        ...identity,
+        fullName: "",
+        phoneNumber: "",
+        email: null,
+      }),
     );
-    localStorage.setItem(storageKeys.profile, JSON.stringify({ ...user, email: "keep@example.com" }));
+    localStorage.setItem(
+      storageKeys.profile,
+      JSON.stringify({ ...user, email: "keep@example.com" }),
+    );
 
     const { result } = await app();
-    await waitFor(() => expect(result.current.profile.customerId).toBe("customer-1"));
+    await waitFor(() =>
+      expect(result.current.profile.customerId).toBe("customer-1"),
+    );
     expect(result.current.profile.name).toBe(user.name);
     expect(result.current.profile.phone).toBe(user.phone);
     expect(result.current.profile.email).toBe("keep@example.com");
@@ -1337,7 +1696,11 @@ describe("AppProvider — tenant API session and branding", () => {
     act(() => result.current.logout());
     expect(result.current.profile.name).toBe(user.name);
     expect(result.current.profile.customerId).toBeUndefined();
-    await waitFor(() => expect(JSON.parse(localStorage.getItem(storageKeys.profile)!)).toMatchObject({ name: user.name }));
+    await waitFor(() =>
+      expect(
+        JSON.parse(localStorage.getItem(storageKeys.profile)!),
+      ).toMatchObject({ name: user.name }),
+    );
   });
 
   it("leaves the demo profile alone for a flag-only login", async () => {
@@ -1354,7 +1717,11 @@ describe("AppProvider — tenant API session and branding", () => {
 describe("AppProvider — signing out", () => {
   beforeEach(() => {
     apiMode.transport = "live";
-    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    api.fetchBranding.mockResolvedValue({
+      notModified: true,
+      branding: null,
+      etag: null,
+    });
     api.refreshSession.mockResolvedValue(tokenPair());
     api.revokeSession.mockResolvedValue(undefined);
     api.attachStoredRefresh.mockResolvedValue(undefined);
@@ -1376,7 +1743,9 @@ describe("AppProvider — signing out", () => {
     // The BFF owns the cookie, so revoking needs no token argument at all.
     expect(api.revokeSession).toHaveBeenCalledTimes(1);
     expect(api.revokeSession).toHaveBeenCalledWith();
-    await waitFor(() => expect(localStorage.getItem(storageKeys.session)).toBe("null"));
+    await waitFor(() =>
+      expect(localStorage.getItem(storageKeys.session)).toBe("null"),
+    );
   });
 
   it("fires one revoke for a double-tapped logout and clears state when the network is down", async () => {
@@ -1436,7 +1805,11 @@ describe("AppProvider — signing out", () => {
 describe("AppProvider — session status and the customer view", () => {
   beforeEach(() => {
     apiMode.transport = "live";
-    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    api.fetchBranding.mockResolvedValue({
+      notModified: true,
+      branding: null,
+      etag: null,
+    });
     api.refreshSession.mockResolvedValue(tokenPair());
     api.revokeSession.mockResolvedValue(undefined);
     api.attachStoredRefresh.mockResolvedValue(undefined);
@@ -1459,14 +1832,18 @@ describe("AppProvider — session status and the customer view", () => {
     const { result } = await app();
     expect(result.current.sessionStatus).toBe("signed-out");
 
-    act(() => result.current.login(sessionPayload({ accessToken: "boot-access" })));
+    act(() =>
+      result.current.login(sessionPayload({ accessToken: "boot-access" })),
+    );
     expect(result.current.sessionStatus).toBe("active");
 
     // A refused request asks for a refresh; until the cookie store answers, the
     // grant is neither live nor gone, and the guard needs to know which.
     const authFetch = result.current.authFetch;
     const request = authFetch("/api/v1/orders");
-    await waitFor(() => expect(result.current.sessionStatus).toBe("refreshing"));
+    await waitFor(() =>
+      expect(result.current.sessionStatus).toBe("refreshing"),
+    );
 
     await act(async () => {
       settleRefresh(tokenPair());
@@ -1529,13 +1906,22 @@ describe("AppProvider — session status and the customer view", () => {
       await authFetch("/api/v1/orders");
     });
     expect(api.refreshSession).toHaveBeenCalledTimes(1);
-    const orderCalls = calls.filter((call) => call.url.endsWith("/api/v1/orders"));
-    expect(orderCalls.map(bearer)).toEqual(["Bearer rotated-access", "Bearer rotated-access"]);
+    const orderCalls = calls.filter((call) =>
+      call.url.endsWith("/api/v1/orders"),
+    );
+    expect(orderCalls.map(bearer)).toEqual([
+      "Bearer rotated-access",
+      "Bearer rotated-access",
+    ]);
   });
 
   it("refuses the app context outside the provider and offers it optionally", async () => {
-    const errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    expect(() => renderHook(() => useApp())).toThrow("useApp must be used within AppProvider");
+    const errors = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    expect(() => renderHook(() => useApp())).toThrow(
+      "useApp must be used within AppProvider",
+    );
     errors.mockRestore();
 
     expect(renderHook(() => useOptionalApp()).result.current).toBeNull();
@@ -1554,7 +1940,10 @@ describe("AppProvider — the account picture", () => {
   });
 
   it("drops the demo picture an account saved before uploading became the only way in", async () => {
-    localStorage.setItem(storageKeys.profile, JSON.stringify({ ...user, avatar: "/images/avatar.webp" }));
+    localStorage.setItem(
+      storageKeys.profile,
+      JSON.stringify({ ...user, avatar: "/images/avatar.webp" }),
+    );
 
     const { result } = await app();
 
@@ -1564,7 +1953,10 @@ describe("AppProvider — the account picture", () => {
 
   it("keeps a picture the customer uploaded", async () => {
     const uploaded = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/";
-    localStorage.setItem(storageKeys.profile, JSON.stringify({ ...user, avatar: uploaded }));
+    localStorage.setItem(
+      storageKeys.profile,
+      JSON.stringify({ ...user, avatar: uploaded }),
+    );
 
     const { result } = await app();
 
@@ -1572,7 +1964,10 @@ describe("AppProvider — the account picture", () => {
   });
 
   it("refuses a picture from a host the image loader is not configured for", async () => {
-    localStorage.setItem(storageKeys.profile, JSON.stringify({ ...user, avatar: "https://cdn.example.com/a.png" }));
+    localStorage.setItem(
+      storageKeys.profile,
+      JSON.stringify({ ...user, avatar: "https://cdn.example.com/a.png" }),
+    );
 
     const { result } = await app();
 
@@ -1583,7 +1978,10 @@ describe("AppProvider — the account picture", () => {
   it("drops a picture large enough to make every later write fail", async () => {
     localStorage.setItem(
       storageKeys.profile,
-      JSON.stringify({ ...user, avatar: `data:image/jpeg;base64,${"A".repeat(400_000)}` }),
+      JSON.stringify({
+        ...user,
+        avatar: `data:image/jpeg;base64,${"A".repeat(400_000)}`,
+      }),
     );
 
     const { result } = await app();

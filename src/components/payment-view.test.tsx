@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PaymentView } from "@/components/payment-view";
 import { renderApp } from "@/test/render";
+import { seedCart } from "@/lib/data";
 import { storageKeys } from "@/lib/storage";
 
 const router = vi.hoisted(() => ({ push: vi.fn() }));
@@ -20,7 +21,14 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...props }: { href: string | { pathname?: string }; children: React.ReactNode }) => (
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string | { pathname?: string };
+    children: React.ReactNode;
+  }) => (
     <a href={typeof href === "string" ? href : String(href)} {...props}>
       {children}
     </a>
@@ -28,7 +36,9 @@ vi.mock("next/link", () => ({
 }));
 
 vi.mock("next/image", () => ({
-  default: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />,
+  default: ({ src, alt }: { src: string; alt: string }) => (
+    <img src={src} alt={alt} />
+  ),
 }));
 
 function stubClipboard() {
@@ -51,13 +61,21 @@ function upload(file: File) {
 }
 
 describe("PaymentView", () => {
+  beforeEach(() => {
+    localStorage.setItem(storageKeys.cart, JSON.stringify(seedCart));
+  });
+
   it("requires a receipt before confirming an InstaPay order", async () => {
     const user = userEvent.setup();
     renderApp(<PaymentView />);
 
-    await user.click(await screen.findByRole("button", { name: "تأكيد الطلب" }));
+    await user.click(
+      await screen.findByRole("button", { name: "تأكيد الطلب" }),
+    );
 
-    expect(screen.getByText("ارفع صورة إثبات الدفع الأول قبل تأكيد الطلب.")).toBeInTheDocument();
+    expect(
+      screen.getByText("ارفع صورة إثبات الدفع الأول قبل تأكيد الطلب."),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(router.push).not.toHaveBeenCalled();
   });
@@ -67,16 +85,24 @@ describe("PaymentView", () => {
 
     upload(new File(["invoice"], "invoice.pdf", { type: "application/pdf" }));
 
-    expect(await screen.findByText("ارفع صورة بصيغة JPG أو PNG.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("ارفع صورة بصيغة JPG أو PNG."),
+    ).toBeInTheDocument();
     expect(screen.queryByText("invoice.pdf")).not.toBeInTheDocument();
   });
 
   it("rejects a receipt larger than five megabytes", async () => {
     renderApp(<PaymentView />);
 
-    upload(new File([new Uint8Array(6 * 1024 * 1024)], "huge.jpg", { type: "image/jpeg" }));
+    upload(
+      new File([new Uint8Array(6 * 1024 * 1024)], "huge.jpg", {
+        type: "image/jpeg",
+      }),
+    );
 
-    expect(await screen.findByText("حجم الصورة أكبر من 5 ميجا، اختار صورة أصغر.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("حجم الصورة أكبر من 5 ميجا، اختار صورة أصغر."),
+    ).toBeInTheDocument();
   });
 
   it("accepts a valid receipt, asks for confirmation and completes the order", async () => {
@@ -90,17 +116,24 @@ describe("PaymentView", () => {
 
     await user.click(screen.getByRole("button", { name: "تأكيد الطلب" }));
 
-    const dialog = await screen.findByRole("dialog", { name: "تأكيد إيصال الدفع" });
+    const dialog = await screen.findByRole("dialog", {
+      name: "تأكيد إيصال الدفع",
+    });
     expect(within(dialog).getByText("proof.png")).toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "تأكيد" }));
 
     await waitFor(() => expect(router.push).toHaveBeenCalledWith("/orders"));
-    await waitFor(() => expect(JSON.parse(localStorage.getItem(storageKeys.cart)!)).toEqual([]));
+    await waitFor(() =>
+      expect(JSON.parse(localStorage.getItem(storageKeys.cart)!)).toEqual([]),
+    );
     await waitFor(() => {
       const stored = JSON.parse(localStorage.getItem(storageKeys.orders)!);
-      expect(stored[0]).toMatchObject({ status: "preparing", paymentMethod: "instapay" });
-      expect(stored[0].items).toHaveLength(3);
+      expect(stored[0]).toMatchObject({
+        status: "preparing",
+        paymentMethod: "instapay",
+      });
+      expect(stored[0].items).toHaveLength(seedCart.length);
       expect(stored[0].total).toBeGreaterThan(0);
     });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -118,22 +151,30 @@ describe("PaymentView", () => {
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(router.push).not.toHaveBeenCalled();
-    expect(JSON.parse(localStorage.getItem(storageKeys.cart) ?? "[]")).toHaveLength(3);
+    expect(
+      JSON.parse(localStorage.getItem(storageKeys.cart) ?? "[]"),
+    ).toHaveLength(seedCart.length);
   });
 
   it("finalizes a cash order without a receipt", async () => {
     const user = userEvent.setup();
     renderApp(<PaymentView />);
 
-    await user.click(await screen.findByRole("button", { name: /الدفع عند الاستلام/ }));
+    await user.click(
+      await screen.findByRole("button", { name: /الدفع عند الاستلام/ }),
+    );
     expect(screen.queryByText("إثبات الدفع")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "تأكيد الطلب" }));
 
     await waitFor(() => expect(router.push).toHaveBeenCalledWith("/orders"));
-    await waitFor(() => expect(JSON.parse(localStorage.getItem(storageKeys.cart)!)).toEqual([]));
     await waitFor(() =>
-      expect(JSON.parse(localStorage.getItem(storageKeys.orders)!)[0]).toMatchObject({
+      expect(JSON.parse(localStorage.getItem(storageKeys.cart)!)).toEqual([]),
+    );
+    await waitFor(() =>
+      expect(
+        JSON.parse(localStorage.getItem(storageKeys.orders)!)[0],
+      ).toMatchObject({
         paymentMethod: "cash",
         status: "preparing",
       }),
@@ -144,9 +185,13 @@ describe("PaymentView", () => {
     const user = userEvent.setup();
     renderApp(<PaymentView />);
 
-    await user.click(await screen.findByRole("button", { name: /محفظة إلكترونية/ }));
+    await user.click(
+      await screen.findByRole("button", { name: /محفظة إلكترونية/ }),
+    );
     expect(
-      screen.getByText("هيتواصل معاك مندوب الدفع لتأكيد تحويل المحفظة قبل تجهيز الطلب."),
+      screen.getByText(
+        "هيتواصل معاك مندوب الدفع لتأكيد تحويل المحفظة قبل تجهيز الطلب.",
+      ),
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "تأكيد الطلب" }));
@@ -172,6 +217,8 @@ describe("PaymentView", () => {
 
     await user.click(screen.getByRole("button", { name: "نسخ الرقم" }));
 
-    expect(await screen.findByText("انسخ الرقم يدوياً: 01010010010")).toBeInTheDocument();
+    expect(
+      await screen.findByText("انسخ الرقم يدوياً: 01010010010"),
+    ).toBeInTheDocument();
   });
 });

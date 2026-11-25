@@ -1,8 +1,9 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SiteChrome } from "@/components/site-chrome";
 import { renderApp } from "@/test/render";
+import { seedCart } from "@/lib/data";
 import { loginHref } from "@/lib/routes";
 import { storageKeys } from "@/lib/storage";
 
@@ -21,7 +22,14 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...props }: { href: string | { pathname?: string }; children: React.ReactNode }) => (
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string | { pathname?: string };
+    children: React.ReactNode;
+  }) => (
     <a href={typeof href === "string" ? href : String(href)} {...props}>
       {children}
     </a>
@@ -39,12 +47,20 @@ function renderChrome(pathname: string, options: { loggedIn?: boolean } = {}) {
 }
 
 describe("SiteChrome route guard", () => {
-  it.each(["/profile", "/checkout", "/checkout/payment", "/orders", "/addresses"])(
+  it.each([
+    "/profile",
+    "/checkout",
+    "/checkout/payment",
+    "/orders",
+    "/addresses",
+  ])(
     "redirects signed-out visitors from %s to login with a return path",
     async (pathname) => {
       renderChrome(pathname);
 
-      await waitFor(() => expect(nav.replace).toHaveBeenCalledWith(loginHref(pathname)));
+      await waitFor(() =>
+        expect(nav.replace).toHaveBeenCalledWith(loginHref(pathname)),
+      );
       // The guarded page stays mounted for the redirect frame, but it is hidden
       // from sight and from assistive tech, so no private UI is ever painted.
       await waitFor(() => {
@@ -66,10 +82,15 @@ describe("SiteChrome route guard", () => {
   it("opens the login prompt on the cart instead of redirecting", async () => {
     renderChrome("/cart");
 
-    const dialog = await screen.findByRole("dialog", { name: "سجل الدخول، علشان تكمل طلبك" });
+    const dialog = await screen.findByRole("dialog", {
+      name: "سجل الدخول، علشان تكمل طلبك",
+    });
     expect(dialog).toBeInTheDocument();
     expect(screen.getByText("protected content")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "سجل الآن" })).toHaveAttribute("href", "/login?next=%2Fcart");
+    expect(screen.getByRole("link", { name: "سجل الآن" })).toHaveAttribute(
+      "href",
+      "/login?next=%2Fcart",
+    );
     expect(nav.replace).not.toHaveBeenCalled();
   });
 
@@ -95,22 +116,30 @@ describe("SiteChrome route guard", () => {
 
     expect(await screen.findByText("protected content")).toBeInTheDocument();
     expect(screen.queryByRole("contentinfo")).not.toBeInTheDocument();
-    expect(screen.queryByRole("navigation", { name: "التنقل السفلي" })).not.toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: "التنقل الرئيسي" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("navigation", { name: "التنقل السفلي" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("navigation", { name: "التنقل الرئيسي" }),
+    ).toBeInTheDocument();
   });
 
   it("keeps the bottom navigation on the orders tab root", async () => {
     renderChrome("/orders", { loggedIn: true });
 
     expect(await screen.findByText("protected content")).toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: "التنقل السفلي" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("navigation", { name: "التنقل السفلي" }),
+    ).toBeInTheDocument();
   });
 
   it("hides the bottom navigation on order tracking", async () => {
     renderChrome("/orders/10248", { loggedIn: true });
 
     expect(await screen.findByText("protected content")).toBeInTheDocument();
-    expect(screen.queryByRole("navigation", { name: "التنقل السفلي" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("navigation", { name: "التنقل السفلي" }),
+    ).not.toBeInTheDocument();
   });
 
   it("hides chrome on the login route while leaving content visible", async () => {
@@ -118,7 +147,9 @@ describe("SiteChrome route guard", () => {
 
     expect(await screen.findByText("protected content")).toBeInTheDocument();
     expect(screen.queryByRole("contentinfo")).not.toBeInTheDocument();
-    expect(screen.queryByRole("navigation", { name: "التنقل السفلي" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("navigation", { name: "التنقل السفلي" }),
+    ).not.toBeInTheDocument();
     expect(nav.replace).not.toHaveBeenCalled();
   });
 
@@ -127,12 +158,18 @@ describe("SiteChrome route guard", () => {
 
     expect(await screen.findByText("protected content")).toBeInTheDocument();
     expect(screen.getByRole("contentinfo")).toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: "التنقل السفلي" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("navigation", { name: "التنقل السفلي" }),
+    ).toBeInTheDocument();
     expect(nav.replace).not.toHaveBeenCalled();
   });
 });
 
 describe("SiteChrome pinned cart bar", () => {
+  beforeEach(() => {
+    localStorage.setItem(storageKeys.cart, JSON.stringify(seedCart));
+  });
+
   function cartBar() {
     return document.querySelector<HTMLElement>("[data-cart-bar]");
   }
@@ -161,15 +198,18 @@ describe("SiteChrome pinned cart bar", () => {
     expect(mainPadding()).not.toContain("pb-32");
   });
 
-  it.each(["/cart", "/checkout/payment", "/product/beef-burger", "/login", "/offline"])(
-    "leaves %s to its own cart call to action",
-    async (pathname) => {
-      renderChrome(pathname, { loggedIn: true });
+  it.each([
+    "/cart",
+    "/checkout/payment",
+    "/product/beef-burger",
+    "/login",
+    "/offline",
+  ])("leaves %s to its own cart call to action", async (pathname) => {
+    renderChrome(pathname, { loggedIn: true });
 
-      expect(await screen.findByText("protected content")).toBeInTheDocument();
-      expect(cartBar()).toBeNull();
-    },
-  );
+    expect(await screen.findByText("protected content")).toBeInTheDocument();
+    expect(cartBar()).toBeNull();
+  });
 
   it("hides the bar and restores the plain padding once the basket is empty", async () => {
     localStorage.setItem(storageKeys.cart, "[]");

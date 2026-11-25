@@ -1,8 +1,9 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PickupView } from "@/components/pickup-view";
 import { renderApp } from "@/test/render";
+import { seedCart } from "@/lib/data";
 import { storageKeys } from "@/lib/storage";
 
 const router = vi.hoisted(() => ({ push: vi.fn() }));
@@ -19,7 +20,14 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...props }: { href: string | { pathname?: string }; children: React.ReactNode }) => (
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string | { pathname?: string };
+    children: React.ReactNode;
+  }) => (
     <a href={typeof href === "string" ? href : String(href)} {...props}>
       {children}
     </a>
@@ -27,6 +35,10 @@ vi.mock("next/link", () => ({
 }));
 
 describe("PickupView", () => {
+  beforeEach(() => {
+    localStorage.setItem(storageKeys.cart, JSON.stringify(seedCart));
+  });
+
   it("starts on delivery with the delivery fee included", async () => {
     renderApp(<PickupView />);
 
@@ -41,7 +53,9 @@ describe("PickupView", () => {
     const user = userEvent.setup();
     renderApp(<PickupView />);
 
-    await user.click(await screen.findByRole("button", { name: "تأكيد طريقة الاستلام" }));
+    await user.click(
+      await screen.findByRole("button", { name: "تأكيد طريقة الاستلام" }),
+    );
     expect(router.push).toHaveBeenCalledWith("/checkout/delivery");
   });
 
@@ -54,9 +68,14 @@ describe("PickupView", () => {
 
     expect(pickup).toHaveAttribute("aria-checked", "true");
     expect(screen.getAllByText(/^345/)).toHaveLength(2);
-    expect(screen.getByRole("link", { name: /تغيير الفرع/ })).toHaveAttribute("href", "/checkout/branch");
+    expect(screen.getByRole("link", { name: /تغيير الفرع/ })).toHaveAttribute(
+      "href",
+      "/checkout/branch",
+    );
 
-    await user.click(screen.getByRole("button", { name: "تأكيد طريقة الاستلام" }));
+    await user.click(
+      screen.getByRole("button", { name: "تأكيد طريقة الاستلام" }),
+    );
     expect(router.push).toHaveBeenCalledWith("/checkout/branch");
   });
 
