@@ -572,7 +572,11 @@ export function AppProvider({
   // place before `authTransport()` or `apiConfigured()` is asked. The server
   // keeps its own per-request resolution and never writes this module value.
   if (typeof window !== "undefined") setRuntimeTenantApiBaseUrl(tenantApiBaseUrl);
-  const [lines, setLines, cartReady] = usePersistentState<CartLine[]>(storageKeys.cart, seedCart, decodeCart);
+  const [lines, setLines, cartReady] = usePersistentState<CartLine[]>(
+    storageKeys.cart,
+    [],
+    decodeCart,
+  );
   const [favorites, setFavorites, favoritesReady] = usePersistentState<string[]>(
     storageKeys.favorites,
     seedFavorites,

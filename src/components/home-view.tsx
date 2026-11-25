@@ -18,7 +18,7 @@ import {
   filterMenu,
   menuFilters,
   products,
-  type CategoryId,
+  type Product,
 } from "@/lib/data";
 import { PromoCarousel } from "@/components/promo-carousel";
 import { ProductCard } from "@/components/product-card";
@@ -33,8 +33,32 @@ import {
 } from "@/components/order-tracking-promo";
 import { useApp } from "@/components/providers";
 import { apiConfigured } from "@/lib/api";
-import { menuProduct } from "@/lib/tenant-menu";
-import { useMostSold } from "@/hooks/use-tenant-menu";
+import { menuImage, menuProduct } from "@/lib/tenant-menu";
+import {
+  useMenuCategories,
+  useMenuItem,
+  useMenuItems,
+  useMostSold,
+} from "@/hooks/use-tenant-menu";
+
+function HomeProductCard({
+  product,
+  branchId,
+  row,
+}: {
+  product: Product;
+  branchId?: string;
+  row?: boolean;
+}) {
+  const needsDetailImage = product.image === "/images/burger.webp";
+  const detail = useMenuItem(product.id, branchId, needsDetailImage);
+  const image = detail.data
+    ? menuImage(detail.data.imageKey, detail.data.imageUrl)
+    : product.image;
+
+  const card = image === product.image ? product : { ...product, image };
+  return row ? <MenuRow product={card} /> : <ProductCard product={card} />;
+}
 
 function PhoneMockup() {
   const { lang, t } = useApp();
@@ -64,26 +88,56 @@ function PhoneMockup() {
 export function HomeView() {
   const { t, loggedIn, orders, toast, lang, selectedBranchId, branding } = useApp();
   const branchId = branding?.branches?.some((branch) => branch.branchId === selectedBranchId) ? selectedBranchId : undefined;
-  const mostSold = useMostSold(branchId);
+  const remoteCategories = useMenuCategories();
+  const homeCategories = apiConfigured()
+    ? remoteCategories.data.map((item) => ({
+        id: item.id,
+        name: (lang === "ar" ? item.nameAr : item.nameEn) || item.nameEn || item.nameAr || "",
+        image: menuImage(item.imageKey, item.imageUrl),
+        count: item.itemCount ?? 0,
+      }))
+    : desktopCategoryOrder.map((id) => ({
+        id,
+        name: categoriesById[id].name,
+        image: categoriesById[id].image,
+        count: categoryCounts[id] ?? 0,
+      }));
   const [filter, setFilter] = useState("الكل");
-  const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(
     "burger",
   );
   const [showActiveOrder, setShowActiveOrder] = useState(true);
-  const menu = selectedCategory
-    ? products.filter((product) => product.category === selectedCategory)
-    : filterMenu(filter);
+  const activeCategoryId = apiConfigured() && selectedCategory && homeCategories.some((category) => category.id === selectedCategory) ? selectedCategory : undefined;
+  const menuItems = useMenuItems({ categoryId: activeCategoryId, branchId });
+  const menu = apiConfigured()
+    ? menuItems.data.items.map((item) => menuProduct(item, lang))
+    : selectedCategory
+      ? products.filter((product) => product.category === selectedCategory)
+      : filterMenu(filter);
   const activeOrder = orders.find((order) => order.status === "preparing");
+  const mostSold = useMostSold(branchId);
   const bestSellers = apiConfigured()
     ? mostSold.data.map((item) => menuProduct(item, lang))
-    : products.filter((product) => product.category === (selectedCategory ?? "burger")).sort((a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)));
+    : products
+        .filter(
+          (product) => product.category === (selectedCategory ?? "burger"),
+        )
+        .sort(
+          (a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)),
+        );
 
-  const selectCategory = (categoryId: CategoryId) => {
-    setSelectedCategory(categoryId);
+  const selectCategory = (categoryId: string) => {
+    setSelectedCategory((current) => (current === categoryId ? null : categoryId));
     setFilter("الكل");
   };
 
   const selectMenuFilter = (value: string) => {
+    if (apiConfigured()) {
+      const match = homeCategories.find((category) => category.name === value);
+      setSelectedCategory(match ? match.id : null);
+      setFilter("الكل");
+      return;
+    }
     setSelectedCategory(null);
     setFilter(value);
   };
@@ -102,21 +156,20 @@ export function HomeView() {
         <SectionTitle
           title="الاقسام"
           icon={<LayoutGrid className="size-5 text-brand lg:size-6" />}
-          action={{ label: "عرض كل الأصناف (12)", href: "/categories" }}
+          action={{ label: `عرض كل الأصناف (${homeCategories.length})`, href: "/categories" }}
         />
 
         {/* Phones scroll the rail edge to edge; from the tablet breakpoint up
             the same seven categories become a card grid that fills the shell. */}
         <div className="motion-stagger hide-scrollbar -mx-4 mt-3 flex gap-2.5 overflow-x-auto px-4 pb-1 sm:hidden">
-          {desktopCategoryOrder.map((id) => {
-            const category = categoriesById[id];
-            const active = id === selectedCategory;
+          {homeCategories.map((category) => {
+            const active = category.id === selectedCategory;
             return (
               <button
-                key={id}
+                key={category.id}
                 type="button"
                 aria-pressed={active}
-                onClick={() => selectCategory(id)}
+                onClick={() => selectCategory(category.id)}
                 className="group flex w-[68px] shrink-0 flex-col items-center gap-2 text-center"
               >
                 <span
@@ -147,15 +200,14 @@ export function HomeView() {
         </div>
 
         <div className="motion-stagger mt-4 hidden grid-cols-4 gap-3 sm:grid lg:mt-5 lg:grid-cols-7 lg:gap-4">
-          {desktopCategoryOrder.map((id) => {
-            const category = categoriesById[id];
-            const active = id === selectedCategory;
+          {homeCategories.map((category) => {
+            const active = category.id === selectedCategory;
             return (
               <button
-                key={id}
+                key={category.id}
                 type="button"
                 aria-pressed={active}
-                onClick={() => selectCategory(id)}
+                onClick={() => selectCategory(category.id)}
                 className={`group flex flex-col items-center rounded-[18px] bg-white px-2.5 py-3.5 text-center shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.98] sm:px-3 sm:py-4 ${
                   active ? "ring-2 ring-inset ring-brand/60" : ""
                 }`}
@@ -179,7 +231,7 @@ export function HomeView() {
                   {t(category.name)}
                 </span>
                 <span className="mt-1 text-[10px] font-semibold text-muted">
-                  {categoryCounts[id] ?? 0} {t("صنف")}
+                  {category.count} {t("صنف")}
                 </span>
               </button>
             );
@@ -196,7 +248,9 @@ export function HomeView() {
         <div className="motion-stagger mt-3 grid grid-cols-2 gap-3 lg:mt-5 lg:grid-cols-5 lg:gap-4">
           {bestSellers.slice(0, 4)
             .map((product) => (
-              <ProductCard key={product.id} product={product} />
+              apiConfigured()
+                ? <HomeProductCard key={product.id} product={product} branchId={branchId} />
+                : <ProductCard key={product.id} product={product} />
             ))}
 
           <div className="motion-lift relative hidden overflow-hidden rounded-[26px] bg-[#e8452c] p-5 text-white shadow-soft lg:block">
@@ -249,8 +303,8 @@ export function HomeView() {
             {t("قائمة الطعام")}
           </h2>
           <MenuFilters
-            filters={menuFilters}
-            value={filter}
+            filters={apiConfigured() ? ["الكل", ...homeCategories.map((category) => category.name)] : menuFilters}
+            value={apiConfigured() ? (homeCategories.find((category) => category.id === selectedCategory)?.name ?? "الكل") : filter}
             onChange={selectMenuFilter}
             className="hidden lg:flex"
           />
@@ -258,7 +312,11 @@ export function HomeView() {
 
         <div className="motion-stagger mt-3 grid gap-3 lg:mt-5 lg:grid-cols-2 lg:gap-4">
           {menu.slice(0, 6).map((product) => (
-            <MenuRow key={product.id} product={product} />
+        apiConfigured() ? (
+          <HomeProductCard key={product.id} product={product} branchId={branchId} row />
+        ) : (
+          <MenuRow key={product.id} product={product} />
+        )
           ))}
         </div>
 

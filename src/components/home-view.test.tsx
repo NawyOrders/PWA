@@ -1,8 +1,39 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { HomeView } from "@/components/home-view";
 import { renderApp } from "@/test/render";
+
+const homeApiState = vi.hoisted(() => ({
+  enabled: false,
+  categories: [] as Array<{ id: string; nameAr?: string; nameEn?: string; imageUrl?: string }>,
+  items: [] as Array<{ id: string; nameAr?: string; nameEn?: string }>,
+}));
+
+vi.mock("@/lib/api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/api")>();
+  return { ...actual, apiConfigured: () => homeApiState.enabled };
+});
+
+vi.mock("@/hooks/use-tenant-menu", () => ({
+  useMenuCategories: () => ({
+    data: homeApiState.categories,
+    loading: false,
+    error: false,
+  }),
+  useMenuItems: (filters: { categoryId?: string }) => ({
+    data: { items: filters.categoryId === "tenant-pizza" ? homeApiState.items : [] },
+    loading: false,
+    error: false,
+  }),
+  useMenuItem: (id: string, _branchId?: string, enabled = true) => ({
+    data: enabled
+      ? { id, imageUrl: "https://images.unsplash.com/photo-tenant-pizza.jpg" }
+      : null,
+    loading: false,
+    error: false,
+  }),
+}));
 
 vi.mock("next/link", () => ({
   default: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
@@ -24,6 +55,12 @@ vi.mock("next/navigation", () => ({
   }),
   useSearchParams: () => new URLSearchParams(),
 }));
+
+beforeEach(() => {
+  homeApiState.enabled = false;
+  homeApiState.categories = [];
+  homeApiState.items = [];
+});
 
 function installSection(): HTMLElement {
   const heading = screen.getByRole("heading", { name: /احصل على طعامك/ });
@@ -76,6 +113,36 @@ function categoryGrid(): HTMLElement {
 }
 
 describe("HomeView categories section", () => {
+  it("shows product cards for the selected tenant category", async () => {
+    homeApiState.enabled = true;
+    homeApiState.categories = [
+      {
+        id: "tenant-pizza",
+        nameAr: "بيتزا",
+        imageUrl: "https://images.unsplash.com/photo-tenant-category.jpg",
+      },
+    ];
+    homeApiState.items = [
+      { id: "tenant-pizza-item", nameAr: "بيتزا خاصة" },
+    ];
+    const user = userEvent.setup();
+    renderApp(<HomeView />);
+
+    await user.click(within(categoryGrid()).getByRole("button", { name: /بيتزا/ }));
+
+    expect(within(categoryGrid()).getByRole("img", { name: "بيتزا" })).toHaveAttribute(
+      "src",
+      expect.stringContaining("photo-tenant-category.jpg"),
+    );
+    const section = screen.getByRole("heading", { name: "الأكثر طلباً" }).closest("section");
+    if (!section) throw new Error("the category products section is missing");
+    expect(await within(section).findByRole("heading", { name: "بيتزا خاصة" })).toBeInTheDocument();
+    expect(within(section).getByRole("img", { name: "بيتزا خاصة" })).toHaveAttribute(
+      "src",
+      expect.stringContaining("photo-tenant-pizza.jpg"),
+    );
+  });
+
   it("offers every category on the phone rail instead of a truncated five", () => {
     renderApp(<HomeView />);
 

@@ -19,7 +19,11 @@ import { ProductCard } from "@/components/product-card";
 import { useApp } from "@/components/providers";
 import { apiConfigured } from "@/lib/api";
 import { menuImage, menuProduct } from "@/lib/tenant-menu";
-import { useMenuCategories, useMenuItems } from "@/hooks/use-tenant-menu";
+import {
+  useMenuCategories,
+  useMenuItems,
+  useMostSold,
+} from "@/hooks/use-tenant-menu";
 
 const chips = ["الكل", "الأكثر طلباً", "العروض"];
 
@@ -50,9 +54,15 @@ export function CategoriesView() {
   };
   const categoryItems = apiConfigured() ? remoteItems.data.items.map((item) => menuProduct(item, lang, categoryId)) : products.filter((product) => product.category === categoryId);
   const categoryTotal = categoryItems.length;
+  const mostSold = useMostSold(branchId, 50);
   let items = categoryItems;
 
-  if (chip === "الأكثر طلباً") items = items.filter((product) => product.popular);
+  if (chip === chips[1])
+    items = apiConfigured()
+      ? mostSold.data
+          .filter((item) => item.categoryId === categoryId)
+          .map((item) => menuProduct(item, lang, categoryId))
+      : items.filter((product) => product.popular);
   if (chip === "العروض") items = items.filter((product) => product.offer);
 
   if (sort === "price-asc") items = [...items].sort((a, b) => a.price - b.price);
