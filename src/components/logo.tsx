@@ -18,8 +18,8 @@ export function LogoMark({ className = "size-14", title }: LogoProps) {
     title ?? brandingName(branding, app?.lang ?? "ar") ?? app?.t("ناوي أوردرز") ?? "ناوي أوردرز";
   return (
     <span
-      className={`relative grid place-items-center overflow-hidden rounded-[30%] text-[#FBF3EA] ${className}`}
-      style={logo ? undefined : { backgroundColor: "#E8452C" }}
+      className={`relative grid place-items-center overflow-hidden rounded-[30%] text-cream ${className}`}
+      style={logo ? undefined : { backgroundColor: "var(--color-brand)" }}
       role="img"
       aria-label={label}
     >

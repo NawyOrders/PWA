@@ -28,7 +28,7 @@ export function ProfileView() {
   const { favorites, profile, orders, points, t } = useApp();
   const stats = [
     { key: "favorites", label: "المفضلة", value: favorites.length, icon: Heart, tile: "bg-[#fde3e8] text-[#e24467]" },
-    { key: "orders", label: "الطلبات", value: orders.length, icon: ShoppingBag, tile: "bg-[#fbdcd2] text-[#e8452c]" },
+    { key: "orders", label: "الطلبات", value: orders.length, icon: ShoppingBag, tile: "bg-brand-soft text-brand" },
     { key: "points", label: "النقاط", value: points, icon: Star, tile: "bg-[#fcecc9] text-[#eaa41c]" },
   ];
 
@@ -46,7 +46,7 @@ export function ProfileView() {
             <div className="relative mx-auto w-fit">
               <div className="absolute -end-7 -top-3 z-10">
                 <span className="absolute end-2 top-0 block h-9 w-5 rotate-[18deg] rounded-full bg-brand" />
-                <span className="absolute end-0 top-6 block h-8 w-4 rotate-[40deg] rounded-full bg-[#f6a723]" />
+                <span className="absolute end-0 top-6 block h-8 w-4 rotate-[40deg] rounded-full bg-gold" />
               </div>
               <CustomerAvatar
                 name={t(profile.name)}
@@ -69,7 +69,7 @@ export function ProfileView() {
 
             <Link
               href="/profile/edit"
-              className="btn-gradient mt-5 inline-flex h-10 items-center justify-center rounded-full px-7 text-xs font-bold text-white shadow-[0_16px_30px_-18px_rgba(232,69,44,0.9)] transition hover:brightness-105"
+              className="btn-gradient mt-5 inline-flex h-10 items-center justify-center rounded-full px-7 text-xs font-bold text-white shadow-[0_16px_30px_-18px_color-mix(in_srgb,var(--color-brand)_90%,transparent)] transition hover:brightness-105"
             >
               {t("تعديل الملف الشخصي")}
             </Link>

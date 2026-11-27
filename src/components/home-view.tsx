@@ -175,7 +175,7 @@ export function HomeView() {
                 <span
                   className={`grid size-[60px] place-items-center rounded-full border-2 bg-white transition duration-300 group-hover:-translate-y-1 group-hover:border-brand/60 ${
                     active
-                      ? "border-brand shadow-[0_10px_24px_-14px_rgba(232,69,44,0.7)]"
+                      ? "border-brand shadow-[0_10px_24px_-14px_color-mix(in_srgb,var(--color-brand)_70%,transparent)]"
                       : "border-[#ece0d4]"
                   }`}
                 >
@@ -253,10 +253,10 @@ export function HomeView() {
                 : <ProductCard key={product.id} product={product} />
             ))}
 
-          <div className="motion-lift relative hidden overflow-hidden rounded-[26px] bg-[#e8452c] p-5 text-white shadow-soft lg:block">
+          <div className="motion-lift relative hidden overflow-hidden rounded-[26px] bg-brand p-5 text-white shadow-soft lg:block">
             <div className="motion-float absolute -right-10 -top-10 size-40 rounded-full bg-white/10" />
             <div
-              className="motion-float absolute -bottom-14 -left-8 size-40 rounded-full bg-[#f6a723]/25"
+              className="motion-float absolute -bottom-14 -left-8 size-40 rounded-full bg-gold/25"
               style={{ animationDelay: "1.4s" }}
             />
             <div className="relative flex h-full flex-col justify-between">

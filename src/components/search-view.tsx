@@ -119,7 +119,7 @@ export function SearchView({ query }: { query: string }) {
               >
                 <span
                   className={`grid size-[60px] place-items-center rounded-full border-2 bg-white transition ${
-                    active ? "border-brand shadow-[0_10px_24px_-14px_rgba(232,69,44,0.7)]" : "border-[#ece0d4]"
+                    active ? "border-brand shadow-[0_10px_24px_-14px_color-mix(in_srgb,var(--color-brand)_70%,transparent)]" : "border-[#ece0d4]"
                   }`}
                 >
                   <span className="relative size-12 overflow-hidden rounded-full">

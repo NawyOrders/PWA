@@ -2,6 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import L from "leaflet";
+
+function brandColor(): string {
+  if (typeof document === "undefined") return "#e8452c";
+  return getComputedStyle(document.documentElement).getPropertyValue("--color-brand").trim() || "#e8452c";
+}
 import "leaflet/dist/leaflet.css";
 
 export type MapMarkerVariant = "pin" | "drop" | "dot" | "courier" | "store";
@@ -90,7 +95,7 @@ function markerHtml(marker: MapMarker) {
     return `<span class="nawy-map-badge${marker.active ? " is-active" : ""}">${label}${glyphSvg(
       glyph === "none" ? "store" : glyph,
       18,
-      marker.active ? "#fff" : "#e8452c",
+      marker.active ? "#fff" : brandColor(),
     )}</span>`;
   }
 
@@ -267,7 +272,7 @@ export function LeafletMap({
     layer.clearLayers();
     for (const route of routes) {
       L.polyline(route.positions, {
-        color: route.color ?? "#e8452c",
+        color: route.color ?? brandColor(),
         weight: route.width ?? 5,
         opacity: 0.95,
         lineCap: "round",

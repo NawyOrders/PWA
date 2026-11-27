@@ -7,10 +7,9 @@
  * block) and being able to remove every one of them again, so a tenant with no
  * branding — or an API that is down — keeps the built-in Nawy palette.
  *
- * The palette is opt-in. The app ships its own visual identity, so a tenant
- * payload never repaints it unless the deploy sets
- * `NEXT_PUBLIC_APPLY_TENANT_COLORS=true`; branding data (names, contact
- * channels) is still fetched, cached and exposed either way.
+ * The tenant palette is applied by default. A deploy can opt out with
+ * `NEXT_PUBLIC_APPLY_TENANT_COLORS=false`; branding data (names, contact
+ * channels) is fetched, cached and exposed either way.
  *
  * Colours are validated before they touch the DOM: a server string that is not
  * a `#rgb`/`#rrggbb` literal is dropped rather than injected into a style.
@@ -40,7 +39,7 @@ const DAYS = new Set([
  * an unset variable stays falsy instead of throwing during the build.
  */
 export function tenantColorsEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_APPLY_TENANT_COLORS === "true";
+  return process.env.NEXT_PUBLIC_APPLY_TENANT_COLORS !== "false";
 }
 
 export const brandingVarNames = [
@@ -51,6 +50,11 @@ export const brandingVarNames = [
   "--color-gold",
   "--color-cream",
   "--color-cream-50",
+  "--color-cream-100",
+  "--color-peach",
+  "--color-peach-strong",
+  "--color-pink-soft",
+  "--color-line",
 ] as const;
 
 export function safeColor(value: unknown): string | null {
@@ -122,6 +126,9 @@ export function brandingVars(branding: RestaurantBranding): Record<string, strin
     vars["--color-brand"] = primary;
     vars["--color-brand-soft"] = lighten(primary, 0.84);
     vars["--color-brand-dark"] = safeColor(branding.secondaryColor) ?? darken(primary, 0.14);
+    vars["--color-peach"] = lighten(primary, 0.86);
+    vars["--color-peach-strong"] = lighten(primary, 0.78);
+    vars["--color-pink-soft"] = lighten(primary, 0.9);
   } else {
     const secondary = safeColor(branding.secondaryColor);
     if (secondary) vars["--color-brand-dark"] = secondary;
@@ -131,7 +138,11 @@ export function brandingVars(branding: RestaurantBranding): Record<string, strin
   if (accent) vars["--color-gold"] = accent;
 
   const background = safeColor(branding.backgroundColor);
-  if (background) vars["--color-cream"] = background;
+  if (background) {
+    vars["--color-cream"] = background;
+    vars["--color-cream-100"] = darken(background, 0.04);
+    vars["--color-line"] = darken(background, 0.07);
+  }
 
   const surface = safeColor(branding.surfaceColor);
   if (surface) vars["--color-cream-50"] = surface;

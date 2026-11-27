@@ -22,12 +22,18 @@ function TrackingBannerContent({
     <>
       <div
         className={`min-w-0 text-white ${
-          mobileEnglish ? "text-left lg:text-center" : "text-right lg:text-center"
+          mobileEnglish
+            ? "text-left lg:text-center"
+            : "text-right lg:text-center"
         }`}
         dir={mobileArabic ? "rtl" : undefined}
       >
         <p className="text-xs font-medium text-white/90 lg:text-xs">
-          {t(order.fulfilment === "pickup" ? "وقت الاستلام المتوقع" : "الوقت المتبقي للتوصيل")}
+          {t(
+            order.fulfilment === "pickup"
+              ? "وقت الاستلام المتوقع"
+              : "الوقت المتبقي للتوصيل",
+          )}
         </p>
         <p className="mt-0.5 text-base font-extrabold leading-tight lg:mt-1 lg:text-base">
           {order.eta ? t(order.eta) : t("خلال 30 - 45 دقيقة")}
@@ -67,7 +73,13 @@ function TrackingBannerContent({
   );
 }
 
-export function MobileOrderTrackingBanner({ order, onClose }: { order: Order; onClose: () => void }) {
+export function MobileOrderTrackingBanner({
+  order,
+  onClose,
+}: {
+  order: Order;
+  onClose: () => void;
+}) {
   const { t, lang } = useApp();
   const isEnglish = lang === "en";
 
@@ -75,7 +87,7 @@ export function MobileOrderTrackingBanner({ order, onClose }: { order: Order; on
     <aside
       aria-label={t("تتبع الطلب")}
       dir="ltr"
-      className={`motion-nav-in fixed inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-30 min-h-[88px] rounded-t-[18px] bg-gradient-to-r from-[#f04b27] via-[#fa5c27] to-[#e9361d] px-4 py-3 shadow-[0_-12px_38px_-18px_rgba(232,69,44,0.65)] sm:px-6 md:px-8 lg:hidden ${
+      className={`motion-nav-in fixed inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-30 min-h-[88px] rounded-t-[18px] bg-gradient-to-r from-brand to-[color-mix(in_srgb,var(--color-brand)_85%,white)] px-4 py-3 shadow-[0_-12px_38px_-18px_color-mix(in_srgb,var(--color-brand)_65%,transparent)] sm:px-6 md:px-8 lg:hidden ${
         isEnglish
           ? "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 pr-9"
           : "grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 pl-9"
@@ -92,13 +104,19 @@ export function MobileOrderTrackingBanner({ order, onClose }: { order: Order; on
   );
 }
 
-export function DesktopOrderTrackingCard({ order, onClose }: { order: Order; onClose: () => void }) {
+export function DesktopOrderTrackingCard({
+  order,
+  onClose,
+}: {
+  order: Order;
+  onClose: () => void;
+}) {
   const { t } = useApp();
 
   return (
     <aside
       aria-label={t("تتبع الطلب")}
-      className="motion-fade pointer-events-auto fixed right-5 top-1/2 z-50 hidden w-[220px] max-w-[calc(100vw-2.5rem)] -translate-y-1/2 flex-col items-center gap-3 rounded-[24px] bg-gradient-to-r from-[#f04b27] via-[#fa5c27] to-[#e9361d] px-4 pb-4 pt-9 text-white shadow-[0_18px_38px_-18px_rgba(232,69,44,0.65)] lg:flex"
+      className="motion-fade pointer-events-auto fixed right-5 top-1/2 z-50 hidden w-[220px] max-w-[calc(100vw-2.5rem)] -translate-y-1/2 flex-col items-center gap-3 rounded-[24px] bg-gradient-to-r from-brand to-[color-mix(in_srgb,var(--color-brand)_85%,white)] px-4 pb-4 pt-9 text-white shadow-[0_18px_38px_-18px_color-mix(in_srgb,var(--color-brand)_65%,transparent)] lg:flex"
     >
       <button
         type="button"

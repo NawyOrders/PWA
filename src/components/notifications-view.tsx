@@ -98,7 +98,7 @@ export function NotificationsView() {
               className={`h-10 rounded-full px-5 text-xs font-bold transition ${
                 onlyUnread
                   ? "bg-brand-soft text-brand hover:bg-brand/15"
-                  : "bg-brand text-white shadow-[0_14px_26px_-16px_rgba(232,69,44,0.9)] hover:bg-brand-dark"
+                  : "bg-brand text-white shadow-[0_14px_26px_-16px_color-mix(in_srgb,var(--color-brand)_90%,transparent)] hover:bg-brand-dark"
               }`}
             >
               {t(onlyUnread ? "عرض كل الإشعارات" : "كل الإشعارات")}

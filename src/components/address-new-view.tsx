@@ -415,7 +415,7 @@ export function AddressNewView() {
                   <button
                     type="button"
                     onClick={listCta.onClick}
-                    className="btn-gradient mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_rgba(232,69,44,0.95)]"
+                    className="btn-gradient mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_color-mix(in_srgb,var(--color-brand)_95%,transparent)]"
                   >
                     {CtaIcon ? <CtaIcon className="size-5" strokeWidth={2.3} /> : null}
                     {t(listCta.label)}
@@ -465,7 +465,7 @@ export function AddressNewView() {
                         <div
                           key={item.id}
                           className={`rounded-2xl border-2 bg-white transition ${
-                            active ? "border-brand shadow-[0_0_0_4px_rgba(232,69,44,0.07)]" : "border-line hover:border-brand/30"
+                            active ? "border-brand shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-brand)_7%,transparent)]" : "border-line hover:border-brand/30"
                           }`}
                         >
                           <button
@@ -522,7 +522,7 @@ export function AddressNewView() {
                   <button
                     type="button"
                     onClick={confirmPickedAddress}
-                    className="btn-gradient mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_rgba(232,69,44,0.95)]"
+                    className="btn-gradient mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_color-mix(in_srgb,var(--color-brand)_95%,transparent)]"
                   >
                     <ArrowRight className="size-5 ltr:rotate-180" strokeWidth={2.3} />
                     {t("تأكيد العنوان")}

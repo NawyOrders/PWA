@@ -26,7 +26,7 @@ export function MenuFilters({
             onClick={() => onChange(filter)}
             className={`motion-press h-9 shrink-0 rounded-full px-4 text-xs font-bold transition ${
               active
-                ? "bg-brand text-white shadow-[0_10px_20px_-14px_rgba(232,69,44,0.9)]"
+                ? "bg-brand text-white shadow-[0_10px_20px_-14px_color-mix(in_srgb,var(--color-brand)_90%,transparent)]"
                 : "border border-line bg-white text-ink/70 hover:border-brand/30 hover:text-brand"
             }`}
           >
