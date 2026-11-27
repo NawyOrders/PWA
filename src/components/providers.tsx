@@ -890,8 +890,8 @@ export function AppProvider({
     document.documentElement.dir = dir;
   }, [lang, dir]);
 
-  /* Tenant palette: opt-in only. Unless the deploy sets the flag, the app keeps
-     the colours from globals.css and a tenant payload repaints nothing. */
+  /* Tenant palette: applied by default; set NEXT_PUBLIC_APPLY_TENANT_COLORS=false
+     to keep the colours from globals.css. */
   useEffect(() => {
     applyBranding(branding);
     applyBrandingAssets(branding);

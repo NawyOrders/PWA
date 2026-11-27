@@ -268,7 +268,7 @@ export function OrderTrackingView({ order }: { order: Order }) {
 
           <a
             href="tel:19885"
-            className="btn-gradient flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_rgba(232,69,44,0.95)]"
+            className="btn-gradient flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_color-mix(in_srgb,var(--color-brand)_95%,transparent)]"
           >
             <Phone className="size-5" strokeWidth={2.1} />
             {t("اتصل بالمطعم")}

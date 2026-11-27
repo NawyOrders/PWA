@@ -99,7 +99,7 @@ export function ChatView() {
                     {t("متصل حاليا")}
                   </p>
                 </div>
-                <span className="grid size-12 shrink-0 place-items-center rounded-full bg-brand text-white shadow-[0_14px_26px_-14px_rgba(232,69,44,0.9)]">
+                <span className="grid size-12 shrink-0 place-items-center rounded-full bg-brand text-white shadow-[0_14px_26px_-14px_color-mix(in_srgb,var(--color-brand)_90%,transparent)]">
                   <Bot className="size-6" strokeWidth={1.9} />
                 </span>
               </div>
@@ -132,7 +132,7 @@ export function ChatView() {
                   </div>
                 ) : (
                   <div key={message.id} className="flex justify-end">
-                    <div className="max-w-[82%] rounded-2xl bg-brand p-4 text-white shadow-[0_18px_32px_-20px_rgba(232,69,44,0.9)]">
+                    <div className="max-w-[82%] rounded-2xl bg-brand p-4 text-white shadow-[0_18px_32px_-20px_color-mix(in_srgb,var(--color-brand)_90%,transparent)]">
                       <p className="text-sm font-semibold leading-7">
                         {t(message.text)}
                       </p>
@@ -193,7 +193,7 @@ export function ChatView() {
               <button
                 type="submit"
                 aria-label={t("إرسال")}
-                className="grid size-11 shrink-0 place-items-center rounded-full bg-brand text-white shadow-[0_14px_24px_-14px_rgba(232,69,44,0.9)] transition hover:bg-brand-dark active:scale-95"
+                className="grid size-11 shrink-0 place-items-center rounded-full bg-brand text-white shadow-[0_14px_24px_-14px_color-mix(in_srgb,var(--color-brand)_90%,transparent)] transition hover:bg-brand-dark active:scale-95"
               >
                 <Send className="size-5 rtl:rotate-180" strokeWidth={2} />
               </button>

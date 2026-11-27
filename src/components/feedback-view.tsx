@@ -160,7 +160,7 @@ export function FeedbackView() {
                         className="hidden"
                         onChange={(event) => pickImage(event.target.files?.[0])}
                       />
-                      <span className="grid size-14 place-items-center rounded-2xl bg-brand text-white shadow-[0_16px_28px_-16px_rgba(232,69,44,0.9)]">
+                      <span className="grid size-14 place-items-center rounded-2xl bg-brand text-white shadow-[0_16px_28px_-16px_color-mix(in_srgb,var(--color-brand)_90%,transparent)]">
                         <UploadCloud className="size-7" strokeWidth={1.9} />
                       </span>
                       {image ? (

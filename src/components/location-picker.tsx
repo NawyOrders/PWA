@@ -413,7 +413,7 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
               <button
                 type="button"
                 onClick={confirmMap}
-                className="btn-gradient motion-press mt-4 flex h-14 w-full items-center justify-center rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_rgba(232,69,44,0.95)]"
+                className="btn-gradient motion-press mt-4 flex h-14 w-full items-center justify-center rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_color-mix(in_srgb,var(--color-brand)_95%,transparent)]"
               >
                 {t("تأكيد العنوان")}
               </button>
@@ -551,7 +551,7 @@ export function LocationPicker({ open, onClose }: { open: boolean; onClose: () =
               <button
                 type="button"
                 onClick={save}
-                className="btn-gradient motion-press mt-5 flex h-14 w-full items-center justify-center rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_rgba(232,69,44,0.95)]"
+                className="btn-gradient motion-press mt-5 flex h-14 w-full items-center justify-center rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_color-mix(in_srgb,var(--color-brand)_95%,transparent)]"
               >
                 {t("حفظ العنوان")}
               </button>

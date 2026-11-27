@@ -1491,7 +1491,7 @@ describe("AppProvider — tenant API session and branding", () => {
     expect(api.attachStoredRefresh).not.toHaveBeenCalled();
   });
 
-  it("caches tenant branding without repainting the app palette", async () => {
+  it("caches tenant branding and applies the tenant palette", async () => {
     api.fetchBranding.mockResolvedValue({
       notModified: false,
       branding: { tenantId: "t-1", nameAr: "ناوي", primaryColor: "#123456" },
@@ -1504,7 +1504,7 @@ describe("AppProvider — tenant API session and branding", () => {
     expect(api.fetchBranding).toHaveBeenCalled();
     expect(
       document.documentElement.style.getPropertyValue("--color-brand"),
-    ).toBe("");
+    ).toBe("#123456");
     await waitFor(() =>
       expect(
         JSON.parse(localStorage.getItem(storageKeys.branding)!),
@@ -1588,7 +1588,7 @@ describe("AppProvider — tenant API session and branding", () => {
     expect(result.current.branding).toMatchObject({ primaryColor: "#654321" });
     expect(
       document.documentElement.style.getPropertyValue("--color-brand"),
-    ).toBe("");
+    ).toBe("#654321");
   });
 
   it("keeps working when branding cannot be loaded", async () => {

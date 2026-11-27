@@ -111,6 +111,8 @@ describe("brandingVars", () => {
       "--color-cream": "#FFF7ED",
       "--color-cream-50": "#FFFBF5",
       "--color-brand-contrast": "#FFFFFF",
+      "--color-cream-100": darken("#FFF7ED", 0.04),
+      "--color-line": darken("#FFF7ED", 0.07),
     });
   });
 
@@ -120,17 +122,18 @@ describe("brandingVars", () => {
 });
 
 describe("tenantColorsEnabled", () => {
-  it("is off unless the deploy explicitly asks for the tenant palette", () => {
+  it("is on unless the deploy opts out with false", () => {
+    expect(tenantColorsEnabled()).toBe(true);
+    vi.stubEnv("NEXT_PUBLIC_APPLY_TENANT_COLORS", "false");
     expect(tenantColorsEnabled()).toBe(false);
     vi.stubEnv("NEXT_PUBLIC_APPLY_TENANT_COLORS", "true");
     expect(tenantColorsEnabled()).toBe(true);
-    vi.stubEnv("NEXT_PUBLIC_APPLY_TENANT_COLORS", "yes");
-    expect(tenantColorsEnabled()).toBe(false);
   });
 });
 
-describe("applyBranding — the app keeps its own colours by default", () => {
+describe("applyBranding — opted out with NEXT_PUBLIC_APPLY_TENANT_COLORS=false", () => {
   it("paints no variable and does not touch the theme colour meta", () => {
+    vi.stubEnv("NEXT_PUBLIC_APPLY_TENANT_COLORS", "false");
     document.head.innerHTML = '<meta name="theme-color" content="#E8452C">';
     applyBranding({ primaryColor: "#123456", accentColor: "#ABCDEF", backgroundColor: "#000000" });
 

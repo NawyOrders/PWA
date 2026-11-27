@@ -244,7 +244,7 @@ export function PaymentView() {
                       </>
                     ) : (
                       <>
-                        <span className="grid size-14 place-items-center rounded-full bg-brand text-white shadow-[0_16px_30px_-16px_rgba(232,69,44,0.9)]">
+                        <span className="grid size-14 place-items-center rounded-full bg-brand text-white shadow-[0_16px_30px_-16px_color-mix(in_srgb,var(--color-brand)_90%,transparent)]">
                           <UploadCloud className="size-7" />
                         </span>
                         <span className="text-sm font-extrabold">{t("ارفع إيصال الدفع")}</span>

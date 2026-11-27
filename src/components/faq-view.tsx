@@ -71,7 +71,7 @@ export function FaqView() {
                 aria-label={t("ابحث في الأسئلة الشائعة")}
                 className="min-w-0 flex-1 bg-transparent px-2 text-sm outline-none"
               />
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand text-white shadow-[0_14px_24px_-14px_rgba(232,69,44,0.9)]">
+              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand text-white shadow-[0_14px_24px_-14px_color-mix(in_srgb,var(--color-brand)_90%,transparent)]">
                 <Search className="size-5" strokeWidth={2.2} />
               </span>
             </div>
@@ -95,7 +95,7 @@ export function FaqView() {
                       onClick={() => setOpenId(open ? null : item.id)}
                       className="flex w-full items-center gap-3 text-start"
                     >
-                      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand text-white shadow-[0_12px_22px_-12px_rgba(232,69,44,0.9)]">
+                      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand text-white shadow-[0_12px_22px_-12px_color-mix(in_srgb,var(--color-brand)_90%,transparent)]">
                         <span className="text-xl font-extrabold leading-none" aria-hidden>
                           ?
                         </span>

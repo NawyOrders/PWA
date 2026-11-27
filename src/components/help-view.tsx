@@ -80,7 +80,7 @@ export function HelpView() {
                     href={cardHrefs[card.id]}
                     className="card animate-float-in relative flex flex-col items-center gap-1 px-4 py-6 text-center transition hover:-translate-y-0.5 hover:shadow-pop lg:flex-col lg:items-start lg:px-6 lg:py-7 lg:text-start"
                   >
-                    <span className="grid size-16 place-items-center rounded-[22px] bg-brand text-white shadow-[0_16px_28px_-16px_rgba(232,69,44,0.9)] lg:size-12 lg:rounded-2xl lg:bg-brand-soft lg:text-brand lg:shadow-none">
+                    <span className="grid size-16 place-items-center rounded-[22px] bg-brand text-white shadow-[0_16px_28px_-16px_color-mix(in_srgb,var(--color-brand)_90%,transparent)] lg:size-12 lg:rounded-2xl lg:bg-brand-soft lg:text-brand lg:shadow-none">
                       <Icon className="size-8 lg:size-6" strokeWidth={1.8} />
                     </span>
                     <span className="mt-4 block text-sm font-extrabold leading-6 lg:mt-4 lg:text-base">

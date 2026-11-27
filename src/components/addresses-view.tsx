@@ -160,7 +160,7 @@ export function AddressesView() {
               <button
                 type="button"
                 onClick={saveChanges}
-                className="btn-gradient mt-4 flex h-14 w-full items-center justify-center rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_rgba(232,69,44,0.95)]"
+                className="btn-gradient mt-4 flex h-14 w-full items-center justify-center rounded-2xl text-base font-extrabold text-white shadow-[0_18px_34px_-18px_color-mix(in_srgb,var(--color-brand)_95%,transparent)]"
               >
                 {t("حفظ التغييرات")}
               </button>
