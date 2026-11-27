@@ -22,6 +22,7 @@ import {
   type Order,
   type OrderItem,
   type PaymentMethodId,
+  type Product,
 } from "@/lib/data";
 import {
   savedAddresses,
@@ -46,6 +47,7 @@ import {
   type CustomerSessionPayload,
   type RestaurantBranding,
 } from "@/lib/api";
+import { menuApi, menuProduct } from "@/lib/tenant-menu";
 import { localAccount, rememberLocalAccount } from "@/lib/local-accounts";
 import {
   createAuthFetch,
@@ -119,6 +121,12 @@ type AppContextValue = {
   lines: CartLine[];
   count: number;
   subtotal: number;
+  /**
+   * The product behind a cart line: a live menu item when the tenant API is
+   * configured, otherwise the demo catalogue. Cart screens read names, prices
+   * and images through this so a live item never renders as its raw id.
+   */
+  productById: (productId: string) => Product | undefined;
   addItem: (productId: string, options: AddOptions) => void;
   quickAdd: (productId: string) => void;
   changeQty: (key: string, delta: number) => void;
@@ -314,18 +322,16 @@ function decodeCart(stored: unknown, fallback: CartLine[]): CartLine[] {
     const line = value as Record<string, unknown>;
     const productId = limited(line.productId, 80);
     if (!line.key || typeof line.key !== "string" || !productId) return [];
-    const product = productsById[productId];
-    if (!product) return [];
+    // Live menu ids are not in the demo catalogue, so the shape is what is
+    // checked here; the product itself is resolved when the line is rendered.
     const qty =
       typeof line.qty === "number" && Number.isInteger(line.qty) && line.qty > 0
         ? Math.min(line.qty, 99)
         : 1;
     const price =
-      typeof line.price === "number" &&
-      Number.isFinite(line.price) &&
-      line.price > 0
+      typeof line.price === "number" && Number.isFinite(line.price) && line.price > 0
         ? line.price
-        : product.price;
+        : (productsById[productId]?.price ?? 0);
     const extras = Array.isArray(line.extras)
       ? line.extras
           .filter((extra): extra is string => typeof extra === "string")
@@ -501,7 +507,6 @@ function isOrderItem(value: unknown): value is OrderItem {
   const item = value as Record<string, unknown>;
   return (
     typeof item.productId === "string" &&
-    Boolean(productsById[item.productId]) &&
     typeof item.name === "string" &&
     typeof item.qty === "number" &&
     Number.isInteger(item.qty) &&
@@ -640,6 +645,20 @@ export function AppProvider({
     [],
     decodeCart,
   );
+  /*
+   * The cart is priced from the tenant's own menu, not from the demo
+   * catalogue: every screen that adds or shows a line goes through this map.
+   * The API is the source of truth for ids, sizes and add-ons.
+   */
+  const [liveProducts, setLiveProducts] = useState<Record<string, Product>>({});
+  const products = useMemo(
+    () => (Object.keys(liveProducts).length ? liveProducts : productsById),
+    [liveProducts],
+  );
+  const productById = useCallback(
+    (productId: string) => products[productId],
+    [products],
+  );
   const [favorites, setFavorites, favoritesReady] = usePersistentState<
     string[]
   >(storageKeys.favorites, seedFavorites, decodeFavorites);
@@ -750,6 +769,29 @@ export function AppProvider({
     "ar",
     decodeLang,
   );
+  /*
+   * Menu items come from the tenant API whenever it is configured. Cart lines
+   * and the screens that show them read from this registry, so an item added
+   * from the live menu keeps its name, price, image and size.
+   */
+  useEffect(() => {
+    if (!apiConfigured()) return;
+    let cancelled = false;
+    menuApi
+      .items({ pageSize: 200 })
+      .then((page) => {
+        if (cancelled) return;
+        const map: Record<string, Product> = {};
+        for (const item of page.items) map[item.id] = menuProduct(item, lang);
+        setLiveProducts(map);
+      })
+      .catch(() => {
+        /* the demo catalogue stays as the fallback */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [lang]);
   const [fulfilment, setFulfilment] = useState<"delivery" | "pickup">(
     "delivery",
   );
@@ -1273,7 +1315,7 @@ export function AppProvider({
 
   const addItem = useCallback(
     (productId: string, options: AddOptions) => {
-      const product = productsById[productId];
+      const product = products[productId];
       if (!product) return;
       const size = options.size ?? "";
       const extras = options.extras?.length ? [...options.extras].sort() : [];
@@ -1310,7 +1352,7 @@ export function AppProvider({
 
   const quickAdd = useCallback(
     (productId: string) => {
-      const product = productsById[productId];
+      const product = products[productId];
       if (!product) return;
       addItem(productId, {
         price: product.price,
@@ -1671,7 +1713,7 @@ export function AppProvider({
       const now = Date.now();
       const items: OrderItem[] = lines.map((line) => ({
         productId: line.productId,
-        name: productsById[line.productId]?.name ?? line.productId,
+        name: products[line.productId]?.name ?? line.productId,
         qty: line.qty,
         price: line.price,
         size: line.size,
@@ -1714,7 +1756,7 @@ export function AppProvider({
           .map((item) => `${item.qty} ${item.name}`)
           .join(" + "),
         total: Math.max(0, subtotal - discount + fee),
-        image: productsById[items[0].productId]?.image ?? "/images/burger.webp",
+        image: products[items[0].productId]?.image ?? "/images/burger.webp",
         eta: fulfilment === "delivery" ? "25 - 35 دقيقة" : "20 - 30 دقيقة",
         items,
         paymentMethod,
@@ -1748,6 +1790,7 @@ export function AppProvider({
       lines,
       count,
       subtotal,
+      productById,
       addItem,
       quickAdd,
       changeQty,
@@ -1801,6 +1844,7 @@ export function AppProvider({
       lines,
       count,
       subtotal,
+      productById,
       addItem,
       quickAdd,
       changeQty,
