@@ -87,12 +87,12 @@ export function PaymentView() {
     setError("");
   };
 
-  const finalize = () => {
+  const finalize = async () => {
     if (submittedRef.current) return;
     submittedRef.current = true;
     setShowModal(false);
 
-    const order = placeOrder(method);
+    const order = await placeOrder(method);
     if (!order) {
       submittedRef.current = false;
       toast(t("سلتك فاضية"), "info");
@@ -119,7 +119,7 @@ export function PaymentView() {
       setShowModal(true);
       return;
     }
-    finalize();
+    void finalize();
   };
 
   const copyNumber = async () => {
@@ -362,7 +362,7 @@ export function PaymentView() {
               {t("سيتم مراجعة الإثبات من قبل المطعم خلال دقائق قليلة، وتم إشعارك عند تأكيد الطلب.")}
             </p>
 
-            <Button block className="mt-5" onClick={finalize}>
+            <Button block className="mt-5" onClick={() => void finalize()}>
               <Check className="size-4" />
               {t("تأكيد")}
             </Button>

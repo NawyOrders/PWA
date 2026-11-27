@@ -3,15 +3,14 @@
 import Image from "next/image";
 import { Trash2, Wallet } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { productsById } from "@/lib/data";
 import { CartSummary } from "@/components/cart-summary";
 import { CheckoutShell, EmptyState, MobilePageHeader, Price, QtyStepper } from "@/components/ui";
 
 function CartItem({ lineKey }: { lineKey: string }) {
-  const { lines, changeQty, removeLine, t, lang } = useApp();
+  const { lines, changeQty, removeLine, t, lang, productById } = useApp();
   const line = lines.find((item) => item.key === lineKey);
   if (!line) return null;
-  const product = productsById[line.productId];
+  const product = productById(line.productId);
   if (!product) return null;
 
   return (

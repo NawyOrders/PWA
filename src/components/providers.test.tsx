@@ -472,8 +472,8 @@ describe("AppProvider — order lifecycle", () => {
     expect(result.current.orders).toHaveLength(seedOrders.length);
 
     let placed: Order | null = null;
-    act(() => {
-      placed = result.current.placeOrder("cash");
+    await act(async () => {
+      placed = await result.current.placeOrder("cash");
     });
 
     expect(placed).not.toBeNull();
@@ -511,8 +511,8 @@ describe("AppProvider — order lifecycle", () => {
     expect(result.current.selectedAddressId).toBeNull();
 
     let placed: Order | null = null;
-    act(() => {
-      placed = result.current.placeOrder("cash");
+    await act(async () => {
+      placed = await result.current.placeOrder("cash");
     });
 
     expect(placed).not.toBeNull();
@@ -527,8 +527,8 @@ describe("AppProvider — order lifecycle", () => {
     act(() => result.current.applyCoupon("nawy20"));
 
     let placed: Order | null = null;
-    act(() => {
-      placed = result.current.placeOrder("wallet");
+    await act(async () => {
+      placed = await result.current.placeOrder("wallet");
     });
 
     expect(placed!.total).toBe(345 - 50);
@@ -542,11 +542,11 @@ describe("AppProvider — order lifecycle", () => {
     const { result } = await seededApp();
     let first: Order | null = null;
     let second: Order | null = null;
-    act(() => {
-      first = result.current.placeOrder("cash");
+    await act(async () => {
+      first = await result.current.placeOrder("cash");
     });
-    act(() => {
-      second = result.current.placeOrder("cash");
+    await act(async () => {
+      second = await result.current.placeOrder("cash");
     });
     expect(first!.id).toBe("10249");
     expect(second!.id).toBe("10250");
@@ -556,8 +556,8 @@ describe("AppProvider — order lifecycle", () => {
     const { result } = await app();
     act(() => result.current.clearCart(true));
     let placed: Order | null = null;
-    act(() => {
-      placed = result.current.placeOrder("cash");
+    await act(async () => {
+      placed = await result.current.placeOrder("cash");
     });
     expect(placed).toBeNull();
     expect(result.current.orders).toHaveLength(seedOrders.length);
@@ -658,8 +658,8 @@ describe("AppProvider — local account ownership", () => {
     });
 
     act(() => result.current.toggleFavorite("beef-burger"));
-    act(() => {
-      result.current.placeOrder("cash");
+    await act(async () => {
+      await result.current.placeOrder("cash");
     });
 
     await waitFor(() => {
@@ -680,8 +680,8 @@ describe("AppProvider — local account ownership", () => {
       result.current.login();
     });
     act(() => result.current.toggleFavorite("beef-burger"));
-    act(() => {
-      result.current.placeOrder("cash");
+    await act(async () => {
+      await result.current.placeOrder("cash");
     });
     await waitFor(() =>
       expect(localAccount(NORMALIZED)?.orders).toHaveLength(1),
@@ -872,12 +872,13 @@ describe("AppProvider — local account ownership", () => {
     await waitFor(() => expect(result.current.loggedIn).toBe(true));
 
     expect(result.current.favorites).toEqual(seedFavorites);
-    expect(result.current.orders).toHaveLength(seedOrders.length);
+    // Live orders belong to the tenant, so no demo history is shown either.
+    expect(result.current.orders).toEqual([]);
     expect(result.current.points).toBe(0);
 
     act(() => result.current.toggleFavorite("fries"));
-    act(() => {
-      result.current.placeOrder("cash");
+    await act(async () => {
+      await result.current.placeOrder("cash");
     });
     const recorded = result.current.orders.length;
 

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { ArrowLeft, Tag } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { deliveryFee as baseDeliveryFee, formatPrice, productsById } from "@/lib/data";
+import { deliveryFee as baseDeliveryFee, formatPrice } from "@/lib/data";
 
 export function CartSummary({
   ctaLabel,
@@ -30,7 +30,7 @@ export function CartSummary({
   children?: ReactNode;
   className?: string;
 }) {
-  const { lines, count, subtotal, t, coupon, applyCoupon, orderNote } = useApp();
+  const { lines, count, subtotal, t, coupon, applyCoupon, orderNote, productById } = useApp();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
 
@@ -63,7 +63,7 @@ export function CartSummary({
       {showItems ? (
         <ul className="mt-4 space-y-3.5">
           {lines.map((line) => {
-            const product = productsById[line.productId];
+            const product = productById(line.productId);
             if (!product) return null;
             return (
               <li key={line.key} className="flex items-center gap-3">
