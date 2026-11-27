@@ -48,6 +48,7 @@ import {
   type RestaurantBranding,
 } from "@/lib/api";
 import { menuApi, menuProduct } from "@/lib/tenant-menu";
+import { customerOrders, orderApi } from "@/lib/tenant-orders";
 import { localAccount, rememberLocalAccount } from "@/lib/local-accounts";
 import {
   createAuthFetch,
@@ -218,7 +219,8 @@ type AppContextValue = {
   deliveryDetails: DeliveryDetails;
   updateDeliveryDetails: (patch: Partial<DeliveryDetails>) => void;
   orders: Order[];
-  placeOrder: (paymentMethod: PaymentMethodId) => Order | null;
+  /** Places the order on the tenant API when a customer is signed in. */
+  placeOrder: (paymentMethod: PaymentMethodId) => Promise<Order | null>;
   fulfilment: "delivery" | "pickup";
   setFulfilment: (mode: "delivery" | "pickup") => void;
   toast: (message: string, kind?: ToastKind) => void;
@@ -724,9 +726,12 @@ export function AppProvider({
       seedDeliveryDetails,
       decodeDeliveryDetails,
     );
+  /* The tenant's API is the record of what this customer ordered, so a live
+     storefront starts with no history rather than the demo rows. */
+  const liveTransport = authTransport() === "live";
   const [orders, setOrders, ordersReady] = usePersistentState<Order[]>(
     storageKeys.orders,
-    seedOrders,
+    liveTransport ? [] : seedOrders,
     decodeOrders,
   );
   const [coupon, setCoupon, couponReady] = usePersistentState<string | null>(
@@ -1224,6 +1229,36 @@ export function AppProvider({
     setSelectedAddressId,
   ]);
 
+  // Order history is the tenant's too: the dashboard is the record of what was
+  // ordered, so the storefront reads it back rather than trusting this device.
+  // Demo mode keeps its seeded rows.
+  useEffect(() => {
+    if (
+      !ready ||
+      authTransport() !== "live" ||
+      !customer ||
+      sessionStatus !== "active"
+    )
+      return;
+    const customerId = customer.customerId;
+    let cancelled = false;
+    setOrders([]);
+    orderApi
+      .myOrders(authFetch)
+      .then((remote) => {
+        if (
+          !cancelled &&
+          grantRef.current &&
+          customer?.customerId === customerId
+        )
+          setOrders(customerOrders(remote, lang));
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, customer, sessionStatus, authFetch, lang, setOrders]);
+
   /*
    * An older build kept the refresh token in `localStorage`. Hand it to the app
    * server once — it goes into the httpOnly jar and is never sent back — and
@@ -1707,7 +1742,7 @@ export function AppProvider({
   );
 
   const placeOrder = useCallback(
-    (paymentMethod: PaymentMethodId) => {
+    async (paymentMethod: PaymentMethodId): Promise<Order | null> => {
       if (lines.length === 0) return null;
 
       const now = Date.now();
@@ -1736,6 +1771,46 @@ export function AppProvider({
           /^\d+$/.test(order.id) ? Math.max(max, Number(order.id)) : max,
         10000,
       );
+      /*
+       * A signed-in customer's order is placed on the tenant API, which is what
+       * the restaurant's dashboard reads. The local order below only exists for
+       * the demo path, where there is no server row to write.
+       */
+      let serverId: string | null = null;
+      if (customer && authTransport() === "live") {
+        const apiMethod =
+          paymentMethod === "cash"
+            ? "Cash"
+            : paymentMethod === "instapay"
+              ? "InstaPay"
+              : "Wallet";
+        const payload = {
+          branchId: branch?.id ?? null,
+          fulfilmentType: fulfilment === "pickup" ? 1 : 0,
+          address: fulfilment === "pickup" ? t(branch?.name ?? "") : deliveryAddress,
+          items: lines.map((line) => ({
+            menuItemId: line.productId,
+            itemSizeId:
+              products[line.productId]?.sizes?.find(
+                (size) => size.label === line.size,
+              )?.id ?? null,
+            quantity: line.qty,
+          })),
+          addOnIds: [],
+          customerNotes: orderNote?.trim() ? orderNote.trim() : null,
+          paymentMethod: apiMethod,
+          couponCode: coupon ?? null,
+        };
+        try {
+          const placed = await orderApi.place(payload, authFetch);
+          serverId = placed?.orderNumber ? String(placed.orderNumber) : null;
+        } catch {
+          // A rejected order must not empty the cart or pretend it was placed.
+          toast(t("تعذر إرسال الطلب، جرّب تاني"), "info");
+          return null;
+        }
+      }
+
       const formattedDate = new Intl.DateTimeFormat(
         lang === "ar" ? "ar-EG" : "en-GB",
         {
@@ -1748,7 +1823,7 @@ export function AppProvider({
       ).format(new Date(now));
 
       const order: Order = {
-        id: String(latestId + 1),
+        id: serverId ?? String(latestId + 1),
         status: "preparing",
         title: items[0].name,
         date: lang === "ar" ? `اليوم، ${formattedDate}` : formattedDate,
@@ -1771,7 +1846,10 @@ export function AppProvider({
     },
     [
       addresses,
+      authFetch,
       coupon,
+      customer,
+      orderNote,
       fulfilment,
       lang,
       lines,

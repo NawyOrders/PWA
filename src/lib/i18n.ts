@@ -173,6 +173,7 @@ const en: Record<string, string> = {
 
   // cart
   "سلتك فاضية": "Your cart is empty",
+  "تعذر إرسال الطلب، جرّب تاني": "We could not send your order, please try again",
   "لسه مضفتش حاجة، اختار طبقك المفضل من القائمة وابدأ طلبك.": "You haven't added anything yet. Pick your favorite dish from the menu and start your order.",
   "سلتك فيها كل اللي بتحبه": "Everything you love, in one cart",
   "راجع طلبك، وعدّل الكمية قبل ما تكمل.": "Review your order and adjust quantities before checkout.",

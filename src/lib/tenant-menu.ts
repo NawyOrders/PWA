@@ -39,6 +39,9 @@ async function request<T>(path: string, init?: RequestInit, authFetch?: AuthFetc
   return envelope.data as T;
 }
 
+/** Shared envelope-unwrapping transport for the storefront's tenant endpoints. */
+export const tenantRequest = request;
+
 function query(values: Record<string, string | number | undefined>): string {
   const params = new URLSearchParams();
   Object.entries(values).forEach(([key, value]) => { if (value !== undefined && value !== "") params.set(key, String(value)); });
