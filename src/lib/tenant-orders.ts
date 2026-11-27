@@ -127,13 +127,28 @@ export function customerOrders(items: CustomerOrderDto[], lang: "ar" | "en"): Or
   });
 }
 
+/** A v4 uuid for one checkout attempt, with a fallback for older browsers. */
+export function idempotencyKey(): string {
+  const uuid = globalThis.crypto?.randomUUID;
+  if (typeof uuid === "function") return uuid.call(globalThis.crypto);
+  return `ab-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
 export const orderApi = {
-  place: (payload: PlaceOrderPayload, authFetch: AuthFetch) =>
+  /**
+   * `POST /api/v1/orders` refuses a request without an `Idempotency-Key`
+   * header. The key also makes a retried submit land on the same order instead
+   * of placing a second one.
+   */
+  place: (payload: PlaceOrderPayload, authFetch: AuthFetch, key: string) =>
     tenantRequest<PlacedOrder>(
       "/api/v1/orders",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": key,
+        },
         body: JSON.stringify(payload),
       },
       authFetch,
