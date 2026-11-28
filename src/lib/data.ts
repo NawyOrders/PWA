@@ -453,7 +453,7 @@ export const notifications: AppNotification[] = [
   {
     id: "n2",
     title: "عرض الشقاوة مستنيك",
-    body: "خصم 20% على البرجر لحد 50 جنيه. استخدم كود NAWY20، العرض لآخر اليوم.",
+    body: "خصم 20% على البرجر لحد 50 جنيه. العرض لآخر اليوم.",
     time: "منذ ساعة",
     group: "today",
     unread: true,

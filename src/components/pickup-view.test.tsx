@@ -78,12 +78,4 @@ describe("PickupView", () => {
     );
     expect(router.push).toHaveBeenCalledWith("/checkout/branch");
   });
-
-  it("applies the persisted NAWY20 discount to the total", async () => {
-    localStorage.setItem(storageKeys.coupon, JSON.stringify("NAWY20"));
-    renderApp(<PickupView />);
-
-    expect(await screen.findByText(/^- 50/)).toBeInTheDocument();
-    expect(screen.getByText(/^325/)).toBeInTheDocument();
-  });
 });

@@ -50,7 +50,7 @@ import {
   type RestaurantBranding,
 } from "@/lib/api";
 import { menuApi, menuProduct, TenantApiError } from "@/lib/tenant-menu";
-import { customerOrders, idempotencyKey, orderApi, uploadPaymentProof } from "@/lib/tenant-orders";
+import { couponApi, couponErrorMessage, customerOrders, idempotencyKey, orderApi, uploadPaymentProof } from "@/lib/tenant-orders";
 import { localAccount, rememberLocalAccount } from "@/lib/local-accounts";
 import {
   createAuthFetch,
@@ -140,7 +140,10 @@ type AppContextValue = {
   removeLine: (key: string) => void;
   clearCart: (silent?: boolean) => void;
   coupon: string | null;
-  applyCoupon: (code: string) => boolean;
+  /** Discount (EGP) the server quoted for the applied coupon; 0 when none. */
+  couponDiscount: number;
+  /** Validates the code on the server; `message` says why when it is refused. */
+  applyCoupon: (code: string) => Promise<{ ok: true } | { ok: false; message: string }>;
   orderNote: string;
   setOrderNote: (note: string) => void;
   profile: Profile;
@@ -613,7 +616,7 @@ function decodeOrders(stored: unknown, fallback: Order[]): Order[] {
 }
 
 function decodeCoupon(stored: unknown): string | null {
-  return stored === "NAWY20" ? "NAWY20" : null;
+  return typeof stored === "string" && stored.trim() ? stored.trim() : null;
 }
 
 function decodeOrderNote(stored: unknown, fallback: string): string {
@@ -674,6 +677,9 @@ export function placeOrderErrorMessage(error: unknown): string {
     }
     if (keys.includes("InvalidPaymentMethod")) {
       return "طريقة الدفع دي مش متاحة حالياً";
+    }
+    if (keys.includes("Coupon")) {
+      return couponErrorMessage(error);
     }
   }
   return "تعذر إرسال الطلب، جرّب تاني";
@@ -1561,15 +1567,6 @@ export function AppProvider({
     [toast, t, setLines, setCoupon, setOrderNote],
   );
 
-  const applyCoupon = useCallback(
-    (code: string) => {
-      if (code.trim().toUpperCase() !== "NAWY20") return false;
-      setCoupon("NAWY20");
-      return true;
-    },
-    [setCoupon],
-  );
-
   const updateProfile = useCallback(
     (patch: Partial<Profile>) => {
       setProfile((current) => ({ ...current, ...patch }));
@@ -1875,6 +1872,56 @@ export function AppProvider({
     [lines],
   );
 
+  /* The server owns coupons: the code is checked and the discount quoted by
+     POST /api/v1/coupons/validate, never worked out in the browser. */
+  const couponFee = fulfilment === "delivery" ? (currentDeliveryFee ?? 0) : 0;
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  useEffect(() => {
+    if (!coupon || subtotal <= 0 || authTransport() !== "live") {
+      setCouponDiscount(0);
+      return;
+    }
+    let stale = false;
+    couponApi
+      .validate(coupon, subtotal, couponFee)
+      .then((quote) => {
+        if (!stale) setCouponDiscount(Math.max(0, Number(quote.totalDiscountAmount) || 0));
+      })
+      .catch((error) => {
+        if (stale) return;
+        setCouponDiscount(0);
+        // A coupon the server no longer accepts (deactivated, expired, cart
+        // below its minimum) is dropped with the reason; a network blip is not.
+        if (error instanceof TenantApiError) {
+          setCoupon(null);
+          toast(t(couponErrorMessage(error)), "info");
+        }
+      });
+    return () => {
+      stale = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coupon, subtotal, couponFee]);
+
+  const applyCoupon = useCallback(
+    async (code: string): Promise<{ ok: true } | { ok: false; message: string }> => {
+      const trimmed = code.trim();
+      if (!trimmed) return { ok: false, message: "اكتب كود الخصم الأول" };
+      if (authTransport() !== "live") {
+        return { ok: false, message: "كود الخصم غير صحيح" };
+      }
+      try {
+        const quote = await couponApi.validate(trimmed, subtotal, couponFee);
+        setCouponDiscount(Math.max(0, Number(quote.totalDiscountAmount) || 0));
+        setCoupon(quote.code || trimmed.toUpperCase());
+        return { ok: true };
+      } catch (error) {
+        return { ok: false, message: couponErrorMessage(error) };
+      }
+    },
+    [setCoupon, subtotal, couponFee],
+  );
+
   const placeOrder = useCallback(
     async (paymentMethod: PaymentMethodId, proof?: File | null): Promise<Order | null> => {
       if (lines.length === 0) return null;
@@ -1898,7 +1945,7 @@ export function AppProvider({
       const deliveryAddress = address
         ? `${t(address.area)}${separator}${t(address.detail)}`
         : t(user.address);
-      const discount = coupon ? Math.min(Math.round(subtotal * 0.2), 50) : 0;
+      const discount = coupon ? couponDiscount : 0;
       const fee = fulfilment === "delivery" ? (currentDeliveryFee ?? 0) : 0;
       const latestId = orders.reduce(
         (max, order) =>
@@ -1998,6 +2045,7 @@ export function AppProvider({
       addresses,
       authFetch,
       coupon,
+      couponDiscount,
       currentDeliveryFee,
       customer,
       orderNote,
@@ -2026,6 +2074,7 @@ export function AppProvider({
       removeLine,
       clearCart,
       coupon,
+      couponDiscount,
       applyCoupon,
       orderNote,
       setOrderNote,
@@ -2081,6 +2130,7 @@ export function AppProvider({
       removeLine,
       clearCart,
       coupon,
+      couponDiscount,
       applyCoupon,
       orderNote,
       setOrderNote,

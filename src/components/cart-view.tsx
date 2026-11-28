@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { bypassImageOptimizer } from "@/lib/tenant-menu";
-import { Trash2, Wallet } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { CartSummary } from "@/components/cart-summary";
 import { CheckoutShell, EmptyState, MobilePageHeader, Price, QtyStepper } from "@/components/ui";
@@ -113,11 +113,6 @@ export function CartView() {
             delivery={mode === "delivery"}
             note="هتراجع بيانات التوصيل والدفع قبل تأكيد الطلب."
           />
-
-          <div className="hidden items-center gap-2 rounded-2xl bg-brand-soft/60 px-4 py-3 text-[11px] font-semibold text-brand-dark lg:flex">
-            <Wallet className="size-4" />
-            {t("جرّب كود NAWY20 واستمتع بخصم 20% لحد 50 جنيه.")}
-          </div>
         </>
       }
     />

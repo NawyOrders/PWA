@@ -31,20 +31,25 @@ export function CartSummary({
   children?: ReactNode;
   className?: string;
 }) {
-  const { lines, count, subtotal, t, coupon, applyCoupon, orderNote, productById, deliveryFee: quotedFee } = useApp();
+  const { lines, count, subtotal, t, coupon, couponDiscount, applyCoupon, orderNote, productById, deliveryFee: quotedFee } = useApp();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
 
-  const discount = coupon ? Math.min(Math.round(subtotal * 0.2), 50) : 0;
+  const discount = coupon ? couponDiscount : 0;
   const fee = delivery && subtotal > 0 ? quotedFee : 0;
   const total = Math.max(0, subtotal - discount + (fee ?? 0));
 
-  const applyCode = () => {
-    if (applyCoupon(code)) {
+  const [checking, setChecking] = useState(false);
+  const applyCode = async () => {
+    if (checking) return;
+    setChecking(true);
+    const result = await applyCoupon(code);
+    setChecking(false);
+    if (result.ok) {
       setCode("");
       setError("");
     } else {
-      setError("كود الخصم غير صحيح");
+      setError(result.message);
     }
   };
 
@@ -115,15 +120,16 @@ export function CartSummary({
           <button
             type="button"
             onClick={applyCode}
+            disabled={checking}
             className="h-11 rounded-xl bg-brand-soft px-4 text-xs font-bold text-brand transition hover:bg-brand/15"
           >
-            {t("تطبيق")}
+            {checking ? t("جارٍ التحقق") : t("تطبيق")}
           </button>
         </div>
         {error ? <p className="mt-1.5 text-[11px] font-semibold text-brand">{t(error)}</p> : null}
         {coupon ? (
           <p className="motion-fade mt-1.5 text-[11px] font-semibold text-success">
-            {t("تم تطبيق كود {code} — خصم 20%", { code: coupon })}
+            {t("تم تطبيق كود {code} — خصم {amount} جنيه", { code: coupon, amount: formatPrice(discount) })}
           </p>
         ) : null}
       </div>
@@ -145,7 +151,7 @@ export function CartSummary({
         </div>
         {discount > 0 ? (
           <div className="flex items-center justify-between text-success">
-            <dt>{t("الخصم (NAWY20)")}</dt>
+            <dt>{t("الخصم ({code})", { code: coupon ?? "" })}</dt>
             <dd className="font-bold">- {formatPrice(discount)} {t("جنيه")}</dd>
           </div>
         ) : null}
