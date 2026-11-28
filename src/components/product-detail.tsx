@@ -50,7 +50,7 @@ export function ProductDetail({ product }: { product: Product }) {
 
   const addToCart = () => {
     if (product.isAvailable === false) {
-      toast(t("هذا الصنف غير متاح في الفرع المحدد"), "info");
+      toast(t("هذا الصنف غير متاح في الفرع المحدد"), "error");
       return;
     }
     addItem(product.id, {
