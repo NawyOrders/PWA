@@ -12,7 +12,7 @@ export function CartSummary({
   ctaLabel,
   ctaHref,
   onCta,
-  ctaDisabled = false,
+  ctaDisabled: ctaDisabledProp = false,
   showCta = true,
   showItems = false,
   delivery = true,
@@ -34,6 +34,10 @@ export function CartSummary({
   const { lines, count, subtotal, t, coupon, couponDiscount, applyCoupon, orderNote, productById, deliveryFee: quotedFee } = useApp();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  // A line the selected branch does not sell blocks the next step until the
+  // customer removes it or picks a branch that has it. Nothing is removed here.
+  const hasUnavailable = lines.some((line) => productById(line.productId)?.isAvailable === false);
+  const ctaDisabled = ctaDisabledProp || hasUnavailable;
 
   const discount = coupon ? couponDiscount : 0;
   const fee = delivery && subtotal > 0 ? quotedFee : 0;
@@ -162,6 +166,12 @@ export function CartSummary({
           </dd>
         </div>
       </dl>
+
+      {hasUnavailable ? (
+        <p role="alert" className="mt-3 rounded-2xl bg-red-50 px-3 py-2 text-[11px] font-semibold leading-5 text-red-700">
+          {t("في أصناف في السلة مش متاحة في الفرع ده. احذفها أو اختار فرع تاني عشان تكمل.")}
+        </p>
+      ) : null}
 
       {showCta ? (
         ctaHref && !ctaDisabled ? (

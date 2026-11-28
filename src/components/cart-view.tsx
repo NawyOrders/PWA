@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { bypassImageOptimizer } from "@/lib/tenant-menu";
-import { Trash2 } from "lucide-react";
+import { AlertTriangle, Trash2 } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { CartSummary } from "@/components/cart-summary";
 import { CheckoutShell, EmptyState, MobilePageHeader, Price, QtyStepper } from "@/components/ui";
@@ -29,6 +29,12 @@ function CartItem({ lineKey }: { lineKey: string }) {
           </p>
         ) : null}
         {line.note ? <p className="mt-1 text-[10px] text-muted">{t("ملاحظات: ")}{line.note}</p> : null}
+        {product.isAvailable === false ? (
+          <p role="alert" className="mt-1 flex items-center gap-1 text-[11px] font-bold text-red-600">
+            <AlertTriangle className="size-3.5" />
+            {t("هذا الصنف غير متاح في الفرع المحدد")}
+          </p>
+        ) : null}
         <div className="mt-2 flex items-center justify-between gap-2">
           <Price value={line.price * line.qty} size="md" />
           <QtyStepper

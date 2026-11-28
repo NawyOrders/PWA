@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import Link from "next/link";
-import { Check, ShoppingCart } from "lucide-react";
+import { AlertTriangle, Check, ShoppingCart } from "lucide-react";
 import {
   branches as demoBranches,
   deliveryFee as demoDeliveryFee,
@@ -246,7 +246,7 @@ type AppContextValue = {
   t: (text: string, vars?: Vars) => string;
 };
 
-type ToastKind = "cart" | "info";
+type ToastKind = "cart" | "info" | "error";
 
 type ToastState = { id: number; message: string; kind: ToastKind } | null;
 
@@ -994,7 +994,9 @@ export function AppProvider({
         if (cancelled) return;
         const map: Record<string, Product> = {};
         for (const item of page.items) {
-          if (item.isAvailable === false) continue;
+          // Keep the items this branch has switched off, flagged
+          // `isAvailable: false`: a cart line for one must still show, with a
+          // message, instead of vanishing and failing at checkout.
           map[item.id] = menuProduct(item, lang);
         }
         setLiveProducts(map);
@@ -1165,7 +1167,10 @@ export function AppProvider({
   const toast = useCallback((message: string, kind: ToastKind = "cart") => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     setToastState({ id: Date.now(), message, kind });
-    toastTimer.current = setTimeout(() => setToastState(null), 2800);
+    toastTimer.current = setTimeout(
+      () => setToastState(null),
+      kind === "error" ? 4500 : 2800,
+    );
   }, []);
 
   /* One conditional GET per load: the stored ETag turns a fresh branding into
@@ -1259,7 +1264,7 @@ export function AppProvider({
     refreshRetries.current = 0;
     retryDeadline.current = null;
     setRefreshRetryAt(null);
-    toast(t("انتهت الجلسة، سجّل الدخول تاني"), "info");
+    toast(t("انتهت الجلسة، سجّل الدخول تاني"), "error");
   }, [
     applyGrant,
     setCustomer,
@@ -1488,6 +1493,10 @@ export function AppProvider({
     (productId: string, options: AddOptions, shown?: Product) => {
       const product = products[productId] ?? shown;
       if (!product) return;
+      if (product.isAvailable === false) {
+        toast(t("هذا الصنف غير متاح في الفرع المحدد"), "error");
+        return;
+      }
       const size = options.size ?? "";
       const extras = options.extras?.length ? [...options.extras].sort() : [];
       const note = options.note?.trim() ?? "";
@@ -1518,7 +1527,7 @@ export function AppProvider({
       });
       toast(t("تمت إضافة {name} إلى السلة", { name: t(product.name) }));
     },
-    [toast, t, setLines],
+    [products, toast, t, setLines],
   );
 
   const quickAdd = useCallback(
@@ -1534,7 +1543,7 @@ export function AppProvider({
         product,
       );
     },
-    [addItem],
+    [addItem, products],
   );
 
   const changeQty = useCallback(
@@ -1783,7 +1792,7 @@ export function AppProvider({
           .catch(() =>
             toast(
               t("تعذر حفظ العنوان. تحقق من البيانات وحاول مرة أخرى"),
-              "info",
+              "error",
             ),
           );
         return;
@@ -1831,7 +1840,7 @@ export function AppProvider({
             );
             setSelectedAddressId(updated.id);
           })
-          .catch(() => toast(t("تعذر تعيين العنوان الافتراضي"), "info"));
+          .catch(() => toast(t("تعذر تعيين العنوان الافتراضي"), "error"));
         return;
       }
       setSelectedAddressId(id);
@@ -1925,6 +1934,10 @@ export function AppProvider({
   const placeOrder = useCallback(
     async (paymentMethod: PaymentMethodId, proof?: File | null): Promise<Order | null> => {
       if (lines.length === 0) return null;
+      if (lines.some((line) => products[line.productId]?.isAvailable === false)) {
+        toast(t("في أصناف في السلة مش متاحة في الفرع ده. احذفها أو اختار فرع تاني عشان تكمل."), "error");
+        return null;
+      }
 
       const now = Date.now();
       const items: OrderItem[] = lines.map((line) => ({
@@ -1988,7 +2001,7 @@ export function AppProvider({
           // A rejected order must not empty the cart or pretend it was placed.
           // Tell the customer why (branch closed, delivery unavailable, ...)
           // instead of the generic failure.
-          toast(t(placeOrderErrorMessage(error)), "info");
+          toast(t(placeOrderErrorMessage(error)), "error");
           return null;
         }
         // InstaPay/wallet orders need the receipt on the server: the
@@ -2003,7 +2016,10 @@ export function AppProvider({
               proof.type || "image/jpeg",
             );
           } catch {
-            toast(t("الطلب اتبعت، بس إثبات الدفع مترفعش — ابعته من صفحة طلباتك"), "info");
+            toast(
+              t("الطلب اتبعت، بس إثبات الدفع مترفعش — ابعته من صفحة طلباتك"),
+              "error",
+            );
           }
         }
       }
@@ -2053,12 +2069,14 @@ export function AppProvider({
       lang,
       lines,
       orders,
+      products,
       selectedAddressId,
       selectedBranchId,
       setOrders,
       storeBranches,
       subtotal,
       t,
+      toast,
     ],
   );
 
@@ -2199,9 +2217,15 @@ export function AppProvider({
             key={toastState.id}
             className="animate-toast-in pointer-events-auto flex items-center gap-3 rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white shadow-[0_20px_50px_-20px_rgba(0,0,0,0.6)]"
           >
-            <span className="grid size-7 place-items-center rounded-full bg-brand text-white">
+            <span
+              className={`grid size-7 place-items-center rounded-full text-white ${
+                toastState.kind === "error" ? "bg-red-600" : "bg-brand"
+              }`}
+            >
               {toastState.kind === "cart" ? (
                 <ShoppingCart className="size-4" />
+              ) : toastState.kind === "error" ? (
+                <AlertTriangle className="size-4" />
               ) : (
                 <Check className="size-4" />
               )}

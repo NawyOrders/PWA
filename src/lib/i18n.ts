@@ -712,6 +712,7 @@ const en: Record<string, string> = {
   "العنوان الافتراضي": "Default address",
   "لا تتوفر إزالة العناوين من الخادم حالياً.": "Address deletion is not supported by the server yet.",
   "تعذر حفظ العنوان. تحقق من البيانات وحاول مرة أخرى": "Could not save the address. Check the details and try again.",
+  "في أصناف في السلة مش متاحة في الفرع ده. احذفها أو اختار فرع تاني عشان تكمل.": "Some items in your cart are not available at this branch. Remove them or pick another branch to continue.",
   "تعذر تعيين العنوان الافتراضي": "Could not set the default address.",
   "منزل العائلة": "Family home",
   "القهوة": "The café",

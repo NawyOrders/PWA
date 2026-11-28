@@ -55,7 +55,7 @@ export function MenuRow({ product, className = "" }: { product: Product; classNa
       <FavoriteButton productId={product.id} className="absolute end-3 top-3 z-20 size-9 lg:size-10" />
       <div className="absolute bottom-3 end-3 z-20">
         {!cartLine ? (
-          <AddButton onClick={() => product.isAvailable === false ? toast(t("هذا الصنف غير متاح في الفرع المحدد"), "info") : quickAdd(product.id, product)} className="size-10 lg:size-11" />
+          <AddButton onClick={() => product.isAvailable === false ? toast(t("هذا الصنف غير متاح في الفرع المحدد"), "error") : quickAdd(product.id, product)} className="size-10 lg:size-11" />
         ) : (
           <QtyStepper
             value={cartLine.qty}

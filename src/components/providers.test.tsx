@@ -2209,3 +2209,50 @@ describe("checkout failure reasons", () => {
     expect(apiPaymentMethod("wallet")).toBe("MobileWallet");
   });
 });
+
+describe("AppProvider — branch menu and the cart", () => {
+  function liveBranding() {
+    apiMode.transport = "live";
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    api.refreshSession.mockResolvedValue(tokenPair());
+    api.revokeSession.mockResolvedValue(undefined);
+    api.attachStoredRefresh.mockResolvedValue(undefined);
+  }
+
+  it("keeps a line the branch switched off in the cart, flagged, and blocks checkout and adding", async () => {
+    liveBranding();
+    const { menuApi } = await import("@/lib/tenant-menu");
+    const spy = vi.spyOn(menuApi, "items").mockResolvedValue({
+      items: [
+        { id: "fish-burger", nameAr: "برجر سمك", nameEn: "Fish Burger", price: 125, isAvailable: true },
+        { id: "beef-burger", nameAr: "برجر لحم", nameEn: "Beef Burger", price: 120, isAvailable: false },
+      ],
+      totalCount: 2, page: 1, pageSize: 100, totalPages: 1, hasPreviousPage: false, hasNextPage: false,
+    } as never);
+    const { result } = await seededApp();
+    await waitFor(() => expect(result.current.productById("beef-burger")?.isAvailable).toBe(false));
+    // nothing was removed
+    expect(result.current.lines.map((l) => l.productId)).toEqual(seedCart.map((l) => l.productId));
+    // an unavailable item cannot be added
+    const before = result.current.lines.length;
+    act(() => result.current.addItem("beef-burger", { size: "x", price: 120 }));
+    expect(result.current.lines).toHaveLength(before);
+    // and the order is not sent
+    let order: unknown = "unset";
+    await act(async () => { order = await result.current.placeOrder("cash"); });
+    expect(order).toBeNull();
+    spy.mockRestore();
+  });
+
+  it("shows a warning icon, not a success check, on an error toast", async () => {
+    const { result } = await app();
+    act(() => result.current.toast("حصل خطأ", "error"));
+    const message = await screen.findByText("حصل خطأ");
+    const badge = message.previousElementSibling as HTMLElement;
+    expect(badge.querySelector("svg.lucide-triangle-alert, svg.lucide-alert-triangle")).not.toBeNull();
+    expect(badge.querySelector("svg.lucide-check")).toBeNull();
+    act(() => result.current.toast("تم", "info"));
+    const ok = await screen.findByText("تم");
+    expect((ok.previousElementSibling as HTMLElement).querySelector("svg.lucide-check")).not.toBeNull();
+  });
+});
