@@ -68,18 +68,6 @@ export type Order = {
   createdAt?: number;
 };
 
-export type AppNotification = {
-  id: string;
-  title: string;
-  body: string;
-  time: string;
-  group: "today" | "yesterday";
-  unread: boolean;
-  icon: "delivery" | "offer" | "done" | "free";
-  image?: string;
-  action?: string;
-};
-
 export type Branch = {
   id: string;
   name: string;
@@ -436,49 +424,6 @@ export const orders: Order[] = [
       { productId: "fries", name: "بطاطس مقرمشة", qty: 1, price: 45 },
     ],
     createdAt: Date.UTC(2026, 9, 20, 21, 0),
-  },
-];
-
-export const notifications: AppNotification[] = [
-  {
-    id: "n1",
-    title: "طلبك في الطريق ليك!",
-    body: "طلبك رقم ١٠٢٤٨ خرج للتوصيل. استعد، أكلك هيوصلك خلال 10 دقائق.",
-    time: "منذ 5 دقائق",
-    group: "today",
-    unread: true,
-    icon: "delivery",
-    action: "تتبع طلبك",
-  },
-  {
-    id: "n2",
-    title: "عرض الشقاوة مستنيك",
-    body: "خصم 20% على البرجر لحد 50 جنيه. العرض لآخر اليوم.",
-    time: "منذ ساعة",
-    group: "today",
-    unread: true,
-    icon: "offer",
-    image: "/images/burger.webp",
-    action: "اطلب دلوقتي",
-  },
-  {
-    id: "n3",
-    title: "بالهنا والشفا يا أحمد!",
-    body: "طلبك رقم ١٠٢٤٦ وصل. قولنا رأيك في الوجبة، تقييمك يهمنا.",
-    time: "أمس، 8:30 مساءً",
-    group: "yesterday",
-    unread: false,
-    icon: "done",
-    action: "قيّم طلبك",
-  },
-  {
-    id: "n4",
-    title: "التوصيل علينا",
-    body: "استمتع بتوصيل مجاني على طلبك الجاي من 200 جنيه.",
-    time: "أمس، 12:00 ظهراً",
-    group: "yesterday",
-    unread: false,
-    icon: "free",
   },
 ];
 

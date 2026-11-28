@@ -74,7 +74,6 @@ export function Navbar() {
             className="motion-press relative grid size-12 place-items-center rounded-full bg-brand-soft text-brand transition-colors hover:bg-brand/15"
           >
             <Bell className="size-5" />
-            <span className="animate-pulse-soft absolute end-2.5 top-2.5 size-1.5 rounded-full bg-brand" />
           </Link>
           <Link
             href="/cart"
