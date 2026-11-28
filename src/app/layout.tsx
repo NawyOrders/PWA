@@ -1,9 +1,13 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Baloo_Bhaijaan_2, Cairo } from "next/font/google";
 import "./globals.css";
 import { TenantProvider } from "@/components/tenant-provider";
 import { SiteChrome } from "@/components/site-chrome";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
+import { brandingFaviconUrl, iconMimeType } from "@/lib/branding";
+import { fetchTenantBranding } from "@/lib/tenant-branding";
+import { tenantApiBaseUrl, tenantSlugFromHost } from "@/lib/tenant";
 import { storageKeys } from "@/lib/storage";
 
 const cairo = Cairo({
@@ -25,34 +29,54 @@ const baloo = Baloo_Bhaijaan_2({
  */
 export const instant = false;
 
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
-  title: {
-    default: "ناوي أوردرز | Nawy Orders",
-    template: "%s | ناوي أوردرز",
-  },
-  description:
-    "ناوي أوردرز — اطلب برجر وبيتزا وفرايد تشيكن على مزاجك، توصيل سريع وعروض حصرية. Nawy Orders food delivery PWA.",
-  applicationName: "ناوي أوردرز",
-  manifest: "/manifest.webmanifest",
-  appleWebApp: {
-    capable: true,
-    title: "ناوي أوردرز",
-    statusBarStyle: "default",
-  },
-  icons: {
-    icon: [{ url: "/icons/logo.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/icons/logo.svg", type: "image/svg+xml" }],
-  },
-  keywords: ["ناوي أوردرز", "برجر", "توصيل", "Nawy Orders", "food delivery", "PWA"],
-  openGraph: {
-    title: "ناوي أوردرز | Nawy Orders",
-    description: "اطلب أكلك المفضل من ناوي أوردرز — توصيل سريع وعروض على البرجر والبيتزا.",
-    type: "website",
-    locale: "ar_EG",
-    images: [{ url: "/og/cover.jpg", width: 1200, height: 630, alt: "ناوي أوردرز" }],
-  },
-};
+const DEFAULT_ICON = { url: "/icons/logo.svg", type: "image/svg+xml" } as const;
+
+/*
+ * The tab icon is per tenant, like the manifest icon: this layout renders on
+ * the storefront host, so the same route answers with that restaurant's icon.
+ * Without a tenant (or when branding is unavailable) the Nawy Orders default
+ * stands.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const requestHeaders = await headers();
+  const host = requestHeaders.get("host");
+  const slug = requestHeaders.get("x-tenant-slug") ?? tenantSlugFromHost(host);
+  const apiBaseUrl = slug ? tenantApiBaseUrl(slug) : "";
+  const result = apiBaseUrl ? await fetchTenantBranding(apiBaseUrl) : null;
+  const branding = result?.status === "ok" ? result.branding : null;
+  const icon = brandingFaviconUrl(branding);
+
+  return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+    title: {
+      default: "ناوي أوردرز | Nawy Orders",
+      template: "%s | ناوي أوردرز",
+    },
+    description:
+      "ناوي أوردرز — اطلب برجر وبيتزا وفرايد تشيكن على مزاجك، توصيل سريع وعروض حصرية. Nawy Orders food delivery PWA.",
+    applicationName: "ناوي أوردرز",
+    manifest: "/manifest.webmanifest",
+    appleWebApp: {
+      capable: true,
+      title: "ناوي أوردرز",
+      statusBarStyle: "default",
+    },
+    icons: icon
+      ? {
+          icon: [{ url: icon, type: iconMimeType(icon) }],
+          apple: [{ url: icon, type: iconMimeType(icon) }],
+        }
+      : { icon: [DEFAULT_ICON], apple: [DEFAULT_ICON] },
+    keywords: ["ناوي أوردرز", "برجر", "توصيل", "Nawy Orders", "food delivery", "PWA"],
+    openGraph: {
+      title: "ناوي أوردرز | Nawy Orders",
+      description: "اطلب أكلك المفضل من ناوي أوردرز — توصيل سريع وعروض على البرجر والبيتزا.",
+      type: "website",
+      locale: "ar_EG",
+      images: [{ url: "/og/cover.jpg", width: 1200, height: 630, alt: "ناوي أوردرز" }],
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#E8452C",
