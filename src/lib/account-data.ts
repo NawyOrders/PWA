@@ -17,6 +17,11 @@ export type SavedAddress = {
   landmark?: string | null;
   /** Server-assigned branch; never sent back while creating/updating an address. */
   branchId?: string | null;
+  /**
+   * The branch the server matched to this pin. Display only: the customer picked
+   * a place, so the address shows that place and the branch stays a suggestion.
+   */
+  branchName?: string | null;
   isDefault?: boolean;
 };
 

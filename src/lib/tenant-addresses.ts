@@ -21,7 +21,10 @@ export function savedAddress(dto: AddressDto): SavedAddress {
     id: dto.id,
     title: dto.label,
     detail: [dto.buildingName, dto.floor, dto.apartmentNumber, dto.landmark].filter(Boolean).join(" - ") || dto.street,
-    area: dto.branchNameAr || dto.branchNameEn || dto.street,
+    // The customer picked this place, so it is what the address says. The
+    // server's nearest branch is a suggestion, not the area they chose.
+    area: dto.street || dto.label,
+    branchName: dto.branchNameAr || dto.branchNameEn || null,
     kind: dto.placeType === "Villa" ? "family" : kind,
     lat: dto.latitude,
     lng: dto.longitude,
