@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Bike, Clock3, MapPin, NotebookPen, Pencil, Phone, ShieldCheck } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { user } from "@/lib/data";
 import { CartSummary } from "@/components/cart-summary";
 import { LocationPicker } from "@/components/location-picker";
 import { CheckoutShell } from "@/components/ui";
@@ -73,15 +72,15 @@ export function DeliveryView() {
               <div className="flex-1 text-start">
                 <p className="flex flex-wrap items-center gap-2 text-xs">
                   <span className="rounded-full bg-white px-2.5 py-0.5 font-bold text-ink">
-                    {selected ? t(selected.title) : t("المنزل")}
+                    {selected ? t(selected.title) : t("اختار عنوانك")}
                   </span>
                   <span className="text-[10px] text-muted">{t("العنوان المحدد")}</span>
                 </p>
                 <p className="mt-2 text-sm font-extrabold lg:text-base">
-                  {selected ? t(selected.area) : t(user.address)}
+                  {selected ? t(selected.area) : t("مفيش عنوان محدد لسه")}
                 </p>
                 <p className="mt-1 text-[11px] leading-5 text-muted">
-                  {selected ? t(selected.detail) : t(user.fullAddress)}
+                  {selected ? t(selected.detail) : t("اضغط لاختيار عنوان التوصيل")}
                 </p>
               </div>
             </div>

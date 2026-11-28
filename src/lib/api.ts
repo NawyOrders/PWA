@@ -1027,6 +1027,53 @@ export async function fetchBranding(
 }
 
 /**
+ * The storefront's delivery fee quote, as `/api/v1/delivery/fees` computes it
+ * from the restaurant's own dashboard pricing (base + per kilometre) for the
+ * customer's coordinates — never a number this app invents.
+ */
+export type DeliveryFeeQuote = {
+  isDeliverable: boolean;
+  deliveryFee: number;
+  distanceKm: number;
+  branchId: string | null;
+};
+
+type DeliveryFeeResponse = {
+  isDeliverable?: boolean;
+  nearestBranchId?: string | null;
+  distanceKm?: number;
+  deliveryFee?: number;
+};
+
+export async function fetchDeliveryFeeQuote(options: {
+  lat: number;
+  lng: number;
+}): Promise<DeliveryFeeQuote> {
+  const params = new URLSearchParams({
+    lat: String(options.lat),
+    lng: String(options.lng),
+  });
+  const response = await rawRequest(`/api/v1/delivery/fees?${params.toString()}`);
+  const data = unwrap<DeliveryFeeResponse>(
+    response.body,
+    response.status,
+    response.retryAfterSeconds,
+  );
+  return {
+    isDeliverable: data.isDeliverable === true,
+    deliveryFee:
+      typeof data.deliveryFee === "number" && Number.isFinite(data.deliveryFee)
+        ? data.deliveryFee
+        : 0,
+    distanceKm:
+      typeof data.distanceKm === "number" && Number.isFinite(data.distanceKm)
+        ? data.distanceKm
+        : 0,
+    branchId: data.nearestBranchId ?? null,
+  };
+}
+
+/**
  * Step 1. Anonymous, but routed through the app server.
  *
  * The tenant's CORS allow-list names deployment origins explicitly, so a

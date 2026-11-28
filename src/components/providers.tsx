@@ -14,7 +14,7 @@ import Link from "next/link";
 import { Check, ShoppingCart } from "lucide-react";
 import {
   branches as demoBranches,
-  deliveryFee,
+  deliveryFee as demoDeliveryFee,
   orders as seedOrders,
   productsById,
   seedFavorites,
@@ -39,12 +39,14 @@ import {
   authTransport,
   completeProfile as completeProfileRequest,
   fetchBranding,
+  fetchDeliveryFeeQuote,
   isFatalRefreshError,
   normalizeEgyptianPhone,
   refreshSession,
   revokeSession,
   splitFullName,
   type CustomerSessionPayload,
+  type DeliveryFeeQuote,
   type RestaurantBranding,
 } from "@/lib/api";
 import { menuApi, menuProduct } from "@/lib/tenant-menu";
@@ -225,6 +227,13 @@ type AppContextValue = {
   placeOrder: (paymentMethod: PaymentMethodId) => Promise<Order | null>;
   fulfilment: "delivery" | "pickup";
   setFulfilment: (mode: "delivery" | "pickup") => void;
+  /**
+   * The delivery fee the cart shows. On the live store it is the tenant's own
+   * quote (the dashboard's base/per-kilometre pricing, computed for the
+   * selected address) — `null` while no quote is available. In demo mode it is
+   * the fixed demo fee.
+   */
+  deliveryFee: number | null;
   toast: (message: string, kind?: ToastKind) => void;
   lang: Lang;
   dir: "rtl" | "ltr";
@@ -866,6 +875,45 @@ export function AppProvider({
   )
     ? storedSelectedAddressId
     : null;
+  const selectedAddress =
+    addresses.find((address) => address.id === selectedAddressId) ?? null;
+  const [deliveryQuote, setDeliveryQuote] = useState<DeliveryFeeQuote | null>(
+    null,
+  );
+  const selectedAddressLat = selectedAddress?.lat ?? null;
+  const selectedAddressLng = selectedAddress?.lng ?? null;
+  /*
+   * The delivery fee is the restaurant's own setting: the tenant API prices
+   * it from the dashboard's base/per-kilometre card for the chosen address.
+   * A failed or missing quote surfaces as "unknown" (null), never as a fee
+   * this app invents.
+   */
+  useEffect(() => {
+    if (
+      authTransport() !== "live" ||
+      fulfilment !== "delivery" ||
+      selectedAddressLat === null ||
+      selectedAddressLng === null
+    ) {
+      setDeliveryQuote(null);
+      return;
+    }
+    let stale = false;
+    fetchDeliveryFeeQuote({ lat: selectedAddressLat, lng: selectedAddressLng })
+      .then((quote) => {
+        if (!stale) setDeliveryQuote(quote);
+      })
+      .catch(() => {
+        if (!stale) setDeliveryQuote(null);
+      });
+    return () => {
+      stale = true;
+    };
+  }, [fulfilment, selectedAddressLat, selectedAddressLng]);
+  const currentDeliveryFee =
+    authTransport() === "live"
+      ? (deliveryQuote?.deliveryFee ?? null)
+      : demoDeliveryFee;
   const branding = brandingCache?.branding ?? null;
   /*
    * `/api/v1/Branding` owns the pickup branches. The demo list only survives
@@ -1809,7 +1857,7 @@ export function AppProvider({
         ? `${t(address.area)}${separator}${t(address.detail)}`
         : t(user.address);
       const discount = coupon ? Math.min(Math.round(subtotal * 0.2), 50) : 0;
-      const fee = fulfilment === "delivery" ? deliveryFee : 0;
+      const fee = fulfilment === "delivery" ? (currentDeliveryFee ?? 0) : 0;
       const latestId = orders.reduce(
         (max, order) =>
           /^\d+$/.test(order.id) ? Math.max(max, Number(order.id)) : max,
@@ -1892,6 +1940,7 @@ export function AppProvider({
       addresses,
       authFetch,
       coupon,
+      currentDeliveryFee,
       customer,
       orderNote,
       fulfilment,
@@ -1956,6 +2005,7 @@ export function AppProvider({
       placeOrder,
       fulfilment,
       setFulfilment,
+      deliveryFee: currentDeliveryFee,
       toast,
       lang,
       dir,
@@ -2009,6 +2059,7 @@ export function AppProvider({
       orders,
       placeOrder,
       fulfilment,
+      currentDeliveryFee,
       toast,
       lang,
       dir,
