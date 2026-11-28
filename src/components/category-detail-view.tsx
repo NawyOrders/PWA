@@ -27,7 +27,13 @@ export function CategoryDetailView({ categoryId }: { categoryId: string }) {
   const popularIds = new Set(popular.map((product) => product.id));
   const rest = categoryProducts.filter((product) => !popularIds.has(product.id));
   const countLabel = categoryProducts.length === 1 ? t("صنف") : t("أصناف");
-  const heading = t("قسم «ال{name}»", { name: t(category.name) });
+  const displayName = t(category.name);
+  /* Tenant category names may already carry the article ("الجبن"); prepending
+     another one renders "الالجبن". */
+  const heading =
+    lang === "ar" && displayName.startsWith("ال")
+      ? t("قسم «{name}»", { name: displayName })
+      : t("قسم «ال{name}»", { name: displayName });
 
   return (
     <div className="pb-10">

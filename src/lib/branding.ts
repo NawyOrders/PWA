@@ -423,6 +423,68 @@ export function branchHoursLabel(branch: StoreBranch): string | null {
   return `${open} – ${close}${range.closesNextDay ? " (+1)" : ""}`;
 }
 
+const CAIRO_TZ = "Africa/Cairo";
+
+function cairoParts(now: Date): { day: string; minutes: number } {
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone: CAIRO_TZ,
+    weekday: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  });
+  let day = "";
+  let minutes = 0;
+  for (const part of fmt.formatToParts(now)) {
+    if (part.type === "weekday") day = part.value;
+    if (part.type === "hour") minutes += Number(part.value) * 60;
+    if (part.type === "minute") minutes += Number(part.value);
+  }
+  return { day, minutes };
+}
+
+function minutesOf(time: string | null): number | null {
+  if (!time) return null;
+  const [h, m] = time.split(":").map(Number);
+  return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null;
+}
+
+const DAY_ORDER = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/**
+ * Whether the branch takes orders right now, from the working hours the
+ * dashboard publishes. A range marked closesNextDay stays open past midnight
+ * until its close time, so yesterday's range counts too. Branches without
+ * published hours fall back to their status flag.
+ */
+export function branchIsOpenNow(branch: StoreBranch, now: Date = new Date()): boolean {
+  if (!branch.open) return false;
+  if (branch.workingHours.length === 0) return true;
+  const { day, minutes } = cairoParts(now);
+  const dayIndex = DAY_ORDER.indexOf(day);
+  const today = branch.workingHours.find((hours) => hours.dayOfWeek === day);
+  const yesterday = branch.workingHours.find(
+    (hours) => hours.dayOfWeek === DAY_ORDER[(dayIndex + 6) % 7],
+  );
+  const within = (hours: StoreBranch["workingHours"][number], mins: number): boolean => {
+    if (hours.isClosed) return false;
+    const open = minutesOf(hours.openTime);
+    const close = minutesOf(hours.closeTime);
+    if (open === null || close === null) return false;
+    return mins >= open && mins < close;
+  };
+  if (today && !today.isClosed && today.closesNextDay) {
+    const open = minutesOf(today.openTime);
+    if (open !== null && minutes >= open) return true;
+  }
+  if (yesterday && !yesterday.isClosed && yesterday.closesNextDay) {
+    const close = minutesOf(yesterday.closeTime);
+    if (close !== null && minutes < close) return true;
+  }
+  if (today && !today.closesNextDay && within(today, minutes)) return true;
+  return false;
+}
+
 export function brandingLogoUrl(branding: RestaurantBranding | null): string | null {
   return branding ? safeUrl(branding.logoUrl) : null;
 }
