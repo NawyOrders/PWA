@@ -54,8 +54,18 @@ describe("CartBar", () => {
     expect(screen.getByRole("link", { name: "السلة" })).toHaveTextContent("3");
     // 125 + 120 + 100 from the seeded basket, plus the 30 EGP delivery fee.
     expect(barText()).toContain("برجر سمك (×1)، برجر لحم (×1)");
-    expect(barText()).toContain("توصيل لزهراء المعادي");
+    expect(barText()).toContain("توصيل إلى اسكندرية، سموحة");
     expect(barText()).toContain("375");
+  });
+
+  it("asks for a delivery address instead of naming a placeholder one", async () => {
+    localStorage.setItem(storageKeys.auth, "true");
+    localStorage.setItem(storageKeys.addresses, JSON.stringify([]));
+    renderApp(<CartBar />);
+
+    await screen.findByText("لديك 3 وجبات في سلة الطلب");
+    expect(barText()).toContain("اختار عنوان التوصيل");
+    expect(barText()).not.toContain("زهراء");
   });
 
   it("shows the pinned bar only on desktop", async () => {
