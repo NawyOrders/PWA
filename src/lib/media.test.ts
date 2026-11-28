@@ -1,3 +1,5 @@
+import { mediaBaseFromUrl, setTenantMediaBase } from "@/lib/media";
+import { menuImage } from "@/lib/tenant-menu";
 import { describe, expect, it } from "vitest";
 import {
   MAX_UPLOAD_BYTES,
@@ -54,5 +56,25 @@ describe("image upload validation", () => {
       ok: false,
       reason: "type",
     });
+  });
+});
+
+describe("tenant media base", () => {
+  const logo = "https://proj.supabase.co/storage/v1/object/public/nawy-orders/onboarding/a/logo.jpg";
+
+  it("derives the public storage prefix from the tenant branding url", () => {
+    expect(mediaBaseFromUrl(logo)).toBe("https://proj.supabase.co/storage/v1/object/public/nawy-orders");
+    expect(mediaBaseFromUrl("https://example.test/logo.jpg")).toBeNull();
+    expect(mediaBaseFromUrl("http://proj.supabase.co/storage/v1/object/public/b/x.jpg")).toBeNull();
+    expect(mediaBaseFromUrl(null)).toBeNull();
+  });
+
+  it("resolves a menu image key once the tenant base is known", () => {
+    setTenantMediaBase(logo);
+    expect(menuImage("tenant-1/menu/items/a.jpg", null)).toBe(
+      "https://proj.supabase.co/storage/v1/object/public/nawy-orders/tenant-1/menu/items/a.jpg",
+    );
+    setTenantMediaBase(null);
+    expect(menuImage("tenant-1/menu/items/a.jpg", null)).toBe("/images/burger.webp");
   });
 });

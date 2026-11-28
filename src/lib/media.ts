@@ -38,3 +38,36 @@ export function validateImageFile(
   if (file.size > maxBytes) return { ok: false, reason: "size" };
   return { ok: true };
 }
+
+// Menu images arrive from the API as an object key, not a URL. The key is only
+// readable under the tenant's own public storage prefix, which that tenant's
+// branding already points at (its logo lives in the same public bucket). Nothing
+// about a specific restaurant is hard-coded here.
+const PUBLIC_STORAGE_PREFIX = "/storage/v1/object/public/";
+
+let tenantMediaBase: string | null = null;
+
+export function mediaBaseFromUrl(url?: string | null): string | null {
+  if (!url) return null;
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== "https:") return null;
+  const index = parsed.pathname.indexOf(PUBLIC_STORAGE_PREFIX);
+  if (index < 0) return null;
+  const bucket = parsed.pathname.slice(index + PUBLIC_STORAGE_PREFIX.length).split("/")[0];
+  if (!bucket) return null;
+  return `${parsed.origin}${PUBLIC_STORAGE_PREFIX}${bucket}`;
+}
+
+/** Set once from the tenant's branding; menu reads then resolve keys under it. */
+export function setTenantMediaBase(brandingUrl?: string | null): void {
+  tenantMediaBase = mediaBaseFromUrl(brandingUrl);
+}
+
+export function getTenantMediaBase(): string | null {
+  return tenantMediaBase;
+}
