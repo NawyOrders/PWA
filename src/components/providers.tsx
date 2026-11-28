@@ -774,29 +774,6 @@ export function AppProvider({
     "ar",
     decodeLang,
   );
-  /*
-   * Menu items come from the tenant API whenever it is configured. Cart lines
-   * and the screens that show them read from this registry, so an item added
-   * from the live menu keeps its name, price, image and size.
-   */
-  useEffect(() => {
-    if (!apiConfigured()) return;
-    let cancelled = false;
-    menuApi
-      .items({ pageSize: 200 })
-      .then((page) => {
-        if (cancelled) return;
-        const map: Record<string, Product> = {};
-        for (const item of page.items) map[item.id] = menuProduct(item, lang);
-        setLiveProducts(map);
-      })
-      .catch(() => {
-        /* the demo catalogue stays as the fallback */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [lang]);
   const [fulfilment, setFulfilment] = useState<"delivery" | "pickup">(
     "delivery",
   );
@@ -870,6 +847,35 @@ export function AppProvider({
   )
     ? storedBranchId
     : storeBranches[0].id;
+
+  /*
+   * Menu items come from the tenant API whenever it is configured, scoped to the
+   * branch the customer is ordering from: an item that branch has switched off
+   * is left out of the registry, so it cannot be priced or added there. Cart
+   * lines and the screens that show them read from this registry, so an item
+   * added from the live menu keeps its name, price, image and size.
+   */
+  useEffect(() => {
+    if (!apiConfigured()) return;
+    let cancelled = false;
+    menuApi
+      .items({ branchId: selectedBranchId, pageSize: 200 })
+      .then((page) => {
+        if (cancelled) return;
+        const map: Record<string, Product> = {};
+        for (const item of page.items) {
+          if (item.isAvailable === false) continue;
+          map[item.id] = menuProduct(item, lang);
+        }
+        setLiveProducts(map);
+      })
+      .catch(() => {
+        /* the demo catalogue stays as the fallback */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [lang, selectedBranchId]);
 
   const loginPromptOpen = loginPromptNext !== null;
   // Two ways in: the local demo flag, or a session issued by the tenant API.
