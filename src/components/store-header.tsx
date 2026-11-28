@@ -75,7 +75,6 @@ export function StoreHeader({
             className="motion-press relative grid size-11 place-items-center rounded-2xl border border-line bg-white text-ink shadow-soft transition hover:-rotate-3 hover:text-brand"
           >
             <Bell className="size-5" />
-            <span className="animate-pulse-soft absolute end-2.5 top-2.5 size-1.5 rounded-full bg-brand" />
           </Link>
         </div>
 

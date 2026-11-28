@@ -25,7 +25,6 @@ export const storageKeys = {
   accountPhone: "nawy-account-phone-v1",
   points: "nawy-points-v1",
   notifications: "nawy-notifications-v1",
-  notificationRead: "nawy-notification-read-v1",
 } as const;
 
 export function readStorage<T>(key: string, fallback: T): T {

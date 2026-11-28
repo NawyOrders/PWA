@@ -621,20 +621,6 @@ const en: Record<string, string> = {
   "24 أكتوبر 2026 • 7:30 م": "Oct 24, 2026 • 7:30 PM",
   "20 أكتوبر 2026 • 9:00 م": "Oct 20, 2026 • 9:00 PM",
 
-  // notifications data
-  "طلبك في الطريق ليك!": "Your order is on the way!",
-  "طلبك رقم ١٠٢٤٨ خرج للتوصيل. استعد، أكلك هيوصلك خلال 10 دقائق.": "Order #10248 is out for delivery. Your food will arrive in 10 minutes.",
-  "منذ 5 دقائق": "5 min ago",
-  "عرض الشقاوة مستنيك": "A tasty offer is waiting",
-  "خصم 20% على البرجر لحد 50 جنيه. العرض لآخر اليوم.": "20% off burgers, up to EGP 50. Today only.",
-  "منذ ساعة": "1 hour ago",
-  "بالهنا والشفا يا أحمد!": "Enjoy your meal, Ahmed!",
-  "طلبك رقم ١٠٢٤٦ وصل. قولنا رأيك في الوجبة، تقييمك يهمنا.": "Order #10246 has arrived. Tell us what you think — your feedback matters.",
-  "أمس، 8:30 مساءً": "Yesterday, 8:30 PM",
-  "التوصيل علينا": "Delivery on us",
-  "استمتع بتوصيل مجاني على طلبك الجاي من 200 جنيه.": "Enjoy free delivery on your next order over EGP 200.",
-  "أمس، 12:00 ظهراً": "Yesterday, 12:00 PM",
-
   // branches & user & payment data
   "فرع سيدي بشر": "Sidi Bishr Branch",
   "فرع سموحة": "Smouha Branch",
