@@ -23,10 +23,6 @@ type Slide = {
   theme: "dark" | "light";
   price?: number | null;
   originalPrice?: number | null;
-  /* Dashboard offers carry photos of any shape, so they render in their own
-     panel next to a solid text panel: nothing is cropped and the copy never
-     sits on top of a busy photo. The demo artwork stays full-bleed. */
-  layout?: "cover" | "panel";
 };
 
 const demoSlides: Slide[] = [
@@ -93,7 +89,6 @@ function promotionalSlide(offer: PromotionalOffer, lang: Lang): Slide | null {
     theme: "dark",
     price: offer.offerPrice,
     originalPrice: offer.originalPrice,
-    layout: "panel",
   };
 }
 
@@ -108,7 +103,6 @@ function dailySlide(offer: DailyRecurringOffer, lang: Lang): Slide | null {
     cta: "اطلب الان",
     href: offerHref("SingleItem", offer.items),
     theme: "dark",
-    layout: "panel",
   };
 }
 
@@ -174,7 +168,6 @@ export function PromoCarousel({ branchId }: { branchId?: string }) {
       >
         {slides.map((item, slideIndex) => {
           const isHero = item.id === "combo";
-          const isPanel = item.layout === "panel";
           const copy = (
             <>
               <span
@@ -234,31 +227,7 @@ export function PromoCarousel({ branchId }: { branchId?: string }) {
               slideIndex === index ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
             }`}
           >
-            {isPanel ? (
-              /* Dashboard offers: the photo gets its own panel and the copy sits
-                 on a solid brand panel, so a busy or bright photo can never make
-                 the title, description or price hard to read. */
-              <div className="flex h-full w-full">
-                <div
-                  className={`relative flex w-[62%] flex-col justify-center gap-2 bg-gradient-to-b from-[#240223] via-[#3a0f42] to-[#4C1354] ps-4 pe-3 sm:w-[58%] lg:w-[54%] lg:gap-3 lg:ps-10 ${
-                    slideIndex === index ? "motion-slide" : ""
-                  }`}
-                >
-                  {copy}
-                </div>
-                <div className="relative w-[38%] shrink-0 overflow-hidden bg-[#240223] sm:w-[34%] lg:w-[30%] lg:max-w-[340px]">
-                  <Image
-                    src={item.image}
-                    alt={t(item.title)}
-                    fill
-                    sizes="(max-width: 1024px) 40vw, 340px"
-                    unoptimized
-                    className="object-cover"
-                  />
-                </div>
-              </div>
-            ) : (
-              <>
+            <>
                 <Image
                   src={isHero ? heroImage(lang) : item.image}
                   alt={t(item.title)}
@@ -284,8 +253,7 @@ export function PromoCarousel({ branchId }: { branchId?: string }) {
                 >
                   {copy}
                 </div>
-              </>
-            )}
+            </>
           </div>
           );
         })}
