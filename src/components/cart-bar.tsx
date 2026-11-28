@@ -10,12 +10,23 @@ import { formatPrice } from "@/lib/data";
  * screen so it stays pinned to the viewport for the whole scroll on desktop.
  */
 export function CartBar({ aboveBottomNav = true }: { aboveBottomNav?: boolean }) {
-  const { count, subtotal, lines, t, lang, loggedIn, openLoginPrompt, fulfilment, coupon, productById, deliveryFee } = useApp();
+  const { count, subtotal, lines, t, lang, loggedIn, openLoginPrompt, fulfilment, coupon, productById, deliveryFee, addresses, selectedAddressId } = useApp();
   if (count === 0) return null;
 
   const discount = coupon ? Math.min(Math.round(subtotal * 0.2), 50) : 0;
   const fee = fulfilment === "delivery" ? (deliveryFee ?? 0) : 0;
   const total = Math.max(0, subtotal - discount + fee);
+
+  // The bar names the address the customer actually picked. With none picked it
+  // asks for one instead of naming a placeholder address.
+  const selectedAddress = addresses.find((address) => address.id === selectedAddressId) ?? null;
+  const addressArea = (selectedAddress?.area || selectedAddress?.title || "").trim();
+  const fulfilmentLabel =
+    fulfilment === "delivery"
+      ? addressArea
+        ? t("توصيل إلى {area}", { area: addressArea })
+        : t("اختار عنوان التوصيل")
+      : t("استلام من الفرع");
 
   const names = lines
     .slice(0, 2)
@@ -58,7 +69,7 @@ export function CartBar({ aboveBottomNav = true }: { aboveBottomNav?: boolean })
           </div>
           <span className="ms-1 hidden items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1.5 text-[11px] font-bold text-brand md:flex lg:ms-4">
             {fulfilment === "delivery" ? <Bike className="size-3.5" /> : <Store className="size-3.5" />}
-            {fulfilment === "delivery" ? t("توصيل لزهراء المعادي") : t("استلام من الفرع")}
+            {fulfilmentLabel}
           </span>
           <div className="shrink-0 text-end">
             <p className="hidden text-[10px] text-muted sm:block">{t("الإجمالي")}</p>

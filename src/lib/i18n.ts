@@ -66,10 +66,9 @@ const en: Record<string, string> = {
   "الدفع": "Payment",
 
   // store header & cart bar
-  "مرحبا أحمد": "Hi Ahmed",
   "زهراء المعادي، المعراج العلوي": "Zahraa Al Maadi, Al Mi'raj Al A'la",
   "لديك {count} وجبات في سلة الطلب": "You have {count} meals in your cart",
-  "توصيل لزهراء المعادي": "Delivering to Zahraa Al Maadi",
+  "توصيل إلى {area}": "Delivering to {area}",
   "متابعة الطلب والدفع": "Continue to checkout",
   "الإجمالي": "Total",
   "عرض السلة": "View cart",
