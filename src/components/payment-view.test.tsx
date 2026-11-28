@@ -86,7 +86,7 @@ describe("PaymentView", () => {
     upload(new File(["invoice"], "invoice.pdf", { type: "application/pdf" }));
 
     expect(
-      await screen.findByText("ارفع صورة بصيغة JPG أو PNG."),
+      await screen.findByText("ارفع صورة بصيغة JPG أو PNG أو HEIC."),
     ).toBeInTheDocument();
     expect(screen.queryByText("invoice.pdf")).not.toBeInTheDocument();
   });

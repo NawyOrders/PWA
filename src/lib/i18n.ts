@@ -174,6 +174,7 @@ const en: Record<string, string> = {
   // cart
   "سلتك فاضية": "Your cart is empty",
   "تعذر إرسال الطلب، جرّب تاني": "We could not send your order, please try again",
+  "الطلب اتبعت، بس إثبات الدفع مترفعش — ابعته من صفحة طلباتك": "The order was placed, but the payment proof did not upload — send it from your orders page",
   "لسه مضفتش حاجة، اختار طبقك المفضل من القائمة وابدأ طلبك.": "You haven't added anything yet. Pick your favorite dish from the menu and start your order.",
   "سلتك فيها كل اللي بتحبه": "Everything you love, in one cart",
   "راجع طلبك، وعدّل الكمية قبل ما تكمل.": "Review your order and adjust quantities before checkout.",
@@ -276,7 +277,7 @@ const en: Record<string, string> = {
   "ميجابايت": "MB",
   "تم الرفع": "Uploaded",
   "سيتم مراجعة الإثبات من قبل المطعم خلال دقائق قليلة، وتم إشعارك عند تأكيد الطلب.": "The restaurant will review the proof within minutes, and you'll be notified once confirmed.",
-  "ارفع صورة بصيغة JPG أو PNG.": "Upload a JPG or PNG image.",
+  "ارفع صورة بصيغة JPG أو PNG أو HEIC.": "Upload a JPG, PNG or HEIC image.",
   "ارفع صورة إثبات الدفع الأول قبل تأكيد الطلب.": "Upload your payment proof first.",
   "انسخ الرقم يدوياً: 01010010010": "Copy the number manually: 01010010010",
   "تم تأكيد طلبك بنجاح، جاري تحضيره الآن": "Your order is confirmed and being prepared",

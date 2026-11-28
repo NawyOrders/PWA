@@ -53,6 +53,15 @@ export type CustomerOrderDto = {
   createdAtUtc: string;
 };
 
+/** `POST /payment-proof/upload-url` answer: where to PUT the receipt image. */
+export type ProofUploadTarget = {
+  objectKey?: string | null;
+  uploadUrl?: string | null;
+  expiresAtUtc?: string | null;
+  contentType?: string | null;
+  maximumSizeBytes?: number | null;
+};
+
 type Paged<T> = {
   items: T[] | null;
   totalCount: number;
@@ -159,4 +168,60 @@ export const orderApi = {
       undefined,
       authFetch,
     ).then((page) => page.items ?? []),
+  proofUploadUrl: (
+    orderId: string,
+    body: { fileName: string; contentType: string; sizeBytes: number },
+    authFetch: AuthFetch,
+  ) =>
+    tenantRequest<ProofUploadTarget>(
+      `/api/v1/orders/${encodeURIComponent(orderId)}/payment-proof/upload-url`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      },
+      authFetch,
+    ),
+  proofComplete: (orderId: string, objectKey: string, authFetch: AuthFetch) =>
+    tenantRequest<unknown>(
+      `/api/v1/orders/${encodeURIComponent(orderId)}/payment-proof/complete`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ objectKey }),
+      },
+      authFetch,
+    ),
+};
+
+/**
+ * Sends the receipt image to the order the customer just placed. The place
+ * response only carries the order number, so the uuid comes from my-orders.
+ */
+export async function uploadPaymentProof(
+  authFetch: AuthFetch,
+  orderNumber: string,
+  file: Blob,
+  fileName: string,
+  contentType: string,
+): Promise<void> {
+  const mine = await orderApi.myOrders(authFetch, 10);
+  const row = mine.find((order) => order.orderNumber === orderNumber);
+  if (!row) throw new Error("proof:order-not-found");
+  const target = await orderApi.proofUploadUrl(
+    row.orderId,
+    { fileName, contentType, sizeBytes: file.size },
+    authFetch,
+  );
+  if (!target.uploadUrl || !target.objectKey) throw new Error("proof:no-upload-url");
+  if (target.maximumSizeBytes && file.size > target.maximumSizeBytes) {
+    throw new Error("proof:too-large");
+  }
+  const upload = await fetch(target.uploadUrl, {
+    method: "PUT",
+    headers: { "Content-Type": target.contentType ?? contentType },
+    body: file,
+  });
+  if (!upload.ok) throw new Error(`proof:upload-${upload.status}`);
+  await orderApi.proofComplete(row.orderId, target.objectKey, authFetch);
 };
