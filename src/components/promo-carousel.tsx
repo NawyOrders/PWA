@@ -240,7 +240,7 @@ export function PromoCarousel({ branchId }: { branchId?: string }) {
                  the title, description or price hard to read. */
               <div className="flex h-full w-full">
                 <div
-                  className={`relative flex w-[62%] flex-col justify-center gap-2 bg-gradient-to-b from-[#240223] via-[#3a0f42] to-[#4C1354] ps-4 pe-3 sm:w-[58%] lg:w-[54%] lg:gap-3 lg:ps-10 ${
+                  className={`relative flex min-w-0 flex-1 flex-col justify-center gap-2 bg-gradient-to-b from-[#240223] via-[#3a0f42] to-[#4C1354] ps-4 pe-3 lg:gap-3 lg:ps-10 ${
                     slideIndex === index ? "motion-slide" : ""
                   }`}
                 >
