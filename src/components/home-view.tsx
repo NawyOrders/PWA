@@ -86,7 +86,7 @@ function PhoneMockup() {
 }
 
 export function HomeView() {
-  const { t, loggedIn, orders, toast, lang, selectedBranchId, branding } = useApp();
+  const { t, loggedIn, orders, toast, lang, selectedBranchId, branding, productById } = useApp();
   const branchId = branding?.branches?.some((branch) => branch.branchId === selectedBranchId) ? selectedBranchId : undefined;
   const remoteCategories = useMenuCategories();
   const homeCategories = apiConfigured()
@@ -116,8 +116,11 @@ export function HomeView() {
       : filterMenu(filter);
   const activeOrder = orders.find((order) => order.status === "preparing");
   const mostSold = useMostSold(branchId);
+  // The most-sold endpoint returns no sizes, so a sized item arrives with its
+  // base price of 0. The branch registry has the full item, sizes included, so
+  // it wins whenever it knows the item; the raw mapping is only a fallback.
   const bestSellers = apiConfigured()
-    ? mostSold.data.map((item) => menuProduct(item, lang))
+    ? mostSold.data.map((item) => productById(item.id) ?? menuProduct(item, lang))
     : products
         .filter(
           (product) => product.category === (selectedCategory ?? "burger"),
