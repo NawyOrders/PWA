@@ -152,7 +152,7 @@ export function HomeView() {
       </div>
 
       <div className="shell mt-5 lg:mt-7">
-        <PromoCarousel />
+        <PromoCarousel branchId={branchId} />
       </div>
 
       <section className="shell relative mt-7 lg:mt-9">
