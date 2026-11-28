@@ -23,6 +23,10 @@ type Slide = {
   theme: "dark" | "light";
   price?: number | null;
   originalPrice?: number | null;
+  /* Dashboard offers carry photos of any shape, so they render in their own
+     panel next to a solid text panel: nothing is cropped and the copy never
+     sits on top of a busy photo. The demo artwork stays full-bleed. */
+  layout?: "cover" | "panel";
 };
 
 const demoSlides: Slide[] = [
@@ -89,6 +93,7 @@ function promotionalSlide(offer: PromotionalOffer, lang: Lang): Slide | null {
     theme: "dark",
     price: offer.offerPrice,
     originalPrice: offer.originalPrice,
+    layout: "panel",
   };
 }
 
@@ -103,6 +108,7 @@ function dailySlide(offer: DailyRecurringOffer, lang: Lang): Slide | null {
     cta: "اطلب الان",
     href: offerHref("SingleItem", offer.items),
     theme: "dark",
+    layout: "panel",
   };
 }
 
@@ -168,37 +174,9 @@ export function PromoCarousel({ branchId }: { branchId?: string }) {
       >
         {slides.map((item, slideIndex) => {
           const isHero = item.id === "combo";
-          return (
-          <div
-            key={item.id}
-            aria-hidden={slideIndex !== index}
-            className={`absolute inset-0 transition-opacity duration-700 ${
-              slideIndex === index ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
-            }`}
-          >
-            <Image
-              src={isHero ? heroImage(lang) : item.image}
-              alt={t(item.title)}
-              fill
-              priority={slideIndex === 0}
-              sizes="(max-width: 1024px) 100vw, 900px"
-              unoptimized={!item.image.startsWith("/")}
-              className={`object-cover transition-transform duration-700 ${
-                isHero && heroIsMirrored(lang) ? "ltr:-scale-x-100" : ""
-              } ${slideIndex === index ? "motion-zoom" : ""}`}
-            />
-            <div
-              className={`absolute inset-0 ${
-                item.theme === "dark"
-                  ? "from-black/35 via-black/5 to-transparent"
-                  : "from-cream/95 via-cream/55 to-transparent"
-              } ${lang === "en" ? "bg-gradient-to-r" : "bg-gradient-to-l"}`}
-            />
-            <div
-              className={`absolute inset-y-0 start-0 flex w-[68%] flex-col justify-center gap-2 ps-4 text-start sm:w-[55%] lg:w-[48%] lg:gap-3 lg:ps-10 ${
-                slideIndex === index ? "motion-slide" : ""
-              }`}
-            >
+          const isPanel = item.layout === "panel";
+          const copy = (
+            <>
               <span
                 className={`w-fit rounded-full px-2.5 py-1 text-[9px] font-bold lg:text-[10px] ${
                   item.theme === "dark" ? "bg-white/20 text-white backdrop-blur" : "bg-white/80 text-brand"
@@ -215,8 +193,8 @@ export function PromoCarousel({ branchId }: { branchId?: string }) {
               </h2>
               {item.text ? (
                 <p
-                  className={`line-2 max-w-md text-[10px] leading-4 sm:text-[11px] lg:line-1 lg:text-xs ${
-                    item.theme === "dark" ? "text-white/85" : "text-ink/60"
+                  className={`line-2 max-w-md text-[11px] leading-4 sm:text-xs lg:text-sm ${
+                    item.theme === "dark" ? "text-white" : "text-ink/70"
                   }`}
                 >
                   {t(item.text)}
@@ -228,7 +206,7 @@ export function PromoCarousel({ branchId }: { branchId?: string }) {
                     {formatPrice(item.price)} {t("جنيه")}
                   </span>
                   {item.originalPrice != null && item.originalPrice > item.price ? (
-                    <span className={`text-[11px] font-bold line-through lg:text-xs ${item.theme === "dark" ? "text-white/60" : "text-ink/40"}`}>
+                    <span className={`text-[11px] font-bold line-through lg:text-xs ${item.theme === "dark" ? "text-white/70" : "text-ink/40"}`}>
                       {formatPrice(item.originalPrice)}
                     </span>
                   ) : null}
@@ -246,7 +224,68 @@ export function PromoCarousel({ branchId }: { branchId?: string }) {
                 {t(item.cta)}
                 <ArrowLeft className="size-3.5 lg:size-4 ltr:rotate-180" />
               </Link>
-            </div>
+            </>
+          );
+          return (
+          <div
+            key={item.id}
+            aria-hidden={slideIndex !== index}
+            className={`absolute inset-0 transition-opacity duration-700 ${
+              slideIndex === index ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+            }`}
+          >
+            {isPanel ? (
+              /* Dashboard offers: the photo gets its own panel and the copy sits
+                 on a solid brand panel, so a busy or bright photo can never make
+                 the title, description or price hard to read. */
+              <div className="flex h-full w-full">
+                <div
+                  className={`relative flex w-[62%] flex-col justify-center gap-2 bg-gradient-to-b from-[#240223] via-[#3a0f42] to-[#4C1354] ps-4 pe-3 sm:w-[58%] lg:w-[54%] lg:gap-3 lg:ps-10 ${
+                    slideIndex === index ? "motion-slide" : ""
+                  }`}
+                >
+                  {copy}
+                </div>
+                <div className="relative w-[38%] shrink-0 overflow-hidden bg-[#240223] sm:w-[34%] lg:w-[30%] lg:max-w-[340px]">
+                  <Image
+                    src={item.image}
+                    alt={t(item.title)}
+                    fill
+                    sizes="(max-width: 1024px) 40vw, 340px"
+                    unoptimized
+                    className="object-cover"
+                  />
+                </div>
+              </div>
+            ) : (
+              <>
+                <Image
+                  src={isHero ? heroImage(lang) : item.image}
+                  alt={t(item.title)}
+                  fill
+                  priority={slideIndex === 0}
+                  sizes="(max-width: 1024px) 100vw, 900px"
+                  unoptimized={!item.image.startsWith("/")}
+                  className={`object-cover transition-transform duration-700 ${
+                    isHero && heroIsMirrored(lang) ? "ltr:-scale-x-100" : ""
+                  } ${slideIndex === index ? "motion-zoom" : ""}`}
+                />
+                <div
+                  className={`absolute inset-0 ${
+                    item.theme === "dark"
+                      ? "from-black/60 via-black/25 to-transparent"
+                      : "from-cream/95 via-cream/55 to-transparent"
+                  } ${lang === "en" ? "bg-gradient-to-r" : "bg-gradient-to-l"}`}
+                />
+                <div
+                  className={`absolute inset-y-0 start-0 flex w-[68%] flex-col justify-center gap-2 ps-4 text-start sm:w-[55%] lg:w-[48%] lg:gap-3 lg:ps-10 ${
+                    slideIndex === index ? "motion-slide" : ""
+                  }`}
+                >
+                  {copy}
+                </div>
+              </>
+            )}
           </div>
           );
         })}
