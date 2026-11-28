@@ -128,8 +128,10 @@ type AppContextValue = {
    * and images through this so a live item never renders as its raw id.
    */
   productById: (productId: string) => Product | undefined;
-  addItem: (productId: string, options: AddOptions) => void;
-  quickAdd: (productId: string) => void;
+  addItem: (productId: string, options: AddOptions, product?: Product) => void;
+  /** `product` lets a screen hand over the item it is showing, so an add
+   *  never depends on the registry having finished loading. */
+  quickAdd: (productId: string, product?: Product) => void;
   changeQty: (key: string, delta: number) => void;
   removeLine: (key: string) => void;
   clearCart: (silent?: boolean) => void;
@@ -1349,8 +1351,8 @@ export function AppProvider({
   }, [refreshRetryAt]);
 
   const addItem = useCallback(
-    (productId: string, options: AddOptions) => {
-      const product = products[productId];
+    (productId: string, options: AddOptions, shown?: Product) => {
+      const product = products[productId] ?? shown;
       if (!product) return;
       const size = options.size ?? "";
       const extras = options.extras?.length ? [...options.extras].sort() : [];
@@ -1386,13 +1388,17 @@ export function AppProvider({
   );
 
   const quickAdd = useCallback(
-    (productId: string) => {
-      const product = products[productId];
+    (productId: string, shown?: Product) => {
+      const product = products[productId] ?? shown;
       if (!product) return;
-      addItem(productId, {
-        price: product.price,
-        size: product.category === "burger" ? "ساندوتش فقط" : undefined,
-      });
+      addItem(
+        productId,
+        {
+          price: product.price,
+          size: product.category === "burger" ? "ساندوتش فقط" : undefined,
+        },
+        product,
+      );
     },
     [addItem],
   );

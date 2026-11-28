@@ -75,7 +75,7 @@ export function ProductCard({
             className="gap-0.5 p-0.5 [&_button]:size-6 [&_span]:min-w-4 [&_span]:text-xs [&_svg]:size-3 max-[375px]:gap-0.5 max-[375px]:p-0.5 max-[375px]:[&_button]:size-6 max-[375px]:[&_span]:min-w-4 max-[375px]:[&_span]:text-xs max-[375px]:[&_svg]:size-3"
           />
         ) : (
-          <AddButton onClick={() => product.isAvailable === false ? toast(t("هذا الصنف غير متاح في الفرع المحدد"), "info") : quickAdd(product.id)} />
+          <AddButton onClick={() => product.isAvailable === false ? toast(t("هذا الصنف غير متاح في الفرع المحدد"), "info") : quickAdd(product.id, product)} />
         )}
       </div>
     </article>
