@@ -1,6 +1,7 @@
 import { waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  branchIsOpenNow,
   applyBranding,
   applyBrandingAssets,
   branchHoursLabel,
@@ -452,5 +453,53 @@ describe("branding assets", () => {
     expect(() => applyBrandingAssets({ faviconUrl: "https://cdn.example.com/icon.png" })).not.toThrow();
     vi.unstubAllGlobals();
     expect(globalThis.document).toBe(original);
+  });
+});
+
+describe("branchIsOpenNow", () => {
+  const mkBranch = (over: Record<string, unknown> = {}) =>
+    brandingBranches(
+      sanitizeBranding({
+        tenantId: "t",
+        nameAr: "مطعم",
+        branches: [
+          {
+            branchId: "b1",
+            nameAr: "فرع",
+            nameEn: "Branch",
+            status: "Open",
+            workingHours: [
+              { dayOfWeek: "Friday", isClosed: false, openTime: "11:00:00", closeTime: "03:00:00", closesNextDay: true },
+              { dayOfWeek: "Saturday", isClosed: false, openTime: "11:00:00", closeTime: "03:00:00", closesNextDay: true },
+              { dayOfWeek: "Sunday", isClosed: true, openTime: null, closeTime: null, closesNextDay: false },
+            ],
+          },
+        ],
+      }),
+      "en",
+    )[0]!;
+
+  it("is open inside today's range and closed after it ends", () => {
+    const branch = mkBranch();
+    expect(branchIsOpenNow(branch, new Date("2026-11-28T10:00:00Z"))).toBe(true); // 12:00 Cairo Sat
+    expect(branchIsOpenNow(branch, new Date("2026-11-28T02:30:00Z"))).toBe(false); // 04:30 Cairo Sat
+  });
+
+  it("stays open past midnight through yesterday's closesNextDay range", () => {
+    const branch = mkBranch();
+    expect(branchIsOpenNow(branch, new Date("2026-11-28T00:30:00Z"))).toBe(true); // 02:30 Cairo Sat, Friday range ends 03:00
+    expect(branchIsOpenNow(branch, new Date("2026-11-28T01:00:00Z"))).toBe(false); // exactly 03:00 Cairo = closed
+  });
+
+  it("honours a closed day and a temporarily closed status", () => {
+    const branch = mkBranch();
+    expect(branchIsOpenNow(branch, new Date("2026-11-29T10:00:00Z"))).toBe(false); // 12:00 Cairo Sun, isClosed
+    const closed = { ...branch, open: false };
+    expect(branchIsOpenNow(closed, new Date("2026-11-28T10:00:00Z"))).toBe(false);
+  });
+
+  it("falls back to the status flag when no hours are published", () => {
+    const branch = { ...mkBranch(), workingHours: [] };
+    expect(branchIsOpenNow(branch, new Date("2026-11-28T02:30:00Z"))).toBe(true);
   });
 });

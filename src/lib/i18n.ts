@@ -115,6 +115,7 @@ const en: Record<string, string> = {
   "كل الأصناف محضرة طازة في مطبخ ناوي أوردرز": "every item is freshly prepared in the Nawy Orders kitchen",
   "عرض {count} من {total} أطباق في قسم {category}": "Showing {count} of {total} items in {category}",
   "قسم «ال{name}»": "Category “{name}”",
+  "قسم «{name}»": "Category “{name}”",
   "قسم غير موجود": "Category not found",
   "{count} أقسام رئيسية — كل الأصناف محضرة طازة في مطبخ ناوي أوردرز": "{count} main categories — everything is freshly prepared in the Nawy Orders kitchen",
 
@@ -174,6 +175,7 @@ const en: Record<string, string> = {
   // cart
   "سلتك فاضية": "Your cart is empty",
   "تعذر إرسال الطلب، جرّب تاني": "We could not send your order, please try again",
+  "الفرع مقفل دلوقتي، جرّب تاني في مواعيد الشغل": "The branch is closed right now, please try again during working hours",
   "الطلب اتبعت، بس إثبات الدفع مترفعش — ابعته من صفحة طلباتك": "The order was placed, but the payment proof did not upload — send it from your orders page",
   "لسه مضفتش حاجة، اختار طبقك المفضل من القائمة وابدأ طلبك.": "You haven't added anything yet. Pick your favorite dish from the menu and start your order.",
   "سلتك فيها كل اللي بتحبه": "Everything you love, in one cart",

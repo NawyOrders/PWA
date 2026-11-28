@@ -954,7 +954,7 @@ describe("AppProvider — local account ownership", () => {
     act(() => result.current.login(sessionPayload()));
     await waitFor(() => expect(result.current.loggedIn).toBe(true));
 
-    expect(result.current.favorites).toEqual(seedFavorites);
+    expect(result.current.favorites).toEqual([]);
     // Live orders belong to the tenant, so no demo history is shown either.
     expect(result.current.orders).toEqual([]);
     expect(result.current.points).toBe(0);
@@ -1698,7 +1698,8 @@ describe("AppProvider — tenant API session and branding", () => {
 
   it("seeds the account with the customer who just signed in", async () => {
     const { result } = await app();
-    expect(result.current.profile.name).toBe(user.name);
+    // A live tenant starts blank: the demo persona belongs to the demo only.
+    expect(result.current.profile.name).toBe("");
 
     act(() => result.current.login(sessionPayload()));
     await waitFor(() => expect(result.current.profile.name).toBe("Nawy Guest"));
@@ -2078,6 +2079,9 @@ describe("AppProvider — the account picture", () => {
 describe("AppProvider — delivery fee quote", () => {
   beforeEach(() => {
     apiMode.transport = "live";
+    // Live mode no longer seeds demo addresses, so the quote tests plant the
+    // address book the flow expects.
+    localStorage.setItem(storageKeys.addresses, JSON.stringify(savedAddresses));
     api.fetchBranding.mockResolvedValue({
       notModified: true,
       branding: null,
