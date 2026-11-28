@@ -431,6 +431,16 @@ export function brandingFaviconUrl(branding: RestaurantBranding | null): string 
   return branding ? safeUrl(branding.faviconUrl) ?? safeUrl(branding.logoUrl) : null;
 }
 
+/** Best-effort MIME type for a tenant-uploaded icon URL. */
+export function iconMimeType(url: string): string {
+  const path = url.split("?")[0]?.toLowerCase() ?? "";
+  if (path.endsWith(".png")) return "image/png";
+  if (path.endsWith(".webp")) return "image/webp";
+  if (path.endsWith(".svg")) return "image/svg+xml";
+  if (path.endsWith(".ico")) return "image/x-icon";
+  return "image/jpeg";
+}
+
 /**
  * Points the document's icon links at the tenant's uploaded icons. The default
  * icons stay in the document; this only overrides their `href` while a tenant
