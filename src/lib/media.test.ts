@@ -47,6 +47,9 @@ describe("image upload validation", () => {
   it("applies the stricter receipt allowlist", () => {
     expect(validateImageFile(file("image/png"), RECEIPT_IMAGE_TYPES)).toEqual({ ok: true });
     expect(validateImageFile(file("image/jpeg"), RECEIPT_IMAGE_TYPES)).toEqual({ ok: true });
+    // iPhone camera rolls hand receipts over as HEIC; the receipt flow accepts them.
+    expect(validateImageFile(file("image/heic"), RECEIPT_IMAGE_TYPES)).toEqual({ ok: true });
+    expect(validateImageFile(file("image/heif"), RECEIPT_IMAGE_TYPES)).toEqual({ ok: true });
     expect(validateImageFile(file("image/webp"), RECEIPT_IMAGE_TYPES)).toEqual({
       ok: false,
       reason: "type",

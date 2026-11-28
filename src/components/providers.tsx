@@ -50,7 +50,7 @@ import {
   type RestaurantBranding,
 } from "@/lib/api";
 import { menuApi, menuProduct, TenantApiError } from "@/lib/tenant-menu";
-import { customerOrders, idempotencyKey, orderApi } from "@/lib/tenant-orders";
+import { customerOrders, idempotencyKey, orderApi, uploadPaymentProof } from "@/lib/tenant-orders";
 import { localAccount, rememberLocalAccount } from "@/lib/local-accounts";
 import {
   createAuthFetch,
@@ -224,7 +224,7 @@ type AppContextValue = {
   updateDeliveryDetails: (patch: Partial<DeliveryDetails>) => void;
   orders: Order[];
   /** Places the order on the tenant API when a customer is signed in. */
-  placeOrder: (paymentMethod: PaymentMethodId) => Promise<Order | null>;
+  placeOrder: (paymentMethod: PaymentMethodId, proof?: File | null) => Promise<Order | null>;
   fulfilment: "delivery" | "pickup";
   setFulfilment: (mode: "delivery" | "pickup") => void;
   /**
@@ -1864,7 +1864,7 @@ export function AppProvider({
   );
 
   const placeOrder = useCallback(
-    async (paymentMethod: PaymentMethodId): Promise<Order | null> => {
+    async (paymentMethod: PaymentMethodId, proof?: File | null): Promise<Order | null> => {
       if (lines.length === 0) return null;
 
       const now = Date.now();
@@ -1931,6 +1931,21 @@ export function AppProvider({
           // instead of the generic failure.
           toast(t(placeOrderErrorMessage(error)), "info");
           return null;
+        }
+        // InstaPay/wallet orders need the receipt on the server: the
+        // restaurant confirms the payment from the dashboard before cooking.
+        if (serverId && proof) {
+          try {
+            await uploadPaymentProof(
+              authFetch,
+              serverId,
+              proof,
+              proof.name || "receipt.jpg",
+              proof.type || "image/jpeg",
+            );
+          } catch {
+            toast(t("الطلب اتبعت، بس إثبات الدفع مترفعش — ابعته من صفحة طلباتك"), "info");
+          }
         }
       }
 

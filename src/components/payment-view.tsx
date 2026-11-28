@@ -22,7 +22,7 @@ import { useDialogFocus } from "@/hooks/use-dialog-focus";
 import { RECEIPT_IMAGE_TYPES, validateImageFile } from "@/lib/media";
 
 type MethodId = "cash" | "instapay" | "wallet";
-type Receipt = { name: string; size: number; url: string };
+type Receipt = { name: string; size: number; url: string; file: File };
 
 const methods: {
   id: MethodId;
@@ -78,12 +78,12 @@ export function PaymentView() {
     if (!check.ok) {
       setError(
         check.reason === "type"
-          ? "ارفع صورة بصيغة JPG أو PNG."
+          ? "ارفع صورة بصيغة JPG أو PNG أو HEIC."
           : "حجم الصورة أكبر من 5 ميجا، اختار صورة أصغر.",
       );
       return;
     }
-    setReceipt({ name: file.name || "إيصال الدفع.jpg", size: file.size, url: URL.createObjectURL(file) });
+    setReceipt({ name: file.name || "إيصال الدفع.jpg", size: file.size, url: URL.createObjectURL(file), file });
     setError("");
   };
 
@@ -92,7 +92,7 @@ export function PaymentView() {
     submittedRef.current = true;
     setShowModal(false);
 
-    const order = await placeOrder(method);
+    const order = await placeOrder(method, receipt?.file ?? null);
     if (!order) {
       submittedRef.current = false;
       // placeOrder already toasted the real reason (branch closed, payment
@@ -219,7 +219,7 @@ export function PaymentView() {
                   <input
                     ref={inputRef}
                     type="file"
-                    accept="image/png,image/jpeg"
+                    accept="image/png,image/jpeg,image/heic,image/heif"
                     className="hidden"
                     onChange={(event) => pickFile(event.target.files?.[0])}
                   />

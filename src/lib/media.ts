@@ -19,7 +19,7 @@ export function heroIsMirrored(lang: Lang) {
 
 /** Formats accepted for customer uploads (receipts, feedback screenshots). */
 export const UPLOAD_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
-export const RECEIPT_IMAGE_TYPES = ["image/jpeg", "image/png"] as const;
+export const RECEIPT_IMAGE_TYPES = ["image/jpeg", "image/png", "image/heic", "image/heif"] as const;
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 export type ImageFileCheck = { ok: true } | { ok: false; reason: "type" | "size" };
