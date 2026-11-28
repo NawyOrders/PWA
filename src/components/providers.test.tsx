@@ -2150,3 +2150,23 @@ describe("AppProvider — delivery fee quote", () => {
     expect(api.fetchDeliveryFeeQuote).not.toHaveBeenCalled();
   });
 });
+
+describe("checkout failure reasons", () => {
+  it("names the real reason instead of blaming an empty cart", async () => {
+    const { placeOrderErrorMessage, apiPaymentMethod } = await import("@/components/providers");
+    const { TenantApiError } = await import("@/lib/tenant-menu");
+    expect(placeOrderErrorMessage(new TenantApiError(409, { "PlaceOrder.BranchClosed": "closed" }))).toContain("الفرع مقفل");
+    expect(placeOrderErrorMessage(new TenantApiError(422, { AreaId: "required" }))).toContain("التوصيل مش متاح");
+    expect(placeOrderErrorMessage(new TenantApiError(422, { "PlaceOrder.InvalidPaymentMethod": "invalid" }))).toContain("طريقة الدفع");
+    expect(placeOrderErrorMessage(new TenantApiError(401, {}))).toContain("سجّل دخولك");
+    expect(placeOrderErrorMessage(new TenantApiError(500, {}))).toBe("تعذر إرسال الطلب، جرّب تاني");
+    expect(placeOrderErrorMessage(new Error("network"))).toBe("تعذر إرسال الطلب، جرّب تاني");
+  });
+
+  it("sends the API payment codes, including MobileWallet", async () => {
+    const { apiPaymentMethod } = await import("@/components/providers");
+    expect(apiPaymentMethod("cash")).toBe("Cash");
+    expect(apiPaymentMethod("instapay")).toBe("InstaPay");
+    expect(apiPaymentMethod("wallet")).toBe("MobileWallet");
+  });
+});

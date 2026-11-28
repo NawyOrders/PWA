@@ -123,7 +123,7 @@ describe("PaymentView", () => {
 
     await user.click(within(dialog).getByRole("button", { name: "تأكيد" }));
 
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/orders"));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/"));
     await waitFor(() =>
       expect(JSON.parse(localStorage.getItem(storageKeys.cart)!)).toEqual([]),
     );
@@ -167,7 +167,7 @@ describe("PaymentView", () => {
 
     await user.click(screen.getByRole("button", { name: "تأكيد الطلب" }));
 
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/orders"));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/"));
     await waitFor(() =>
       expect(JSON.parse(localStorage.getItem(storageKeys.cart)!)).toEqual([]),
     );
@@ -195,7 +195,7 @@ describe("PaymentView", () => {
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "تأكيد الطلب" }));
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/orders"));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/"));
   });
 
   it("copies the InstaPay number and confirms visually", async () => {

@@ -95,14 +95,19 @@ export function PaymentView() {
     const order = await placeOrder(method);
     if (!order) {
       submittedRef.current = false;
-      toast(t("سلتك فاضية"), "info");
-      router.push("/cart");
+      // placeOrder already toasted the real reason (branch closed, payment
+      // method unavailable, ...). Only bounce to the cart when it is
+      // genuinely empty.
+      if (lines.length === 0) {
+        toast(t("سلتك فاضية"), "info");
+        router.push("/cart");
+      }
       return;
     }
 
     clearCart(true);
     toast(t("تم تأكيد طلبك بنجاح، جاري تحضيره الآن"), "info");
-    router.push("/orders");
+    router.push("/");
   };
 
   const confirm = () => {
