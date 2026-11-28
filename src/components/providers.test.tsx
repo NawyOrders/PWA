@@ -464,6 +464,81 @@ describe("AppProvider — checkout details", () => {
     expect(result.current.deliveryDetails.name).toHaveLength(80);
     expect(typeof result.current.deliveryDetails.phone).toBe("string");
   });
+
+  it("drops the demo recipient older builds stored, keeping the rest", async () => {
+    localStorage.setItem(
+      storageKeys.deliveryDetails,
+      JSON.stringify({
+        building: "12",
+        floor: "2",
+        apartment: "8",
+        name: user.name,
+        phone: user.phone,
+        instructions: "اتصل قبل ما توصل",
+      }),
+    );
+    const { result } = await app();
+    expect(result.current.deliveryDetails.name).toBe("");
+    expect(result.current.deliveryDetails.phone).toBe("");
+    expect(result.current.deliveryDetails.building).toBe("12");
+    expect(result.current.deliveryDetails.instructions).toBe("اتصل قبل ما توصل");
+  });
+
+  it("starts a live storefront with an empty recipient, not the demo one", async () => {
+    apiMode.transport = "live";
+    api.fetchBranding.mockResolvedValue({
+      notModified: true,
+      branding: null,
+      etag: null,
+    });
+    api.refreshSession.mockResolvedValue(tokenPair());
+    api.revokeSession.mockResolvedValue(undefined);
+    api.attachStoredRefresh.mockResolvedValue(undefined);
+
+    const { result } = await app();
+    expect(result.current.deliveryDetails.name).toBe("");
+    expect(result.current.deliveryDetails.phone).toBe("");
+  });
+
+  it("prefills the live checkout recipient from the logged-in account", async () => {
+    apiMode.transport = "live";
+    api.fetchBranding.mockResolvedValue({
+      notModified: true,
+      branding: null,
+      etag: null,
+    });
+    api.refreshSession.mockResolvedValue(tokenPair());
+    api.revokeSession.mockResolvedValue(undefined);
+    api.attachStoredRefresh.mockResolvedValue(undefined);
+
+    const { result } = await app();
+    act(() => result.current.login(sessionPayload()));
+    await waitFor(() =>
+      expect(result.current.deliveryDetails.name).toBe(identity.fullName),
+    );
+    expect(result.current.deliveryDetails.phone).toBe(identity.phoneNumber);
+  });
+
+  it("never overwrites a recipient the customer typed", async () => {
+    apiMode.transport = "live";
+    api.fetchBranding.mockResolvedValue({
+      notModified: true,
+      branding: null,
+      etag: null,
+    });
+    api.refreshSession.mockResolvedValue(tokenPair());
+    api.revokeSession.mockResolvedValue(undefined);
+    api.attachStoredRefresh.mockResolvedValue(undefined);
+
+    const { result } = await app();
+    act(() =>
+      result.current.updateDeliveryDetails({ name: "منى", phone: "+201555" }),
+    );
+    act(() => result.current.login(sessionPayload()));
+    await waitFor(() => expect(result.current.loggedIn).toBe(true));
+    expect(result.current.deliveryDetails.name).toBe("منى");
+    expect(result.current.deliveryDetails.phone).toBe("+201555");
+  });
 });
 
 describe("AppProvider — order lifecycle", () => {

@@ -284,6 +284,17 @@ const seedDeliveryDetails: DeliveryDetails = {
   instructions: "",
 };
 
+/* Live storefronts start blank: the recipient is the logged-in customer, not
+   the demo persona. */
+const emptyDeliveryDetails: DeliveryDetails = {
+  building: "",
+  floor: "",
+  apartment: "",
+  name: "",
+  phone: "",
+  instructions: "",
+};
+
 const ADDRESS_KINDS = new Set<AddressKind>([
   "home",
   "work",
@@ -503,6 +514,13 @@ function decodeDeliveryDetails(
     if (typeof value[key] === "string")
       next[key] = (value[key] as string).slice(0, limits[key]);
   });
+  /* Older builds persisted the demo recipient (name/phone from `user`). Those
+     two fields were never the customer's own, so they are dropped on hydrate;
+     the account prefill below writes the real ones. */
+  if (next.name === user.name && next.phone === user.phone) {
+    next.name = "";
+    next.phone = "";
+  }
   return next;
 }
 
@@ -722,15 +740,15 @@ export function AppProvider({
       DEMO_BRANCHES[0].id,
       decodeSelectedBranch,
     );
-  const [deliveryDetails, setDeliveryDetails, deliveryDetailsReady] =
-    usePersistentState<DeliveryDetails>(
-      storageKeys.deliveryDetails,
-      seedDeliveryDetails,
-      decodeDeliveryDetails,
-    );
   /* The tenant's API is the record of what this customer ordered, so a live
      storefront starts with no history rather than the demo rows. */
   const liveTransport = authTransport() === "live";
+  const [deliveryDetails, setDeliveryDetails, deliveryDetailsReady] =
+    usePersistentState<DeliveryDetails>(
+      storageKeys.deliveryDetails,
+      liveTransport ? emptyDeliveryDetails : seedDeliveryDetails,
+      decodeDeliveryDetails,
+    );
   const [orders, setOrders, ordersReady] = usePersistentState<Order[]>(
     storageKeys.orders,
     liveTransport ? [] : seedOrders,
@@ -741,6 +759,20 @@ export function AppProvider({
     null,
     decodeCoupon,
   );
+  /* The checkout recipient is the logged-in customer: once the session is
+     known, empty name/phone fields take the account's values. Anything the
+     customer typed is never overwritten. */
+  useEffect(() => {
+    if (!customer) return;
+    setDeliveryDetails((current) => {
+      if (current.name && current.phone) return current;
+      return {
+        ...current,
+        name: current.name || customer.fullName,
+        phone: current.phone || customer.phoneNumber,
+      };
+    });
+  }, [customer, setDeliveryDetails]);
   const [orderNote, setOrderNote, orderNoteReady] = usePersistentState<string>(
     storageKeys.orderNote,
     "",
