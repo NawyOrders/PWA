@@ -58,7 +58,7 @@ export function ProductDetail({ product }: { product: Product }) {
       size: size?.label,
       extras: customizable ? selectedExtras : undefined,
       note,
-    });
+    }, product);
     setSelectedQuantity(0);
     setSizeId("sandwich");
     setExtras([]);

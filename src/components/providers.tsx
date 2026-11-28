@@ -49,7 +49,7 @@ import {
   type DeliveryFeeQuote,
   type RestaurantBranding,
 } from "@/lib/api";
-import { menuApi, menuProduct } from "@/lib/tenant-menu";
+import { menuApi, menuProduct, TenantApiError } from "@/lib/tenant-menu";
 import { customerOrders, idempotencyKey, orderApi } from "@/lib/tenant-orders";
 import { localAccount, rememberLocalAccount } from "@/lib/local-accounts";
 import {
@@ -652,6 +652,36 @@ function decodeProfile(stored: unknown, fallback: Profile): Profile {
   if (!isProfile(stored)) return fallback;
   return { ...stored, avatar: usableAvatar(stored.avatar) };
 }
+
+// Maps a rejected POST /api/v1/orders to the reason the customer needs.
+export function placeOrderErrorMessage(error: unknown): string {
+  if (error instanceof TenantApiError) {
+    const keys = Object.keys(error.errors ?? {}).join(" ");
+    if (error.status === 401 || error.status === 403) {
+      return "سجّل دخولك تاني وأعد تأكيد الطلب";
+    }
+    if (keys.includes("BranchClosed")) {
+      return "الفرع مقفل دلوقتي، جرّب تاني في مواعيد الشغل";
+    }
+    if (keys.includes("AreaId") || keys.includes("DeliveryArea")) {
+      return "التوصيل مش متاح للعنوان ده حالياً، جرّب الاستلام من الفرع";
+    }
+    if (keys.includes("InvalidPaymentMethod")) {
+      return "طريقة الدفع دي مش متاحة حالياً";
+    }
+  }
+  return "تعذر إرسال الطلب، جرّب تاني";
+}
+
+// The API's exact payment-method codes (GET /api/v1/payment-methods).
+export function apiPaymentMethod(paymentMethod: PaymentMethodId): string {
+  return paymentMethod === "cash"
+    ? "Cash"
+    : paymentMethod === "instapay"
+      ? "InstaPay"
+      : "MobileWallet";
+}
+
 
 export function AppProvider({
   children,
@@ -1870,16 +1900,15 @@ export function AppProvider({
        */
       let serverId: string | null = null;
       if (customer && authTransport() === "live") {
-        const apiMethod =
-          paymentMethod === "cash"
-            ? "Cash"
-            : paymentMethod === "instapay"
-              ? "InstaPay"
-              : "Wallet";
+        const apiMethod = apiPaymentMethod(paymentMethod);
         const payload = {
-          branchId: branch?.id ?? null,
+          // Delivery orders let the server pick the branch from the address
+          // pin; sending a branch id there is rejected.
+          branchId: fulfilment === "pickup" ? (branch?.id ?? null) : null,
           fulfilmentType: fulfilment === "pickup" ? 1 : 0,
           address: fulfilment === "pickup" ? t(branch?.name ?? "") : deliveryAddress,
+          latitude: fulfilment === "delivery" ? (address?.lat ?? null) : null,
+          longitude: fulfilment === "delivery" ? (address?.lng ?? null) : null,
           items: lines.map((line) => ({
             menuItemId: line.productId,
             itemSizeId:
@@ -1896,9 +1925,11 @@ export function AppProvider({
         try {
           const placed = await orderApi.place(payload, authFetch, idempotencyKey());
           serverId = placed?.orderNumber ? String(placed.orderNumber) : null;
-        } catch {
+        } catch (error) {
           // A rejected order must not empty the cart or pretend it was placed.
-          toast(t("تعذر إرسال الطلب، جرّب تاني"), "info");
+          // Tell the customer why (branch closed, delivery unavailable, ...)
+          // instead of the generic failure.
+          toast(t(placeOrderErrorMessage(error)), "info");
           return null;
         }
       }
