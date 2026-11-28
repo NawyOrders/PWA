@@ -48,7 +48,7 @@ import {
   type RestaurantBranding,
 } from "@/lib/api";
 import { menuApi, menuProduct } from "@/lib/tenant-menu";
-import { customerOrders, orderApi } from "@/lib/tenant-orders";
+import { customerOrders, idempotencyKey, orderApi } from "@/lib/tenant-orders";
 import { localAccount, rememberLocalAccount } from "@/lib/local-accounts";
 import {
   createAuthFetch,
@@ -1802,7 +1802,7 @@ export function AppProvider({
           couponCode: coupon ?? null,
         };
         try {
-          const placed = await orderApi.place(payload, authFetch);
+          const placed = await orderApi.place(payload, authFetch, idempotencyKey());
           serverId = placed?.orderNumber ? String(placed.orderNumber) : null;
         } catch {
           // A rejected order must not empty the cart or pretend it was placed.
