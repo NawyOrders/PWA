@@ -1,5 +1,5 @@
 import { mediaBaseFromUrl, setTenantMediaBase } from "@/lib/media";
-import { menuImage } from "@/lib/tenant-menu";
+import { bypassImageOptimizer, menuImage } from "@/lib/tenant-menu";
 import { describe, expect, it } from "vitest";
 import {
   MAX_UPLOAD_BYTES,
@@ -76,5 +76,25 @@ describe("tenant media base", () => {
     );
     setTenantMediaBase(null);
     expect(menuImage("tenant-1/menu/items/a.jpg", null)).toBe("/images/burger.webp");
+  });
+});
+
+describe("bypassImageOptimizer", () => {
+  it("sends a tenant-hosted photo straight to the browser", () => {
+    // The tenant storage host is only known at runtime, so next/image cannot
+    // have it in remotePatterns and would answer 400 for it.
+    expect(bypassImageOptimizer("https://cxvrtmdsxfwhhmwnazos.supabase.co/storage/v1/object/public/nawy-orders/t/menu/items/a.jpg")).toBe(true);
+    expect(bypassImageOptimizer("https://cdn.example.com/photo.jpg")).toBe(true);
+  });
+
+  it("keeps the hosts next.config.ts allows on the optimiser", () => {
+    expect(bypassImageOptimizer("https://images.unsplash.com/photo-1?w=600")).toBe(false);
+    expect(bypassImageOptimizer("https://www.themealdb.com/images/media/meals/a.jpg")).toBe(false);
+  });
+
+  it("keeps local assets optimised and ignores an empty source", () => {
+    expect(bypassImageOptimizer("/images/burger.webp")).toBe(false);
+    expect(bypassImageOptimizer("data:image/jpeg;base64,AAA")).toBe(false);
+    expect(bypassImageOptimizer(null)).toBe(false);
   });
 });

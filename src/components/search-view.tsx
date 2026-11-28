@@ -14,7 +14,7 @@ import { useApp } from "@/components/providers";
 import { translate } from "@/lib/i18n";
 import { apiConfigured } from "@/lib/api";
 import { useMenuItems } from "@/hooks/use-tenant-menu";
-import { menuProduct } from "@/lib/tenant-menu";
+import { menuProduct, bypassImageOptimizer } from "@/lib/tenant-menu";
 
 const types = ["لحم", "سمك", "دجاج", "نباتي"] as const;
 
@@ -123,7 +123,7 @@ export function SearchView({ query }: { query: string }) {
                   }`}
                 >
                   <span className="relative size-12 overflow-hidden rounded-full">
-                    <Image src={category.image} alt={t(category.name)} fill sizes="48px" className="object-cover" />
+                    <Image src={category.image} unoptimized={bypassImageOptimizer(category.image)} alt={t(category.name)} fill sizes="48px" className="object-cover" />
                   </span>
                 </span>
                 <span className={`whitespace-nowrap text-[10px] font-bold ${active ? "text-brand" : "text-ink"}`}>{t(category.name)}</span>

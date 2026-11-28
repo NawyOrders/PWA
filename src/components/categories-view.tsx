@@ -18,7 +18,7 @@ import { MobilePageHeader } from "@/components/ui";
 import { ProductCard } from "@/components/product-card";
 import { useApp } from "@/components/providers";
 import { apiConfigured } from "@/lib/api";
-import { menuImage, menuProduct } from "@/lib/tenant-menu";
+import { menuImage, menuProduct, bypassImageOptimizer } from "@/lib/tenant-menu";
 import {
   useMenuCategories,
   useMenuItems,
@@ -108,6 +108,7 @@ export function CategoriesView() {
                   <span className="relative size-12 overflow-hidden rounded-full">
                     <Image
                       src={item.image}
+                      unoptimized={bypassImageOptimizer(item.image)}
                       alt={t(item.name)}
                       fill
                       sizes="48px"
@@ -145,6 +146,7 @@ export function CategoriesView() {
                   <span className="relative size-12 overflow-hidden rounded-full">
                     <Image
                       src={item.image}
+                      unoptimized={bypassImageOptimizer(item.image)}
                       alt={t(item.name)}
                       fill
                       sizes="48px"

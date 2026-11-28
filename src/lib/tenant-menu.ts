@@ -100,6 +100,18 @@ export const menuApi = {
     ),
 };
 
+/**
+ * next/image only optimises hosts listed in `images.remotePatterns`, and one
+ * build serves every store, so a tenant's storage host is unknown at build
+ * time. Its photos therefore go to the browser as they are — the same way the
+ * offer photos already load — while the pictures this app ships stay optimised.
+ * The demo hosts below are the ones `next.config.ts` does allow.
+ */
+export function bypassImageOptimizer(src?: string | null): boolean {
+  if (!src || !/^https?:\/\//i.test(src)) return false;
+  return !/^https?:\/\/(?:www\.)?(?:themealdb\.com|images\.unsplash\.com)\//i.test(src);
+}
+
 /** Listing keys are not URLs. The tenant's own storage prefix (from its branding) turns a key into a URL; without one, keep the local placeholder. */
 export function menuImage(imageKey?: string | null, imageUrl?: string | null): string {
   if (imageUrl) {
