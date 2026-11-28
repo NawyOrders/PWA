@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { bypassImageOptimizer } from "@/lib/tenant-menu";
 import Link from "next/link";
 import type { Product } from "@/lib/data";
 import { useApp } from "@/components/providers";
@@ -29,6 +30,7 @@ export function MenuRow({ product, className = "" }: { product: Product; classNa
         >
           <Image
             src={product.image}
+            unoptimized={bypassImageOptimizer(product.image)}
             alt={t(product.name)}
             fill
             sizes="150px"

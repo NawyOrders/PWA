@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { bypassImageOptimizer } from "@/lib/tenant-menu";
 import Link from "next/link";
 import type { Product } from "@/lib/data";
 import { useApp } from "@/components/providers";
@@ -37,6 +38,7 @@ export function ProductCard({
         <div className={`relative overflow-hidden rounded-[20px] bg-peach ${mediaClassName}`}>
           <Image
             src={product.image}
+            unoptimized={bypassImageOptimizer(product.image)}
             alt={t(product.name)}
             fill
             sizes="(max-width: 1024px) 45vw, 280px"

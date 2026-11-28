@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { bypassImageOptimizer } from "@/lib/tenant-menu";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { ArrowLeft, Tag } from "lucide-react";
@@ -68,7 +69,7 @@ export function CartSummary({
             return (
               <li key={line.key} className="flex items-center gap-3">
                 <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-peach">
-                  <Image src={product.image} alt={t(product.name)} fill sizes="56px" className="object-cover" />
+                  <Image src={product.image} unoptimized={bypassImageOptimizer(product.image)} alt={t(product.name)} fill sizes="56px" className="object-cover" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold">{t(product.name)}</p>

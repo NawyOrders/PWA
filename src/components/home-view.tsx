@@ -33,7 +33,7 @@ import {
 } from "@/components/order-tracking-promo";
 import { useApp } from "@/components/providers";
 import { apiConfigured } from "@/lib/api";
-import { menuImage, menuProduct } from "@/lib/tenant-menu";
+import { menuImage, menuProduct, bypassImageOptimizer } from "@/lib/tenant-menu";
 import {
   useMenuCategories,
   useMenuItem,
@@ -185,6 +185,7 @@ export function HomeView() {
                   <span className="relative size-12 overflow-hidden rounded-full">
                     <Image
                       src={category.image}
+                      unoptimized={bypassImageOptimizer(category.image)}
                       alt={t(category.name)}
                       fill
                       sizes="48px"
@@ -219,6 +220,7 @@ export function HomeView() {
                   <span className="relative size-10 overflow-hidden rounded-full md:size-11 lg:size-12">
                     <Image
                       src={category.image}
+                      unoptimized={bypassImageOptimizer(category.image)}
                       alt={t(category.name)}
                       fill
                       sizes="(max-width: 767px) 40px, (max-width: 1023px) 44px, 48px"

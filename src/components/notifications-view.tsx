@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { bypassImageOptimizer } from "@/lib/tenant-menu";
 import Link from "next/link";
 import { useState } from "react";
 import { ChevronLeft, CircleCheck, MailCheck, Truck } from "lucide-react";
@@ -144,6 +145,7 @@ export function NotificationsView() {
                               <span className="relative size-14 shrink-0 overflow-hidden rounded-2xl bg-peach">
                                 <Image
                                   src={notification.image}
+                                  unoptimized={bypassImageOptimizer(notification.image)}
                                   alt=""
                                   fill
                                   sizes="56px"

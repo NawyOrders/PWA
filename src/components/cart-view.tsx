@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { bypassImageOptimizer } from "@/lib/tenant-menu";
 import { Trash2, Wallet } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { CartSummary } from "@/components/cart-summary";
@@ -16,7 +17,7 @@ function CartItem({ lineKey }: { lineKey: string }) {
   return (
     <article className="relative flex gap-3 rounded-[24px] bg-white p-3 shadow-soft transition duration-300 hover:shadow-pop lg:gap-4 lg:p-4">
       <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-peach lg:size-32">
-        <Image src={product.image} alt={t(product.name)} fill sizes="128px" className="object-cover" />
+        <Image src={product.image} unoptimized={bypassImageOptimizer(product.image)} alt={t(product.name)} fill sizes="128px" className="object-cover" />
       </div>
       <div className="flex min-w-0 flex-1 flex-col justify-center">
         <h3 className="pe-12 text-base font-extrabold lg:text-lg">{t(product.name)}</h3>

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { bypassImageOptimizer } from "@/lib/tenant-menu";
 import Link from "next/link";
 import { useState } from "react";
 import { ChevronLeft, ReceiptText, RotateCcw, Truck } from "lucide-react";
@@ -62,7 +63,7 @@ export function OrdersView() {
 
         <div className="mt-4 flex items-start gap-3.5">
           <div className="relative size-20 shrink-0 overflow-hidden rounded-2xl bg-peach">
-            <Image src={order.image} alt={t(order.title)} fill sizes="96px" className="object-cover" />
+            <Image src={order.image} unoptimized={bypassImageOptimizer(order.image)} alt={t(order.title)} fill sizes="96px" className="object-cover" />
           </div>
           <div className="min-w-0 flex-1 pt-1">
             <h3 className="text-[15px] font-extrabold leading-6">{t(order.title)}</h3>

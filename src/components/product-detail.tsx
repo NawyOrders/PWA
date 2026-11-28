@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { bypassImageOptimizer } from "@/lib/tenant-menu";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Check, ChevronLeft, Info, Minus, Plus, ShoppingCart } from "lucide-react";
@@ -96,6 +97,7 @@ export function ProductDetail({ product }: { product: Product }) {
             <div className="motion-fade relative aspect-[2.1/1] overflow-hidden rounded-[24px] bg-peach shadow-soft lg:aspect-[1.55/1] lg:rounded-[30px]">
               <Image
                 src={product.image}
+                unoptimized={bypassImageOptimizer(product.image)}
                 alt={t(product.name)}
                 fill
                 priority

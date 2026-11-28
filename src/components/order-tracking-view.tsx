@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { bypassImageOptimizer } from "@/lib/tenant-menu";
 import Link from "next/link";
 import { useState } from "react";
 import {
@@ -221,7 +222,7 @@ export function OrderTrackingView({ order }: { order: Order }) {
 
             <div className="mt-4 flex items-center gap-3">
               <div className="relative size-16 shrink-0 overflow-hidden rounded-2xl bg-peach">
-                <Image src={order.image} alt={t(order.title)} fill sizes="64px" className="object-cover" />
+                <Image src={order.image} unoptimized={bypassImageOptimizer(order.image)} alt={t(order.title)} fill sizes="64px" className="object-cover" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-extrabold">{t(order.title)}</p>
