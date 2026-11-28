@@ -10,14 +10,14 @@ import { branchHoursLabel } from "@/lib/branding";
 
 export function PickupView() {
   const router = useRouter();
-  const { fulfilment, setFulfilment, subtotal, count, t, lang, addresses, selectedAddressId, selectedBranchId, coupon, branches, deliveryFee } = useApp();
+  const { fulfilment, setFulfilment, subtotal, count, t, lang, addresses, selectedAddressId, selectedBranchId, coupon, couponDiscount, branches, deliveryFee } = useApp();
   const branch = branches.find((item) => item.id === selectedBranchId) ?? branches[0];
   const selectedAddress = addresses.find((address) => address.id === selectedAddressId) ?? null;
   const deliveryAddress = selectedAddress
     ? `${t(selectedAddress.area)}${lang === "ar" ? "، " : ", "}${t(selectedAddress.detail)}`
     : t("اختار عنوان التوصيل");
   const fee = fulfilment === "delivery" && subtotal > 0 ? (deliveryFee ?? 0) : 0;
-  const discount = coupon ? Math.min(Math.round(subtotal * 0.2), 50) : 0;
+  const discount = coupon ? couponDiscount : 0;
   const total = Math.max(0, subtotal - discount + fee);
 
   function confirmFulfilment() {
@@ -152,7 +152,7 @@ export function PickupView() {
               </div>
               {discount > 0 ? (
                 <div className="flex items-center justify-between gap-4 text-success">
-                  <dt>{t("الخصم (NAWY20)")}</dt>
+                  <dt>{t("الخصم ({code})", { code: coupon ?? "" })}</dt>
                   <dd className="font-bold">- {formatPrice(discount)} {t("جنيه")}</dd>
                 </div>
               ) : null}

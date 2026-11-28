@@ -27,6 +27,7 @@ import type {
   CustomerSessionPayload,
   TokenPair,
 } from "@/lib/api";
+import { TenantApiError } from "@/lib/tenant-menu";
 import type { CustomerSession } from "@/lib/session";
 
 /**
@@ -44,6 +45,12 @@ const api = vi.hoisted(() => ({
   revokeSession: vi.fn(),
   attachStoredRefresh: vi.fn(),
 }));
+
+const couponValidate = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/tenant-orders", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/tenant-orders")>();
+  return { ...actual, couponApi: { validate: couponValidate } };
+});
 
 vi.mock("@/lib/api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api")>();
@@ -187,6 +194,7 @@ async function seededApp() {
  * starts from, so no suite can leak a live transport into the next one.
  */
 beforeEach(() => {
+  couponValidate.mockReset();
   apiMode.transport = "demo";
   api.fetchDeliveryFeeQuote.mockResolvedValue({
     isDeliverable: true,
@@ -324,23 +332,51 @@ describe("AppProvider — cart flow", () => {
 });
 
 describe("AppProvider — discounts and notes", () => {
-  it("accepts only the supported coupon, case-insensitively", async () => {
-    const { result } = await app();
-    act(() => expect(result.current.applyCoupon("SAVE50")).toBe(false));
+  it("asks the server about a coupon and keeps its quoted discount", async () => {
+    apiMode.transport = "live";
+    api.fetchBranding.mockResolvedValue({ notModified: true, branding: null, etag: null });
+    api.refreshSession.mockResolvedValue(tokenPair());
+    couponValidate.mockImplementation(async (code: string) => {
+      if (code.toUpperCase() === "PABLO20") {
+        return { code: "PABLO20", totalDiscountAmount: 25 };
+      }
+      throw new TenantApiError(404, { "Coupon.NotFound": "no" });
+    });
+    const { result } = await seededApp();
+
+    let bad: Awaited<ReturnType<typeof result.current.applyCoupon>> | undefined;
+    await act(async () => {
+      bad = await result.current.applyCoupon("SAVE50");
+    });
+    expect(bad).toEqual({ ok: false, message: "كود الخصم غير صحيح" });
     expect(result.current.coupon).toBeNull();
 
-    act(() => expect(result.current.applyCoupon("  nawy20 ")).toBe(true));
-    expect(result.current.coupon).toBe("NAWY20");
-    await waitFor(() =>
-      expect(JSON.parse(localStorage.getItem(storageKeys.coupon)!)).toBe(
-        "NAWY20",
-      ),
+    await act(async () => {
+      await result.current.applyCoupon("  pablo20 ");
+    });
+    expect(couponValidate).toHaveBeenCalledWith(
+      "pablo20",
+      expect.any(Number),
+      expect.any(Number),
     );
+    expect(result.current.coupon).toBe("PABLO20");
+    await waitFor(() => expect(result.current.couponDiscount).toBe(25));
+  });
+
+  it("never grants a coupon discount in the offline demo", async () => {
+    const { result } = await app();
+    await act(async () => {
+      expect(await result.current.applyCoupon("PABLO20")).toEqual({
+        ok: false,
+        message: "كود الخصم غير صحيح",
+      });
+    });
+    expect(result.current.coupon).toBeNull();
+    expect(couponValidate).not.toHaveBeenCalled();
   });
 
   it("clears cart, coupon and note together", async () => {
     const { result } = await app();
-    act(() => result.current.applyCoupon("NAWY20"));
     act(() => result.current.setOrderNote("اتصل قبل الوصول"));
     act(() => result.current.clearCart(true));
     expect(result.current.lines).toEqual([]);
@@ -603,18 +639,17 @@ describe("AppProvider — order lifecycle", () => {
     expect(placed!.address).toBe(user.address);
   });
 
-  it("applies coupon and pickup branch to the recorded order", async () => {
+  it("records the pickup branch on the order", async () => {
     const { result } = await seededApp();
     act(() => result.current.setFulfilment("pickup"));
     act(() => result.current.selectBranch("smouha"));
-    act(() => result.current.applyCoupon("nawy20"));
 
     let placed: Order | null = null;
     await act(async () => {
       placed = await result.current.placeOrder("wallet");
     });
 
-    expect(placed!.total).toBe(345 - 50);
+    expect(placed!.total).toBe(345);
     expect(placed!.fulfilment).toBe("pickup");
     expect(placed!.branchId).toBe("smouha");
     expect(placed!.address).toBe("فرع سموحة");

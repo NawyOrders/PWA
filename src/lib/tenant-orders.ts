@@ -1,6 +1,6 @@
 import type { Order, PaymentMethodId } from "@/lib/data";
 import type { AuthFetch } from "@/lib/session";
-import { tenantRequest } from "@/lib/tenant-menu";
+import { TenantApiError, tenantRequest } from "@/lib/tenant-menu";
 
 /* -------------------------------------------------------------------------- */
 /* Orders: the tenant owns the order, so the storefront writes it and reads it */
@@ -142,6 +142,40 @@ export function idempotencyKey(): string {
   if (typeof uuid === "function") return uuid.call(globalThis.crypto);
   return `ab-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 }
+
+/** `POST /api/v1/coupons/validate` — the server's own discount preview. */
+export type CouponQuote = {
+  couponId?: string | null;
+  code: string;
+  totalDiscountAmount: number;
+  finalTotalPreview?: number | null;
+  endsAtUtc?: string | null;
+};
+
+/** Why a coupon was refused, in the customer's words (Arabic source text). */
+export function couponErrorMessage(error: unknown): string {
+  if (error instanceof TenantApiError) {
+    const keys = Object.keys(error.errors ?? {}).join(" ");
+    if (keys.includes("NotFound")) return "كود الخصم غير صحيح";
+    if (keys.includes("Expired")) return "كود الخصم ده انتهت صلاحيته";
+    if (keys.includes("NotStarted")) return "كود الخصم ده لسه ما بدأش";
+    if (keys.includes("Inactive") || keys.includes("NotActive")) return "كود الخصم ده مش مفعّل دلوقتي";
+    if (keys.includes("Minimum") || keys.includes("MinOrder")) return "الطلب أقل من الحد الأدنى لكود الخصم ده";
+    if (keys.includes("Limit") || keys.includes("Usage") || keys.includes("Exhausted")) return "كود الخصم ده وصل للحد الأقصى للاستخدام";
+    if (keys.includes("FirstOrder")) return "كود الخصم ده للطلب الأول بس";
+    if (error.status === 404) return "كود الخصم غير صحيح";
+  }
+  return "تعذر التحقق من كود الخصم، جرّب تاني";
+}
+
+export const couponApi = {
+  validate: (code: string, subTotal: number, deliveryFee: number) =>
+    tenantRequest<CouponQuote>("/api/v1/coupons/validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, subTotal, deliveryFee }),
+    }),
+};
 
 export const orderApi = {
   /**
