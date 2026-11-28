@@ -13,6 +13,7 @@ const en: Record<string, string> = {
   "السلة": "Cart",
   "الطلبات": "Orders",
   "المفضلة": "Favorites",
+  "أهلاً،": "Welcome,",
   "الاعدادات": "Settings",
   "الإعدادات": "Settings",
   "العودة للاعدادات": "Back to settings",
