@@ -74,7 +74,9 @@ import {
   sanitizeBranding,
   type BrandingCache,
   type StoreBranch,
+  brandingLogoUrl,
 } from "@/lib/branding";
+import { setTenantMediaBase } from "@/lib/media";
 import { setRuntimeTenantApiBaseUrl } from "@/lib/runtime-tenant";
 import { usePersistentState } from "@/hooks/use-persistent-state";
 import { LoadingIndicator } from "@/components/loading-indicator";
@@ -949,6 +951,12 @@ export function AppProvider({
       ? (deliveryQuote?.deliveryFee ?? null)
       : demoDeliveryFee;
   const branding = brandingCache?.branding ?? null;
+
+  // Menu images are storage keys: the tenant's own public prefix (the one its
+  // logo already lives under) is what makes them loadable.
+  useEffect(() => {
+    setTenantMediaBase(brandingLogoUrl(branding));
+  }, [branding]);
   /*
    * `/api/v1/Branding` owns the pickup branches. The demo list only survives
    * when the payload has no branches, which is exactly when the app is running

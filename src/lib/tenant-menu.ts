@@ -1,3 +1,4 @@
+import { getTenantMediaBase } from "./media";
 import { apiUrl, type ApiResponse } from "@/lib/api";
 import { apiBaseUrl } from "@/lib/api";
 import type { Product } from "@/lib/data";
@@ -99,14 +100,14 @@ export const menuApi = {
     ),
 };
 
-/** Listing keys are not URLs. Without an explicitly configured media resolver, use the existing local placeholder. */
+/** Listing keys are not URLs. The tenant's own storage prefix (from its branding) turns a key into a URL; without one, keep the local placeholder. */
 export function menuImage(imageKey?: string | null, imageUrl?: string | null): string {
   if (imageUrl) {
     try { return new URL(imageUrl, apiBaseUrl() || window.location.origin).toString(); } catch { return "/images/burger.webp"; }
   }
   if (imageKey && /^https?:\/\//i.test(imageKey)) return imageKey;
   if (imageKey) {
-    const mediaBase = (process.env.NEXT_PUBLIC_TENANT_MEDIA_BASE_URL ?? "").trim().replace(/\/+$/, "");
+    const mediaBase = (getTenantMediaBase() ?? process.env.NEXT_PUBLIC_TENANT_MEDIA_BASE_URL ?? "").trim().replace(/\/+$/, "");
     if (mediaBase) {
       try { return new URL(imageKey.replace(/^\/+/, ""), `${mediaBase}/`).toString(); } catch { return "/images/burger.webp"; }
     }
