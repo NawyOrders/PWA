@@ -5,18 +5,18 @@ import { useRouter } from "next/navigation";
 import { Bike, MapPin, PackageCheck } from "lucide-react";
 import { useApp } from "@/components/providers";
 import { CheckoutShell, Button } from "@/components/ui";
-import { deliveryFee, formatPrice, user } from "@/lib/data";
+import { formatPrice, user } from "@/lib/data";
 import { branchHoursLabel } from "@/lib/branding";
 
 export function PickupView() {
   const router = useRouter();
-  const { fulfilment, setFulfilment, subtotal, count, t, lang, addresses, selectedAddressId, selectedBranchId, coupon, branches } = useApp();
+  const { fulfilment, setFulfilment, subtotal, count, t, lang, addresses, selectedAddressId, selectedBranchId, coupon, branches, deliveryFee } = useApp();
   const branch = branches.find((item) => item.id === selectedBranchId) ?? branches[0];
   const selectedAddress = addresses.find((address) => address.id === selectedAddressId) ?? null;
   const deliveryAddress = selectedAddress
     ? `${t(selectedAddress.area)}${lang === "ar" ? "، " : ", "}${t(selectedAddress.detail)}`
     : t(user.fullAddress);
-  const fee = fulfilment === "delivery" && subtotal > 0 ? deliveryFee : 0;
+  const fee = fulfilment === "delivery" && subtotal > 0 ? (deliveryFee ?? 0) : 0;
   const discount = coupon ? Math.min(Math.round(subtotal * 0.2), 50) : 0;
   const total = Math.max(0, subtotal - discount + fee);
 

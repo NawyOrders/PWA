@@ -207,6 +207,7 @@ const en: Record<string, string> = {
   "كود الخصم غير صحيح": "Invalid promo code",
   "تم تطبيق كود {code} — خصم 20%": "Code {code} applied — 20% off",
   "رسوم التوصيل": "Delivery fee",
+  "تُحدد حسب العنوان": "Set by the address",
   "استلام من الفرع": "Pickup from branch",
   "الخصم (NAWY20)": "Discount (NAWY20)",
 

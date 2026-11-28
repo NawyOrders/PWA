@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { ArrowLeft, Tag } from "lucide-react";
 import { useApp } from "@/components/providers";
-import { deliveryFee as baseDeliveryFee, formatPrice } from "@/lib/data";
+import { formatPrice } from "@/lib/data";
 
 export function CartSummary({
   ctaLabel,
@@ -30,13 +30,13 @@ export function CartSummary({
   children?: ReactNode;
   className?: string;
 }) {
-  const { lines, count, subtotal, t, coupon, applyCoupon, orderNote, productById } = useApp();
+  const { lines, count, subtotal, t, coupon, applyCoupon, orderNote, productById, deliveryFee: quotedFee } = useApp();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
 
   const discount = coupon ? Math.min(Math.round(subtotal * 0.2), 50) : 0;
-  const fee = delivery ? (subtotal > 0 ? baseDeliveryFee : 0) : 0;
-  const total = Math.max(0, subtotal - discount + fee);
+  const fee = delivery && subtotal > 0 ? quotedFee : 0;
+  const total = Math.max(0, subtotal - discount + (fee ?? 0));
 
   const applyCode = () => {
     if (applyCoupon(code)) {
@@ -135,7 +135,11 @@ export function CartSummary({
         <div className="flex items-center justify-between">
           <dt className="text-muted">{t("رسوم التوصيل")}</dt>
           <dd className="font-bold">
-            {delivery ? `${formatPrice(fee)} ${t("جنيه")}` : t("استلام من الفرع")}
+            {delivery
+              ? fee !== null
+                ? `${formatPrice(fee)} ${t("جنيه")}`
+                : t("تُحدد حسب العنوان")
+              : t("استلام من الفرع")}
           </dd>
         </div>
         {discount > 0 ? (

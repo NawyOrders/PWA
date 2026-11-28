@@ -39,6 +39,7 @@ import type { CustomerSession } from "@/lib/session";
 const apiMode = vi.hoisted(() => ({ transport: "demo" as AuthTransport }));
 const api = vi.hoisted(() => ({
   fetchBranding: vi.fn(),
+  fetchDeliveryFeeQuote: vi.fn(),
   refreshSession: vi.fn(),
   revokeSession: vi.fn(),
   attachStoredRefresh: vi.fn(),
@@ -53,6 +54,7 @@ vi.mock("@/lib/api", async (importOriginal) => {
     apiUrl: (path: string) => `https://api.test/${path.replace(/^\//, "")}`,
     authTransport: () => apiMode.transport,
     fetchBranding: api.fetchBranding,
+    fetchDeliveryFeeQuote: api.fetchDeliveryFeeQuote,
     refreshSession: api.refreshSession,
     revokeSession: api.revokeSession,
     attachStoredRefresh: api.attachStoredRefresh,
@@ -186,6 +188,12 @@ async function seededApp() {
  */
 beforeEach(() => {
   apiMode.transport = "demo";
+  api.fetchDeliveryFeeQuote.mockResolvedValue({
+    isDeliverable: true,
+    deliveryFee: 25,
+    distanceKm: 3,
+    branchId: null,
+  });
 });
 
 describe("AppProvider — cart flow", () => {
@@ -1989,5 +1997,81 @@ describe("AppProvider — the account picture", () => {
 
     expect(result.current.profile.name).toBe(user.name);
     expect(result.current.profile.avatar).toBe("");
+  });
+});
+
+describe("AppProvider — delivery fee quote", () => {
+  beforeEach(() => {
+    apiMode.transport = "live";
+    api.fetchBranding.mockResolvedValue({
+      notModified: true,
+      branding: null,
+      etag: null,
+    });
+    api.refreshSession.mockResolvedValue(tokenPair());
+    api.revokeSession.mockResolvedValue(undefined);
+    api.attachStoredRefresh.mockResolvedValue(undefined);
+  });
+
+  it("quotes the fee from the tenant API for the selected address", async () => {
+    api.fetchDeliveryFeeQuote.mockResolvedValue({
+      isDeliverable: true,
+      deliveryFee: 42,
+      distanceKm: 3.2,
+      branchId: "branch-1",
+    });
+    const { result } = await app();
+    act(() => result.current.selectAddress(savedAddresses[0].id));
+    await waitFor(() => expect(result.current.deliveryFee).toBe(42));
+    expect(api.fetchDeliveryFeeQuote).toHaveBeenCalledWith({
+      lat: savedAddresses[0].lat,
+      lng: savedAddresses[0].lng,
+    });
+  });
+
+  it("leaves the fee unknown when the quote fails", async () => {
+    api.fetchDeliveryFeeQuote.mockRejectedValue(new Error("closed"));
+    const { result } = await app();
+    act(() => result.current.selectAddress(savedAddresses[0].id));
+    await waitFor(() => expect(api.fetchDeliveryFeeQuote).toHaveBeenCalled());
+    expect(result.current.deliveryFee).toBeNull();
+  });
+
+  it("does not quote while the customer picks up", async () => {
+    const { result } = await app();
+    act(() => result.current.setFulfilment("pickup"));
+    await waitFor(() => expect(result.current.fulfilment).toBe("pickup"));
+    api.fetchDeliveryFeeQuote.mockClear();
+    act(() => result.current.selectAddress(savedAddresses[0].id));
+    await waitFor(() =>
+      expect(result.current.selectedAddressId).toBe(savedAddresses[0].id),
+    );
+    expect(api.fetchDeliveryFeeQuote).not.toHaveBeenCalled();
+    expect(result.current.deliveryFee).toBeNull();
+  });
+
+  it("re-quotes when the selected address changes", async () => {
+    const { result } = await app();
+    act(() => result.current.selectAddress(savedAddresses[0].id));
+    await waitFor(() => expect(result.current.deliveryFee).toBe(25));
+    api.fetchDeliveryFeeQuote.mockResolvedValue({
+      isDeliverable: true,
+      deliveryFee: 60,
+      distanceKm: 8,
+      branchId: "branch-2",
+    });
+    act(() => result.current.selectAddress(savedAddresses[1].id));
+    await waitFor(() => expect(result.current.deliveryFee).toBe(60));
+    expect(api.fetchDeliveryFeeQuote).toHaveBeenLastCalledWith({
+      lat: savedAddresses[1].lat,
+      lng: savedAddresses[1].lng,
+    });
+  });
+
+  it("keeps the fixed demo fee in demo mode", async () => {
+    apiMode.transport = "demo";
+    const { result } = await app();
+    expect(result.current.deliveryFee).toBe(30);
+    expect(api.fetchDeliveryFeeQuote).not.toHaveBeenCalled();
   });
 });
