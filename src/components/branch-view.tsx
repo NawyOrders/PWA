@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { ArrowLeft, Clock3, MapPin, Phone, Store } from "lucide-react";
-import { branchHoursLabel } from "@/lib/branding";
+import { branchHoursLabel, branchIsOpenNow } from "@/lib/branding";
 import { CartSummary } from "@/components/cart-summary";
 import { CheckoutShell, buttonStyles } from "@/components/ui";
 import { useApp } from "@/components/providers";
@@ -66,10 +66,10 @@ export function BranchView() {
                       <span className="text-sm font-extrabold">{t(item.name)}</span>
                       <span
                         className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
-                          item.open ? "bg-success-soft text-success" : "bg-brand-soft text-brand"
+                          branchIsOpenNow(item) ? "bg-success-soft text-success" : "bg-brand-soft text-brand"
                         }`}
                       >
-                        {item.open ? t("مفتوح الآن") : t("مغلق مؤقتاً")}
+                        {branchIsOpenNow(item) ? t("مفتوح الآن") : t("مغلق مؤقتاً")}
                       </span>
                     </span>
                     <span className="mt-1 block text-[11px] leading-5 text-muted">{t(item.address)}</span>

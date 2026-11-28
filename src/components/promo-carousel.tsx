@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useApp } from "@/components/providers";
+import { authTransport } from "@/lib/api";
 import { heroImage, heroIsMirrored } from "@/lib/media";
 
 const slides = [
@@ -50,6 +51,10 @@ export function PromoCarousel() {
   const { t, lang } = useApp();
   const [index, setIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
+  /* The slides below are demo marketing artwork. A live tenant has no offers
+     feed yet, so the carousel stays hidden there rather than advertising
+     products and promos the restaurant does not sell. */
+  const demoOnly = authTransport() !== "live";
 
   useEffect(() => {
     const timer = setInterval(() => setIndex((current) => (current + 1) % slides.length), 6000);
@@ -67,6 +72,8 @@ export function PromoCarousel() {
       (current + (distance < 0 ? 1 : -1) + slides.length) % slides.length,
     );
   };
+
+  if (!demoOnly) return null;
 
   return (
     <div>

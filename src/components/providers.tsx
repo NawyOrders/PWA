@@ -280,6 +280,10 @@ export const seedProfile: Profile = {
   avatar: "",
 };
 
+/* A live tenant signs in a real customer; until then the identity is blank
+   rather than the demo persona. */
+const emptyProfile: Profile = { name: "", phone: "", email: "", avatar: "" };
+
 /* -------------------------------------------------------------------------- */
 /* Decoders: storage is untrusted input, so every domain validates on hydrate. */
 /* -------------------------------------------------------------------------- */
@@ -722,7 +726,7 @@ export function AppProvider({
   );
   const [favorites, setFavorites, favoritesReady] = usePersistentState<
     string[]
-  >(storageKeys.favorites, seedFavorites, decodeFavorites);
+  >(storageKeys.favorites, authTransport() === "live" ? [] : seedFavorites, decodeFavorites);
   const [authFlag, setAuthFlag, authReady] = usePersistentState<boolean>(
     storageKeys.auth,
     false,
@@ -766,11 +770,11 @@ export function AppProvider({
     );
   const [addresses, setAddresses, addressesReady] = usePersistentState<
     SavedAddress[]
-  >(storageKeys.addresses, savedAddresses, decodeAddresses);
+  >(storageKeys.addresses, authTransport() === "live" ? [] : savedAddresses, decodeAddresses);
   const [storedSelectedAddressId, setSelectedAddressId, selectedAddressReady] =
     usePersistentState<string | null>(
       storageKeys.selectedAddress,
-      savedAddresses[0].id,
+      authTransport() === "live" ? null : savedAddresses[0].id,
       decodeSelectedAddress,
     );
   const [storedBranchId, setSelectedBranchId, branchReady] =
@@ -819,7 +823,7 @@ export function AppProvider({
   );
   const [profile, setProfile, profileReady] = usePersistentState<Profile>(
     storageKeys.profile,
-    seedProfile,
+    authTransport() === "live" ? emptyProfile : seedProfile,
     decodeProfile,
   );
   /*
